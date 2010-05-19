@@ -1,0 +1,6 @@
+[submodule "lib/redis-node"]
+	path = lib/redis-node
+	url = git://github.com/fictorial/redis-node-client.git
+[submodule "test/nodeunit"]
+	path = test/nodeunit
+	url = git://github.com/caolan/nodeunit.git
