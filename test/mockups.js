@@ -14,7 +14,7 @@ var User = nohm.Model.extend({
     email: {
       type: 'string',
       validations: [
-        'email'
+      'email'
       ]
     }
   }
