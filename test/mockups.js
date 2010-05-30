@@ -4,7 +4,10 @@ var User = nohm.Model.extend({
   properties: {
     name: {
       type: 'string',
-      value: 'test'
+      value: 'test',
+      validations: [
+        'required'
+      ]
     },
     visits: {
       type: 'counter',

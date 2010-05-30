@@ -1,5 +1,11 @@
 var sys = require('sys');
 
+// HARHARHARHARHARH!!!!111..... whatever, works for these tests :/
+var compare = function(thing1, thing2) {
+  return JSON.stringify(thing1) === JSON.stringify(thing2);
+}
+
+
 exports.testForModules = function (t) {
   t.expect(3);
 
@@ -19,9 +25,10 @@ exports.testForModules = function (t) {
 // real tests start in 3.. 2.. 1.. NOW!
 var nohm = require('nohm');
 var mockups = require('./mockups');
-var user = new mockups.User();
+var user;
 
 exports.testPropertyGetter = function (t) {
+  var user = new mockups.User();
   t.expect(6);
 
   t.ok(typeof user.p === 'function', 'Property getter short p is not available.');
@@ -46,10 +53,9 @@ exports.testPropertyGetter = function (t) {
 }
 
 
-user = new mockups.User();
-
 exports.testPropertySetter = function (t) {
   // we won't test setter validation here, that'll be tested in the testPropertyValidation
+  user = new mockups.User();
   var result;
   t.expect(3);
 
@@ -67,19 +73,11 @@ exports.testPropertySetter = function (t) {
 }
 
 
-user = new mockups.User();
-
-// HARHARHARHARHARH!!!!111..... whatever, works for the property diff tests :/
-Array.prototype.compare = function(arr2) {
-  var arr1 = JSON.stringify(this);
-  arr2 = JSON.stringify(arr2);
-  return arr1 === arr2;
-}
-
 exports.testPropertyDiff = function (t) {
+  user = new mockups.User();
   var should = [],
-      beforeName = user.p('name'),
-      beforeEmail = user.p('email');
+  beforeName = user.p('name'),
+  beforeEmail = user.p('email');
   t.expect(5);
   
   t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
@@ -90,31 +88,30 @@ exports.testPropertyDiff = function (t) {
     before: beforeName,
     after: 'hurgelwurz'
   });
-  t.ok(should.compare(user.propertyDiff()), 'Property diff did not correctly recognize the changed property `name`.');
+  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the changed property `name`.');
 
   user.p('email', 'asdasd');
-  t.ok(should.compare(user.propertyDiff('name')), 'Property diff did not correctly search for changes only in `name`.');
+  t.ok(compare(should, user.propertyDiff('name')), 'Property diff did not correctly search for changes only in `name`.');
 
   should.push({
     key: 'email',
     before: beforeEmail,
     after: 'asdasd'
   });
-  t.ok(should.compare(user.propertyDiff()), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
+  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
 
   should.shift();
   user.p('name', beforeName);
-  t.ok(should.compare(user.propertyDiff()), 'Property diff did not correctly recognize the reset property `name`.');
+  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the reset property `name`.');
 
   t.done();
 }
 
 
-user = new mockups.User();
-
-exports.testPropertyDiff = function (t) {
+exports.testPropertyReset = function (t) {
+  user = new mockups.User();
   var beforeName = user.p('name'),
-      beforeEmail = user.p('email');
+  beforeEmail = user.p('email');
   t.expect(4);
 
   user.p('name', user.p('name') + 'hurgelwurz');
@@ -128,6 +125,22 @@ exports.testPropertyDiff = function (t) {
   user.p('name', user.p('name') + 'hurgelwurz');
   user.propertyReset();
   t.ok(user.p('name') === beforeName && user.p('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
+
+  t.done();
+}
+
+
+exports.allProperties = function (t) {
+  user = new mockups.User();
+  t.expect(2);
+
+  user.p('name', 'hurgelwurz');
+  user.p('email', 'hurgelwurz@test.de');
+  var should = { name: user.p('name'), visits: user.p('visits'), email: user.p('email') }; // yes, this absolutely must be set correct for this test to work. sorry
+
+  t.ok(compare(should, user.allProperties()), 'Getting all properties failed.');
+
+  t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
   t.done();
 }
