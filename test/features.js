@@ -19,25 +19,27 @@ exports.checkModules = function (t) {
 // real tests start in 3.. 2.. 1.. NOW!
 var nohm = require('nohm');
 var userMockup = nohm.Model.extend({
-  properties: {
-    name: {
-      type: 'string',
-      value: 'test',
-      validations: [
+  constructor: function () {
+    this.properties = {
+      name: {
+        type: 'string',
+        value: 'test',
+        validations: [
         'required'
-      ]
-    },
-    visits: {
-      type: 'counter',
-      stepsize: 2,
-      cap: 20
-    },
-    email: {
-      type: 'string',
-      validations: [
-      'email'
-      ]
-    }
+        ]
+      },
+      visits: {
+        type: 'counter',
+        stepsize: 2
+      },
+      email: {
+        type: 'string',
+        validations: [
+        'email'
+        ]
+      }
+    };
+    nohm.Model.call(this);
   }
 });
 
@@ -51,7 +53,7 @@ exports.propertyGetter = function (t) {
 
   t.ok(typeof user.property === 'function', 'Property getter is not available.');
 
-  t.ok(user.p('email') === null, 'Property getter did not return the correct value for email.');
+  t.ok(user.p('email') === '', 'Property getter did not return the correct value for email.');
 
   t.ok(user.p('name') === 'test', 'Property getter did not return the correct value for name.');
 
@@ -68,20 +70,21 @@ exports.propertyGetter = function (t) {
 
 
 exports.propertySetter = function (t) {
-  // we won't test setter validation here, that'll be tested in the testPropertyValidation
   var user = new userMockup();
   var result;
-  t.expect(3);
+  t.expect(4);
 
-  result = user.p('email', 'asdasd');
-  t.ok(result, 'Setting a property without validation did not return `true`.');
+  t.ok(user.p('email', 'asdasd'), 'Setting a property without validation did not return `true`.');
 
   t.ok(user.p('email') === 'asdasd', 'Setting a property did not actually set the property to the correct value');
   
-  result = user.p('email', null);
-  t.ok(result, 'Setting a property without validation did not return `true`.');
+  t.ok(user.p('email', null), 'Setting a property without validation did not return `true`.');
 
   // t.ok(user.p('email') === '', "Setting a string property to null did not cast the value to an empty string."); TODO: reinstate this test :P
+
+  user.p('email', 'test@test.de');
+  var controlUser = new userMockup();
+  t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
 
   t.done();
 }
@@ -150,7 +153,11 @@ exports.allProperties = function (t) {
 
   user.p('name', 'hurgelwurz');
   user.p('email', 'hurgelwurz@test.de');
-  var should = { name: user.p('name'), visits: user.p('visits'), email: user.p('email') }; // yes, this absolutely must be set correct for this test to work. sorry
+  var should = {
+    name: user.p('name'),
+    visits: user.p('visits'),
+    email: user.p('email')
+  }; // yes, this absolutely must be set correct for this test to work. sorry
 
   t.same(should, user.allProperties(), 'Getting all properties failed.');
 
