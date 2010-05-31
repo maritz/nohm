@@ -56,4 +56,4 @@ run = function(files){
 };
 
 process.chdir(__dirname);
-run(['features.js']);
+run(['features.js', 'validations.js']);

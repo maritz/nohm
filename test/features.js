@@ -1,12 +1,6 @@
 var sys = require('sys');
 
-// HARHARHARHARHARH!!!!111..... whatever, works for these tests :/
-var compare = function(thing1, thing2) {
-  return JSON.stringify(thing1) === JSON.stringify(thing2);
-}
-
-
-exports.testForModules = function (t) {
+exports.checkModules = function (t) {
   t.expect(3);
 
   var redis = require('redis-client');
@@ -24,11 +18,31 @@ exports.testForModules = function (t) {
 
 // real tests start in 3.. 2.. 1.. NOW!
 var nohm = require('nohm');
-var mockups = require('./mockups');
-var user;
+var userMockup = nohm.Model.extend({
+  properties: {
+    name: {
+      type: 'string',
+      value: 'test',
+      validations: [
+        'required'
+      ]
+    },
+    visits: {
+      type: 'counter',
+      stepsize: 2,
+      cap: 20
+    },
+    email: {
+      type: 'string',
+      validations: [
+      'email'
+      ]
+    }
+  }
+});
 
-exports.testPropertyGetter = function (t) {
-  var user = new mockups.User();
+exports.propertyGetter = function (t) {
+  var user = new userMockup();
   t.expect(6);
 
   t.ok(typeof user.p === 'function', 'Property getter short p is not available.');
@@ -53,9 +67,9 @@ exports.testPropertyGetter = function (t) {
 }
 
 
-exports.testPropertySetter = function (t) {
+exports.propertySetter = function (t) {
   // we won't test setter validation here, that'll be tested in the testPropertyValidation
-  user = new mockups.User();
+  var user = new userMockup();
   var result;
   t.expect(3);
 
@@ -73,8 +87,8 @@ exports.testPropertySetter = function (t) {
 }
 
 
-exports.testPropertyDiff = function (t) {
-  user = new mockups.User();
+exports.propertyDiff = function (t) {
+  var user = new userMockup();
   var should = [],
   beforeName = user.p('name'),
   beforeEmail = user.p('email');
@@ -88,28 +102,28 @@ exports.testPropertyDiff = function (t) {
     before: beforeName,
     after: 'hurgelwurz'
   });
-  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the changed property `name`.');
+  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
 
   user.p('email', 'asdasd');
-  t.ok(compare(should, user.propertyDiff('name')), 'Property diff did not correctly search for changes only in `name`.');
+  t.same(should, user.propertyDiff('name'), 'Property diff did not correctly search for changes only in `name`.');
 
   should.push({
     key: 'email',
     before: beforeEmail,
     after: 'asdasd'
   });
-  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
+  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
 
   should.shift();
   user.p('name', beforeName);
-  t.ok(compare(should, user.propertyDiff()), 'Property diff did not correctly recognize the reset property `name`.');
+  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
 
   t.done();
 }
 
 
-exports.testPropertyReset = function (t) {
-  user = new mockups.User();
+exports.propertyReset = function (t) {
+  var user = new userMockup();
   var beforeName = user.p('name'),
   beforeEmail = user.p('email');
   t.expect(4);
@@ -131,14 +145,14 @@ exports.testPropertyReset = function (t) {
 
 
 exports.allProperties = function (t) {
-  user = new mockups.User();
+  var user = new userMockup();
   t.expect(2);
 
   user.p('name', 'hurgelwurz');
   user.p('email', 'hurgelwurz@test.de');
   var should = { name: user.p('name'), visits: user.p('visits'), email: user.p('email') }; // yes, this absolutely must be set correct for this test to work. sorry
 
-  t.ok(compare(should, user.allProperties()), 'Getting all properties failed.');
+  t.same(should, user.allProperties(), 'Getting all properties failed.');
 
   t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
