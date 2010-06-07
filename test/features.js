@@ -18,7 +18,7 @@ exports.checkModules = function (t) {
 
 // real tests start in 3.. 2.. 1.. NOW!
 var nohm = require('nohm');
-var userMockup = nohm.Model.extend({
+var UserMockup = nohm.Model.extend({
   constructor: function () {
     this.properties = {
       name: {
@@ -44,7 +44,7 @@ var userMockup = nohm.Model.extend({
 });
 
 exports.propertyGetter = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(6);
 
   t.ok(typeof user.p === 'function', 'Property getter short p is not available.');
@@ -70,7 +70,7 @@ exports.propertyGetter = function (t) {
 
 
 exports.propertySetter = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   var result;
   t.expect(4);
 
@@ -83,7 +83,7 @@ exports.propertySetter = function (t) {
   // t.ok(user.p('email') === '', "Setting a string property to null did not cast the value to an empty string."); TODO: reinstate this test :P
 
   user.p('email', 'test@test.de');
-  var controlUser = new userMockup();
+  var controlUser = new UserMockup();
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
 
   t.done();
@@ -91,7 +91,7 @@ exports.propertySetter = function (t) {
 
 
 exports.propertyDiff = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   var should = [],
   beforeName = user.p('name'),
   beforeEmail = user.p('email');
@@ -126,7 +126,7 @@ exports.propertyDiff = function (t) {
 
 
 exports.propertyReset = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   var beforeName = user.p('name'),
   beforeEmail = user.p('email');
   t.expect(4);
@@ -148,7 +148,7 @@ exports.propertyReset = function (t) {
 
 
 exports.allProperties = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(2);
 
   user.p('name', 'hurgelwurz');

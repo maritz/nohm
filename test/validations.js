@@ -2,7 +2,7 @@ var sys = require('sys');
 var nohm = require('nohm');
 
 // !!! this mockup must be defined valid from the start for most tests !!!
-var userMockup = nohm.Model.extend({
+var UserMockup = nohm.Model.extend({
   constructor: function () {
     this.properties = {
       name: {
@@ -64,23 +64,30 @@ var userMockup = nohm.Model.extend({
       },
       number: {
         type: 'string',
-        value: '1,000.56234234',
+        value: '1,000.5623',
         validations: [
         'number'
         ]
       },
-      germanNumber: {
+      numberUS: {
         type: 'string',
-        value: '1.000,56234234',
+        value: '2,000.5623',
         validations: [
-        'numberGerman'
+        'numberUS'
         ]
       },
-      universalNumber: {
+      numberEU: {
         type: 'string',
-        value: '1.000,56234234',
+        value: '3.000,5623',
         validations: [
-        'numberGerman'
+        'numberEU'
+        ]
+      },
+      numberSI: {
+        type: 'string',
+        value: '4 000,5623',
+        validations: [
+        'numberSI'
         ]
       },
       url: {
@@ -96,7 +103,7 @@ var userMockup = nohm.Model.extend({
 });
 
 exports.general = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(1);
 
   t.ok(user.valid(), 'The Model was not recognized as valid. Is it? Should be!');
@@ -104,8 +111,37 @@ exports.general = function (t) {
   t.done();
 }
 
+exports.castString = function (t) {
+  var user = new UserMockup();
+  t.expect(7);
+
+  // is this overkill? i believe so... but a little copy and paste doesn't take that much time ;D
+  user.p('name', null);
+  t.ok(user.p('name') === '', 'Setting a String to null did not cast it to an empty string.');
+
+  user.p('name', false);
+  t.ok(user.p('name') === '', 'Setting a String to false did not cast it to an empty string.');
+
+  user.p('name', true);
+  t.ok(user.p('name') === '', 'Setting a String to true did not cast it to an empty string.');
+
+  user.p('name', 0);
+  t.ok(user.p('name') === '', 'Setting a String to 0 did not cast it to an empty string.');
+
+  user.p('name', {});
+  t.ok(user.p('name') === '', 'Setting a String to {} did not cast it to an empty string.');
+
+  user.p('name', []);
+  t.ok(user.p('name') === '', 'Setting a String to [] did not cast it to an empty string.');
+
+  user.p('name', new String(''));
+  t.ok(user.p('name') === '', 'Setting a String to new String() did not cast it to an empty string.');
+
+  t.done();
+}
+
 exports.setterValidation = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(4);
 
   t.ok(user.p('name', 'hurz', true), 'Setting a property to a correct value with validation did not return true.');
@@ -119,8 +155,8 @@ exports.setterValidation = function (t) {
   t.done();
 }
 
-exports.notempty = function (t) {
-  var user = new userMockup();
+exports.notEmpty = function (t) {
+  var user = new UserMockup();
   t.expect(5);
 
   t.ok(user.valid('name'), 'Notempty field `name` was valid but not accepted.');
@@ -140,8 +176,8 @@ exports.notempty = function (t) {
   t.done();
 }
 
-exports.stringlength = function (t) {
-  var user = new userMockup();
+exports.stringLength = function (t) {
+  var user = new UserMockup();
   t.expect(5);
 
   t.ok(user.valid('minLength'), 'Valid minLength was not accepted.');
@@ -159,9 +195,22 @@ exports.stringlength = function (t) {
   t.done();
 }
 
+exports.intSize = function (t) {
+  var user = new UserMockup();
+  t.expect(3);
+
+  t.ok(!user.p('minMax', 1, true), 'Integer lower than min was accepted.');
+
+  t.ok(!user.p('minMax', 21, true), 'Integer higher than min was accepted.');
+
+  t.ok(user.p('minOptional', 0, true), 'Integer as 0 and optional was not accepted.');
+
+  t.done();
+}
+
 exports.email = function (t) {
   // oh gawd...
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(4);
 
   t.ok(user.valid('email'), 'Valid email was not recognized.');
@@ -177,8 +226,39 @@ exports.email = function (t) {
   t.done()
 }
 
+exports.number = function (t) {
+  var user = new UserMockup();
+  t.expect(11);
+
+  t.ok(user.p('number', '0', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '-1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '10', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1000', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1.000,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1,000.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1 000.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  t.ok(user.p('number', '1 000,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
+
+  // TODO: write tests for US, EU, SI specifically
+
+  t.done();
+}
+
 exports.consistency = function (t) {
-  var user = new userMockup();
+  var user = new UserMockup();
   t.expect(2);
 
   t.ok(user.valid('name') === user.valid('email'), 'Validating two valid properties resulted in different outputs.');
