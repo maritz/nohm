@@ -17,15 +17,17 @@ exports.checkModules = function (t) {
 
 
 // real tests start in 3.. 2.. 1.. NOW!
+var redis = require('redis-client').createClient();
 var nohm = require('nohm');
 var UserMockup = nohm.Model.extend({
   constructor: function () {
+    this.modelName = 'UserMockup';
     this.properties = {
       name: {
         type: 'string',
         value: 'test',
         validations: [
-        'required'
+        'notEmpty'
         ]
       },
       visits: {
@@ -164,4 +166,23 @@ exports.allProperties = function (t) {
   t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
   t.done();
+}
+
+exports.save = function (t) {
+  var user = new UserMockup();
+  t.expect(4);
+
+  user.p('name', 'asdads');
+  user.p('email', 'asdasd@asdasd.de');
+  user.save(function (err) {
+    t.ok(err === null, 'Saving a user did not work.');
+    redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+      // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
+      t.ok(value.name == 'asdads', 'The user name was not saved properly');
+      t.ok(value.visits == '0', 'The user visits were not saved properly');
+      t.ok(value.email == 'asdasd@asdasd.de', 'The user email was not saved properly');
+      t.done();
+    });
+  });
+
 }

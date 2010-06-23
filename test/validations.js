@@ -4,6 +4,7 @@ var nohm = require('nohm');
 // !!! this mockup must be defined valid from the start for most tests !!!
 var UserMockup = nohm.Model.extend({
   constructor: function () {
+    this.modelName = 'UserMockup';
     this.properties = {
       name: {
         type: 'string',
