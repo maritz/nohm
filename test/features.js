@@ -184,5 +184,19 @@ exports.save = function (t) {
       t.done();
     });
   });
+}
 
+exports.remove = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+
+  user.save(function () {
+    var id = user.id;
+    user.remove(function (err) {
+      redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
+        t.ok(value === 0, 'Deleting a user did not work');
+        t.done();
+      });
+    })
+  });
 }

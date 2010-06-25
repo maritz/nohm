@@ -36,21 +36,38 @@ run = function(files){
         done: function(assertions){
             var end = new Date().getTime();
             var duration = end - start;
-            if(assertions.failures){
-                sys.puts(
-                    '\n' + bold(red('FAILURES: ')) + assertions.failures +
-                    '/' + assertions.length + ' assertions failed (' +
-                    assertions.duration + 'ms)'
-                );
-              process.exit(1);
-            }
-            else {
-                sys.puts(
-                    '\n' + bold(green('OK: ')) + assertions.length +
-                    ' assertions (' + assertions.duration + 'ms)'
-                );
-              process.exit(0);
-            }
+            var redis = require('redis-client').createClient();
+            redis.del('nohm:ids:UserMockup', function () {
+              redis.keys('nohm:hashes:UserMockup:*', function (err, keys) {
+                var reallyDone = function reallyDone () {
+                  if(assertions.failures){
+                    sys.puts(
+                        '\n' + bold(red('FAILURES: ')) + assertions.failures +
+                        '/' + assertions.length + ' assertions failed (' +
+                        assertions.duration + 'ms)'
+                    );
+                    process.exit(1);
+                  }
+                  else {
+                      sys.puts(
+                          '\n' + bold(green('OK: ')) + assertions.length +
+                          ' assertions (' + assertions.duration + 'ms)'
+                      );
+                    process.exit(0);
+                  }
+                }
+                if (keys.length == 0) {
+                  return reallyDone();
+                }
+                for(var i = 0, len = keys.length; i <= len; i++) {
+                  if (i == len) {
+                    setTimeout(reallyDone, 500); // this can go wrong and leave data on the db. but really: don't run tests on a production db. :P
+                  } else {
+                    redis.del(keys[i]);
+                  }
+                }
+              })
+            });
         }
     });
 };
