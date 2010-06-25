@@ -10,3 +10,6 @@
 [submodule "lib/double-metaphone"]
 	path = lib/double-metaphone
 	url = git://github.com/maritz/js-double-metaphone.git
+[submodule "lib/conductor"]
+	path = lib/conductor
+	url = git://github.com/creationix/conductor.git

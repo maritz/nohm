@@ -2,6 +2,7 @@ require.paths.unshift(__dirname); //tests
 require.paths.unshift('../lib'); // nohm itself
 require.paths.unshift('../lib/redis-node/lib'); // redis-node client lib
 require.paths.unshift('../lib/class/lib'); // class system
+require.paths.unshift('../lib/conductor/lib'); // class system
 
 var nodeunit = require('nodeunit')
     , sys = require('sys');
@@ -38,35 +39,34 @@ run = function(files){
             var duration = end - start;
             var redis = require('redis-client').createClient();
             redis.del('nohm:ids:UserMockup', function () {
-              redis.keys('nohm:hashes:UserMockup:*', function (err, keys) {
-                var reallyDone = function reallyDone () {
-                  if(assertions.failures){
+              var deleteKeys = function (err, keys) {
+                if (!keys || keys.length == 0) {
+                  return false;
+                }
+                for(var i = 0, len = keys.length; i < len; i++) {
+                  redis.del(keys[i]);
+                }
+              };
+              redis.keys('nohm:hashes:UserMockup:*', deleteKeys);
+              redis.keys('nohm:uniques:UserMockup:*', deleteKeys);
+              setTimeout(function () {
+                // timeout here because else the deletes don't go through fast enough and executing the tests again will result in failure.
+                if(assertions.failures){
+                  sys.puts(
+                      '\n' + bold(red('FAILURES: ')) + assertions.failures +
+                      '/' + assertions.length + ' assertions failed (' +
+                      assertions.duration + 'ms)'
+                  );
+                  process.exit(1);
+                }
+                else {
                     sys.puts(
-                        '\n' + bold(red('FAILURES: ')) + assertions.failures +
-                        '/' + assertions.length + ' assertions failed (' +
-                        assertions.duration + 'ms)'
+                        '\n' + bold(green('OK: ')) + assertions.length +
+                        ' assertions (' + assertions.duration + 'ms)'
                     );
-                    process.exit(1);
-                  }
-                  else {
-                      sys.puts(
-                          '\n' + bold(green('OK: ')) + assertions.length +
-                          ' assertions (' + assertions.duration + 'ms)'
-                      );
-                    process.exit(0);
-                  }
+                  process.exit(0);
                 }
-                if (keys.length == 0) {
-                  return reallyDone();
-                }
-                for(var i = 0, len = keys.length; i <= len; i++) {
-                  if (i == len) {
-                    setTimeout(reallyDone, 500); // this can go wrong and leave data on the db. but really: don't run tests on a production db. :P
-                  } else {
-                    redis.del(keys[i]);
-                  }
-                }
-              })
+              }, 500);
             });
         }
     });

@@ -26,6 +26,7 @@ var UserMockup = nohm.Model.extend({
       name: {
         type: 'string',
         value: 'test',
+        unique: true,
         validations: [
         'notEmpty'
         ]
@@ -36,6 +37,8 @@ var UserMockup = nohm.Model.extend({
       },
       email: {
         type: 'string',
+        unique: true,
+        value: 'email@email.de',
         validations: [
         'email'
         ]
@@ -44,6 +47,14 @@ var UserMockup = nohm.Model.extend({
     nohm.Model.call(this);
   }
 });
+
+exports.redisClean = function (t) {
+  t.expect(1);
+  redis.keys('nohm:*:UserMockup:*', function (err, value) {
+    t.ok(value === null, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS nohm:*:UserMockup:*" to see what keys could be the cause.');
+    t.done();
+  });
+}
 
 exports.propertyGetter = function (t) {
   var user = new UserMockup();
@@ -55,7 +66,7 @@ exports.propertyGetter = function (t) {
 
   t.ok(typeof user.property === 'function', 'Property getter is not available.');
 
-  t.ok(user.p('email') === '', 'Property getter did not return the correct value for email.');
+  t.ok(user.p('email') === 'email@email.de', 'Property getter did not return the correct value for email.');
 
   t.ok(user.p('name') === 'test', 'Property getter did not return the correct value for name.');
 
@@ -172,16 +183,17 @@ exports.create = function (t) {
   var user = new UserMockup();
   t.expect(5);
 
-  user.p('name', 'asdads');
-  user.p('email', 'asdasd@asdasd.de');
+  user.p('name', 'createTest');
+  user.p('email', 'createTest@asdasd.de');
   user.save(function (err) {
-    t.ok(err === null, 'Saving a user did not work.');
+    t.ok(!err, 'Saving a user did not work.');
+    if (err) t.done();
     redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
       // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
-      t.ok(value.name == 'asdads', 'The user name was not saved properly');
+      t.ok(value.name == 'createTest', 'The user name was not saved properly');
       t.ok(value.visits == '0', 'The user visits were not saved properly');
-      t.ok(value.email == 'asdasd@asdasd.de', 'The user email was not saved properly');
+      t.ok(value.email == 'createTest@asdasd.de', 'The user email was not saved properly');
       t.done();
     });
   });
@@ -189,12 +201,17 @@ exports.create = function (t) {
 
 exports.remove = function (t) {
   var user = new UserMockup();
-  t.expect(3);
+  t.expect(4);
 
-  user.save(function () {
+  user.p('name', 'deleteTest');
+  user.p('email', 'deleteTest@asdasd.de');
+  user.save(function (err) {
+    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    if (err) t.done();
     var id = user.id;
     user.remove(function (err) {
       t.ok(!err, 'There was a redis error in the remove test.');
+      if (err) t.done();
       redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
         t.ok(!err, 'There was a redis error in the remove test check.');
         t.ok(value === 0, 'Deleting a user did not work');
@@ -208,21 +225,43 @@ exports.update = function (t) {
   var user = new UserMockup();
   t.expect(5);
 
-  user.p('name', 'name1');
-  user.p('email', 'email1@email.de');
+  user.p('name', 'updateTest1');
+  user.p('email', 'updateTest1@email.de');
   user.save(function (err) {
     t.ok(!err, 'There was a redis error in the update test. (creation part)');
-    user.p('name', 'name2');
-    user.p('email', 'email2@email.de');
+    if (err) t.done();
+    user.p('name', 'updateTest2');
+    user.p('email', 'updateTest2@email.de');
     user.save(function (err) {
       t.ok(!err, 'There was a redis error in the update test.');
+      if (err) t.done();
       redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
         t.ok(!err, 'There was a redis error in the update test check.');
+        if (err) t.done();
         // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
-        t.ok(value.name == 'name2', 'The user name was not updated properly');
-        t.ok(value.email == 'email2@email.de', 'The user email was not updated properly');
+        t.ok(value.name == 'updateTest2', 'The user name was not updated properly');
+        t.ok(value.email == 'updateTest2@email.de', 'The user email was not updated properly');
         t.done();
       });
     });
   });
+}
+
+exports.unique = function (t) {
+  var user1 = new UserMockup();
+  var user2 = new UserMockup();
+  t.expect(2);
+
+  user1.p('name', 'dubplicateTest');
+  user1.p('email', 'dubplicateTest@test.de');
+  user2.p('name', 'dubplicateTest');
+  user2.p('email', 'dubplicateTest@test.de');
+  user1.save(function (err) {
+    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    if (err) t.done();
+    user2.save(function (err) {
+      t.ok(err, 'A saved unique property was not recognized as a duplicate');
+      t.done();
+    });
+  })
 }
