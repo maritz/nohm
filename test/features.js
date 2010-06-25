@@ -168,15 +168,16 @@ exports.allProperties = function (t) {
   t.done();
 }
 
-exports.save = function (t) {
+exports.create = function (t) {
   var user = new UserMockup();
-  t.expect(4);
+  t.expect(5);
 
   user.p('name', 'asdads');
   user.p('email', 'asdasd@asdasd.de');
   user.save(function (err) {
     t.ok(err === null, 'Saving a user did not work.');
     redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+      t.ok(!err, 'There was a redis error in the create test check.');
       // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
       t.ok(value.name == 'asdads', 'The user name was not saved properly');
       t.ok(value.visits == '0', 'The user visits were not saved properly');
@@ -188,15 +189,40 @@ exports.save = function (t) {
 
 exports.remove = function (t) {
   var user = new UserMockup();
-  t.expect(1);
+  t.expect(3);
 
   user.save(function () {
     var id = user.id;
     user.remove(function (err) {
+      t.ok(!err, 'There was a redis error in the remove test.');
       redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
+        t.ok(!err, 'There was a redis error in the remove test check.');
         t.ok(value === 0, 'Deleting a user did not work');
         t.done();
       });
     })
+  });
+}
+
+exports.update = function (t) {
+  var user = new UserMockup();
+  t.expect(5);
+
+  user.p('name', 'name1');
+  user.p('email', 'email1@email.de');
+  user.save(function (err) {
+    t.ok(!err, 'There was a redis error in the update test. (creation part)');
+    user.p('name', 'name2');
+    user.p('email', 'email2@email.de');
+    user.save(function (err) {
+      t.ok(!err, 'There was a redis error in the update test.');
+      redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+        t.ok(!err, 'There was a redis error in the update test check.');
+        // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
+        t.ok(value.name == 'name2', 'The user name was not updated properly');
+        t.ok(value.email == 'email2@email.de', 'The user email was not updated properly');
+        t.done();
+      });
+    });
   });
 }
