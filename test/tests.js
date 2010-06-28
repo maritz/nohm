@@ -35,8 +35,6 @@ run = function(files){
             }
         },
         done: function(assertions){
-            var end = new Date().getTime();
-            var duration = end - start;
             var redis = require('redis-client').createClient();
             redis.del('nohm:ids:UserMockup', function () {
               var deleteKeys = function (err, keys) {
