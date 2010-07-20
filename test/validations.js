@@ -1,3 +1,4 @@
+"use strict";
 var sys = require('sys');
 var nohm = require('nohm');
 
@@ -10,92 +11,92 @@ var UserMockup = nohm.Model.extend({
         type: 'string',
         value: 'test',
         validations: [
-        'notEmpty'
+          'notEmpty'
         ]
       },
       minMax: {
         type: 'integer',
         value: 5,
         validations: [
-        ['min', 2],
-        ['max', 20]
+          ['min', 2],
+          ['max', 20]
         ]
       },
       minOptional: {
         type: 'integer',
         value: 0,
         validations: [
-        ['min', 10, 'optional'],
+          ['min', 10, 'optional']
         ]
       },
       email: {
         type: 'string',
         value: 'blub@bla.de',
         validations: [
-        'email'
+          'email'
         ]
       },
       optionalEmail: {
         type: 'string',
         value: '',
         validations: [
-        ['email', true]
+          ['email', true]
         ]
       },
       minLength: {
         type: 'string',
         value: 'asd',
         validations: [
-        ['minLength', 3]
+          ['minLength', 3]
         ]
       },
       minLength2: {
         type: 'string',
         value: '',
         validations: [
-        ['minLength', 3, 'optional']
+          ['minLength', 3, 'optional']
         ]
       },
       maxLength: {
         type: 'string',
         value: 'asd',
         validations: [
-        ['maxLength', 5]
+          ['maxLength', 5]
         ]
       },
       number: {
         type: 'string',
         value: '1,000.5623',
         validations: [
-        'number'
+          'number'
         ]
       },
       numberUS: {
         type: 'string',
         value: '2,000.5623',
         validations: [
-        'numberUS'
+          'numberUS'
         ]
       },
       numberEU: {
         type: 'string',
         value: '3.000,5623',
         validations: [
-        'numberEU'
+          'numberEU'
         ]
       },
       numberSI: {
         type: 'string',
         value: '4 000,5623',
         validations: [
-        'numberSI'
+          'numberSI'
         ]
       },
       url: {
         type: 'string',
         value: 'http://test.de',
         validations: [
-        'url'
+          'url'
         ]
       }
     };
@@ -110,11 +111,11 @@ exports.general = function (t) {
   t.ok(user.valid(), 'The Model was not recognized as valid. Is it? Should be!');
 
   t.done();
-}
+};
 
 exports.castString = function (t) {
   var user = new UserMockup();
-  t.expect(7);
+  t.expect(6);
 
   // is this overkill? i believe so... but a little copy and paste doesn't take that much time ;D
   user.p('name', null);
@@ -135,11 +136,8 @@ exports.castString = function (t) {
   user.p('name', []);
   t.ok(user.p('name') === '', 'Setting a String to [] did not cast it to an empty string.');
 
-  user.p('name', new String(''));
-  t.ok(user.p('name') === '', 'Setting a String to new String() did not cast it to an empty string.');
-
   t.done();
-}
+};
 
 exports.setterValidation = function (t) {
   var user = new UserMockup();
@@ -147,14 +145,14 @@ exports.setterValidation = function (t) {
 
   t.ok(user.p('name', 'hurz', true), 'Setting a property to a correct value with validation did not return true.');
 
-  t.ok(user.p('name') === 'hurz', 'Setting a property to a correct value with validation did not set the value.')
+  t.ok(user.p('name') === 'hurz', 'Setting a property to a correct value with validation did not set the value.');
 
   t.ok(!user.p('name', '', true), 'Setting a property to a wrong value with validation did not return false.');
 
   t.ok(user.p('name') === 'hurz', 'Setting a property to a wrong value with validation did set the value.');
 
   t.done();
-}
+};
 
 exports.notEmpty = function (t) {
   var user = new UserMockup();
@@ -175,7 +173,7 @@ exports.notEmpty = function (t) {
   t.ok(!user.valid('name'), 'Notempty field `name` was accepted with value true.');
 
   t.done();
-}
+};
 
 exports.stringLength = function (t) {
   var user = new UserMockup();
@@ -183,10 +181,10 @@ exports.stringLength = function (t) {
 
   t.ok(user.valid('minLength'), 'Valid minLength was not accepted.');
 
-  
+
   t.ok(!user.p('minLength', 'as', true), 'String shorter than minLength was accepted.');
 
-  
+
   t.ok(!user.p('minLength2', 'as', true), 'String shorter than minLength was accepted. (optional but 2 chars)');
 
   t.ok(user.valid('maxLength'), 'Valid maxLength was not accepted');
@@ -194,7 +192,7 @@ exports.stringLength = function (t) {
   t.ok(!user.p('maxLength', 'asdasd', true), 'Invalid maxLength was accepted.');
 
   t.done();
-}
+};
 
 exports.intSize = function (t) {
   var user = new UserMockup();
@@ -207,7 +205,7 @@ exports.intSize = function (t) {
   t.ok(user.p('minOptional', 0, true), 'Integer as 0 and optional was not accepted.');
 
   t.done();
-}
+};
 
 exports.email = function (t) {
   // oh gawd...
@@ -224,8 +222,8 @@ exports.email = function (t) {
 
   t.ok(user.valid('optionalEmail'), 'Optional email was not recognized.');
 
-  t.done()
-}
+  t.done();
+};
 
 exports.number = function (t) {
   var user = new UserMockup();
@@ -256,7 +254,7 @@ exports.number = function (t) {
   // TODO: write tests for US, EU, SI specifically
 
   t.done();
-}
+};
 
 exports.consistency = function (t) {
   var user = new UserMockup();
@@ -267,4 +265,4 @@ exports.consistency = function (t) {
   t.ok(user.valid('name') === user.valid(), 'Validating the entire Model had a different result than validating a single property.');
 
   t.done();
-}
+};

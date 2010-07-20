@@ -1,15 +1,17 @@
+"use strict";
 var sys = require('sys');
 
 exports.checkModules = function (t) {
+  var redis, nohm, Class;
   t.expect(3);
 
-  var redis = require('redis-client');
+  redis = require('redis-client');
   t.ok(typeof redis.Client === 'function', 'redis-client should be available -- forgot to do "git submodule update --init"?');
 
-  var nohm = require('nohm');
+  nohm = require('nohm');
   t.ok(typeof nohm.Model === 'function', 'nohm should be available -- something is fishy here.');
 
-  var Class = require('class');
+  Class = require('class');
   t.ok(typeof Class.Class === 'function', 'Class should be available -- forgot to do "git submodule update --init"?');
 
   t.done();
@@ -28,7 +30,7 @@ var UserMockup = nohm.Model.extend({
         value: 'test',
         unique: true,
         validations: [
-        'notEmpty'
+          'notEmpty'
         ]
       },
       visits: {
@@ -40,7 +42,7 @@ var UserMockup = nohm.Model.extend({
         unique: true,
         value: 'email@email.de',
         validations: [
-        'email'
+          'email'
         ]
       }
     };
@@ -54,10 +56,11 @@ exports.redisClean = function (t) {
     t.ok(value === null, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS nohm:*:UserMockup:*" to see what keys could be the cause.');
     t.done();
   });
-}
+};
 
 exports.propertyGetter = function (t) {
-  var user = new UserMockup();
+  var user = new UserMockup(),
+  exceptionThrown;
   t.expect(6);
 
   t.ok(typeof user.p === 'function', 'Property getter short p is not available.');
@@ -70,7 +73,7 @@ exports.propertyGetter = function (t) {
 
   t.ok(user.p('name') === 'test', 'Property getter did not return the correct value for name.');
 
-  var exceptionThrown = false;
+  exceptionThrown = false;
   try {
     user.p('hurgelwurz');
   } catch (e) {
@@ -79,35 +82,36 @@ exports.propertyGetter = function (t) {
   t.ok(exceptionThrown, 'Accessing an undefined property did not throw an exception.');
 
   t.done();
-}
+};
 
 
 exports.propertySetter = function (t) {
-  var user = new UserMockup();
-  var result;
+  var user = new UserMockup(),
+  result,
+  controlUser;
   t.expect(4);
 
   t.ok(user.p('email', 'asdasd'), 'Setting a property without validation did not return `true`.');
 
   t.ok(user.p('email') === 'asdasd', 'Setting a property did not actually set the property to the correct value');
-  
+
   t.ok(user.p('email', null), 'Setting a property without validation did not return `true`.');
 
   user.p('email', 'test@test.de');
-  var controlUser = new UserMockup();
+  controlUser = new UserMockup();
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
 
   t.done();
-}
+};
 
 
 exports.propertyDiff = function (t) {
-  var user = new UserMockup();
-  var should = [],
+  var user = new UserMockup(),
+  should = [],
   beforeName = user.p('name'),
   beforeEmail = user.p('email');
   t.expect(5);
-  
+
   t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
 
   user.p('name', 'hurgelwurz');
@@ -133,12 +137,12 @@ exports.propertyDiff = function (t) {
   t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
 
   t.done();
-}
+};
 
 
 exports.propertyReset = function (t) {
-  var user = new UserMockup();
-  var beforeName = user.p('name'),
+  var user = new UserMockup(),
+  beforeName = user.p('name'),
   beforeEmail = user.p('email');
   t.expect(4);
 
@@ -155,16 +159,17 @@ exports.propertyReset = function (t) {
   t.ok(user.p('name') === beforeName && user.p('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
 
   t.done();
-}
+};
 
 
 exports.allProperties = function (t) {
-  var user = new UserMockup();
+  var user = new UserMockup(),
+  should;
   t.expect(2);
 
   user.p('name', 'hurgelwurz');
   user.p('email', 'hurgelwurz@test.de');
-  var should = {
+  should = {
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email')
@@ -175,7 +180,7 @@ exports.allProperties = function (t) {
   t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
   t.done();
-}
+};
 
 exports.create = function (t) {
   var user = new UserMockup();
@@ -185,7 +190,9 @@ exports.create = function (t) {
   user.p('email', 'createTest@asdasd.de');
   user.save(function (err) {
     t.ok(!err, 'Saving a user did not work.');
-    if (err) t.done();
+    if (err) {
+      t.done();
+    }
     redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
       // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
@@ -195,7 +202,7 @@ exports.create = function (t) {
       t.done();
     });
   });
-}
+};
 
 exports.remove = function (t) {
   var user = new UserMockup();
@@ -205,19 +212,23 @@ exports.remove = function (t) {
   user.p('email', 'deleteTest@asdasd.de');
   user.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
-    if (err) t.done();
+    if (err) {
+      t.done();
+    }
     var id = user.id;
     user.remove(function (err) {
       t.ok(!err, 'There was a redis error in the remove test.');
-      if (err) t.done();
+      if (err) {
+        t.done();
+      }
       redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
         t.ok(!err, 'There was a redis error in the remove test check.');
         t.ok(value === 0, 'Deleting a user did not work');
         t.done();
       });
-    })
+    });
   });
-}
+};
 
 exports.update = function (t) {
   var user = new UserMockup();
@@ -227,15 +238,21 @@ exports.update = function (t) {
   user.p('email', 'updateTest1@email.de');
   user.save(function (err) {
     t.ok(!err, 'There was a redis error in the update test. (creation part)');
-    if (err) t.done();
+    if (err) {
+      t.done();
+    }
     user.p('name', 'updateTest2');
     user.p('email', 'updateTest2@email.de');
     user.save(function (err) {
       t.ok(!err, 'There was a redis error in the update test.');
-      if (err) t.done();
+      if (err) {
+        t.done();
+      }
       redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
         t.ok(!err, 'There was a redis error in the update test check.');
-        if (err) t.done();
+        if (err) {
+          t.done();
+        }
         // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
         t.ok(value.name == 'updateTest2', 'The user name was not updated properly');
         t.ok(value.email == 'updateTest2@email.de', 'The user email was not updated properly');
@@ -243,11 +260,11 @@ exports.update = function (t) {
       });
     });
   });
-}
+};
 
 exports.unique = function (t) {
-  var user1 = new UserMockup();
-  var user2 = new UserMockup();
+  var user1 = new UserMockup(),
+  user2 = new UserMockup();
   t.expect(3);
 
   user1.p('name', 'dubplicateTest');
@@ -259,13 +276,15 @@ exports.unique = function (t) {
     redis.get('nohm:uniques:UserMockup:name:dubplicateTest', function (err, value) {
       t.ok(value == user1.id, 'The unique key did not have the correct id');
     });
-    if (err) t.done();
+    if (err) {
+      t.done();
+    }
     user2.save(function (err) {
       t.ok(err, 'A saved unique property was not recognized as a duplicate');
       t.done();
     });
-  })
-}
+  });
+};
 
 exports.__updated = function (t) {
   var user = new UserMockup();
@@ -277,7 +296,7 @@ exports.__updated = function (t) {
     user.p('name', 'hurgelwurz');
     user.p('name', 'test');
     t.ok(user.properties.name.__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
-    
+
     user.remove(function (err) {
       if (err) {
         sys.debug('Error while saving user in __updated.');
@@ -289,4 +308,4 @@ exports.__updated = function (t) {
       t.done();
     });
   });
-}
+};
