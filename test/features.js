@@ -93,8 +93,6 @@ exports.propertySetter = function (t) {
   
   t.ok(user.p('email', null), 'Setting a property without validation did not return `true`.');
 
-  // t.ok(user.p('email') === '', "Setting a string property to null did not cast the value to an empty string."); TODO: reinstate this test :P
-
   user.p('email', 'test@test.de');
   var controlUser = new UserMockup();
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
@@ -250,7 +248,7 @@ exports.update = function (t) {
 exports.unique = function (t) {
   var user1 = new UserMockup();
   var user2 = new UserMockup();
-  t.expect(2);
+  t.expect(3);
 
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
@@ -258,10 +256,37 @@ exports.unique = function (t) {
   user2.p('email', 'dubplicateTest@test.de');
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    redis.get('nohm:uniques:UserMockup:name:dubplicateTest', function (err, value) {
+      t.ok(value == user1.id, 'The unique key did not have the correct id');
+    });
     if (err) t.done();
     user2.save(function (err) {
       t.ok(err, 'A saved unique property was not recognized as a duplicate');
       t.done();
     });
   })
+}
+
+exports.__updated = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+  user.save(function (err) {
+    if (err) {
+      sys.debug('Error while saving user in __updated.');
+    }
+    user.p('name', 'hurgelwurz');
+    user.p('name', 'test');
+    t.ok(user.properties.name.__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
+    
+    user.remove(function (err) {
+      if (err) {
+        sys.debug('Error while saving user in __updated.');
+      }
+      user = new UserMockup();
+      user.p('name', 'hurgelwurz');
+      user.propertyReset();
+      t.ok(user.properties.name.__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
+      t.done();
+    });
+  });
 }
