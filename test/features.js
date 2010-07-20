@@ -44,6 +44,11 @@ var UserMockup = nohm.Model.extend({
         validations: [
           'email'
         ]
+      },
+      country: {
+        type: 'string',
+        value: 'Tibet',
+        index: true
       }
     };
     nohm.Model.call(this);
@@ -172,7 +177,8 @@ exports.allProperties = function (t) {
   should = {
     name: user.p('name'),
     visits: user.p('visits'),
-    email: user.p('email')
+    email: user.p('email'),
+    country: user.p('country')
   }; // yes, this absolutely must be set correct for this test to work. sorry
 
   t.same(should, user.allProperties(), 'Getting all properties failed.');
@@ -282,6 +288,23 @@ exports.unique = function (t) {
     }
     user2.save(function (err) {
       t.ok(err, 'A saved unique property was not recognized as a duplicate');
+      t.done();
+    });
+  });
+};
+
+exports.indexes = function (t) {
+  var user = new UserMockup();
+  t.expect(3);
+
+  user.p('name', 'indexTest');
+  user.p('email', 'indexTest@test.de');
+  user.p('country', 'indexTestCountry');
+  user.save(function (err) {
+    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    redis.sismember('nohm:index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
+      t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+      t.ok(value === 1, 'The index did not have the user as one of its ids.');
       t.done();
     });
   });
