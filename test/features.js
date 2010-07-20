@@ -265,7 +265,7 @@ exports.update = function (t) {
 exports.unique = function (t) {
   var user1 = new UserMockup(),
   user2 = new UserMockup();
-  t.expect(3);
+  t.expect(4);
 
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
@@ -274,6 +274,7 @@ exports.unique = function (t) {
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
     redis.get('nohm:uniques:UserMockup:name:dubplicateTest', function (err, value) {
+      t.ok(user1.id, 'Userid b0rked while checking uniques');
       t.ok(value == user1.id, 'The unique key did not have the correct id');
     });
     if (err) {
