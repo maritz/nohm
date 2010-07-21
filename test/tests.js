@@ -48,6 +48,7 @@ run = function(files){
               redis.keys('nohm:hashes:UserMockup:*', deleteKeys);
               redis.keys('nohm:uniques:UserMockup:*', deleteKeys);
               redis.keys('nohm:index:UserMockup:*', deleteKeys);
+              redis.keys('nohm:scoredindex:UserMockup:*', deleteKeys);
               setTimeout(function () {
                 // timeout here because else the deletes don't go through fast enough and executing the tests again will result in failure.
                 if(assertions.failures){

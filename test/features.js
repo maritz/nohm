@@ -35,6 +35,7 @@ var UserMockup = nohm.Model.extend({
       },
       visits: {
         type: 'counter',
+        index: true,
         stepsize: 2
       },
       email: {
@@ -295,17 +296,37 @@ exports.unique = function (t) {
 
 exports.indexes = function (t) {
   var user = new UserMockup();
-  t.expect(3);
+  t.expect(7);
 
   user.p('name', 'indexTest');
   user.p('email', 'indexTest@test.de');
   user.p('country', 'indexTestCountry');
-  user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+  user.p('visits', 20);
+
+  function checkCountryIndex(callback) {
     redis.sismember('nohm:index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
-      t.ok(value === 1, 'The index did not have the user as one of its ids.');
-      t.done();
+      t.ok(value === 1, 'The country index did not have the user as one of its ids.');
+      callback();
+    });
+  }
+
+  function checkVisitsIndex(callback) {
+    redis.zscore('nohm:scoredindex:UserMockup:visits', user.id, function (err, value) {
+      t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+      t.ok(value === user.p('visits'), 'The visits index did not have the correct score.');
+      redis.sismember('nohm:index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
+        t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+        t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
+        callback();
+      });
+    });
+  }
+
+  user.save(function (err) {
+    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    checkCountryIndex(function () {
+      checkVisitsIndex(t.done);
     });
   });
 };
