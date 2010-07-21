@@ -34,7 +34,7 @@ var UserMockup = nohm.Model.extend({
         ]
       },
       visits: {
-        type: 'counter',
+        type: 'integer',
         index: true,
         stepsize: 2
       },

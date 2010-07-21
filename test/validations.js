@@ -14,6 +14,18 @@ var UserMockup = nohm.Model.extend({
           'notEmpty'
         ]
       },
+      castInteger: {
+        type: 'integer',
+        value: 2
+      },
+      castFloat: {
+        type: 'float',
+        value: 2.5
+      },
+      castTimestamp: {
+        type: 'timestamp',
+        value: 100000
+      },
       minMax: {
         type: 'integer',
         value: 5,
@@ -135,6 +147,88 @@ exports.castString = function (t) {
 
   user.p('name', []);
   t.ok(user.p('name') === '', 'Setting a String to [] did not cast it to an empty string.');
+
+  t.done();
+};
+
+exports.castInteger = function (t) {
+  var user = new UserMockup();
+  t.expect(6);
+
+  user.p('castInteger', '15');
+  t.ok(user.p('castInteger') === 15, 'Setting an Integer to a string "15" did not cast it to 15.');
+
+  user.p('castInteger', '15asd');
+  t.ok(user.p('castInteger') === 15, 'Setting an Integer to a string "15asd" did not cast it to 15.');
+
+  user.p('castInteger', '1.5');
+  t.ok(user.p('castInteger') === 1, 'Setting an Integer to a string "1.5" did not cast it to 1.');
+
+  user.p('castInteger', '0x15');
+  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string "0x1.5" did not cast it to 0.');
+
+  user.p('castInteger', '.5');
+  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string ".5" did not cast it to 0.');
+
+  user.p('castInteger', '0.1e2');
+  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string "0.1e2" did not cast it to 0.');
+
+  t.done();
+};
+
+exports.castFloat = function (t) {
+  var user = new UserMockup();
+  t.expect(6);
+
+  user.p('castFloat', '1.5');
+  t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "1.5" did not cast it to 1.5.');
+
+  user.p('castFloat', '1.5asd');
+  t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "1.5asd" did not cast it to 1.5.');
+
+  user.p('castFloat', '01.5');
+  t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "01.5" did not cast it to 1.5.');
+
+  user.p('castFloat', '0x1.5');
+  t.ok(user.p('castFloat') === 0, 'Setting a Float to a string "0x1.5" did not cast it to 0.');
+
+  user.p('castFloat', '.5');
+  t.ok(user.p('castFloat') === 0.5, 'Setting a Float to a string ".5" did not cast it to 0.5.');
+
+  user.p('castFloat', '0.1e2');
+  t.ok(user.p('castFloat') === 10, 'Setting a Float to a string "0.1e2" did not cast it to 10.');
+
+  t.done();
+};
+
+exports.castTimestamp = function (t) {
+  var user = new UserMockup(),
+  should = new Date('1988-03-12T00:00:00Z').getTime() / 1000;
+  t.expect(8);
+
+  user.p('castTimestamp', should);
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a number should did not cast it to ' + should);
+
+  user.p('castTimestamp', '' + should);
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "should" did not cast it to ' + should);
+
+  user.p('castTimestamp', '1988-03-12T00:00:00Z');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00Z" did not cast it to ' + should);
+
+  user.p('castTimestamp', '1988-03-12T04:30:00+04:30');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00+04:30" did not cast it to ' + should);
+
+  user.p('castTimestamp', '1988-03-11T20:30:00-04:30');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00+04:30" did not cast it to ' + should);
+
+  user.p('castTimestamp', 'Sat, 12 Mar 1988 00:00:00');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "Sat, 12 Mar 1988 00:00:00" did not cast it to ' + should);
+
+  user.p('castTimestamp', '03.12.1988');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "03.12.1988" did not cast it to ' + should);
+
+  user.p('castTimestamp', '03/12/1988');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "03/12/1988" did not cast it to ' + should);
 
   t.done();
 };
