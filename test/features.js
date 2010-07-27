@@ -3,7 +3,7 @@ var sys = require('sys');
 
 exports.checkModules = function (t) {
   var redis, nohm, Class;
-  t.expect(3);
+  t.expect(4);
 
   redis = require('redis-client');
   t.ok(typeof redis.Client === 'function', 'redis-client should be available -- forgot to do "git submodule update --init"?');
@@ -14,6 +14,9 @@ exports.checkModules = function (t) {
   Class = require('class');
   t.ok(typeof Class.Class === 'function', 'Class should be available -- forgot to do "git submodule update --init"?');
 
+  Conduct = require('conductor');
+  t.ok(typeof Conduct === 'function', 'Conductor should be available -- forgot to do "git submodule update --init"?');
+
   t.done();
 };
 
@@ -21,6 +24,7 @@ exports.checkModules = function (t) {
 // real tests start in 3.. 2.. 1.. NOW!
 var redis = require('redis-client').createClient();
 var nohm = require('nohm');
+var Conduct = require('conductor');
 var UserMockup = nohm.Model.extend({
   constructor: function () {
     this.modelName = 'UserMockup';
@@ -212,8 +216,40 @@ exports.create = function (t) {
 };
 
 exports.remove = function (t) {
-  var user = new UserMockup();
-  t.expect(4);
+  var user = new UserMockup(),
+  testExists;
+  t.expect(8);
+  
+  testExists = function (key, callback) {
+    redis.exists(key, function (err, value) {
+        t.ok(!err, 'There was a redis error in the remove test check.');
+        t.ok(value === 0, 'Deleting a user did not work');
+        callback();
+      });
+  }
+  testBattery = Conduct({
+    'hashes': ['_1', function(user, callback) {
+      testExists('nohm:hashes:UserMockup:' + user.id, callback);
+    }],
+    'index': ['_1', function(user, callback) {
+      redis.sismember('nohm:index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
+        t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
+        callback();
+      });
+    }],
+    'scoredindex': ['_1', function(user, callback) {
+      redis.zscore('nohm:scoredindex:UserMockup:visits', user.p('name'), function (err, value) {
+        t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
+        callback();
+      });
+    }],
+    'uniques': ['_1', function(user, callback) {
+      testExists('nohm:uniques:UserMockup:name:' + user.p('name'), callback);
+    }],
+    'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', function () {
+      t.done();
+    }]
+  }, 'done1');
 
   user.p('name', 'deleteTest');
   user.p('email', 'deleteTest@asdasd.de');
@@ -228,11 +264,7 @@ exports.remove = function (t) {
       if (err) {
         t.done();
       }
-      redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
-        t.ok(!err, 'There was a redis error in the remove test check.');
-        t.ok(value === 0, 'Deleting a user did not work');
-        t.done();
-      });
+      testBattery(user);
     });
   });
 };
