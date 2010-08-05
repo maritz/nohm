@@ -204,7 +204,7 @@ exports.create = function (t) {
     if (err) {
       t.done();
     }
-    redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+    redis.hgetall('nohm:hash:UserMockup:' + user.id, function (err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
       // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
       t.ok(value.name == 'createTest', 'The user name was not saved properly');
@@ -229,7 +229,7 @@ exports.remove = function (t) {
   }
   testBattery = Conduct({
     'hashes': ['_1', function(user, callback) {
-      testExists('nohm:hashes:UserMockup:' + user.id, callback);
+      testExists('nohm:hash:UserMockup:' + user.id, callback);
     }],
     'index': ['_1', function(user, callback) {
       redis.sismember('nohm:index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
@@ -246,9 +246,7 @@ exports.remove = function (t) {
     'uniques': ['_1', function(user, callback) {
       testExists('nohm:uniques:UserMockup:name:' + user.p('name'), callback);
     }],
-    'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', function () {
-      t.done();
-    }]
+    'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', t.done]
   }, 'done1');
 
   user.p('name', 'deleteTest');
@@ -287,7 +285,7 @@ exports.update = function (t) {
       if (err) {
         t.done();
       }
-      redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+      redis.hgetall('nohm:hash:UserMockup:' + user.id, function (err, value) {
         t.ok(!err, 'There was a redis error in the update test check.');
         if (err) {
           t.done();

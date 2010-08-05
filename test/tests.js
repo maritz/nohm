@@ -36,41 +36,35 @@ run = function(files){
         },
         done: function(assertions){
             var redis = require('redis-client').createClient();
-            redis.del('nohm:ids:UserMockup', function () {
-              var deleteKeys = function (err, keys) {
-                if (!keys || keys.length == 0) {
-                  return false;
-                }
-                for(var i = 0, len = keys.length; i < len; i++) {
-                  redis.del(keys[i]);
-                }
-              };
-              redis.keys('nohm:hashes:UserMockup:*', deleteKeys);
-              redis.keys('nohm:uniques:UserMockup:*', deleteKeys);
-              redis.keys('nohm:index:UserMockup:*', deleteKeys);
-              redis.keys('nohm:scoredindex:UserMockup:*', deleteKeys);
-              setTimeout(function () {
-                // timeout here because else the deletes don't go through fast enough and executing the tests again will result in failure.
-                if(assertions.failures){
-                  sys.puts(
-                      '\n' + bold(red('FAILURES: ')) + assertions.failures +
-                      '/' + assertions.length + ' assertions failed (' +
-                      assertions.duration + 'ms)'
-                  );
-                  process.exit(1);
-                }
-                else {
-                    sys.puts(
-                        '\n' + bold(green('OK: ')) + assertions.length +
-                        ' assertions (' + assertions.duration + 'ms)'
-                    );
-                  process.exit(0);
-                }
-              }, 500);
+            redis.keys('nohm:*', function (err, keys) {
+              if (!keys || keys.length == 0) {
+                return false;
+              }
+              for(var i = 0, len = keys.length, k = 0; i < len; i++) {
+                redis.del(keys[i], function () {
+                  k = k+1;
+                  if (k === len) {
+                    if (assertions.failures) {
+                      sys.puts(
+                        '\n' + bold(red('FAILURES: ')) + assertions.failures +
+                        '/' + assertions.length + ' assertions failed (' +
+                        assertions.duration + 'ms)'
+                      );
+                      process.exit(1);
+                    } else {
+                        sys.puts(
+                            '\n' + bold(green('OK: ')) + assertions.length +
+                            ' assertions (' + assertions.duration + 'ms)'
+                          );
+                        process.exit(0);
+                    }
+                  }
+                });
+              }
             });
         }
     });
 };
 
 process.chdir(__dirname);
-run(['features.js', 'validations.js']);
+run(['features.js', 'validations.js', 'relations.js']);
