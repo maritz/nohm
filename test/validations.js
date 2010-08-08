@@ -250,21 +250,12 @@ exports.setterValidation = function (t) {
 
 exports.notEmpty = function (t) {
   var user = new UserMockup();
-  t.expect(5);
+  t.expect(2);
 
   t.ok(user.valid('name'), 'Notempty field `name` was valid but not accepted.');
 
   user.p('name', '');
   t.ok(!user.valid('name'), 'Notempty field `name` was accepted as an empty string.');
-
-  user.p('name', null); // TODO: this is obsolete once typecasting to string is implemented, since null is cast to ''
-  t.ok(!user.valid('name'), 'Notempty field `name` was accepted with value null.');
-
-  user.p('name', false); // TODO: this is obsolete once typecasting to string is implemented, since false is cast to ''
-  t.ok(!user.valid('name'), 'Notempty field `name` was accepted with value false.');
-
-  user.p('name', true); // TODO: this is obsolete once typecasting to string is implemented, since true is cast to ''
-  t.ok(!user.valid('name'), 'Notempty field `name` was accepted with value true.');
 
   t.done();
 };

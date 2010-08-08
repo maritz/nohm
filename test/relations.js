@@ -50,14 +50,16 @@ var RoleMockup = nohm.Model.extend({
 });
 
 
-var user = new UserMockup(),
-role = new RoleMockup();
-
-user.save(function (err) {
-  if (!err) {
-    user.link(role);
-    user.unlink(role);
-  }
-});
-
-// haha, no tests yet :P
+exports.linkWithoutSaving = function (t) {
+  var user = new UserMockup(),
+  role = new RoleMockup();
+  t.expect(0);
+  
+  user.save(function (err) {
+    if (!err) {
+      user.link(role);
+      user.unlink(role);
+      t.done();
+    }
+  });
+};
