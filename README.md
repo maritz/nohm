@@ -1,5 +1,7 @@
-
 # Nohm
+
+Sorry, I give up for now. It's taking too much of my limited motivation (err, time! I MEANT TIME!). I'll just use mongodb and mongoose for now. If there is serious interest in nohm I might reconsider continuing this. (hint)
+
 
 ## Description
 
