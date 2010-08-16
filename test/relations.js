@@ -1,12 +1,20 @@
 "use strict";
 var sys = require('sys');
 
+var prefix = 'nohm';
+
+process.argv.forEach(function (val, index) {
+  if (val === '--nohm-prefix') {
+    prefix = process.argv[index + 1];
+  }
+});
+var relationsprefix = prefix + ':relations:';
 
 var redis = require('redis-client').createClient();
 var nohm = require('nohm');
-var UserMockup = nohm.Model.extend({
+var UserLinkMockup = nohm.Model.extend({
   constructor: function () {
-    this.modelName = 'UserMockup';
+    this.modelName = 'UserLinkMockup';
     this.properties = {
       name: {
         type: 'string',
@@ -21,9 +29,9 @@ var UserMockup = nohm.Model.extend({
   }
 });
 
-var CommentMockup = nohm.Model.extend({
+var CommentLinkMockup = nohm.Model.extend({
   constructor: function () {
-    this.modelName = 'CommentMockup';
+    this.modelName = 'CommentLinkMockup';
     this.properties = {
       text: {
         type: 'string',
@@ -37,9 +45,9 @@ var CommentMockup = nohm.Model.extend({
   }
 });
 
-var RoleMockup = nohm.Model.extend({
+var RoleLinkMockup = nohm.Model.extend({
   constructor: function () {
-    this.modelName = 'RoleMockup';
+    this.modelName = 'RoleLinkMockup';
     this.properties = {
       name: {
         type: 'string',
@@ -51,14 +59,44 @@ var RoleMockup = nohm.Model.extend({
 
 
 exports.linkWithoutSaving = function (t) {
-  var user = new UserMockup(),
-  role = new RoleMockup();
-  t.expect(0);
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  linkCallbackCalled = false;
+  t.expect(10);
+  
+  user.link(role, function (action, on, name, obj) {
+    linkCallbackCalled = true;
+    t.ok(action === 'link', 'The argument "action" given to the link callback are not correct');
+    t.ok(on === 'UserLinkMockup', 'The argument "on" given to the link callback are not correct');
+    t.ok(name === 'child', 'The argument "name" given to the link callback are not correct');
+    t.ok(obj === role, 'The argument "obj" given to the link callback are not correct');
+  });
   
   user.save(function (err) {
     if (!err) {
-      user.link(role);
-      user.unlink(role);
+      t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
+      redis.keys('*:relations:*', function (err, values) {
+        var args = [],
+        key,
+        firstDone = false,
+        keyCheck = function (err, members) {
+          t.ok(members.length === 1, 'The set of a relationship does not have exactly one relationship entry');
+          t.ok(members[0].toString() === '1', 'The set of a relationship contained a wrong member');
+          if (firstDone === true) {
+            t.done();
+          } else {
+            firstDone = true;
+          }
+        };
+        if (!err) {
+          t.ok(values.length === 2, 'Linking an object did not create the correct number of keys.');
+          redis.smembers(values[0].toString(), keyCheck);
+          redis.smembers(values[1].toString(), keyCheck);
+        } else {
+          t.done();
+        }
+      });
+    } else {
       t.done();
     }
   });
