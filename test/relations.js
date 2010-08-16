@@ -58,7 +58,7 @@ var RoleLinkMockup = nohm.Model.extend({
 });
 
 
-exports.linkWithoutSaving = function (t) {
+exports.link = function (t) {
   var user = new UserLinkMockup(),
   role = new RoleLinkMockup(),
   linkCallbackCalled = false;
@@ -97,6 +97,39 @@ exports.linkWithoutSaving = function (t) {
         }
       });
     } else {
+      t.done();
+    }
+  });
+};
+
+exports.unlink = function (t) {
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  unlinkCallbackCalled = false;
+  t.expect(6);
+  
+  user.id = 1;
+  role.id = 1;
+  
+  user.unlink(role, function (action, on, name, obj) {
+    unlinkCallbackCalled = true;
+    t.ok(action === 'unlink', 'The argument "action" given to the unlink callback are not correct');
+    t.ok(on === 'UserLinkMockup', 'The argument "on" given to the unlink callback are not correct');
+    t.ok(name === 'child', 'The argument "name" given to the unlink callback are not correct');
+    t.ok(obj === role, 'The argument "obj" given to the unlink callback are not correct');
+  });
+  
+  user.save(function (err) {
+    if (!err) {
+      t.ok(unlinkCallbackCalled, 'The provided callback for unlinking was not called.');
+      redis.keys('*:relations:*', function (err, values) {
+        if (!err) {
+          t.ok(values === null, 'Unlinking an object did not delete keys.');
+        }
+        t.done();
+      });
+    } else {
+      console.dir(err);
       t.done();
     }
   });
