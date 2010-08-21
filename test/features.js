@@ -2,8 +2,8 @@
 var sys = require('sys');
 
 exports.checkModules = function (t) {
-  var redis, nohm, Class;
-  t.expect(3);
+  var redis, nohm, Class, Conduct;
+  t.expect(4);
 
   redis = require('redis-client');
   t.ok(typeof redis.Client === 'function', 'redis-client should be available -- forgot to do "git submodule update --init"?');
@@ -14,13 +14,24 @@ exports.checkModules = function (t) {
   Class = require('class');
   t.ok(typeof Class.Class === 'function', 'Class should be available -- forgot to do "git submodule update --init"?');
 
+  Conduct = require('conductor');
+  t.ok(typeof Conduct === 'function', 'Conductor should be available -- forgot to do "git submodule update --init"?');
+
   t.done();
 };
 
+var prefix = 'nohm';
+
+process.argv.forEach(function (val, index) {
+  if (val === '--nohm-prefix') {
+    prefix = process.argv[index + 1];
+  }
+});
 
 // real tests start in 3.. 2.. 1.. NOW!
 var redis = require('redis-client').createClient();
 var nohm = require('nohm');
+var Conduct = require('conductor');
 var UserMockup = nohm.Model.extend({
   constructor: function () {
     this.modelName = 'UserMockup';
@@ -58,8 +69,8 @@ var UserMockup = nohm.Model.extend({
 
 exports.redisClean = function (t) {
   t.expect(1);
-  redis.keys('nohm:*:UserMockup:*', function (err, value) {
-    t.ok(value === null, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS nohm:*:UserMockup:*" to see what keys could be the cause.');
+  redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
+    t.ok(value === null, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS nohm:*:*Mockup:*" to see what keys could be the cause.');
     t.done();
   });
 };
@@ -200,20 +211,50 @@ exports.create = function (t) {
     if (err) {
       t.done();
     }
-    redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+    redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
-      // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
-      t.ok(value.name == 'createTest', 'The user name was not saved properly');
-      t.ok(value.visits == '0', 'The user visits were not saved properly');
-      t.ok(value.email == 'createTest@asdasd.de', 'The user email was not saved properly');
+      t.ok(value.name.toString() === 'createTest', 'The user name was not saved properly');
+      t.ok(value.visits.toString() === '0', 'The user visits were not saved properly');
+      t.ok(value.email.toString() === 'createTest@asdasd.de', 'The user email was not saved properly');
       t.done();
     });
   });
 };
 
 exports.remove = function (t) {
-  var user = new UserMockup();
-  t.expect(4);
+  var user = new UserMockup(),
+  testExists,
+  testBattery;
+  t.expect(8);
+  
+  testExists = function (key, callback) {
+    redis.exists(key, function (err, value) {
+        t.ok(!err, 'There was a redis error in the remove test check.');
+        t.ok(value === 0, 'Deleting a user did not work');
+        callback();
+      });
+  };
+  testBattery = new Conduct({
+    'hashes': ['_1', function (user, callback) {
+      testExists(prefix + ':hash:UserMockup:' + user.id, callback);
+    }],
+    'index': ['_1', function (user, callback) {
+      redis.sismember(prefix + ':index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
+        t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
+        callback();
+      });
+    }],
+    'scoredindex': ['_1', function (user, callback) {
+      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.p('name'), function (err, value) {
+        t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
+        callback();
+      });
+    }],
+    'uniques': ['_1', function (user, callback) {
+      testExists(prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
+    }],
+    'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', t.done]
+  }, 'done1');
 
   user.p('name', 'deleteTest');
   user.p('email', 'deleteTest@asdasd.de');
@@ -228,11 +269,7 @@ exports.remove = function (t) {
       if (err) {
         t.done();
       }
-      redis.exists('nohm:hashes:UserMockup:' + id, function (err, value) {
-        t.ok(!err, 'There was a redis error in the remove test check.');
-        t.ok(value === 0, 'Deleting a user did not work');
-        t.done();
-      });
+      testBattery(user);
     });
   });
 };
@@ -255,14 +292,13 @@ exports.update = function (t) {
       if (err) {
         t.done();
       }
-      redis.hgetall('nohm:hashes:UserMockup:' + user.id, function (err, value) {
+      redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
         t.ok(!err, 'There was a redis error in the update test check.');
         if (err) {
           t.done();
         }
-        // using == here because value.x are actually buffers. other option would be value.x.toString() === 'something'
-        t.ok(value.name == 'updateTest2', 'The user name was not updated properly');
-        t.ok(value.email == 'updateTest2@email.de', 'The user email was not updated properly');
+        t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
+        t.ok(value.email.toString() === 'updateTest2@email.de', 'The user email was not updated properly');
         t.done();
       });
     });
@@ -272,7 +308,7 @@ exports.update = function (t) {
 exports.unique = function (t) {
   var user1 = new UserMockup(),
   user2 = new UserMockup();
-  t.expect(4);
+  t.expect(5);
 
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
@@ -280,17 +316,20 @@ exports.unique = function (t) {
   user2.p('email', 'dubplicateTest@test.de');
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
-    redis.get('nohm:uniques:UserMockup:name:dubplicateTest', function (err, value) {
+    redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
       t.ok(user1.id, 'Userid b0rked while checking uniques');
-      t.ok(value == user1.id, 'The unique key did not have the correct id');
+      t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id');
+      user2.valid(false, false, function (valid) {
+        t.ok(valid, 'A unique property was not recognized as a duplicate');
+        user2.save(function (err) {
+          t.ok(err, 'A saved unique property was not recognized as a duplicate');
+          t.done();
+        });
+      });
     });
     if (err) {
       t.done();
     }
-    user2.save(function (err) {
-      t.ok(err, 'A saved unique property was not recognized as a duplicate');
-      t.done();
-    });
   });
 };
 
@@ -304,7 +343,7 @@ exports.indexes = function (t) {
   user.p('visits', 20);
 
   function checkCountryIndex(callback) {
-    redis.sismember('nohm:index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
+    redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
       t.ok(value === 1, 'The country index did not have the user as one of its ids.');
       callback();
@@ -312,10 +351,10 @@ exports.indexes = function (t) {
   }
 
   function checkVisitsIndex(callback) {
-    redis.zscore('nohm:scoredindex:UserMockup:visits', user.id, function (err, value) {
+    redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
       t.ok(value === user.p('visits'), 'The visits index did not have the correct score.');
-      redis.sismember('nohm:index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
+      redis.sismember(prefix + ':index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
         t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
         t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
         callback();
