@@ -89,13 +89,7 @@ exports.propertyGetter = function (t) {
 
   t.ok(user.p('name') === 'test', 'Property getter did not return the correct value for name.');
 
-  exceptionThrown = false;
-  try {
-    user.p('hurgelwurz');
-  } catch (e) {
-    exceptionThrown = true;
-  }
-  t.ok(exceptionThrown, 'Accessing an undefined property did not throw an exception.');
+  t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
 
   t.done();
 };

@@ -82,7 +82,7 @@ exports.link = function (t) {
   role2 = new RoleLinkMockup(),
   linkCallbackCalled = false,
   linkCallbackCalled2 = false;
-  t.expect(11);
+  t.expect(9);
 
   user.link(role, function (action, on, name, obj) {
     linkCallbackCalled = true;
@@ -102,12 +102,11 @@ exports.link = function (t) {
     if (!err) {
       t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
       t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
-      redis.keys(prefix + '*:relations:*', function (err, values) {
+      redis.keys(relationsprefix + '*', function (err, values) {
         var args = [],
         key,
         firstDone = false,
         keyCheck = function (err, members) {
-          t.equals(members.length, 1, 'The set of a relationship does not have exactly one relationship entry');
           t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
           if (firstDone === true) {
             t.done();

@@ -26,6 +26,12 @@ var UserMockup = nohm.Model.extend({
         type: 'timestamp',
         value: 100000
       },
+      behaviour: {
+        type: function incrby(value) {
+          return this.p('behaviour') + value;
+        },
+        value: 1
+      },
       minMax: {
         type: 'integer',
         value: 5,
@@ -230,6 +236,16 @@ exports.castTimestamp = function (t) {
   user.p('castTimestamp', '03/12/1988');
   t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "03/12/1988" did not cast it to ' + should);
 
+  t.done();
+};
+
+exports.behaviours = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+  
+  user.p('behaviour', 5);
+  t.equals(user.p('behaviour'), 6, 'Using the behaviour did not work correctly');
+  
   t.done();
 };
 
