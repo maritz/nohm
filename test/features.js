@@ -46,8 +46,7 @@ var UserMockup = nohm.Model.extend({
       },
       visits: {
         type: 'integer',
-        index: true,
-        stepsize: 2
+        index: true
       },
       email: {
         type: 'string',
@@ -226,17 +225,17 @@ exports.remove = function (t) {
   testExists,
   testBattery;
   t.expect(8);
-  
-  testExists = function (key, callback) {
+
+  testExists = function (what, key, callback) {
     redis.exists(key, function (err, value) {
         t.ok(!err, 'There was a redis error in the remove test check.');
-        t.ok(value === 0, 'Deleting a user did not work');
+        t.ok(value === 0, 'Deleting a user did not work: ' + what);
         callback();
       });
   };
   testBattery = new Conduct({
     'hashes': ['_1', function (user, callback) {
-      testExists(prefix + ':hash:UserMockup:' + user.id, callback);
+      testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
     }],
     'index': ['_1', function (user, callback) {
       redis.sismember(prefix + ':index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
@@ -251,7 +250,7 @@ exports.remove = function (t) {
       });
     }],
     'uniques': ['_1', function (user, callback) {
-      testExists(prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
+      testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
     }],
     'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', t.done]
   }, 'done1');

@@ -1,13 +1,12 @@
 require.paths.unshift(__dirname); //tests
-require.paths.unshift('../lib'); // nohm itself
-require.paths.unshift('./lib/redis-node/lib'); // redis-node client lib
-require.paths.unshift('../lib/redis-node/lib'); // redis-node client lib
-require.paths.unshift('../lib/class/lib'); // class system
-require.paths.unshift('../lib/conductor/lib'); // class system
+require.paths.unshift(__dirname + '/../lib'); // nohm itself
+require.paths.unshift(__dirname + '/../lib/redis-node-multi/lib'); // redis-node client lib
+require.paths.unshift(__dirname + '/../lib/class/lib'); // class system
+require.paths.unshift(__dirname + '/../lib/conductor/lib'); // class system
 
 var nodeunit = require('nodeunit')
     , sys = require('sys');
-    
+
 
 // testrunner copied from nodeunit and edited a little
 run = function(files){

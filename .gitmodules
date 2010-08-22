@@ -10,3 +10,6 @@
 [submodule "lib/conductor"]
 	path = lib/conductor
 	url = git://github.com/creationix/conductor.git
+[submodule "lib/redis-node-multi"]
+	path = lib/redis-node-multi
+	url = git://github.com/spahl/redis-node-client.git
