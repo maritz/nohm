@@ -65,7 +65,7 @@ process.argv.forEach(function (val, index) {
 
 var runner = function () {
     process.chdir(__dirname);
-    run(['features.js', 'validations.js', 'relations.js']);
+    run(['features.js', 'validations.js', 'relations.js', 'find.js']);
 }
 
 var redis = require('redis-client').createClient();

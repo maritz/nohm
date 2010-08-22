@@ -98,18 +98,25 @@ exports.propertyGetter = function (t) {
 exports.propertySetter = function (t) {
   var user = new UserMockup(),
   result,
-  controlUser;
-  t.expect(4);
+  controlUser = new UserMockup();
+  t.expect(6);
 
   t.ok(user.p('email', 'asdasd'), 'Setting a property without validation did not return `true`.');
 
-  t.ok(user.p('email') === 'asdasd', 'Setting a property did not actually set the property to the correct value');
+  t.equals(user.p('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
 
   t.ok(user.p('email', null), 'Setting a property without validation did not return `true`.');
 
   user.p('email', 'test@test.de');
-  controlUser = new UserMockup();
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
+  
+  user.p({
+    name: 'objectTest',
+    email: 'object@test.de'
+  });
+  
+  t.equals(user.p('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
+  t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
 
   t.done();
 };
