@@ -158,7 +158,7 @@ exports.unlink = function (t) {
     if (!err) {
       t.ok(unlinkCallbackCalled, 'The provided callback for unlinking was not called.');
       t.ok(unlinkCallbackCalled2, 'The provided callback for the second(!) unlinking was not called.');
-      redis.keys('*:relations:*', function (err, values) {
+      redis.keys(relationsprefix + '*', function (err, values) {
         if (!err) {
           t.equals(values, null, 'Unlinking an object did not delete keys.');
         }

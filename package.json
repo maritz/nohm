@@ -1,8 +1,13 @@
 {
-  name: "nohm",
-  version: "0.1.0",
-  engines: { "node" : ">=0.2.0" },
-  author: "Moritz Peters",
-  directories: {lib: ".lib"},
-  main: "./lib/nohm"
+    "name": "nohm",
+    "version": "0.1.0",
+    "engines": {
+        "node" : ">=0.2.0" 
+    },
+    "author": "Moritz Peters",
+    "directories": {
+        "lib": "./lib"
+    },
+    "description": "redis ORM (Object relational mapper)",
+    "main": "./lib/nohm"
 }

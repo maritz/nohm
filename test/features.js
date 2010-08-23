@@ -93,6 +93,7 @@ exports.propertyGetter = function (t) {
 
   t.equals(user.p('name'), 'test', 'Property getter did not return the correct value for name.');
 
+  console.log('Note: there should be an error message in the next line. (intended behaviour)');
   t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
 
   t.same(user.p('json'), {}, 'Property getter did not return the correct value for json.');
