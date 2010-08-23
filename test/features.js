@@ -60,6 +60,10 @@ var UserMockup = nohm.Model.extend({
         type: 'string',
         value: 'Tibet',
         index: true
+      },
+      json: {
+        type: 'json',
+        value: {}
       }
     };
     nohm.Model.call(this);
@@ -77,19 +81,21 @@ exports.redisClean = function (t) {
 exports.propertyGetter = function (t) {
   var user = new UserMockup(),
   exceptionThrown;
-  t.expect(6);
+  t.expect(7);
 
-  t.ok(typeof user.p === 'function', 'Property getter short p is not available.');
+  t.equals(typeof(user.p), 'function', 'Property getter short p is not available.');
 
-  t.ok(typeof user.prop === 'function', 'Property getter short prop is not available.');
+  t.equals(typeof(user.prop), 'function', 'Property getter short prop is not available.');
 
-  t.ok(typeof user.property === 'function', 'Property getter is not available.');
+  t.equals(typeof(user.property), 'function', 'Property getter is not available.');
 
-  t.ok(user.p('email') === 'email@email.de', 'Property getter did not return the correct value for email.');
+  t.equals(user.p('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
 
-  t.ok(user.p('name') === 'test', 'Property getter did not return the correct value for name.');
+  t.equals(user.p('name'), 'test', 'Property getter did not return the correct value for name.');
 
   t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
+
+  t.same(user.p('json'), {}, 'Property getter did not return the correct value for json.');
 
   t.done();
 };
@@ -99,7 +105,7 @@ exports.propertySetter = function (t) {
   var user = new UserMockup(),
   result,
   controlUser = new UserMockup();
-  t.expect(6);
+  t.expect(7);
 
   t.ok(user.p('email', 'asdasd'), 'Setting a property without validation did not return `true`.');
 
@@ -109,14 +115,22 @@ exports.propertySetter = function (t) {
 
   user.p('email', 'test@test.de');
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
-  
+
   user.p({
     name: 'objectTest',
     email: 'object@test.de'
   });
-  
+
   t.equals(user.p('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
   t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
+
+  user.p('json', {
+    test: function () {
+      t.ok(true, 'Yep...');
+    }
+  });
+
+  user.p('json').test();
 
   t.done();
 };
@@ -190,7 +204,8 @@ exports.allProperties = function (t) {
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email'),
-    country: user.p('country')
+    country: user.p('country'),
+    json: {}
   }; // yes, this absolutely must be set correct for this test to work. sorry
 
   t.same(should, user.allProperties(), 'Getting all properties failed.');
