@@ -47,10 +47,29 @@ var RoleFindMockup = nohm.Model.extend({
   }
 });
 
-exports.findByUnique = function (t) {
+exports.load = function (t) {
   var user = new UserFindMockup(),
   findUser = new UserFindMockup();
-  t.expect(0);
+  t.expect(2);
   
-  t.done();
+  user.p({
+    name: 'hurgelwurz',
+    email: 'hurgelwurz@hurgel.de'
+  });
+  
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    findUser.load(user.id, function (err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
+      t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
+      t.done();
+    });
+  });
 };
