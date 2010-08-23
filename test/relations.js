@@ -280,3 +280,28 @@ exports.has = function (t) {
     });
   });
 };
+
+exports.getAll = function (t) {
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  role2 = new RoleLinkMockup();
+  t.expect(1);
+
+  user.link(role);
+  user.link(role2);
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    user.getAll(role.modelName, function (err, values) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      t.same(values, [role.id, role2.id], 'The link was not detected correctly by has()');
+      t.done();
+    });
+  });
+};
