@@ -16,10 +16,11 @@ Early in development.
   - validation
   - and some other small stuff
   - relations (except retrieving/finding)
+  - retrieving by id
+  - finding ids by index/unique
 
 ### What does not yet work:
 
-  - retrieving/finding of objects
   - probably some other things
   - double-metaphone text search
 
