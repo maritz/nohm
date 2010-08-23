@@ -15,7 +15,7 @@ Early in development.
   - Creating/updating/removing (including indexes, uniques and sorted indexes)
   - validation
   - and some other small stuff
-  - relations (except retrieving/finding)
+  - relations
   - retrieving by id
   - finding ids by index/unique
 
