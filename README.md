@@ -6,6 +6,16 @@ Nohm is an object relational mapper (ORM) written for node.js and redis.
 
 It was originally thought to be a node.js implementation of [ohm](http://ohm.keyvalue.org/ "Ruby ORM for redis") but gradually slided away from that approach.
 
+## Install
+### If you haven't done this yet: install npm 
+
+    curl http://npmjs.org/install.sh | sh
+
+### Installing nohm
+
+    npm install nohm
+
+
 ## Status
 
 Early in development.
