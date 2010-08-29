@@ -202,6 +202,7 @@ exports.allProperties = function (t) {
   user.p('name', 'hurgelwurz');
   user.p('email', 'hurgelwurz@test.de');
   should = {
+    id: user.id,
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email'),
@@ -324,7 +325,7 @@ exports.update = function (t) {
 exports.unique = function (t) {
   var user1 = new UserMockup(),
   user2 = new UserMockup();
-  t.expect(5);
+  t.expect(7);
 
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
@@ -339,7 +340,11 @@ exports.unique = function (t) {
         t.ok(valid, 'A unique property was not recognized as a duplicate');
         user2.save(function (err) {
           t.ok(err, 'A saved unique property was not recognized as a duplicate');
-          t.done();
+          redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
+            t.ok(!err, 'There was an unexpected probllem: ' + sys.inspect(err));
+            t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+            t.done();
+          });
         });
       });
     });
