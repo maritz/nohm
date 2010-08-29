@@ -202,16 +202,16 @@ exports.allProperties = function (t) {
   user.p('name', 'hurgelwurz');
   user.p('email', 'hurgelwurz@test.de');
   should = {
-    id: user.id,
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email'),
     country: user.p('country'),
-    json: {}
+    json: {},
+    id: user.id
   }; // yes, this absolutely must be set correct for this test to work. sorry
 
   t.same(should, user.allProperties(), 'Getting all properties failed.');
-
+  
   t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
   t.done();
