@@ -66,7 +66,7 @@ var RoleFindMockup = nohm.Model.extend({
 exports.load = function (t) {
   var user = new UserFindMockup(),
   findUser = new UserFindMockup();
-  t.expect(3);
+  t.expect(4);
 
   user.p({
     name: 'hurgelwurz',
@@ -91,6 +91,7 @@ exports.load = function (t) {
       t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
       t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
       user.p('json').test();
+      t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
       t.done();
     });
   });
