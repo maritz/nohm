@@ -300,7 +300,32 @@ exports.getAll = function (t) {
         console.dir(err);
         t.done();
       }
-      t.same(values, [role.id, role2.id], 'The link was not detected correctly by has()');
+      t.same(values, [role.id, role2.id], 'getAll() did not return the correct array');
+      t.done();
+    });
+  });
+};
+
+exports.numLinks = function (t) {
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  role2 = new RoleLinkMockup();
+  t.expect(1);
+
+  user.link(role);
+  user.link(role2);
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    user.numLinks(role.modelName, function (err, value) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      t.same(value, 2, 'The number of links was not returned correctly');
       t.done();
     });
   });
