@@ -25,6 +25,11 @@ var UserLinkMockup = nohm.Model.extend({
         ]
       }
     };
+    this.cascades = {
+      remove: {
+        'RoleLinkMockup': ['child']
+      }
+    };
     nohm.Model.call(this);
   }
 });
@@ -52,6 +57,11 @@ var RoleLinkMockup = nohm.Model.extend({
       name: {
         type: 'string',
         value: 'user'
+      }
+    };
+    this.cascades = {
+      remove: {
+        'CommentLinkMockup': ['child']
       }
     };
     nohm.Model.call(this);
@@ -327,6 +337,35 @@ exports.numLinks = function (t) {
       }
       t.same(value, 2, 'The number of links was not returned correctly');
       t.done();
+    });
+  });
+};
+
+exports.cascadingDeletes = function (t) {
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  comment = new CommentLinkMockup(),
+  testComment = new CommentLinkMockup();
+  t.expect(1);
+
+  user.link(role);
+  role.link(comment);
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    var testid = comment.id;
+    user.remove(function (err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      testComment.load(testid, function (err) {
+        t.equals(err, 'not found', 'Removing an object that has cascading deletes did not remove the relations');
+        t.done();
+      });
     });
   });
 };

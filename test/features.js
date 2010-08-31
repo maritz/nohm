@@ -245,7 +245,7 @@ exports.remove = function (t) {
   var user = new UserMockup(),
   testExists,
   testBattery;
-  t.expect(8);
+  t.expect(9);
 
   testExists = function (what, key, callback) {
     redis.exists(key, function (err, value) {
@@ -289,6 +289,7 @@ exports.remove = function (t) {
       if (err) {
         t.done();
       }
+      t.equals(user.id, null, 'Removing an object from the db did not set the id to null');
       testBattery(user);
     });
   });
