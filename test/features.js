@@ -289,7 +289,8 @@ exports.remove = function (t) {
       if (err) {
         t.done();
       }
-      t.equals(user.id, null, 'Removing an object from the db did not set the id to null');
+      t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
+      user.id = id; // the other tests need it back. :D
       testBattery(user);
     });
   });
