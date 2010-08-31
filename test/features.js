@@ -59,7 +59,10 @@ var UserMockup = nohm.Model.extend({
       country: {
         type: 'string',
         value: 'Tibet',
-        index: true
+        index: true,
+        validations: [
+          'notEmpty'
+        ]
       },
       json: {
         type: 'json',
@@ -325,25 +328,28 @@ exports.update = function (t) {
 exports.unique = function (t) {
   var user1 = new UserMockup(),
   user2 = new UserMockup();
-  t.expect(7);
+  t.expect(8);
 
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
   user2.p('name', 'dubplicateTest');
-  user2.p('email', 'dubplicateTest@test.de');
+  user2.p('email', 'dubbplicateTest@test.de');
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
     redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
       t.ok(user1.id, 'Userid b0rked while checking uniques');
-      t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id');
+      t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
       user2.valid(false, false, function (valid) {
-        t.ok(valid, 'A unique property was not recognized as a duplicate');
+        t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
         user2.save(function (err) {
-          t.ok(err, 'A saved unique property was not recognized as a duplicate');
-          redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
-            t.ok(!err, 'There was an unexpected probllem: ' + sys.inspect(err));
-            t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
-            t.done();
+          t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+          redis.exists(prefix + ':uniques:UserMockup:email:dubbplicateTest@test.de', function (err, value) {
+            t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
+            redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
+              t.ok(!err, 'There was an unexpected probllem: ' + sys.inspect(err));
+              t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+              t.done();
+            });
           });
         });
       });
@@ -351,6 +357,25 @@ exports.unique = function (t) {
     if (err) {
       t.done();
     }
+  });
+};
+
+exports.uniqueDeletion = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+
+  user.p({
+    'name': 'dubplicateDeletionTest',
+    'email': 'dubplicateDeletionTest@test.de',
+    'country': ''
+  });
+  
+  user.save(function (err) {
+    t.ok(err, 'The invalid property country did not trigger a failure.');
+    redis.exists(prefix + ':uniques:UserMockup:name:dubplicateDeletionTest', function (err, value) {
+      t.equals(value, 0, 'The tmp unique key was not deleted if a non-unique saving failure occured.');
+      t.done();
+    });
   });
 };
 
