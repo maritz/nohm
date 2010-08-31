@@ -340,7 +340,9 @@ exports.numLinks = function (t) {
     });
   });
 };
-
+ 
+/* Maybe this isn't such a good idea. I like that model definitions are completely
+   lacking relation definitions.
 exports.cascadingDeletes = function (t) {
   var user = new UserLinkMockup(),
   role = new RoleLinkMockup(),
@@ -368,4 +370,4 @@ exports.cascadingDeletes = function (t) {
       });
     });
   });
-};
+};*/
