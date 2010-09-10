@@ -222,45 +222,40 @@ exports.removeUnlinks = function (t) {
   role = new RoleLinkMockup(),
   role2 = new RoleLinkMockup(),
   comment = new CommentLinkMockup();
-  t.expect(3);
+  t.expect(9);
 
   user.link(role);
-  user.link(role2);
   user.link(comment);
-
-  user.save(function (err) {
+  role2.link(user);
+  
+  role2.save(function (err) {
     if (err) {
       console.dir(err);
       t.done();
     }
+    var tmpid = user.id;
     user.remove(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
+      t.ok(!err, 'An unexpected redis error occured.');
       redis.exists(relationsprefix + user.modelName + ':child:' +
-        role.modelName + ':' + user.id, function (err, value) {
-          if (err) {
-            console.dir(err);
-            t.done();
-          }
+        role.modelName + ':' + tmpid, function (err, value) {
+          t.ok(!err, 'An unexpected redis error occured.');
           t.equals(value, 0, 'The link to the child role was not deleted');
           redis.exists(relationsprefix + user.modelName + ':child:' +
-            comment.modelName + ':' + user.id, function (err, value) {
-              if (err) {
-                console.dir(err);
-                t.done();
-              }
+            comment.modelName + ':' + tmpid, function (err, value) {
+              t.ok(!err, 'An unexpected redis error occured.');
               t.equals(value, 0, 'The link to the child comment was not deleted');
               redis.sismember(relationsprefix + comment.modelName + ':parent:' +
-                user.modelName + ':' + comment.id, user.id,
+                user.modelName + ':' + comment.id, tmpid,
                 function (err, value) {
-                  if (err) {
-                    console.dir(err);
-                    t.done();
-                  }
-                  t.equals(value, 0, 'The link to the child comment was not deleted');
-                  t.done();
+                  t.ok(!err, 'An unexpected redis error occured.');
+                  t.equals(value, 0, 'The link to the comment parent was not deleted');
+                  redis.sismember(relationsprefix + role2.modelName + ':child:' +
+                                  user.modelName + ':' + role2.id, tmpid,
+                                  function (err, value) {
+                                    t.ok(!err, 'An unexpected redis error occured.');
+                                    t.equals(value, 0, 'The removal did not delete the link from a parent to the object itself.');
+                                    t.done();
+                                  });
                 });
             });
         });
@@ -295,7 +290,7 @@ exports.getAll = function (t) {
   var user = new UserLinkMockup(),
   role = new RoleLinkMockup(),
   role2 = new RoleLinkMockup();
-  t.expect(1);
+  t.expect(4);
 
   user.link(role);
   user.link(role2);
@@ -305,12 +300,20 @@ exports.getAll = function (t) {
       console.dir(err);
       t.done();
     }
+    var should = [role.id, role2.id];
     user.getAll(role.modelName, function (err, values) {
       if (err) {
         console.dir(err);
         t.done();
       }
-      t.same(values, [role.id, role2.id], 'getAll() did not return the correct array');
+      t.ok(Array.isArray(values), 'getAll() did not return an array.');
+      for (var index, i = 0, len = values.length; i < len; i = i + 1) {
+        index = should.indexOf(values[i]);
+        t.ok(index !== -1, 'getAll() returned an array with wrong values');
+        delete should[index];
+        delete values[i];
+      }
+      t.same(values, should, 'getAll() did not return the correct array');
       t.done();
     });
   });
