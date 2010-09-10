@@ -67,6 +67,79 @@ var RoleFindMockup = nohm.Model.extend({
   }
 });
 
+var errLogger = function (err) {
+  if (err) {
+    console.dir(err);
+  }
+};
+
+var userNumeric = new UserFindMockup(),
+userNumeric2 = new UserFindMockup(),
+userNumeric3 = new UserFindMockup(),
+all = [];
+
+userNumeric.p({
+  name: 'numericindextest',
+  email: 'numericindextest@hurgel.de',
+  number: 3
+});
+userNumeric.save(function (err) {
+  errLogger(err);
+  all.push(userNumeric.id);
+});
+
+userNumeric2.p({
+  name: 'numericindextest',
+  email: 'numericindextest2@hurgel.de',
+  number: 4,
+  number2: 33
+});
+userNumeric2.save(function (err) {
+  errLogger(err);
+  all.push(userNumeric2.id);
+});
+
+userNumeric3.p({
+  name: 'numericindextest',
+  email: 'numericindextest3@hurgel.de',
+  number: 4,
+  number2: 1
+});
+userNumeric3.save(function (err) {
+  errLogger(err);
+  all.push(userNumeric3.id);
+});
+
+var userUnique = new UserFindMockup();
+userUnique.p({
+  name: 'uniquefind',
+  email: 'uniquefind@hurgel.de'
+});
+userUnique.save(function (err) {
+  errLogger(err);
+  all.push(userUnique.id);
+});
+
+var userString = new UserFindMockup();
+userString.p({
+  name: 'indextest',
+  email: 'indextest@hurgel.de'
+});
+userString.save(function (err) {
+  errLogger(err);
+  all.push(userString.id);
+});
+
+var userString2 = new UserFindMockup();
+userString2.p({
+  name: 'indextest',
+  email: 'indextest2@hurgel.de'
+});
+userString2.save(function (err) {
+  errLogger(err);
+  all.push(userString2.id);
+});
+
 exports.load = function (t) {
   var user = new UserFindMockup(),
   findUser = new UserFindMockup();
@@ -87,6 +160,7 @@ exports.load = function (t) {
       console.dir(err);
       t.done();
     }
+    all.push(user.id); // this is for findAll. we can't do findAll before this one, because this way it kinda ensures that findAll is called after all objects were saved.
     findUser.load(user.id, function (err) {
       if (err) {
         console.dir(err);
@@ -102,131 +176,63 @@ exports.load = function (t) {
   });
 };
 
+exports.findAll = function (t) {
+  // this is a fuckup and heavily relies upon the rest of this file. (the stuff above this test, not below)
+  var findUser = new UserFindMockup();
+  t.expect(1);
+  
+  findUser.find(function (err, ids) {
+    t.same(all, ids, 'find() did not return all users when not given any search parameters.');
+    t.done();
+  });
+};
+
 exports.findByUnique = function (t) {
-  var user = new UserFindMockup(),
-  findUser = new UserFindMockup();
+  var findUser = new UserFindMockup();
   t.expect(1);
 
-  user.p({
-    name: 'uniquefind',
-    email: 'uniquefind@hurgel.de'
-  });
-
-  user.save(function (err) {
+  findUser.find({
+    email: userUnique.p('email')
+  }, function (err, ids) {
     if (err) {
       console.dir(err);
-      t.done();
     }
-    findUser.find({
-      email: user.p('email')
-    }, function (err, ids) {
-      if (err) {
-        console.dir(err);
-      }
-      t.same(ids, [user.id], 'The found id did not match the id of the saved object.');
-      t.done();
-    });
+    t.same(ids, [userUnique.id], 'The found id did not match the id of the saved object.');
+    t.done();
   });
 };
 
 exports.findByStringIndex = function (t) {
-  var user = new UserFindMockup(),
-  user2 = new UserFindMockup(),
-  findUser = new UserFindMockup();
+  var findUser = new UserFindMockup();
   t.expect(1);
 
-  user.p({
-    name: 'indextest',
-    email: 'indextest@hurgel.de'
-  });
-
-  user2.p({
-    name: 'indextest',
-    email: 'indextest2@hurgel.de'
-  });
-
-  user.save(function (err) {
+  findUser.find({
+    name: 'indextest'
+  }, function (err, ids) {
     if (err) {
       console.dir(err);
-      t.done();
     }
-    user2.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      findUser.find({
-        name: 'indextest'
-      }, function (err, ids) {
-        if (err) {
-          console.dir(err);
-        }
-        t.same(ids, [user.id, user2.id], 'The found id did not match the id of the saved object.');
-        t.done();
-      });
-    });
+    t.same(ids, [userString.id, userString2.id], 'The found id did not match the id of the saved object.');
+    t.done();
   });
 };
 
 exports.findByNumericIndex = function (t) {
-  var user = new UserFindMockup(),
-  user2 = new UserFindMockup(),
-  user3 = new UserFindMockup(),
-  findUser = new UserFindMockup();
+  var findUser = new UserFindMockup();
   t.expect(1);
-
-  user.p({
-    name: 'numericindextest',
-    email: 'numericindextest@hurgel.de',
-    number: 3
-  });
-
-  user2.p({
-    name: 'numericindextest',
-    email: 'numericindextest2@hurgel.de',
-    number: 4,
-    number2: 33
-  });
-
-  user3.p({
-    name: 'numericindextest',
-    email: 'numericindextest3@hurgel.de',
-    number: 4,
-    number2: 1
-  });
-
-  user.save(function (err) {
-    if (err) {
-      console.dir(err);
-      t.done();
+  
+  findUser.find({
+    number: {
+      min: 2
+    },
+    number2: {
+      max: 100,
+      limit: 2
     }
-    user2.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user3.save(function (err) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        findUser.find({
-          number: {
-            min: 2
-          },
-          number2: {
-            max: 100,
-            limit: 2
-          }
-        }, function (err, ids) {
-          if (err) {
-            console.dir(err);
-          }
-          t.same(ids, [user2.id, user3.id], 'The found id did not match the id of the saved object.');
-          t.done();
-        });
-      });
-    });
+  }, function (err, ids) {
+    errLogger(err);
+    t.same(ids, [userNumeric2.id, userNumeric3.id], 'The found id did not match the id of the saved object.');
+    t.done();
   });
 };
 
