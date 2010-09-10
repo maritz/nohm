@@ -296,6 +296,29 @@ exports.remove = function (t) {
   });
 };
 
+exports.idSets = function (t) {
+  var user = new UserMockup(),
+  tmpid = 0;
+  t.expect(6);
+  user.p('name', 'idSetTest');
+  user.save(function (err) {
+    t.ok(!err, 'There was an unexpected redis error.');
+    tmpid = user.id;
+    redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, function (err, value) {
+      t.ok(!err, 'There was an unexpected redis error.');
+      t.equals(value, 1, 'The userid was not part of the idset after saving.');
+      user.remove(function (err) {
+        t.ok(!err, 'There was an unexpected redis error.');
+        redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, function (err, value) {
+          t.ok(!err, 'There was an unexpected redis error.');
+          t.equals(value, 0, 'The userid was still part of the idset after removing.');
+          t.done();
+        });
+      });
+    });
+  });
+};
+
 exports.update = function (t) {
   var user = new UserMockup();
   t.expect(5);
