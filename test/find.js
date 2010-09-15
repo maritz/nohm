@@ -186,6 +186,17 @@ exports.findAll = function (t) {
     t.done();
   });
 };
+ /* I don't know how to do this right now.
+exports.loadArray = function (t) {
+  var findUser = new UserFindMockup();
+  t.expect(2);
+  
+  findUser.load(all, function (err, users) {
+    errLogger(err);
+    t.ok(Array.isArray(users), 'load()ing an array of ids did not return an array');
+    t.same(all.length, users.length, 'load()ing an array of ids did not return an array with the coorect length');
+  });
+};*/
 
 exports.findByUnique = function (t) {
   var findUser = new UserFindMockup();

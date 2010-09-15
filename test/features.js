@@ -265,7 +265,7 @@ exports.remove = function (t) {
       });
     }],
     'scoredindex': ['_1', function (user, callback) {
-      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.p('name'), function (err, value) {
+      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
         t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
         callback();
       });
