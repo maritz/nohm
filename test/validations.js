@@ -251,7 +251,7 @@ exports.behaviours = function (t) {
 
 exports.setterValidation = function (t) {
   var user = new UserMockup();
-  t.expect(4);
+  t.expect(6);
 
   t.ok(user.p('name', 'hurz', true), 'Setting a property to a correct value with validation did not return true.');
 
@@ -260,6 +260,10 @@ exports.setterValidation = function (t) {
   t.ok(!user.p('name', '', true), 'Setting a property to a wrong value with validation did not return false.');
 
   t.ok(user.p('name') === 'hurz', 'Setting a property to a wrong value with validation did set the value.');
+  
+  t.ok(user.p({name: 'hurgel'}, true), 'Setting a property by passing an object and with validation did not return true.');
+  
+  t.ok(user.p('name') === 'hurgel', 'Setting a property by passing an object and with validation did set the value.');
 
   t.done();
 };
