@@ -209,7 +209,7 @@ exports.castFloat = function (t) {
 
 exports.castTimestamp = function (t) {
   var user = new UserMockup(),
-  should = new Date('1988-03-12T00:00:00Z').getTime() / 1000;
+  should = new Date('1988-03-12T00:00:00Z').getTime();
   t.expect(8);
 
   user.p('castTimestamp', should);
