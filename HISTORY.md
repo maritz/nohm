@@ -1,3 +1,5 @@
+### v0.1.4
+   - three small changes
 ### v0.1.3
    - added numLinks()
    - lots of bugfixes and some semi-internal changes

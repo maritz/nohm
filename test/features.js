@@ -350,6 +350,42 @@ exports.update = function (t) {
   });
 };
 
+exports.partialUpdate = function (t) {
+  var user = new UserMockup(),
+  user2 = new UserMockup();
+  t.expect(6);
+
+  user.p('name', 'updateTest1');
+  user.p('email', 'updateTest1@email.de');
+  user.save(function (err) {
+    t.ok(!err, 'There was a redis error in the update test. (creation part)');
+    if (err) {
+      t.done();
+    }
+    user2.id = user.id;
+    user2.p({
+      name: 'updateTest2',
+      visits: 10
+    });
+    user2.partialSave(function (err) {
+      t.ok(!err, 'There was a redis error in the update test.');
+      if (err) {
+        t.done();
+      }
+      redis.hgetall(prefix + ':hash:UserMockup:' + user2.id, function (err, value) {
+        t.ok(!err, 'There was a redis error in the update test check.');
+        if (err) {
+          t.done();
+        }
+        t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
+        t.ok(value.email.toString() === 'updateTest1@email.de', 'The user email was not left correctly.');
+        t.ok(value.visits.toString() === '10', 'The visits were not set correctly.');
+        t.done();
+      });
+    });
+  });
+};
+
 exports.unique = function (t) {
   var user1 = new UserMockup(),
   user2 = new UserMockup();
