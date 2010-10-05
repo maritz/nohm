@@ -1,5 +1,9 @@
 # Nohm
 
+## Warning
+
+You should probably have a look at [biggie-orm](http://github.com/biggie/biggie-orm) since that offers a more complete and probably faster redis ORM.
+
 ## Description
 
 Nohm is an object relational mapper (ORM) written for node.js and redis.
