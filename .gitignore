@@ -1,3 +1,6 @@
 .project
 nohm.komodoproject
 benchmark.js.js
+admin/*.sh
+*.log
+.sass-cache

@@ -1,0 +1,1 @@
+var Ni = require('ni');

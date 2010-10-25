@@ -1,0 +1,26 @@
+@import "_boilerplate.scss";
+
+header, footer, aside, nav, article, div {
+  display: block; }  
+
+
+ul {
+  list-style-type: none; }
+
+* {
+  margin: 0;
+  padding: 0;
+  font: {
+    size: 9pt;
+    family: Tahoma, Arial, sans-serif; }; }
+
+body {
+  padding: 0 2% 0 1%; }
+
+form label:after {
+  content: ": "; }
+  
+.clear {
+  clear: both;
+  zoom: 1; // stupid IE hacks :x
+}
