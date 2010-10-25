@@ -2,7 +2,7 @@
 
 ## Warning
 
-You should probably have a look at [biggie-orm](http://github.com/biggie/biggie-orm) since that offers a more complete and probably faster redis ORM.
+You should probably have a look at [biggie-orm](http://github.com/biggie/biggie-orm) since that offers a more complete and probably faster redis ORM. (however it does not have proper unique support yet and some other things aren't 100%)
 
 ## Description
 
