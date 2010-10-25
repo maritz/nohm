@@ -10,7 +10,7 @@ process.argv.forEach(function (val, index) {
 });
 var relationsprefix = prefix + ':relations:';
 
-var redis = require('redis-client').createClient();
+var redis = require('redis').createClient();
 var nohm = require('nohm');
 var UserFindMockup = nohm.Model.extend({
   constructor: function () {

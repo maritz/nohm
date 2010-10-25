@@ -1,15 +1,6 @@
-[submodule "lib/redis-node"]
-	path = lib/redis-node
-	url = git://github.com/fictorial/redis-node-client.git
 [submodule "test/nodeunit"]
 	path = test/nodeunit
 	url = git://github.com/caolan/nodeunit.git
 [submodule "lib/double-metaphone"]
 	path = lib/double-metaphone
 	url = git://github.com/maritz/js-double-metaphone.git
-[submodule "lib/conductor"]
-	path = lib/conductor
-	url = git://github.com/creationix/conductor.git
-[submodule "lib/redis-node-multi"]
-	path = lib/redis-node-multi
-	url = git://github.com/spahl/redis-node-client.git

@@ -1,8 +1,7 @@
 require.paths.unshift(__dirname); //tests
 require.paths.unshift(__dirname + '/../lib'); // nohm itself
-require.paths.unshift(__dirname + '/../lib/redis-node-multi/lib'); // redis-node client lib
 require.paths.unshift(__dirname + '/../lib/class/lib'); // class system
-require.paths.unshift(__dirname + '/../lib/conductor/lib'); // class system
+require.paths.unshift(__dirname + '/../lib/conductor/lib'); // conductor
 
 var nodeunit = require('nodeunit')
     , sys = require('sys');
@@ -68,7 +67,7 @@ var runner = function () {
     run(['features.js', 'validations.js', 'relations.js', 'find.js']);
 }
 
-var redis = require('redis-client').createClient();
+var redis = require('redis').createClient();
 redis.keys(prefix + ':*', function (err, keys) {
   if (!keys || keys.length == 0) {
     return runner();

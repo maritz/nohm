@@ -5,8 +5,8 @@ exports.checkModules = function (t) {
   var redis, nohm, Class, Conduct;
   t.expect(4);
 
-  redis = require('redis-client');
-  t.ok(typeof redis.Client === 'function', 'redis-client should be available -- forgot to do "git submodule update --init"?');
+  redis = require('redis');
+  t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
 
   nohm = require('nohm');
   t.ok(typeof nohm.Model === 'function', 'nohm should be available -- something is fishy here.');
@@ -15,7 +15,7 @@ exports.checkModules = function (t) {
   t.ok(typeof Class.Class === 'function', 'Class should be available -- forgot to do "git submodule update --init"?');
 
   Conduct = require('conductor');
-  t.ok(typeof Conduct === 'function', 'Conductor should be available -- forgot to do "git submodule update --init"?');
+  t.ok(typeof Conduct === 'function', 'Conductor should be available.');
 
   t.done();
 };
@@ -29,7 +29,7 @@ process.argv.forEach(function (val, index) {
 });
 
 // real tests start in 3.. 2.. 1.. NOW!
-var redis = require('redis-client').createClient();
+var redis = require('redis').createClient();
 var nohm = require('nohm');
 var Conduct = require('conductor');
 var UserMockup = nohm.Model.extend({
@@ -460,7 +460,7 @@ exports.indexes = function (t) {
   function checkVisitsIndex(callback) {
     redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
-      t.ok(value === user.p('visits'), 'The visits index did not have the correct score.');
+      t.ok(value == user.p('visits'), 'The visits index did not have the correct score.');
       redis.sismember(prefix + ':index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
         t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
         t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
