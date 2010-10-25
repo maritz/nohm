@@ -4,3 +4,5 @@ benchmark.js.js
 admin/*.sh
 *.log
 .sass-cache
+dump.rdb
+style.css
