@@ -15,6 +15,7 @@ var userController = module.exports = {
     if (req.body) {
       if (req.body.name === user && req.body.password === password) {
         req.session.logged_in = true;
+        res.redirect('/');
       }
     }
     next();

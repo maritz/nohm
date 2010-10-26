@@ -66,7 +66,7 @@ var UserMockup = nohm.Model.extend({
       },
       json: {
         type: 'json',
-        value: {}
+        value: '{}'
       }
     };
     nohm.Model.call(this);
@@ -129,12 +129,10 @@ exports.propertySetter = function (t) {
   t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
 
   user.p('json', {
-    test: function () {
-      t.ok(true, 'Yep...');
-    }
+    test: 1
   });
 
-  user.p('json').test();
+  t.equals(user.p('json').test, 1, 'Setting a json property did not work correctly.');
 
   t.done();
 };
@@ -209,7 +207,7 @@ exports.allProperties = function (t) {
     visits: user.p('visits'),
     email: user.p('email'),
     country: user.p('country'),
-    json: {},
+    json: '{}',
     id: user.id
   }; // yes, this absolutely must be set correct for this test to work. sorry
 

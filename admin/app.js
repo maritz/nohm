@@ -45,6 +45,7 @@ var merge = function () {
 // real application starts now!
 
 Ni.setRoot(__dirname);
+Ni.config.redis_prefix = 'tests';
 
 Ni.boot(function() {
   
@@ -62,7 +63,7 @@ Ni.boot(function() {
 
   // static stuff
   app.use(express.conditionalGet());
-  app.use(express.favicon());
+  app.use(express.favicon(''));
   app.use(express.gzip());
   app.use(express.staticProvider(__dirname + '/public'));
 
@@ -81,6 +82,9 @@ Ni.boot(function() {
         options = {};
       }
       options.locals = merge(options.locals, rlocals);
+      if (req.xhr) {
+        options.layout = false;
+      }
       res.original_render(file, options);
     };
     next();

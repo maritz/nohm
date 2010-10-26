@@ -31,9 +31,7 @@ var UserFindMockup = nohm.Model.extend({
       },
       json: {
         type: 'json',
-        value: {
-          test: true
-        }
+        value: '{}'
       },
       number: {
         type: 'integer',
@@ -148,11 +146,7 @@ exports.load = function (t) {
   user.p({
     name: 'hurgelwurz',
     email: 'hurgelwurz@hurgel.de',
-    json: {
-      test: function () {
-        t.ok(true, 'Yup'); // this fails by t.expect(x), if it fails at all the message won't show.
-      }
-    }
+    json: { test: 1 }
   });
 
   user.save(function (err) {
@@ -168,7 +162,7 @@ exports.load = function (t) {
       }
       t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
       t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
-      user.p('json').test();
+      t.equals(findUser.p('json').test, 1, 'The loaded version of the json was not the same as the set one.');
       t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
       t.equals(user.p('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
       t.done();

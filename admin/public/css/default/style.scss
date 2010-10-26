@@ -1,26 +1,43 @@
 @import "_boilerplate.scss";
 
-header, footer, aside, nav, article, div {
-  display: block; }  
-
-
-ul {
-  list-style-type: none; }
-
-* {
-  margin: 0;
-  padding: 0;
-  font: {
-    size: 9pt;
-    family: Tahoma, Arial, sans-serif; }; }
-
 body {
   padding: 0 2% 0 1%; }
 
+ul {
+  list-style-type: none;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
 form label:after {
   content: ": "; }
-  
-.clear {
-  clear: both;
-  zoom: 1; // stupid IE hacks :x
+
+table.model_properties {
+  border-collapse: collapse;
+  tr {
+    border-bottom: 1px solid black;
+    td {
+      padding: 0 5px;
+    }
+    td+td {
+      border-left: 1px solid grey;
+    }
+  }
+}
+
+ul.col {
+  width: 100%;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dd {
+  margin: {
+    bottom: 10px;
+    left: 15px;
+  }
 }
