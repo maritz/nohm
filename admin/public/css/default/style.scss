@@ -28,7 +28,16 @@ table.model_properties {
 }
 
 ul.col {
+  li:hover {
+    background-color: #ddffff;
+  }
+}
+
+ul.columnize {
   width: 100%;
+  li li:hover {
+    background-color: #ddffff;
+  }
 }
 
 dt {

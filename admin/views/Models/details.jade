@@ -1,0 +1,27 @@
+table.model_properties(data-model: model)
+  tr
+    - each prop, name in props
+      td
+        = name
+  tr
+    - each prop in props
+      td
+        dl
+          - each p, type in prop
+            - if( !type.match(/^__/) )
+              dt
+                = type
+              - if (typeof(p) === 'object' && p !== null && ! Array.isArray(p))
+                dd(data-json: JSON.stringify(p))
+                  a= p
+              - else {
+                dd
+                  = p
+              - }
+| There is a total of
+= ids.length
+|  Objects:
+ul.columnize
+  - each id in ids
+    li
+      a.objectId( data-id: id )= id

@@ -8,20 +8,33 @@ $(document).ready(function () {
     $(this).html(json);
   });
   
-  $('a.objectId').click(function(e) {
-    var a = $(this),
-    content = a.next('dl'),
-    id = a.text();
-    if (content.length > 0) {
+  var getObjectDetails = function (type, e) {
+    var a = type === 'object' ? $(this).find('a') : $(this),
+    content = a.next('div.' + type),
+    id = a.closest('[data-id]').attr('data-id');
+    if (content.length > 0 && (type === 'relations' || e.target.nodeName !== 'A') ) {
       content.toggle();
-    } else {
-      $.get('/Models/getObject/' + model + '/' + id, null, function(html, status) {
+    } else if (type !== 'object' || e.target.nodeName !== 'A') {
+      relModel = model;
+      if (!model) {
+        // we're not on a model page
+        var relModel = a.closest('[data-model-rel]').attr('data-model-rel');
+      }
+      var url = '/Models/get' + type.charAt(0).toUpperCase() + type.slice(1) + '/' + relModel + '/' + id;
+      $.get(url, null, function(html, status) {
         a.after(html);
       }, 'html');
     }
+  }
+  $('a.objectId').closest('li').click(function(e) {
+    getObjectDetails.apply(this, ['object', e]);
   });
   
-  $('ul.col').columnizeList({cols:10,constrainWidth:1});
+  $('div.relations > a').live('click', function (e) {
+    getObjectDetails.apply(this, ['relations', e]);
+  });
+  
+  $('ul.columnize').columnizeList({cols:8,constrainWidth:1});
 });
 
 
@@ -47,7 +60,7 @@ http://chillu.com/2007/9/30/jquery-columnizelist-plugin
     }, settings);
     // var type=this.getNodeType();
     var container = this;
-    if (container.length == 0) { return; }
+    if (container.length == 0) {return;}
     var prevColNum = 10000; // Start high to avoid appending to the wrong column
     var size = $('li',this).size();
     var percol = Math.ceil(size/settings.cols);
@@ -61,7 +74,7 @@ http://chillu.com/2007/9/30/jquery-columnizelist-plugin
     $('li',this).each(function(i) {
       var currentColNum = Math.floor(i/percol);
       if(prevColNum != currentColNum) {
-        if ($("#col" + rand + "-" + prevColNum).height() > maxheight) { maxheight = $("#col" + rand + "-" + prevColNum).height(); }
+        if ($("#col" + rand + "-" + prevColNum).height() > maxheight) {maxheight = $("#col" + rand + "-" + prevColNum).height();}
         $("#container"+rand).append('<li class="list-column-processed"><'+tag+' id="col'+rand+'-'+currentColNum+'"></'+tag+'></li>');
       }
       $(this).attr("value",i+1).appendTo("#col"+rand+'-'+currentColNum);

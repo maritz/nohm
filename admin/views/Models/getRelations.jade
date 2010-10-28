@@ -1,0 +1,12 @@
+div.relations
+  - if (relations.length > 0)
+    dl
+      - each rel in relations
+        dt='has ' + rel.rel + ' ' + rel.model
+          dd(data-model-rel: rel.model)
+            ul.col
+              - each id in rel.ids
+                li
+                  a.objectId(href: '/Models/getObject/' + rel.model + '/' + id)= id
+  - else
+    | No relations found.
