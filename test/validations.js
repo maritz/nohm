@@ -1,5 +1,5 @@
 "use strict";
-var sys = require('sys');
+var util = require('util');
 var nohm = require('nohm');
 
 // !!! this mockup must be defined valid from the start for most tests !!!
@@ -27,8 +27,8 @@ var UserMockup = nohm.Model.extend({
         value: 100000
       },
       behaviour: {
-        type: function incrby(value) {
-          return this.p('behaviour') + value;
+        type: function incrby(value, key, old) {
+          return old + value;
         },
         value: 1
       },

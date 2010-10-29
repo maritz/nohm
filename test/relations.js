@@ -1,5 +1,5 @@
 "use strict";
-var sys = require('sys');
+var util = require('util');
 
 var prefix = 'nohm';
 

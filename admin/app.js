@@ -104,7 +104,7 @@ Ni.boot(function() {
     app.use(express.errorHandler({showStack: true}));
   }
 
-  fugue.start(app, 3000, null, 2, {
+  fugue.start(app, 3001, null, 2, {
     started: function () {
       console.log('listening on 3000');
     },

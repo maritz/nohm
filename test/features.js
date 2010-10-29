@@ -1,5 +1,5 @@
 "use strict";
-var sys = require('sys');
+var util = require('util');
 
 exports.checkModules = function (t) {
   var redis, nohm, Class, Conduct;
@@ -277,7 +277,7 @@ exports.remove = function (t) {
   user.p('name', 'deleteTest');
   user.p('email', 'deleteTest@asdasd.de');
   user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
     if (err) {
       t.done();
     }
@@ -394,7 +394,7 @@ exports.unique = function (t) {
   user2.p('name', 'dubplicateTest');
   user2.p('email', 'dubbplicateTest@test.de');
   user1.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
     redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
       t.ok(user1.id, 'Userid b0rked while checking uniques');
       t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
@@ -405,7 +405,7 @@ exports.unique = function (t) {
           redis.exists(prefix + ':uniques:UserMockup:email:dubbplicateTest@test.de', function (err, value) {
             t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
             redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
-              t.ok(!err, 'There was an unexpected probllem: ' + sys.inspect(err));
+              t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
               t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
               t.done();
             });
@@ -449,7 +449,7 @@ exports.indexes = function (t) {
 
   function checkCountryIndex(callback) {
     redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
-      t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+      t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
       t.ok(value === 1, 'The country index did not have the user as one of its ids.');
       callback();
     });
@@ -457,10 +457,10 @@ exports.indexes = function (t) {
 
   function checkVisitsIndex(callback) {
     redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
-      t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+      t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
       t.ok(value == user.p('visits'), 'The visits index did not have the correct score.');
       redis.sismember(prefix + ':index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
-        t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+        t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
         t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
         callback();
       });
@@ -468,7 +468,7 @@ exports.indexes = function (t) {
   }
 
   user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + sys.inspect(err));
+    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
     checkCountryIndex(function () {
       checkVisitsIndex(t.done);
     });
@@ -480,7 +480,7 @@ exports.__updated = function (t) {
   t.expect(2);
   user.save(function (err) {
     if (err) {
-      sys.debug('Error while saving user in __updated.');
+      util.debug('Error while saving user in __updated.');
     }
     user.p('name', 'hurgelwurz');
     user.p('name', 'test');
@@ -488,7 +488,7 @@ exports.__updated = function (t) {
 
     user.remove(function (err) {
       if (err) {
-        sys.debug('Error while saving user in __updated.');
+        util.debug('Error while saving user in __updated.');
       }
       user = new UserMockup();
       user.p('name', 'hurgelwurz');
