@@ -13,7 +13,7 @@ getMeta = function getMeta (model, forceRefresh, callback) {
     ! modelCache.hasOwnProperty(model)) {
     console.log('re-retrieving meta cache.');
     redis.keys(Ni.config.redis_prefix + ':meta:*', function (err, keys) {
-      if (keys.length > 0 && ! err) {
+      if (keys && ! err) {
         keys.forEach(function (value, i) {
           value = value.toString();
           var modelname = value.replace(/^[^:]*:meta:/, '');
@@ -37,7 +37,7 @@ getMeta = function getMeta (model, forceRefresh, callback) {
     callback(modelCache[model]);
   }
 }
-getMeta(false, true);
+getMeta(false, true, function () {});
 
 var getChildren = function (model, id, callback) {
   redis.keys(Ni.config.redis_prefix + ':relations:' + model + '*:' + id, function (err, keys) {
@@ -75,7 +75,7 @@ var getChildren = function (model, id, callback) {
 
 module.exports = {
   __init: function (cb, req, res, next) {
-    if (!req.session.logged_in) {
+    if (typeof(req.session.logged_in) === 'undefined' || !req.session.logged_in) {
       res.Ni.action = 'login';
       res.Ni.controller = 'User';
       Ni.controllers.User.login(req, res, next);
@@ -88,9 +88,11 @@ module.exports = {
   index: function (req, res, next) {
     redis.keys(Ni.config.redis_prefix + ':idsets:*', function (err, replies) {
       res.rlocals.models = [];
+      if (replies) {
       replies.forEach(function (val, i) {
          res.rlocals.models[i] = val.toString().replace(/^.*\:idsets:/, '');
       });
+      }
       next();
     });
   },

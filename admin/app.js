@@ -45,7 +45,7 @@ var merge = function () {
 // real application starts now!
 
 Ni.setRoot(__dirname);
-Ni.config.redis_prefix = 'tests';
+Ni.config.redis_prefix = 'nohm';
 
 Ni.boot(function() {
   
@@ -106,7 +106,7 @@ Ni.boot(function() {
 
   fugue.start(app, 3001, null, 2, {
     started: function () {
-      console.log('listening on 3000');
+      console.log('listening on 3001');
     },
     log_file: __dirname + '/log/workers.log',
     master_pid_path: '/tmp/fugue-master-nohmadmin.pid',
