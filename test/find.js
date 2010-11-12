@@ -302,3 +302,47 @@ exports.findByMixedIndex = function (t) {
     });
   });
 };
+
+exports.findSameNumericTwice = function (t) {
+  var user = new UserFindMockup(),
+  user2 = new UserFindMockup(),
+  user3 = new UserFindMockup(),
+  findUser = new UserFindMockup();
+  t.expect(1);
+
+  user.p({
+    name: 'SameNumericTwice',
+    email: 'SameNumericTwice@hurgel.de',
+    number: 3000
+  });
+
+  user2.p({
+    name: 'SameNumericTwice2',
+    email: 'SameNumericTwice2@hurgel.de',
+    number: 3000
+  });
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    user2.save(function (err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      findUser.find({
+        number: {
+          min: 3000
+        }
+      }, function (err, ids) {
+        if (err) {
+          console.dir(err);
+        }
+        t.same(ids, [user.id, user2.id], 'The found id did not match the id of the saved objects.');
+        t.done();
+      });
+    });
+  });
+};
