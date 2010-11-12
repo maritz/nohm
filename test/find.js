@@ -346,3 +346,54 @@ exports.findSameNumericTwice = function (t) {
     });
   });
 };
+
+exports.findByMixedIndexMissing = function (t) {
+  var user = new UserFindMockup(),
+  user2 = new UserFindMockup(),
+  user3 = new UserFindMockup(),
+  findUser = new UserFindMockup();
+  t.expect(1);
+
+  user2.p({
+    name: 'mixedindextestMissing',
+    email: 'mixedindextestMissing@hurgel.de',
+    number: 4
+  });
+
+  user3.p({
+    name: 'mixedindextestMissing2',
+    email: 'mixedindextestMissing2@hurgel.de',
+    number: 4
+  });
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    user2.save(function (err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      user3.save(function (err) {
+        if (err) {
+          console.dir(err);
+          t.done();
+        }
+        findUser.find({
+          number: {
+            min: 2
+          },
+          name: 'mixedindextASDASDestMISSING'
+        }, function (err, ids) {
+          if (err) {
+            console.dir(err);
+          }
+          t.same(ids, [], 'Ids were found even though the name should not be findable.');
+          t.done();
+        });
+      });
+    });
+  });
+};

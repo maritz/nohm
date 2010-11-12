@@ -1,6 +1,6 @@
 {
     "name": "nohm",
-    "version": "0.1.6admin-conductorfix",
+    "version": "0.1.7admin",
     "engines": {
         "node" : ">=0.3.0" 
     },
