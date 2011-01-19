@@ -1,7 +1,7 @@
 "use strict";
 var util = require('util');
 
-var prefix = 'nohm';
+var prefix = 'tests';
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
@@ -168,9 +168,10 @@ exports.unlink = function (t) {
     if (!err) {
       t.ok(unlinkCallbackCalled, 'The provided callback for unlinking was not called.');
       t.ok(unlinkCallbackCalled2, 'The provided callback for the second(!) unlinking was not called.');
-      redis.keys(relationsprefix + '*', function (err, values) {
+      redis.keys(relationsprefix + '*', function (err, value) {
         if (!err) {
-          t.equals(values, null, 'Unlinking an object did not delete keys.');
+          var check = (Array.isArray(value) && value.length === 0) || value === null;
+          t.ok(check, 'Unlinking an object did not delete keys.');
         }
         t.done();
       });

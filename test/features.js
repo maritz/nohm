@@ -20,7 +20,7 @@ exports.checkModules = function (t) {
   t.done();
 };
 
-var prefix = 'nohm';
+var prefix = 'tests';
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
@@ -76,7 +76,8 @@ var UserMockup = nohm.Model.extend({
 exports.redisClean = function (t) {
   t.expect(1);
   redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
-    t.ok(value === null, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS nohm:*:*Mockup:*" to see what keys could be the cause.');
+    var check = (Array.isArray(value) && value.length === 0) || value === null;
+    t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS '+prefix+':*:*Mockup:*" to see what keys could be the cause.');
     t.done();
   });
 };

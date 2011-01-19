@@ -54,7 +54,7 @@ run = function(files){
 };
 
 
-var prefix = 'nohm';
+var prefix = 'tests';
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
