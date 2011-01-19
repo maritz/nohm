@@ -68,6 +68,7 @@ var runner = function () {
 }
 
 var redis = require('redis').createClient();
+require('nohm').connect();
 redis.keys(prefix + ':*', function (err, keys) {
   if (!keys || keys.length == 0) {
     return runner();
