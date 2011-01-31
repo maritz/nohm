@@ -1,8 +1,9 @@
 var Ni = require('ni'),
-redis = require('redis').createClient(),
-nohm = require('nohm');
+nohm = require('nohm'),
+redis = false;
 
 var modelCache = {},
+first_get = false,
 getMeta = function getMeta (model, forceRefresh, callback) {
   if (typeof(forceRefresh) === 'function') {
     callback = forceRefresh;
@@ -12,8 +13,10 @@ getMeta = function getMeta (model, forceRefresh, callback) {
     modelCache === {} || 
     ! modelCache.hasOwnProperty(model)) {
     console.log('re-retrieving meta cache.');
-    redis.keys(Ni.config.redis_prefix + ':meta:*', function (err, keys) {
-      if (keys && ! err) {
+    if (!redis)
+      redis = Ni.config('nohmclient');
+    redis.keys(Ni.config('redis_prefix') + ':meta:*', function (err, keys) {
+      if (keys !== [] && ! err) {
         keys.forEach(function (value, i) {
           value = value.toString();
           var modelname = value.replace(/^[^:]*:meta:/, '');
@@ -26,6 +29,8 @@ getMeta = function getMeta (model, forceRefresh, callback) {
             }
             if (modelname === model) {
               callback(modelCache[modelname]);
+            } else {
+              callback(false);
             }
           });
         });
@@ -37,18 +42,17 @@ getMeta = function getMeta (model, forceRefresh, callback) {
     callback(modelCache[model]);
   }
 }
-getMeta(false, true, function () {});
 
 var getChildren = function (model, id, callback) {
-  redis.keys(Ni.config.redis_prefix + ':relations:' + model + '*:' + id, function (err, keys) {
+  redis.keys(Ni.config('redis_prefix') + ':relations:' + model + '*:' + id, function (err, keys) {
     var children = [],
     count = keys ? keys.length : 0;
-    if (keys) {
+    if (keys !== []) {
       keys.forEach(function (key) {
         key = key.toString();
         var relName = key.replace(/^.*:([^:]*):[^:]*:[\d]$/, '$1'),
         modelName = key.replace(/^.*:([^:]*):[\d]$/, '$1');
-        redis.smembers(Ni.config.redis_prefix + ':relations:' + model
+        redis.smembers(Ni.config('redis_prefix') + ':relations:' + model
           + ':' + relName + ':' + modelName + ':' + id, function (err, members) {
           var ids = [];
           if (members) {
@@ -75,18 +79,26 @@ var getChildren = function (model, id, callback) {
 
 module.exports = {
   __init: function (cb, req, res, next) {
-    if (typeof(req.session.logged_in) === 'undefined' || !req.session.logged_in) {
-      res.Ni.action = 'login';
-      res.Ni.controller = 'User';
-      Ni.controllers.User.login(req, res, next);
+    var doModelInit = function () {
+      if (typeof(req.session.logged_in) === 'undefined' || !req.session.logged_in) {
+        res.Ni.action = 'login';
+        res.Ni.controller = 'User';
+        Ni.controllers.User.login(req, res, next);
+      } else {
+        res.Ni.controller = 'Models'; // since i've overwritten the controller for home to be News, this is neccessary for automatic views
+        cb();
+      }
+    }
+    if (!first_get) {
+      first_get = true;
+      getMeta(false, true, doModelInit);
     } else {
-      res.Ni.controller = 'Models'; // since i've overwritten the controller for home to be News, this is neccessary for automatic views
-      cb();
+      doModelInit();
     }
   },
   
   index: function (req, res, next) {
-    redis.keys(Ni.config.redis_prefix + ':idsets:*', function (err, replies) {
+    redis.keys(Ni.config('redis_prefix') + ':idsets:*', function (err, replies) {
       res.rlocals.models = [];
       if (replies) {
       replies.forEach(function (val, i) {
@@ -106,7 +118,7 @@ module.exports = {
       
       res.rlocals.model = model;
       res.rlocals.props = meta;
-      redis.smembers(Ni.config.redis_prefix + ':idsets:' + model, function (err, replies) {
+      redis.smembers(Ni.config('redis_prefix') + ':idsets:' + model, function (err, replies) {
         if (err) {
           console.dir('something went wrong in fetching model details with model:' + model);
           res.redirect('/Models');
@@ -122,7 +134,7 @@ module.exports = {
       console.dir('someone tried to access model: "' + model + '" with id #' + id);
       res.redirect('/Models');
     }
-    redis.hgetall(Ni.config.redis_prefix + ':hash:' + model + ':' + id, function (err, replies) {
+    redis.hgetall(Ni.config('redis_prefix') + ':hash:' + model + ':' + id, function (err, replies) {
       if (err) {
         console.dir('someone tried to access an inexistant object of model: "' + model + '" with id #' + id);
         res.redirect('/Models');

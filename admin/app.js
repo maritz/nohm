@@ -4,18 +4,22 @@ var express = require('express'),
 fs = require('fs'),
 RedisStore = require('connect-redis'),
 Ni = require('ni'),
-fugue = require('fugue');
+nohm = require('nohm')
+child_process = require('child_process');
 
 // sass watch hack for development :(
-var sassfiles = fs.readdirSync('public/css/default');
+var sassfiles = fs.readdirSync(__dirname + '/public/css/default');
 for (var i = 0, len = sassfiles.length; i < len; i = i + 1) {
   if (sassfiles[i].match(/\.scss$/i)) {
-    fs.watchFile('./public/css/default/' + sassfiles[i], function () {
+    fs.watchFile(__dirname + '/public/css/default/' + sassfiles[i], function () {
       console.log('file changed');
-      require('child_process').spawn('touch', ['public/css/default/style.scss'])
+      require('child_process').spawn('touch', [__dirname + '/public/css/default/style.scss'])
     });
   }
 }
+
+// sass does not communicate well at all, so we just ignore sass output here -.-
+var sass = child_process.spawn('/var/lib/gems/1.8/bin/sass', [/*'--debug-info',*/ '--watch', __dirname + '/public/css/default/style.scss']);
 
 process.on('uncaughtException', function(excp) {
   if (excp.message || excp.name) {
@@ -44,10 +48,20 @@ var merge = function () {
 
 // real application starts now!
 
-Ni.setRoot(__dirname);
-Ni.config.redis_prefix = 'nohm';
+// load config
+require('./config');
+
 
 Ni.boot(function() {
+  nohm.connect(Ni.config('redis_port'), Ni.config('redis_host'));
+  var nohmclient = nohm.getClient();
+  nohmclient.select(Ni.config('redis_nohm_db'), function (err) {
+    if (err) {
+      console.dir(err);
+    }
+    Ni.config('nohmclient', nohmclient);
+  });
+  
   
   var workerstart = new Date().toLocaleTimeString();
   
@@ -70,46 +84,48 @@ Ni.boot(function() {
   // start main app pre-routing stuff
   app.use(express.bodyDecoder());
   app.use(express.cookieDecoder());
-  app.use(express.session({store: new RedisStore({magAge: 60000 * 60 * 24})})); // one day
+  var redisSessionStore = new RedisStore({magAge: 60000 * 60 * 24, port: Ni.config('redis_port')}); // one day
+  redisSessionStore.client.select(Ni.config('redis_session_db'), function () {
+    
+    app.use(express.session({
+      key: Ni.config('cookie_key'),
+      secret: Ni.config('cookie_secret'),
+      store: redisSessionStore}));
+    
+    
+    app.use(function (req, res, next) {
+      res.original_render = res.render;
+      res.rlocals = {};
+      res.render = function (file, options) {
+        var rlocals = res.rlocals;
+        rlocals.session = req.session;
+        if (typeof(options) === 'undefined') {
+          options = {};
+        }
+        options.locals = merge(options.locals, rlocals);
+        if (req.xhr) {
+          options.layout = false;
+        }
+        res.original_render(file, options);
+      };
+      next();
+    });
+    
+    app.use(Ni.router);
+    
+    app.use(Ni.renderView(function(req, res, next, filename) {
+      res.render(filename, {layout: __dirname + '/views/layout.jade'});
+    }));
+    
+    app.use(function (req, res, next) {
+      res.render('404');
+    });
+    
+    if (app.set('env') !== 'production') {
+      app.use(express.errorHandler({showStack: true}));
+    }
   
-  app.use(function (req, res, next) {
-    res.original_render = res.render;
-    res.rlocals = {};
-    res.render = function (file, options) {
-      var rlocals = res.rlocals;
-      rlocals.session = req.session;
-      if (typeof(options) === 'undefined') {
-        options = {};
-      }
-      options.locals = merge(options.locals, rlocals);
-      if (req.xhr) {
-        options.layout = false;
-      }
-      res.original_render(file, options);
-    };
-    next();
-  });
-  
-  app.use(Ni.router);
-  
-  app.use(Ni.view(function(req, res, next, filename) {
-    res.render(filename);
-  }));
-  
-  app.use(function (req, res, next) {
-    res.render('404');
-  });
-  
-  if (app.set('env') !== 'production') {
-    app.use(express.errorHandler({showStack: true}));
-  }
-
-  fugue.start(app, 3001, null, 2, {
-    started: function () {
-      console.log('listening on 3001');
-    },
-    log_file: __dirname + '/log/workers.log',
-    master_pid_path: '/tmp/fugue-master-nohmadmin.pid',
-    verbose: true
+    app.listen(Ni.config('port'), Ni.config('host'));
+    console.log('listening to '+Ni.config('host')+':'+Ni.config('port'));
   });
 });

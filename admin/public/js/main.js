@@ -67,7 +67,7 @@ http://chillu.com/2007/9/30/jquery-columnizelist-plugin
     var tag = container[0].tagName.toLowerCase();
     var classN = container[0].className;
     var colwidth = Math.floor($(container).width()/settings.cols);
-    var maxheight = 0;
+    var maxheight = 10;
     // Prevent stomping on existing ids with pseudo-random string
     var rand = Math.floor(Math.random().toPrecision(6)*10e6);
     $('<ul id="container'+rand+'" class="'+classN+'"></ul>').css({width:$(container).width()+'px'}).insertBefore(container);

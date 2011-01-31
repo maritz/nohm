@@ -2,7 +2,7 @@
     "name": "nohm",
     "version": "0.1.10admin",
     "engines": {
-        "node" : ">=0.3.0" 
+        "node" : ">=0.2.6" 
     },
     "author": "Moritz Peters",
     "directories": {
