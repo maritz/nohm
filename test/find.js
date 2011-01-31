@@ -245,13 +245,15 @@ exports.findByMixedIndex = function (t) {
   var user = new UserFindMockup(),
   user2 = new UserFindMockup(),
   user3 = new UserFindMockup(),
+  user4 = new UserFindMockup(),
   findUser = new UserFindMockup();
   t.expect(1);
 
   user.p({
     name: 'mixedindextest',
     email: 'mixedindextest@hurgel.de',
-    number: 3
+    number: 3,
+    number2: 33
   });
 
   user2.p({
@@ -266,6 +268,13 @@ exports.findByMixedIndex = function (t) {
     email: 'mixedindextest3@hurgel.de',
     number: 4,
     number2: 1
+  });
+  
+  user4.p({
+    name: 'mixedindextest',
+    email: 'mixedindextest4@hurgel.de',
+    number: 1,
+    number2: 33
   });
 
   user.save(function (err) {
@@ -283,20 +292,26 @@ exports.findByMixedIndex = function (t) {
           console.dir(err);
           t.done();
         }
-        findUser.find({
-          number: {
-            min: 2
-          },
-          number2: {
-            max: 100
-          },
-          name: 'mixedindextest'
-        }, function (err, ids) {
+        user4.save(function (err) {
           if (err) {
             console.dir(err);
+            t.done();
           }
-          t.same(ids, [user2.id], 'The found id did not match the id of the saved object.');
-          t.done();
+          findUser.find({
+            number: {
+              min: 2
+            },
+            number2: {
+              max: 100
+            },
+            name: 'mixedindextest'
+          }, function (err, ids) {
+            if (err) {
+              console.dir(err);
+            }
+            t.same(ids, [user.id, user2.id], 'The found id did not match the id of the saved object.');
+            t.done();
+          });
         });
       });
     });
@@ -396,4 +411,37 @@ exports.findByMixedIndexMissing = function (t) {
       });
     });
   });
+};
+
+
+exports.findNumericWithoutLimit = function (t) {
+  var findUser = new UserFindMockup()
+  , usersLooped = 0
+  , loopUserCreation = function () {
+    usersLooped++;
+    if (usersLooped === 55) {  
+      findUser.find({
+        number: {
+          min: 1,
+          limit: 0
+        }
+      }, function (err, ids) {
+        errLogger(err);
+        t.ok(ids.length > 54, 'The limit: 0 option did not return more than 50 ids.');
+        t.done();
+      });
+    }
+  };
+  t.expect(1);
+  
+  for (var i = 0, len = 55; i < len; i++) {
+    var user = new UserFindMockup();  
+    user.p({
+      name: 'findNumericWithoutLimit'+i,
+      email: 'findNumericWithoutLimit'+i+'@hurgel.de',
+      number: i
+    });
+    
+    user.save(loopUserCreation);
+  }
 };

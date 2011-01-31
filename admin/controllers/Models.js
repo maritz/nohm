@@ -16,7 +16,7 @@ getMeta = function getMeta (model, forceRefresh, callback) {
     if (!redis)
       redis = Ni.config('nohmclient');
     redis.keys(Ni.config('redis_prefix') + ':meta:*', function (err, keys) {
-      if (keys !== [] && ! err) {
+      if (Array.isArray(keys) && keys.length > 0 && ! err) {
         keys.forEach(function (value, i) {
           value = value.toString();
           var modelname = value.replace(/^[^:]*:meta:/, '');
@@ -27,6 +27,8 @@ getMeta = function getMeta (model, forceRefresh, callback) {
                 modelCache[modelname][i] = JSON.parse(val.toString());
               });
             }
+            console.dir(modelname);
+            console.dir(model);
             if (modelname === model) {
               callback(modelCache[modelname]);
             } else {

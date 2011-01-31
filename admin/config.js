@@ -11,12 +11,13 @@ Ni.config('host', null);
 
 
 // redis
-Ni.config('redis_prefix', 'nohm');
+Ni.config('redis_prefix', 'tests');
 Ni.config('redis_host', '127.0.0.1');
-Ni.config('redis_port', '6385');
+Ni.config('redis_port', '6379');
+//Ni.config('redis_port', '6385');
 Ni.config('redis_general_db', 1);
 Ni.config('redis_session_db', 4);
-Ni.config('redis_nohm_db', 3);
+Ni.config('redis_nohm_db', 0);
 
 // cookies
 Ni.config('cookie_key', 'nohm-admin');
