@@ -1,3 +1,6 @@
+### v0.2
+   - merged admin branch (this adds an optional and very basic admin web interface)
+   - a lot of fixes for find and indexes
 ### v0.1.4
    - three small changes
 ### v0.1.3
