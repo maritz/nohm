@@ -63,12 +63,12 @@ process.argv.forEach(function (val, index) {
 });
 
 var runner = function () {
-    process.chdir(__dirname);
-    run(['features.js', 'validations.js', 'relations.js', 'find.js']);
+  process.chdir(__dirname);
+  run(['features.js', 'validations.js', 'relations.js', 'find.js']);
 }
 
-var redis = require('redis').createClient();
-require('nohm').connect();
+
+var redis = require(__dirname+'/../lib/nohm').Nohm.client;
 redis.keys(prefix + ':*', function (err, keys) {
   if (!keys || keys.length == 0) {
     return runner();

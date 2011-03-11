@@ -2,17 +2,14 @@
 var util = require('util');
 
 exports.checkModules = function (t) {
-  var redis, nohm, Class, Conduct;
-  t.expect(4);
+  var redis, nohm, Conduct;
+  t.expect(3);
 
   redis = require('redis');
   t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
 
   nohm = require('nohm');
-  t.ok(typeof nohm.Model === 'function', 'nohm should be available -- something is fishy here.');
-
-  Class = require('class');
-  t.ok(typeof Class.Class === 'function', 'Class should be available -- forgot to do "git submodule update --init"?');
+  t.ok(typeof nohm.Nohm === 'function', 'nohm should be available -- something is fishy here.');
 
   Conduct = require('conductor');
   t.ok(typeof Conduct === 'function', 'Conductor should be available.');
@@ -30,46 +27,42 @@ process.argv.forEach(function (val, index) {
 
 // real tests start in 3.. 2.. 1.. NOW!
 var redis = require('redis').createClient();
-var nohm = require('nohm');
+var nohm = require('nohm').Nohm;
 var Conduct = require('conductor');
-var UserMockup = nohm.Model.extend({
-  constructor: function () {
-    this.modelName = 'UserMockup';
-    this.properties = {
-      name: {
-        type: 'string',
-        value: 'test',
-        unique: true,
-        validations: [
-          'notEmpty'
-        ]
-      },
-      visits: {
-        type: 'integer',
-        index: true
-      },
-      email: {
-        type: 'string',
-        unique: true,
-        value: 'email@email.de',
-        validations: [
-          'email'
-        ]
-      },
-      country: {
-        type: 'string',
-        value: 'Tibet',
-        index: true,
-        validations: [
-          'notEmpty'
-        ]
-      },
-      json: {
-        type: 'json',
-        value: '{}'
-      }
-    };
-    nohm.Model.call(this);
+var UserMockup = nohm.model('UserMockup', {
+  properties: {
+    name: {
+      type: 'string',
+      value: 'test',
+      unique: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+    visits: {
+      type: 'integer',
+      index: true
+    },
+    email: {
+      type: 'string',
+      unique: true,
+      value: 'email@email.de',
+      validations: [
+        'email'
+      ]
+    },
+    country: {
+      type: 'string',
+      value: 'Tibet',
+      index: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+    json: {
+      type: 'json',
+      value: '{}'
+    }
   }
 });
 
