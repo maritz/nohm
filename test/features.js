@@ -271,7 +271,7 @@ exports.remove = function (t) {
   user.p('name', 'deleteTest');
   user.p('email', 'deleteTest@asdasd.de');
   user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
+    t.ok(!err, 'There was an unexpected problem: ' + err);
     if (err) {
       t.done();
     }
