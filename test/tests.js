@@ -1,6 +1,5 @@
 require.paths.unshift(__dirname); //tests
 require.paths.unshift(__dirname + '/../lib'); // nohm itself
-require.paths.unshift(__dirname + '/../lib/class/lib'); // class system
 require.paths.unshift(__dirname + '/../lib/conductor/lib'); // conductor
 
 var nodeunit = require('nodeunit')
@@ -64,7 +63,7 @@ process.argv.forEach(function (val, index) {
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['features.js', 'validations.js', 'relations.js', 'find.js']);
+  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js']);
 }
 
 
