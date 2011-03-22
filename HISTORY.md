@@ -1,3 +1,5 @@
+### v0.3
+   - refactored entire code structure
 ### v0.2
    - merged admin branch (this adds an optional and very basic admin web interface)
    - a lot of fixes for find and indexes
