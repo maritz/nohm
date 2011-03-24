@@ -1,6 +1,6 @@
 {
     "name": "nohm",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "engines": {
         "node" : ">=0.4.0" 
     },
@@ -11,7 +11,7 @@
     "description": "redis ORM (Object relational mapper)",
     "main": "./lib/nohm",
     "dependencies": {
-      "conductor": "0.1.0",
+      "async": "0.1.8",
       "redis": ">=0.5.7"
     }
 }
