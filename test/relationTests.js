@@ -1,42 +1,38 @@
-var util = require('util');
-
-
-var nohm = require('nohm').Nohm;
-var redis = nohm.client;
-var relationsprefix = nohm.prefix.relations;
-var UserLinkMockup = nohm.model('UserLinkMockup', {
-  properties: {
-    name: {
-      type: 'string',
-      value: 'testName',
-      unique: true,
-      validations: [
-        'notEmpty'
-      ]
+var util = require('util'),
+  nohm = require('nohm').Nohm,
+  redis = nohm.client,
+  relationsprefix = nohm.prefix.relations,
+  UserLinkMockup = nohm.model('UserLinkMockup', {
+    properties: {
+      name: {
+        type: 'string',
+        value: 'testName',
+        unique: true,
+        validations: [
+          'notEmpty'
+        ]
+      }
     }
-  }
-});
-
-var CommentLinkMockup = nohm.model('CommentLinkMockup', {
-  properties: {
-    text: {
-      type: 'string',
-      value: 'this is a comment! REALLY!',
-      validations: [
-        'notEmpty'
-      ]
+  }),
+  CommentLinkMockup = nohm.model('CommentLinkMockup', {
+    properties: {
+      text: {
+        type: 'string',
+        value: 'this is a comment! REALLY!',
+        validations: [
+          'notEmpty'
+        ]
+      }
     }
-  }
-});
-
-var RoleLinkMockup = nohm.model('RoleLinkMockup', {
-  properties: {
-    name: {
-      type: 'string',
-      value: 'user'
+  }),
+  RoleLinkMockup = nohm.model('RoleLinkMockup', {
+    properties: {
+      name: {
+        type: 'string',
+        value: 'user'
+      }
     }
-  }
-});
+  });
 
 exports.instances = function (t) {
   var user = new UserLinkMockup(),

@@ -1,4 +1,3 @@
-"use strict";
 var util = require('util');
 
 var nohm = require('nohm').Nohm;
@@ -160,6 +159,7 @@ exports.findAll = function (t) {
   t.expect(1);
   
   findUser.find(function (err, ids) {
+    ids.sort(); // usually redis returns them first-in-first-out, but not always
     t.same(all, ids, 'find() did not return all users when not given any search parameters.');
     t.done();
   });
