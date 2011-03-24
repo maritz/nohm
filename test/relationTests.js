@@ -189,12 +189,13 @@ exports.removeUnlinks = function (t) {
   var user = new UserLinkMockup(),
   role = new RoleLinkMockup(),
   role2 = new RoleLinkMockup(),
-  comment = new CommentLinkMockup();
+  comment = new CommentLinkMockup(),
+  linkName = 'creator';
   t.expect(9);
   
   user.p('name', 'removeUnlinks');
   
-  user.link(role);
+  user.link(role, linkName);
   user.link(comment);
   role2.link(user);
   
@@ -206,10 +207,10 @@ exports.removeUnlinks = function (t) {
     var tmpid = user.id;
     user.remove(function (err) {
       t.ok(!err, 'An unexpected redis error occured.');
-      redis.exists(relationsprefix + user.modelName + ':child:' +
+      redis.exists(relationsprefix + user.modelName + ':'+linkName+':' +
         role.modelName + ':' + tmpid, function (err, value) {
           t.ok(!err, 'An unexpected redis error occured.');
-          t.equals(value, 0, 'The link to the child role was not deleted');
+          t.equals(value, 0, 'The link to the custom-link-name role was not deleted');
           redis.exists(relationsprefix + user.modelName + ':child:' +
             comment.modelName + ':' + tmpid, function (err, value) {
               t.ok(!err, 'An unexpected redis error occured.');
