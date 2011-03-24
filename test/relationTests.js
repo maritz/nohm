@@ -154,7 +154,7 @@ exports.deeplink = function (t) {
   comment = new CommentLinkMockup(),
   userLinkCallbackCalled = false,
   commentLinkCallbackCalled = false;
-  t.expect(4);
+  t.expect(5);
 
   role.link(user, function (action, on, name, obj) {
     userLinkCallbackCalled = true;
@@ -170,12 +170,13 @@ exports.deeplink = function (t) {
     }
     t.ok(userLinkCallbackCalled, 'The user link callback was not called.');
     t.ok(commentLinkCallbackCalled, 'The comment link callback was not called.');
+    t.ok(user.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
     t.ok(comment.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
     redis.smembers(relationsprefix + comment.modelName + ':parent:' +
                     user.modelName + ':' + comment.id,
                     function (err, value) {
                       if (!err) {
-                        t.ok(value, 'The comment does not have the neccessary relations saved. There are probably more problems, if this occurs.');
+                        t.equals(value, user.id, 'The comment does not have the neccessary relations saved. There are probably more problems, if this occurs.');
                       } else {
                         console.dir(err);
                       }
@@ -190,7 +191,9 @@ exports.removeUnlinks = function (t) {
   role2 = new RoleLinkMockup(),
   comment = new CommentLinkMockup();
   t.expect(9);
-
+  
+  user.p('name', 'removeUnlinks');
+  
   user.link(role);
   user.link(comment);
   role2.link(user);
