@@ -347,8 +347,8 @@ exports.partialUpdate = function (t) {
   user2 = new UserMockup();
   t.expect(6);
 
-  user.p('name', 'updateTest1');
-  user.p('email', 'updateTest1@email.de');
+  user.p('name', 'partialUpdateTest1');
+  user.p('email', 'partialUpdateTest1@email.de');
   user.save(function (err) {
     t.ok(!err, 'There was a redis error in the update test. (creation part)');
     if (err) {
@@ -370,7 +370,7 @@ exports.partialUpdate = function (t) {
           t.done();
         }
         t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
-        t.ok(value.email.toString() === 'updateTest1@email.de', 'The user email was not left correctly.');
+        t.ok(value.email.toString() === 'partialUpdateTest1@email.de', 'The user email was not left correctly.');
         t.ok(value.visits.toString() === '10', 'The visits were not set correctly.');
         t.done();
       });
