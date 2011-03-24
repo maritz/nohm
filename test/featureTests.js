@@ -1,8 +1,7 @@
-"use strict";
 var util = require('util');
 
 exports.checkModules = function (t) {
-  var redis, nohm, Conduct;
+  var redis, nohm, async;
   t.expect(3);
 
   redis = require('redis');
@@ -11,8 +10,8 @@ exports.checkModules = function (t) {
   nohm = require('nohm');
   t.ok(typeof nohm.Nohm === 'function', 'nohm should be available -- something is fishy here.');
 
-  Conduct = require('conductor');
-  t.ok(typeof Conduct === 'function', 'Conductor should be available.');
+  async = require('async');
+  t.ok(typeof async !== 'undefined', 'async should be available.');
 
   t.done();
 };
@@ -26,45 +25,45 @@ process.argv.forEach(function (val, index) {
 });
 
 // real tests start in 3.. 2.. 1.. NOW!
-var redis = require('redis').createClient();
-var nohm = require('nohm').Nohm;
-var Conduct = require('conductor');
-var UserMockup = nohm.model('UserMockup', {
-  properties: {
-    name: {
-      type: 'string',
-      value: 'test',
-      unique: true,
-      validations: [
-        'notEmpty'
-      ]
-    },
-    visits: {
-      type: 'integer',
-      index: true
-    },
-    email: {
-      type: 'string',
-      unique: true,
-      value: 'email@email.de',
-      validations: [
-        'email'
-      ]
-    },
-    country: {
-      type: 'string',
-      value: 'Tibet',
-      index: true,
-      validations: [
-        'notEmpty'
-      ]
-    },
-    json: {
-      type: 'json',
-      value: '{}'
-    }
-  }
-});
+var redis = require('redis').createClient(),
+    nohm = require('nohm').Nohm,
+    async = require('async'),
+    UserMockup = nohm.model('UserMockup', {
+      properties: {
+        name: {
+          type: 'string',
+          value: 'test',
+          unique: true,
+          validations: [
+            'notEmpty'
+          ]
+        },
+        visits: {
+          type: 'integer',
+          index: true
+        },
+        email: {
+          type: 'string',
+          unique: true,
+          value: 'email@email.de',
+          validations: [
+            'email'
+          ]
+        },
+        country: {
+          type: 'string',
+          value: 'Tibet',
+          index: true,
+          validations: [
+            'notEmpty'
+          ]
+        },
+        json: {
+          type: 'json',
+          value: '{}'
+        }
+      }
+    });
 
 exports.redisClean = function (t) {
   t.expect(1);
@@ -246,27 +245,6 @@ exports.remove = function (t) {
         callback();
       });
   };
-  testBattery = new Conduct({
-    'hashes': ['_1', function (user, callback) {
-      testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
-    }],
-    'index': ['_1', function (user, callback) {
-      redis.sismember(prefix + ':index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
-        t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
-        callback();
-      });
-    }],
-    'scoredindex': ['_1', function (user, callback) {
-      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
-        t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
-        callback();
-      });
-    }],
-    'uniques': ['_1', function (user, callback) {
-      testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
-    }],
-    'done': ['hashes1', 'index1', 'scoredindex1', 'uniques1', t.done]
-  }, 'done1');
 
   user.p('name', 'deleteTest');
   user.p('email', 'deleteTest@asdasd.de');
@@ -283,7 +261,26 @@ exports.remove = function (t) {
       }
       t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
       user.id = id; // the other tests need it back. :D
-      testBattery(user);
+      async.series([
+        function (callback) {
+          testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
+        },
+        function (callback) {
+          redis.sismember(prefix + ':index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
+            t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
+          });
+          callback();
+        },
+        function (callback) {
+          redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
+            t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
+          });
+          callback();
+        },
+        function (callback) {
+          testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
+        }
+      ], t.done);
     });
   });
 };

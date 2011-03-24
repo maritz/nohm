@@ -1,6 +1,5 @@
 require.paths.unshift(__dirname); //tests
 require.paths.unshift(__dirname + '/../lib'); // nohm itself
-require.paths.unshift(__dirname + '/../lib/conductor/lib'); // conductor
 
 var nodeunit = require('nodeunit')
     , util = require('util');
@@ -34,6 +33,7 @@ run = function(files){
             }
         },
         done: function(assertions){
+          cleanup(function () {
             if (assertions.failures) {
               util.puts(
                 '\n' + bold(red('FAILURES: ')) + assertions.failures +
@@ -48,16 +48,21 @@ run = function(files){
                   );
                 process.exit(0);
             }
+          });
         }
     });
 };
 
 
-var prefix = 'tests';
+var prefix = 'tests',
+noCleanup = false;
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
     prefix = process.argv[index + 1];
+  }
+  if (val === '--no-cleanup') {
+    noCleanup = true;
   }
 });
 
@@ -67,17 +72,24 @@ var runner = function () {
 }
 
 
-var redis = require(__dirname+'/../lib/nohm').Nohm.client;
-redis.keys(prefix + ':*', function (err, keys) {
-  if (!keys || keys.length == 0) {
-    return runner();
-  }
-  for(var i = 0, len = keys.length, k = 0; i < len; i++) {
-    redis.del(keys[i], function () {
-      k = k+1;
-      if (k === len) {
-        runner();
-      }
-    });
-  }
-});
+var redis = require('redis').createClient(),
+    cleanup = function (cb, force) {
+      if ( ! force && noCleanup === true)
+        return cb();
+      redis.keys(prefix + ':*', function (err, keys) {
+        if (!keys || keys.length == 0) {
+          return cb();
+        }
+        for(var i = 0, len = keys.length, k = 0; i < len; i++) {
+          redis.del(keys[i], function () {
+            k = k+1;
+            if (k === len) {
+              cb();
+            }
+          });
+        }
+      });
+    },
+    Nohm = require('nohm').Nohm;
+Nohm.setClient(redis);    
+cleanup(runner, true);
