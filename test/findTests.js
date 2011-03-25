@@ -1,6 +1,6 @@
 var util = require('util');
 
-var nohm = require('nohm').Nohm;
+var nohm = require(__dirname+'/../lib/nohm').Nohm;
 var redis = nohm.client;
 var relationsprefix = nohm.prefix.relations;
 var UserFindMockup = nohm.model('UserFindMockup', {

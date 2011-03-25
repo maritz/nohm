@@ -1,6 +1,5 @@
-"use strict";
-var util = require('util');
-var nohm = require('nohm').Nohm;
+var util = require('util'),
+    nohm = require(__dirname+'/../lib/nohm').Nohm;
 
 // !!! this mockup must be defined valid from the start for most tests !!!
 var UserMockup = nohm.model('UserMockup', {

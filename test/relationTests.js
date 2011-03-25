@@ -1,5 +1,5 @@
 var util = require('util'),
-  nohm = require('nohm').Nohm,
+  nohm = require(__dirname+'/../lib/nohm').Nohm,
   redis = nohm.client,
   relationsprefix = nohm.prefix.relations,
   UserLinkMockup = nohm.model('UserLinkMockup', {

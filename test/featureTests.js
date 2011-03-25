@@ -7,7 +7,7 @@ exports.checkModules = function (t) {
   redis = require('redis');
   t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
 
-  nohm = require('nohm');
+  nohm = require(__dirname+'/../lib/nohm');
   t.ok(typeof nohm.Nohm === 'function', 'nohm should be available -- something is fishy here.');
 
   async = require('async');
@@ -26,7 +26,8 @@ process.argv.forEach(function (val, index) {
 
 // real tests start in 3.. 2.. 1.. NOW!
 var redis = require('redis').createClient(),
-    nohm = require('nohm').Nohm,
+    nohm = require(__dirname+'/../lib/nohm').Nohm,
+    helper = require(__dirname+'/../lib/helpers'),
     async = require('async'),
     UserMockup = nohm.model('UserMockup', {
       properties: {
@@ -72,6 +73,71 @@ exports.redisClean = function (t) {
     t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS '+prefix+':*:*Mockup:*" to see what keys could be the cause.');
     t.done();
   });
+};
+
+exports.idIntersection = function (t) {
+  var arr1 = [1,2,3,4,5,6,7,8,9],
+      arr2 = [2,3,4,10],
+      arr3 = [2,3,4,10],
+      arr4 = [],
+      arr5 = [16,28,39],
+      arr6 = ['hurgelwurz',28,39],
+      arr7 = ['hurgelwurz',28,39],
+      arr8 = [10,3,2],
+      testIntersection = function (arrs, resultTest) {
+        var result;
+            
+        result = helper.idIntersection.apply(null, arrs);
+        t.same(result, resultTest, 'idIntersection did not perform correctly.');
+      };
+  t.expect(9);
+  
+  testIntersection(
+    [arr1],
+    arr1
+  );
+  
+  testIntersection(
+    [arr1, arr2],
+    [2,3,4]
+  );
+  
+  testIntersection(
+    [arr1, arr2, arr3],
+    [2,3,4]
+  );
+  
+  testIntersection(
+    [arr2, arr3],
+    [2,3,4, 10]
+  );
+  
+  testIntersection(
+    [arr1, arr2, arr3, arr4],
+    []
+  );
+  
+  testIntersection(
+    [arr1, arr2, arr3, arr5],
+    []
+  );
+  
+  testIntersection(
+    [arr5, arr6],
+    [28,39]
+  );
+  
+  testIntersection(
+    [arr6, arr7],
+    [28,39]
+  );
+  
+  testIntersection(
+    [arr3, arr8],
+    [10, 3, 2]
+  );
+    
+  t.done();
 };
 
 exports.propertyGetter = function (t) {
