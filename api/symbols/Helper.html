@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="generator" content="JsDoc Toolkit" />
+		
+		<title>JsDoc Reference - Helper</title>
+
+    <script type="text/javascript" src="../jproton.js"></script>
+    <script type="text/javascript" src="../ui.js"></script>
+    <script type="text/javascript" src="../sh.js"></script>
+		<link rel=stylesheet href="../sh.css" type="text/css">
+		<link rel=stylesheet href="../default.css" type="text/css">
+	</head>
+
+	<body>
+		<div id="main-wrapper">
+			<div id="main">
+<!-- ============================== classes index ============================ -->
+				<div id="index" class="fixed">
+					<div id="index-wrapper">
+	<div class="header">
+	  <div id="index-close" title="Esconde o outline.">&nbsp;</div>
+	  <div id="index-title">Project Outline</div>
+	</div>
+	<div id="index-menu"><a href="../index.html">Class Index</a>
+	| <a href="../files.html">File Index</a></div>
+	
+	<div id="index-content">
+		
+		<div class="classList">
+			
+			<div class="section">
+				<div title='Global namespace.' class='itemName namespace'>
+				<div class='method-toggler'>&nbsp;</div><span class='icon'><i><a href="../symbols/_global_.html">_global_</a></i></span></div><div class='sectionItems'></div></div>
+			
+			<div class="section">
+				<div title='Helper functions that are used throughout nohm' class='itemName namespace'>
+				<div class='method-toggler'>&nbsp;</div><span class='icon'><a href="../symbols/Helper.html">Helper</a></span></div><div class='sectionItems'><div class='sectionItem classMethod'><b class='icon' title='This extends an object with x other objects.'><a href="../symbols/Helper.html#.$extend">$extend</a></b><span class='signature'>()</span></div><div class='sectionItem classMethod'><b class='icon' title='Get an object containing all the prefixes for the different key types.'><a href="../symbols/Helper.html#.getPrefix">getPrefix</a></b><span class='signature'>(<span>defaultPrefix</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Get the intersection of 2 or more id arrays.'><a href="../symbols/Helper.html#.idIntersection">idIntersection</a></b><span class='signature'>(<span title="(Array[]) The arrays (containing ids) you want to check">Arrays</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Checks if the last item in the given array is a function and returns that or an empty function.'><a href="../symbols/Helper.html#.getCallback">getCallback</a></b><span class='signature'>(<span>args</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Checks whether 2 nohm objects are the same.'><a href="../symbols/Helper.html#.checkEqual">checkEqual</a></b><span class='signature'>(<span>obj1</span>, <span>obj2</span>)</span></div></div></div>
+			
+			<div class="section">
+				<div title='The Nohm object used for some general configuration and model creation.' class='itemName namespace'>
+				<div class='method-toggler'>&nbsp;</div><span class='icon'><a href="../symbols/Nohm.html">Nohm</a></span></div><div class='sectionItems'><div class='sectionItem classProperty'><b class='icon' title='The redis prefixed key object.'><a href="../symbols/Nohm.html#.prefix">prefix</a></b></div><div class='sectionItem classProperty'><b class='icon' title='The property types that get indexed in a sorted set.'><a href="../symbols/Nohm.html#.indexNumberTypes">indexNumberTypes</a></b></div><div class='sectionItem classProperty'><b class='icon' title='The current global nohm redis client'><a href="../symbols/Nohm.html#.client">client</a></b></div><div class='sectionItem classProperty'><b class='icon' title='Whether to store the meta values about models.'><a href="../symbols/Nohm.html#.meta">meta</a></b></div><div class='sectionItem classProperty'><b class='icon' title='Get or set a property.'><a href="../symbols/Nohm.html#.p">p</a></b></div><div class='sectionItem classMethod'><b class='icon' title='Creates and returns a new model with the given name and options.'><a href="../symbols/Nohm.html#.model">model</a></b><span class='signature'>(<span title="(String) Name of the model.">Name</span>, <span title="(Object) This is an object containing the actual model definitions.">Option</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='This function is used whenever an error occurs in nohm.'><a href="../symbols/Nohm.html#.logError">logError</a></b><span class='signature'>(<span>err</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Set the Nohm global redis client.'><a href="../symbols/Nohm.html#.setClient">setClient</a></b><span class='signature'>(<span>client</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Returns the key needed to retreive a hash (properties) of an instance.'><a href="../symbols/Nohm.html#getHashKey">getHashKey</a></b><span class='signature'>(<span title="(Number) Id of the model instance.">id</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Returns the client of either the model (if set) or the global Nohm object.'><a href="../symbols/Nohm.html#getClient">getClient</a></b><span class='signature'>()</span></div><div class='sectionItem classMethod'><b class='icon' title='Get an array of all properties that have been changed.'><a href="../symbols/Nohm.html#.propertyDiff">propertyDiff</a></b><span class='signature'>(<span>key</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Resets the values of all or one propert(y/ies).'><a href="../symbols/Nohm.html#.propertyReset">propertyReset</a></b><span class='signature'>(<span>key</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Get all properties with values either as an array or as json (param true)'><a href="../symbols/Nohm.html#.allProperties">allProperties</a></b><span class='signature'>(<span>json</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Check if the object has a relation to another object.'><a href="../symbols/Nohm.html#.has">has</a></b><span class='signature'>(<span>obj</span>, <span>name</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Returns the key needed for getting related objects'><a href="../symbols/Nohm.html#.relationKey">relationKey</a></b><span class='signature'>(<span>objName</span>, <span>name</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Retrieves all relations to another model.'><a href="../symbols/Nohm.html#.getAll">getAll</a></b><span class='signature'>(<span>objName</span>, <span>name</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Adds a reference to another object.'><a href="../symbols/Nohm.html#.link">link</a></b><span class='signature'>(<span>obj</span>, <span>name</span>, <span>directChange</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Removes the reference in the current object to the object given in the first argument.'><a href="../symbols/Nohm.html#.unlink">unlink</a></b><span class='signature'>(<span>obj</span>, <span>name</span>, <span>directChange</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Removes all links to all other object instances'><a href="../symbols/Nohm.html#.unlinkAll">unlinkAll</a></b><span class='signature'>(<span>client</span>, <span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Retrieves the hash data by id and puts it into the properties.'><a href="../symbols/Nohm.html#.load">load</a></b><span class='signature'>(<span>id</span>, <span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Finds ids of objects by search arguments'><a href="../symbols/Nohm.html#.find">find</a></b><span class='signature'>(<span>searches</span>, <span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Saves the object by either creating, or updating it.'><a href="../symbols/Nohm.html#.save">save</a></b><span class='signature'>(<span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Only operates on properties that have been changed'><a href="../symbols/Nohm.html#.partialSave">partialSave</a></b><span class='signature'>(<span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Remove an objet from the database.'><a href="../symbols/Nohm.html#.remove">remove</a></b><span class='signature'>(<span>callback</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Check if one or all propert(y/ies) are valid.'><a href="../symbols/Nohm.html#.valid">valid</a></b><span class='signature'>(<span>key</span>, <span>setDirectly</span>, <span>callback</span>)</span></div></div></div>
+			
+			<div class="section">
+				<div title='' class='itemName namespace'>
+				<div class='method-toggler'>&nbsp;</div><span class='icon'><a href="../symbols/validators.html">validators</a></span></div><div class='sectionItems'><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is not empty.'><a href="../symbols/validators.html#.notEmpty">notEmpty</a></b><span class='signature'>(<span>value</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is of at least a given length (params[0]) or is optional (params[1]) and empty'><a href="../symbols/validators.html#.minLength">minLength</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is of at most a given length (params[0])'><a href="../symbols/validators.html#.maxLength">maxLength</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is of at least a given value (params[0]) (pun intended :P ) or is optional (params[1]) and zero'><a href="../symbols/validators.html#.min">min</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is of at most a given value (params[0])'><a href="../symbols/validators.html#.max">max</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid email adress or empty if it's optional (params[0])'><a href="../symbols/validators.html#.email">email</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid url or empty if it's optional (params[0])'><a href="../symbols/validators.html#.url">url</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a date that the Date object can feed on or is optional (params[0]) and empty'><a href="../symbols/validators.html#.date">date</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid ISO Date (YYYY-MM-DD) or is optional (params[0]) and empty'><a href="../symbols/validators.html#.dateISO">dateISO</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid US number (thousands seperator comma, decimal seperator point) string or is optional (params[0]) and empty'><a href="../symbols/validators.html#.numberUS">numberUS</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid EU number (thousands seperator point, decimal seperator comma) string or is optional (params[0]) and empty'><a href="../symbols/validators.html#.numberEU">numberEU</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid SI number (thousands seperator space, decimal seperator point or comma) string or is optional (params[0]) and empty'><a href="../symbols/validators.html#.numberSI">numberSI</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Make sure a value is a valid (SI, US or EU) number string or is optional (params[0]) and empty'><a href="../symbols/validators.html#.number">number</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div><div class='sectionItem classMethod'><b class='icon' title='Please don't use this.'><a href="../symbols/validators.html#.digits">digits</a></b><span class='signature'>(<span>value</span>, <span>params</span>)</span></div></div></div>
+			
+		</div>
+	</div>
+</div>
+	
+
+				</div>
+				<div id="index-toggler" class="fixed">&laquo;</div>
+
+<!-- ============================== header ================================= -->	
+				<!-- begin static/header.html -->
+				<div class="header">
+  Framework jProton
+</div>
+
+				<!-- end static/header.html -->
+		
+				<div id="content">
+<!-- ============================== class title ============================ -->
+					<h1 class="classTitle">
+						Namespace Helper
+					</h1>
+		
+<!-- ============================== class summary ========================== -->			
+<!-- 
+					
+-->
+					<div class="full-description">
+						<p></p>
+					</div>
+					
+						<p class="fileName itemName"><i>Defined in: </i> <span class="icon"><a href="../symbols/src/_home_cloud9_devel_nohm_lib_helpers.js.html">helpers.js</a>.</span></p>
+					
+		
+<!-- ============================== constructor summary ==================== -->			
+					
+		
+<!-- ============================== properties summary ===================== -->
+					
+		
+<!-- ============================== methods summary ======================== -->
+					
+						
+						
+						<div class="summary section">
+							<div class="sectionTitle">Method Summary</div>
+							<div class="sectionItems">
+							
+								<div class="sectionItem classMethod">
+								  <!--
+									<div class="module-filter">&nbsp;</div>
+									-->
+									<b class="icon" title="This extends an object with x other objects."><a href="../symbols/Helper.html#.$extend">$extend</a></b><span class='signature'>()</span>
+									<span class='description'>This extends an object with x other objects.</span>
+								</div>
+							
+								<div class="sectionItem classMethod">
+								  <!--
+									<div class="module-filter">&nbsp;</div>
+									-->
+									<b class="icon" title="Get an object containing all the prefixes for the different key types."><a href="../symbols/Helper.html#.getPrefix">getPrefix</a></b><span class='signature'>(<span>defaultPrefix</span>)</span>
+									<span class='description'>Get an object containing all the prefixes for the different key types.</span>
+								</div>
+							
+								<div class="sectionItem classMethod">
+								  <!--
+									<div class="module-filter">&nbsp;</div>
+									-->
+									<b class="icon" title="Get the intersection of 2 or more id arrays."><a href="../symbols/Helper.html#.idIntersection">idIntersection</a></b><span class='signature'>(<span title="(Array[]) The arrays (containing ids) you want to check">Arrays</span>)</span>
+									<span class='description'>Get the intersection of 2 or more id arrays.</span>
+								</div>
+							
+								<div class="sectionItem classMethod">
+								  <!--
+									<div class="module-filter">&nbsp;</div>
+									-->
+									<b class="icon" title="Checks if the last item in the given array is a function and returns that or an empty function."><a href="../symbols/Helper.html#.getCallback">getCallback</a></b><span class='signature'>(<span>args</span>)</span>
+									<span class='description'>Checks if the last item in the given array is a function and returns that or an empty function.</span>
+								</div>
+							
+								<div class="sectionItem classMethod">
+								  <!--
+									<div class="module-filter">&nbsp;</div>
+									-->
+									<b class="icon" title="Checks whether 2 nohm objects are the same."><a href="../symbols/Helper.html#.checkEqual">checkEqual</a></b><span class='signature'>(<span>obj1</span>, <span>obj2</span>)</span>
+									<span class='description'>Checks whether 2 nohm objects are the same.</span>
+								</div>
+							
+							</div>
+						</div>
+						
+					
+		
+<!-- ============================== constructor details ==================== -->		
+					
+		
+<!-- ============================== field details ========================== -->		
+					
+		
+<!-- ============================== method details ========================= -->		
+					
+					<div class="details section">
+						<div class="sectionTitle">
+							Method Detail
+						</div>
+						<div class="sectionItems">
+							
+							
+								<div class='sectionItem classMethod '>
+									<a name=".$extend"> </a>
+									<div class="itemTitle icon">
+										Helper.$extend<span class="signature">()</span>
+										
+									</div>
+									<div class="full-description">
+										This extends an object with x other objects.
+										
+										
+									
+										
+										<pre class="prettyprint"></pre>
+										
+									</div>
+									
+									
+									
+									
+									
+									
+									
+									
+										<div class="heading">See:</div>
+										<table class="methodItem"><tbody>
+										
+											<tr>
+												<td class="methodItemDesc">
+													http://api.jquery.com/jQuery.extend/
+												</td>
+											</tr>
+										
+										</tbody></table>
+									
+				
+								</div>
+							
+							
+								<div class='sectionItem classMethod '>
+									<a name=".getPrefix"> </a>
+									<div class="itemTitle icon">
+										Helper.getPrefix<span class="signature">(<span>defaultPrefix</span>)</span>
+										
+									</div>
+									<div class="full-description">
+										Get an object containing all the prefixes for the different key types.
+										
+										
+									
+										
+										<pre class="prettyprint"></pre>
+										
+									</div>
+									
+									
+										<div class="heading">Parameters:</div>
+										<table class="methodItem"><tbody>
+										
+											<tr>
+												<td class="methodItemType">
+												  
+												</td>
+												<td class="methodItemName">
+												  <b>defaultPrefix</b>
+												</td>
+												<td class="methodItemDesc">
+											    
+												</td>
+											</tr>
+										
+										</tbody></table>
+									
+									
+									
+									
+									
+									
+									
+				
+								</div>
+							
+							
+								<div class='sectionItem classMethod '>
+									<a name=".idIntersection"> </a>
+									<div class="itemTitle icon">
+										Helper.idIntersection<span class="signature">(<span title="(Array[]) The arrays (containing ids) you want to check">Arrays</span>)</span>
+										
+									</div>
+									<div class="full-description">
+										Get the intersection of 2 or more id arrays.
+										
+										
+									
+										
+										<pre class="prettyprint"></pre>
+										
+									</div>
+									
+									
+										<div class="heading">Parameters:</div>
+										<table class="methodItem"><tbody>
+										
+											<tr>
+												<td class="methodItemType">
+												  <span class="light">{Array[]}</span> 
+												</td>
+												<td class="methodItemName">
+												  <b>Arrays</b>
+												</td>
+												<td class="methodItemDesc">
+											    The arrays (containing ids) you want to check
+												</td>
+											</tr>
+										
+										</tbody></table>
+									
+									
+									
+									
+									
+									
+									
+				
+								</div>
+							
+							
+								<div class='sectionItem classMethod '>
+									<a name=".getCallback"> </a>
+									<div class="itemTitle icon">
+										Helper.getCallback<span class="signature">(<span>args</span>)</span>
+										
+									</div>
+									<div class="full-description">
+										Checks if the last item in the given array is a function and returns that or an empty function.
+										
+										
+									
+										
+										<pre class="prettyprint"></pre>
+										
+									</div>
+									
+									
+										<div class="heading">Parameters:</div>
+										<table class="methodItem"><tbody>
+										
+											<tr>
+												<td class="methodItemType">
+												  
+												</td>
+												<td class="methodItemName">
+												  <b>args</b>
+												</td>
+												<td class="methodItemDesc">
+											    
+												</td>
+											</tr>
+										
+										</tbody></table>
+									
+									
+									
+									
+									
+									
+									
+				
+								</div>
+							
+							
+								<div class='sectionItem classMethod '>
+									<a name=".checkEqual"> </a>
+									<div class="itemTitle icon">
+										Helper.checkEqual<span class="signature">(<span>obj1</span>, <span>obj2</span>)</span>
+										
+									</div>
+									<div class="full-description">
+										Checks whether 2 nohm objects are the same.
+										
+										
+									
+										
+										<pre class="prettyprint"></pre>
+										
+									</div>
+									
+									
+										<div class="heading">Parameters:</div>
+										<table class="methodItem"><tbody>
+										
+											<tr>
+												<td class="methodItemType">
+												  
+												</td>
+												<td class="methodItemName">
+												  <b>obj1</b>
+												</td>
+												<td class="methodItemDesc">
+											    
+												</td>
+											</tr>
+										
+											<tr>
+												<td class="methodItemType">
+												  
+												</td>
+												<td class="methodItemName">
+												  <b>obj2</b>
+												</td>
+												<td class="methodItemDesc">
+											    
+												</td>
+											</tr>
+										
+										</tbody></table>
+									
+									
+									
+									
+									
+									
+									
+				
+								</div>
+							
+						</div>
+					</div>
+					
+					
+				</div>
+				
+<!-- ============================== footer ================================= -->
+				<div class="fineprint" style="clear:both">
+					
+					Documentation generated by <a href="http://www.jsdoctoolkit.org/" target="_blank">JsDoc Toolkit</a> 2.3.2 on Wed Mar 30 2011 16:15:35 GMT+0200 (MESZ)
+				</div>
+				
+			</div>
+		</div>
+		
+	</body>
+</html>
