@@ -4,7 +4,7 @@ layout: default
 ---
 
 ## Api
-You can find the api <a href="api/index.html">here</a>.
+You can find the api [here](api/index.html).
 ## How To
 ### Overview
 Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
@@ -16,7 +16,7 @@ Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-
   nohm.setClient(redisClient);
 {% endhighlight %}
 ### Basics
-There are some things you need to do before you can use nohm. If you just want to know how actually use nohm models, skip to the next part "Models".
+There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
 
 #### Prefix
 The first thing you should do is set a prefix for the redis keys. This should be unique on the redis database you're using since you may run into conflicts otherwise.
@@ -54,7 +54,6 @@ By default nohm just logs errors it encounters to the console. However you can o
 ### Models
 You start by defining a Model. A model needs a name and properties and can optionally have custom methods and a redis client.
 
-<small>Strictly speaking the properties are optional as well, but a model really doesn't make sense without them.</small>
 
 {% highlight js %}    
 var someModel = nohm.model('YourModelName', {
@@ -67,6 +66,7 @@ var someModel = nohm.model('YourModelName', {
   client: someRedisClient // optional
 });
 {% endhighlight %}
+<p><small>Strictly speaking the properties are optional as well, but a model really doesn't make sense without them.</small></p>
 
 The first parameter is the name of the model that is used internally by nohm for the redis keys and relations. This should be unique across your application (prefix/db).
 The second is an object containing properties, methods and the client.
@@ -89,7 +89,7 @@ A property can have the following options: (explained in more detail later)
   <dd>
     The variable type/behaviour of the property. All values will be cast to this value.<br/>
     There are a few built-in types:<br/>
-      <code>string, number, float, boolean, timestamp and json</code><br/>
+      <code>string, integer, float, boolean, timestamp and json</code><br/>
     You can also define a behaviour. This is a function that type-casts the value in whatever way you want.
   </dd>
   <dt>
@@ -118,7 +118,7 @@ A property can have the following options: (explained in more detail later)
     Whether the value should be unique among all instances of this model.
   </dd>
 </dl>
-<small><bold>bold</bold> = mandatory</small>
+<p><small><bold>bold</bold> = mandatory</small></p>
 
 Here's an example of a very basic user model:
 
@@ -162,7 +162,7 @@ var User = nohm.model('User', {
 ###### String
 Normal javascript string.
 
-###### Number / Float
+###### Integer / Float
 The value is parsed to an Int(base 10) or Float and defaults to 0 if NaN.
 
 ###### Boolean
@@ -208,9 +208,9 @@ test.p('balance', -6);
 test.p('balance'); // 9
 {% endhighlight %}
 
-##### Validations
+##### Validators
 A property can have multiple validators. These are invoked whenever a model is saved or manually validated.
-Validations of a property are defined as an array of strings , arrays and functions.
+Validations of a property are defined as an array of strings, arrays and functions.
 
 Here's an example with all three ways:
 {% highlight js %}
@@ -230,29 +230,96 @@ var validatorModel = nohm.model('validatorModel', {
         ['email', true]
       ]
     },
-    password: {
-      value: '',
-      type: function (value) {
-        return value + 'someSeed'; // and hash it of course, but to make this short that is omitted in this example
-      },
-      validations: [
-        ['minLength', 6]
-      ]
-    },
-    visits: {
+    customValidation: {
       type: 'integer',
-      index: true
+      validations: [
+        function checkIsFour(value) {
+          return value === 4;
+        }
+      ]
     }
   }
 });
 {% endhighlight %}
 
+You can find the documentation of the [built-in validations in the api](api/symbols/validators.html)
 
-The following validations are built in:
+### Validating
+Your model instance is automatically validated on saving but you can manually validate it as well.  
+There are two ways to do that. In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
+
+#### On setting a property
+Passing true as the third parameter (or second if the first is an object of all properties) validates the property and only changes it if the new value validates.
+{% highlight js %}
+user.p('builtIns', '', true); // returns false and does NOT change the property
+user.p('builtIns', 'asd', true); // returns true and changes the property
+user.p('optionalEmail', 'asd@asd.de', true); // returns true and changes the property - even if the email is used already, see below
+{% endhighlight %}
+
+This is limited to the normal validators and does **not** check uniqueness.
+
+#### Calling valid()
+{% highlight js %}
+user.p({
+  builtIns: 'teststringlongerthan20chars',
+  optionalEmail: 'hurgs',
+  customValidation: 3
+});
+user.valid(); // returns false
+user.errors; // { builtIns: ['maxLength'], optionalEmail: ['email'], customValidation: ['custom'] }
+user.p({
+  builtIns: 'hurgs',
+  optionalEmail: 'valid@email.de',
+  customValidation: 4
+});
+user.valid(false, false, function (valid) {
+  if ( ! valid) {
+    user.errors; // if the email is already taken this will be: { optionalEmail: ['unique'] }
+  } else {
+    // valid! YEHAA!
+  }
+});
+{% endhighlight %}
+
+There are a few things to note here:
+* The user errors object contains the errors for each property since the last validation of that property (this is a problem that will be fixed)
+* The first argument to valid is an optional property name. If set, only that property will be validated.
+* The second argument to valid is to tell the unique check whether it should lock the unique. The unique checks are the last validation and if the model is not valid by the time the uniques are checked, this argument is ignored and no unique is locked. If the unique check of any property results in an error all unique locks that were done in the process of the previous checks are removed (however not the old unique locks of the last valid state).
 
 
-### Typecasts/Behaviours
-### Saving/Updating/Deleting
+### Saving
+Saving an instance automatically decides whether it needs to be created or updated on the base of checking for this.id.
+This means that if you haven't either manually set the id or load()ed the instance from the database, it will try to create a new instance.
+Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
+
+{% highlight js %}
+user.save(function (success) {
+  if ( ! success) {
+    this.errors; // the errors in validation
+  } else {
+    // it's in the db :)
+  }
+});
+{% endhighlight %}
+
+### Deleting
+Calling remove() completely removes the instance from the db, including relations.
+This only works on instances where the id is set (manually or from load()).
+
 ### Loading
+To populate the properties of an existing instance you have to load it via id.
+{% highlight js %}
+user.load(1234, function (err) {
+  if (err) {
+    // err may be a redis error or "not found" if the id was not found in the db.
+  } else {
+    this.allProperties(); // all the properties - now loaded from the db
+  }
+});
+{% endhighlight %}
+
+
 ### Finding
 ### Relations
+{% highlight js %}
+{% endhighlight %}
