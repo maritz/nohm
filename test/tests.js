@@ -91,5 +91,4 @@ var redis = require('redis').createClient(),
       });
     },
     Nohm = require(__dirname+'/../lib/nohm').Nohm;
-Nohm.setClient(redis);    
 cleanup(runner, true);

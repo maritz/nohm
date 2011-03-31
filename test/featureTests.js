@@ -140,6 +140,17 @@ exports.idIntersection = function (t) {
   t.done();
 };
 
+exports.setRedisClient = function (t) {
+  t.expect(2);
+  var user = new UserMockup();
+  t.equal(user, {}, 'Creating a model without having a nohm client set did not return false.');
+  
+  nohm.setClient(redis);
+  user = new UserMockup();
+  t.notEqual(user, {}, 'Creating a model having a nohm client set did not work.');
+  t.done();
+};
+
 exports.propertyGetter = function (t) {
   var user = new UserMockup(),
   exceptionThrown;
@@ -563,4 +574,4 @@ exports.setPrefix = function (t) {
   t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
   nohm.prefix = oldPrefix;
   t.done();
-}
+};
