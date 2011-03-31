@@ -17,3 +17,9 @@ You can find the api <a href="api/index.html">here</a>.
 <h3>Loading</h3>
 <h3>Finding</h3>
 <h3>Relations</h3>
+{% highlight javascript %}
+var test = 'test';
+function Testst() {
+  return test;
+}
+{% endhighlight %}
