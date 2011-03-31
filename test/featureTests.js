@@ -555,3 +555,12 @@ exports.__updated = function (t) {
     });
   });
 };
+
+exports.setPrefix = function (t) {
+  var oldPrefix = nohm.prefix;
+  t.expect(1);
+  nohm.setPrefix('hurgel');
+  t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
+  nohm.prefix = oldPrefix;
+  t.done();
+}
