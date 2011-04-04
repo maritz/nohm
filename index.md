@@ -3,8 +3,9 @@ title: Index
 layout: default
 ---
 
-## Api
-You can find the api [here](api/index.html).
+## Links
+[Github](https://github.com/maritz/nohm)
+[API docs](api/index.html).
 ## How To
 ### Overview
 Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
@@ -335,11 +336,11 @@ Simply calling find() with only a callback will retrieve all IDs.
 {% endhighlight %}
 
 #### Finding by Index
-To specify indexes to search for you have to pass in an object as the first parameter.
-There are three kinds of indexes: unique, simple and numeric.
-Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.
-You can mix the three search queries within one find call.
-After all search queries of a find() have been processed the intersection of the found IDs is returned.
+To specify indexes to search for you have to pass in an object as the first parameter.  
+There are three kinds of indexes: unique, simple and numeric.  
+Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.  
+You can mix the three search queries within one find call.  
+After all search queries of a find() have been processed the intersection of the found IDs is returned.  
 To limit/filter/sort the overall result you have to manually edit the returned array.
 
 ##### Finding by simple index
@@ -357,9 +358,9 @@ SomeModel.find({
 
 
 ##### Finding by numeric index
-Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.
-The search needs to be an object that optionaly contains further filters: min, max, offset and limit.
-This uses the redis command (zrangebyscore)[http://redis.io/commands/zrangebyscore] and the filters are the same as the arguments passed to that command. (limit = count)
+Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.  
+The search needs to be an object that optionaly contains further filters: min, max, offset and limit.  
+This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)  
 They default to this:
 {% highlight js %}
 {
@@ -391,5 +392,127 @@ SomeModel.find({
 
 
 ### Relations
+Relations (links) are dynamically defined for each instance and not for a model. This differs from traditional ORMs that use RDBMS and thus need a predefined set of tables or columns to maintain these relations.  
+In nohm this is not necessary making it possible for one instance of a model to have relations to models that other instances of the same model do not have.
+
+A simple example:  
+We have 2 instances of the UserModel: User1, User2  
+We have 3 instances the RoleModel: Admin, Author, UserManager  
+A user can have 0-3 roles.  
+This creates an N:M relationship. In a traditional DB you'd now need a [pivot table](http://www.wellho.net/solutions/mysql-many-to-many-table-mapping-pivot-tables.html) and then you'd have to somehow tell your ORM that it should use that table to map these relations.  
+In nohm this step is not needed.  
+Instead we just tell every UserModel instance whatever relationships it has.  
+
+This has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.  
+
+In nohm all relations have a name pair. By default this pair is "child" and "parent". The instance that initiated the relationship is the child.  
+This again has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations. 
+
+Some Examples:
+
+
 {% highlight js %}
+User1.link(Admin);
+User1.link(Author);
+User2.link(UserManager, 'createdBy');
+User2.link(UserManager, 'temp');
+{% endhighlight %}
+
+Now (after saving) the these relations exist:
+    User1 (child) -> Admin (parent)
+    User1 (child) -> Author (parent)
+    User1 (createdBy) -> UserManager (createdByParent)
+    User2 (temp) -> UserManager (tempParent)
+
+Be careful with naming and don't overuse it!
+
+#### link(otherInstance, [relationName,] [callback])
+This creates a relation (link) to another instance.
+The most basic usage is to just use the first argument 'otherInstance':
+
+{% highlight js %}
+User1.link(Admin);
+{% endhighlight %}
+
+This only creates the relation on the object holding the instance. In this case User1.
+User1 as well as Admin may be unsaved instances at this time.
+The relation is only written to the DB when User1 is saved. (not when Admin is saved manually though!)
+
+{% highlight js %}
+User1.save(function (err) {
+  if ( ! err) {
+    // User1 is saved
+  } else {
+    // an error occured while saving.
+  }
+});
+{% endhighlight %}
+
+There are several things that happen here:  
+First User1 is validated. If User1 is invalid the save callback is called with the error.  
+If User1 is valid, User1 is stored.  
+If Admin has an ID, the relation is stored and the save callback is called.  
+Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (currently you have to manually check where the error is. This is a known bug and should soon be fixed)  
+If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
+
+
+This process works inifinitely deep. However, I recommend to not do this since the process is not atomic!
+
+If you define a callback in the link() call, that callback is called right after the link is stored to the db. This may make error handling in deep linked instances a little easier.
+
+#### unlink(otherInstance, [relationName,] [callback])
+Removes the relation to another instance and otherwise works the same as link.
+
+
+#### has(otherInstance, [relationName,] [callback])
+This checks if an instance has a relationship to another relationship.
+
+{% highlight js %}
+User1.has(Admin, function (err, hasAdmin) {
+  if (hasAdmin) {
+    // the user has the admin role!
+  }
+});
+{% endhighlight %}
+
+This requires that User1 as well as Admin are loaded from DB. (Or the same object was previously saved and thus still has the correct id)
+
+#### numLinks(modelName, [relatioName,] [callback])
+This checks how many relations of one name pair an Instance has to another Model.
+
+{% highlight js %}
+// assuming the relation definitions from above
+
+User1.numLinks('RoleModel', function (err, num) {
+  // num will be 2
+  // note that it is not 3, because the default link name is used
+});
+
+// get the amount of links that are named 'createdBy':
+User1.numLinks('RoleModel', 'createdBy', function (err, num) {
+  // num will be 1
+});
+
+// get the amount of links that are named 'temp':
+User1.numLinks('RoleModel', 'temp', function (err, num) {
+  // num will be 0
+});
+{% endhighlight %}
+
+
+#### getAll(modelName, [relatioName,] [callback])
+This gets the IDs of all linked instances.
+
+{% highlight js %}
+User1.getAll('RoleModel', function (err, roleIds) {
+  // roleIds = [1,2]
+});
+
+User1.getAll('RoleModel', 'createdBy', function (err, roleIds) {
+  // roleIds = [3]
+});
+
+User2.getAll('RoleModel', 'temp', function (err, roleIds) {
+  // roleIds = [3]
+});
 {% endhighlight %}
