@@ -143,11 +143,11 @@ exports.idIntersection = function (t) {
 exports.setRedisClient = function (t) {
   t.expect(2);
   var user = new UserMockup();
-  t.equal(user, {}, 'Creating a model without having a nohm client set did not return false.');
+  t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
   
   nohm.setClient(redis);
   user = new UserMockup();
-  t.notEqual(user, {}, 'Creating a model having a nohm client set did not work.');
+  t.equals(typeof(user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
   t.done();
 };
 
