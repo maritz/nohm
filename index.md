@@ -4,11 +4,48 @@ layout: default
 ---
 
 ## Links
-[Github](https://github.com/maritz/nohm)
-[API docs](api/index.html).
+- [Github](https://github.com/maritz/nohm)
+- [API docs](api/index.html)
 ## How To
+### Index
+* [Overview](#overview)
+* [Basics](#basics)
+  * [Prefix](#prefix)
+  * [Client](#client)
+  * [Logging](#logging)
+* [Models](#models)
+  * [Methods](#methods)
+  * [Client](#client)
+  * [Properties](#properties)
+    * [Types/Behaviours](#typesbehaviours)
+      * [String](#string)
+      * [Integer / Float](#integer__float)
+      * [Boolean](#boolean)
+      * [Timestamp](#timestamp)
+      * [Json](#json)
+      * [Behaviour](#behaviour)
+    * [Validators](#validators)
+* [Setting/Getting properties](#settinggetting_properties)
+* [Validating](#validating)
+  * [On setting a property](#on_setting_a_property)
+  * [Calling valid()](#calling_valid)
+* [Saving](#saving)
+* [Deleting](#deleting)
+* [Loading](#loading)
+* [Finding](#finding)
+  * [Finding all instances of a model](#finding_all_instances_of_a_model)
+  * [Finding by Index](#finding_by_index)
+    * [Finding by simple index](#finding_by_simple_index)
+    * [Finding by numeric index](#finding_by_numeric_index)
+* [Relations](#relations)
+  * [link](#linkotherinstance_relationname)
+  * [unlink](#unlinkotherinstance_relationname)
+  * [has](#hasotherinstance_relationname)
+  * [numLinks](#numlinksmodelname_relationame)
+  * [getAll](#getallmodelname_relationame)
 ### Overview
-Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
+Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).  
+This How-To is intended to give you a good understanding of how nohm works. 
 
 ### Basics
 There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
@@ -246,6 +283,24 @@ var validatorModel = nohm.model('validatorModel', {
 
 You can find the documentation of the [built-in validations in the api](api/symbols/validators.html)
 
+### Setting/Getting properties
+The function p/prop/property (all the same) gets and sets properties of an instance.
+
+{% highlight js %}
+var user = new User;
+user.p('name', 'test');
+user.p('name'); // returns 'test'
+user.p({
+  name: 'test2',
+  email: 'someMail@example.com'
+});
+user.p('name'); // returns 'test2'
+user.p('email'); // returns 'someMail@example.com'
+{% endhighlight %}
+
+There are several other methods for dealing with properties: [allProperties](api/symbols/Nohm.html#.allProperties), [propertyReset](api/symbols/Nohm.html#.propertyReset), [propertyDiff](api/symbols/Nohm.html#.propertyDiff)
+
+
 ### Validating
 Your model instance is automatically validated on saving but you can manually validate it as well.  
 There are two ways to do that. In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
@@ -253,9 +308,10 @@ There are two ways to do that. In the following code examples we assume the mode
 #### On setting a property
 Passing true as the third parameter (or second if the first is an object of all properties) validates the property and only changes it if the new value validates.
 {% highlight js %}
-user.p('builtIns', '', true); // returns false and does NOT change the property
-user.p('builtIns', 'asd', true); // returns true and changes the property
-user.p('optionalEmail', 'asd@asd.de', true); // returns true and changes the property - even if the email is used already, see below
+var test = new validatorModel();
+test.p('builtIns', '', true); // returns false and does NOT change the property
+test.p('builtIns', 'asd', true); // returns true and changes the property
+test.p('optionalEmail', 'asd@asd.de', true); // returns true and changes the property - even if the email is used already, see below
 {% endhighlight %}
 
 This is limited to the normal validators and does **not** check uniqueness.
