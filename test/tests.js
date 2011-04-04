@@ -55,7 +55,8 @@ run = function(files){
 
 
 var prefix = 'tests',
-noCleanup = false;
+    noCleanup = false,
+    setMeta = false;
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
@@ -63,6 +64,9 @@ process.argv.forEach(function (val, index) {
   }
   if (val === '--no-cleanup') {
     noCleanup = true;
+  }
+  if (val === '--set-meta') {
+    setMeta = true;
   }
 });
 
@@ -91,4 +95,5 @@ var redis = require('redis').createClient(),
       });
     },
     Nohm = require(__dirname+'/../lib/nohm').Nohm;
+Nohm.meta = setMeta;
 cleanup(runner, true);
