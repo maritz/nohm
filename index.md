@@ -9,14 +9,15 @@ You can find the api [here](api/index.html).
 ### Overview
 Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
 
-**Note:** Almost all code examples here assume that you've required nohm like this: 
+### Basics
+There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
+
+**Note:** Almost all code examples here assume the following code: 
 {% highlight js %}
   var nohm = require('nohm').Nohm;
   var redisClient = require('redis').createClient();
   nohm.setClient(redisClient);
 {% endhighlight %}
-### Basics
-There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
 
 #### Prefix
 The first thing you should do is set a prefix for the redis keys. This should be unique on the redis database you're using since you may run into conflicts otherwise.
@@ -307,7 +308,7 @@ Calling remove() completely removes the instance from the db, including relation
 This only works on instances where the id is set (manually or from load()).
 
 ### Loading
-To populate the properties of an existing instance you have to load it via id.
+To populate the properties of an existing instance you have to load it via ID.
 {% highlight js %}
 user.load(1234, function (err) {
   if (err) {
@@ -320,6 +321,75 @@ user.load(1234, function (err) {
 
 
 ### Finding
+To find an ID of an instance (e.g. to load it) Nohm offers a few simple search functionalities.
+The function to do so is always .find(), but what it does depends on the arguments given.
+Note that the ID array is sorted by default from lowest to highest.
+
+#### Finding all instances of a model
+Simply calling find() with only a callback will retrieve all IDs.
+
+{% highlight js %}
+  SomeModel.find(function (err, ids) {
+    // ids = array of ids
+  });
+{% endhighlight %}
+
+#### Finding by Index
+To specify indexes to search for you have to pass in an object as the first parameter.
+There are three kinds of indexes: unique, simple and numeric.
+Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.
+You can mix the three search queries within one find call.
+After all search queries of a find() have been processed the intersection of the found IDs is returned.
+To limit/filter/sort the overall result you have to manually edit the returned array.
+
+##### Finding by simple index
+Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behaviour).
+
+Example:
+{% highlight js %}
+SomeModel.find({
+    someString: 'hurg'
+    someBoolean: false
+  }, function (err, ids) {
+    // ids = array of all instances that have (somestring === 'hurg' && someBoolean === false)
+  });
+{% endhighlight %}
+
+
+##### Finding by numeric index
+Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.
+The search needs to be an object that optionaly contains further filters: min, max, offset and limit.
+This uses the redis command (zrangebyscore)[http://redis.io/commands/zrangebyscore] and the filters are the same as the arguments passed to that command. (limit = count)
+They default to this:
+{% highlight js %}
+{
+  min: '-inf',
+  max: '+inf',
+  offset: '+inf', // only used if you a limit is defined
+  limit: undefined
+}
+{% endhighlight %}
+
+To specify an infinite limit while using an offset use limit: 0.
+
+Example:
+{% highlight js %}
+SomeModel.find({
+    someInteger: {
+      min: 10,
+      max: 40,
+      offset: 15, // this in combination with the limit would work as a kind of pagination where only the 
+      limit: 5
+    },
+    SomeTimestamp: {
+      max: + new Date() // timestamp before now
+    }
+  }, function (err, ids) {
+    
+  });
+{% endhighlight %}
+
+
 ### Relations
 {% highlight js %}
 {% endhighlight %}
