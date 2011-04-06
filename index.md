@@ -6,7 +6,10 @@ layout: default
 ## Links
 - [Github](https://github.com/maritz/nohm)
 - [API docs](api/index.html)
+
+
 ## How To
+
 ### Index
 * [Overview](#overview)
 * [Basics](#basics)
