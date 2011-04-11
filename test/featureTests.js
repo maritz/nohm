@@ -142,6 +142,7 @@ exports.idIntersection = function (t) {
 
 exports.setRedisClient = function (t) {
   t.expect(2);
+  console.log('Note: there should be an error message in the next line. (intended behaviour)');
   var user = new UserMockup();
   t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
   

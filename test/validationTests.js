@@ -113,6 +113,33 @@ var UserMockup = nohm.model('UserMockup', {
       validations: [
         'url'
       ]
+    },
+    custom: {
+      type: 'string',
+      value: 'valid',
+      validations: [
+        function (value) {
+          return value === 'valid';
+        }
+      ]
+    },
+    custom2: {
+      type: 'string',
+      value: 'valid2',
+      validations: [
+        function (value) {
+          return value === 'valid2';
+        }
+      ]
+    },
+    customNamed: {
+      type: 'string',
+      value: 'validNamed',
+      validations: [
+        function customNamed (value) {
+          return value === 'validNamed';
+        }
+      ]
     }
   }
 });
@@ -366,4 +393,83 @@ exports.consistency = function (t) {
   t.ok(user.valid('name') === user.valid(), 'Validating the entire Model had a different result than validating a single property.');
 
   t.done();
+};
+
+exports.functionArgument = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+
+  
+  user.valid(function (valid) {
+    t.same(valid, true, 'Validating with a function as the first arg did not call the callback with false as its first arg');
+
+    user.p({
+      name: '',
+      email: 'asd'
+    });
+    
+    user.valid(function (valid2) {
+      t.same(valid2, false, 'Validating with a function as the first arg did not call the callback with false as its first arg');
+      t.done();
+    });
+  });
+};
+
+
+exports.errorsCleared = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+
+  user.p({
+    name: '',
+    email: 'asd'
+  });
+  
+  user.valid(function (valid) {
+    t.same({
+      user: user.errors.name,
+      email: user.errors.email
+    }, {
+      user: ['notEmpty'], 
+      email: ['email']
+    }, 'Validating a user did not set the user.errors properly.');
+    user.p({
+      name: 'test'
+    });
+    user.valid(function (valid) {
+      t.same({
+        user: user.errors.name,
+        email: user.errors.email
+      }, {
+        user: [],
+        email: ['email']
+      }, 'Validating a user did not REset the user.errors properly.');
+    });
+    t.done();
+  });
+};
+
+
+exports.customErrorNames = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+
+  user.p({
+    custom: 'INVALID',
+    custom2: 'INVALID',
+    customNamed: 'INVALID'
+  });
+  
+  user.valid(function(valid) {
+    t.same({
+      custom: user.errors.custom, 
+      custom2: user.errors.custom2,
+      customNamed: user.errors.customNamed
+    }, {
+      custom: ['custom_custom'], 
+      custom2: ['custom_custom2'],
+      customNamed: ['custom_customNamed']
+    }, 'Validating a user with custom validations failing did not put the proper error messages in user.errors.');
+    t.done();
+  });
 };
