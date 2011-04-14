@@ -1,3 +1,11 @@
+### v0.4
+   - documentation
+   - added instance.exists(id, callback)
+   - added Nohm.setPrefix(prefix) to set the global redis prefix (default "nohm")
+   - added Nohm.setClient(client) & Nohm.getClient() to set/get the global redis client (no default!)
+   - removed instance.partialSave()
+   - removed admin app (now in https://github.com/maritz/nohm-admin)
+   - bug fixes and code improvements
 ### v0.3
    - refactored a lot of the code
 ### v0.2
