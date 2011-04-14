@@ -1,5 +1,7 @@
 var util = require('util');
 
+// please do not prepend saving tests before the findAll tests
+
 var nohm = require(__dirname+'/../lib/nohm').Nohm;
 var redis = nohm.client;
 var relationsprefix = nohm.prefix.relations;
@@ -121,6 +123,21 @@ userString2.save(function (err) {
   all.push(userString2.id);
 });
 
+
+exports.loadInvalid = function (t) {
+  var user = new UserFindMockup();
+  t.expect(1);
+
+
+  user.load(1, function (err) {
+    t.equals(err, 'not found', 'Load() did not return "not true" for id 1 even though there should not be a user yet.');
+    t.done();
+  });
+};
+
+
+// please do not prepend saving tests before the findAll tests
+
 exports.load = function (t) {
   var user = new UserFindMockup(),
   findUser = new UserFindMockup();
@@ -153,6 +170,8 @@ exports.load = function (t) {
   });
 };
 
+// please do not prepend saving tests before the findAll tests
+
 exports.findAll = function (t) {
   // this is a fuckup and heavily relies upon the rest of this file. (the stuff above this test, not below)
   var findUser = new UserFindMockup();
@@ -164,6 +183,22 @@ exports.findAll = function (t) {
     t.done();
   });
 };
+
+exports.exists = function (t) {
+  var existsUser = new UserFindMockup();
+  t.expect(2);
+
+
+  existsUser.exists(1, function (exists) {
+    t.equals(exists, true, 'Exists() did not return true for id 1.');
+    
+    existsUser.exists(9999999, function (exists) {
+      t.equals(exists, false, 'Exists() did not return false for id 9999999.');
+      t.done();
+    });
+  });
+};
+
  /* I don't know how to do this right now.
 exports.loadArray = function (t) {
   var findUser = new UserFindMockup();

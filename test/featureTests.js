@@ -319,7 +319,7 @@ exports.remove = function (t) {
   testExists = function (what, key, callback) {
     redis.exists(key, function (err, value) {
         t.ok(!err, 'There was a redis error in the remove test check.');
-        t.ok(value === 0, 'Deleting a user did not work: ' + what);
+        t.ok(value === 0, 'Deleting a user did not work: '+what+', key: '+key);
         callback();
       });
   };
@@ -539,4 +539,15 @@ exports.setPrefix = function (t) {
   t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
   nohm.prefix = oldPrefix;
   t.done();
+};
+
+exports.deleteNonExistant = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+  user.id = 987654321;
+  
+  user.remove(function (err) {
+    t.same(err, 'not found', 'Trying to delete an instance that doesn\'t exist did not return "not found".');
+    t.done();
+  });
 };
