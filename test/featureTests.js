@@ -63,6 +63,17 @@ var redis = require('redis').createClient(),
           type: 'json',
           value: '{}'
         }
+      },
+      methods: {
+        test: function test () {
+          return this.p('name');
+        },
+        prop: function prop (orig, name) {
+          if (name === 'super')
+            return orig('name');
+          else 
+            return orig.apply(Array.prototype.slice.call(arguments, 0));
+        }
       }
     });
 
@@ -550,4 +561,22 @@ exports.deleteNonExistant = function (t) {
     t.same(err, 'not found', 'Trying to delete an instance that doesn\'t exist did not return "not found".');
     t.done();
   });
+};
+
+exports.methods = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+  
+  t.same(typeof(user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
+  t.same(user.test(), user.p('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
+  t.done();
+};
+
+exports.methodsSuper = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+  
+  t.same(typeof(user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
+  t.same(user.prop('super'), user.p('name'), 'The super test method did not work properly.');
+  t.done();
 };
