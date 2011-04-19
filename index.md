@@ -479,13 +479,13 @@ User2.link(UserManager, 'createdBy');
 User2.link(UserManager, 'temp');
 {% endhighlight %}
 
-Now (after saving) the these relations exist:
-    User1 (child) -> Admin (parent)
-    User1 (child) -> Author (parent)
-    User1 (createdBy) -> UserManager (createdByParent)
-    User2 (temp) -> UserManager (tempParent)
+Now (after saving) these relations exist:
+   * User1 (child) -> Admin (parent)
+   * User1 (child) -> Author (parent)
+   * User1 (createdBy) -> UserManager (createdByParent)
+   * User2 (temp) -> UserManager (tempParent)
 
-Be careful with naming and don't overuse it!
+Tip: Be careful with naming and don't overuse it!
 
 #### link(otherInstance, [relationName,] [callback])
 This creates a relation (link) to another instance.
