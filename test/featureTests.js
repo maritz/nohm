@@ -70,9 +70,9 @@ var redis = require('redis').createClient(),
         },
         prop: function prop (name) {
           if (name === 'super')
-            return this.__prop('name');
+            return this._super_prop('name');
           else 
-            return this.__prop.apply(this, arguments, 0);
+            return this._super_prop.apply(this, arguments, 0);
         }
       }
     });
