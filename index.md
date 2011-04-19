@@ -480,10 +480,10 @@ User2.link(UserManager, 'temp');
 {% endhighlight %}
 
 Now (after saving) these relations exist:
-   * User1 (child) -> Admin (parent)
-   * User1 (child) -> Author (parent)
-   * User1 (createdBy) -> UserManager (createdByParent)
-   * User2 (temp) -> UserManager (tempParent)
+* User1 (child) -> Admin (parent)
+* User1 (child) -> Author (parent)
+* User1 (createdBy) -> UserManager (createdByParent)
+* User2 (temp) -> UserManager (tempParent)
 
 Tip: Be careful with naming and don't overuse it!
 
