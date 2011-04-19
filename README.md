@@ -23,7 +23,7 @@ Yes, please contact me or just fork and request pulls. Any help or feedback is a
 ## Running tests
 To run the tests you need to have nodeunit\@0.1.0:
 
-    npm install nodeunit\@0.1.0
+    npm install nodeunit@0.1.0
 
 Then run
 
