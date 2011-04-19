@@ -68,11 +68,11 @@ var redis = require('redis').createClient(),
         test: function test () {
           return this.p('name');
         },
-        prop: function prop (orig, name) {
+        prop: function prop (name) {
           if (name === 'super')
-            return orig('name');
+            return this.__prop('name');
           else 
-            return orig.apply(Array.prototype.slice.call(arguments, 0));
+            return this.__prop.apply(this, arguments, 0);
         }
       }
     });
@@ -574,9 +574,11 @@ exports.methods = function (t) {
 
 exports.methodsSuper = function (t) {
   var user = new UserMockup();
-  t.expect(2);
+  t.expect(3);
   
   t.same(typeof(user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
   t.same(user.prop('super'), user.p('name'), 'The super test method did not work properly.');
+  user.prop('name', 'methodTest');
+  t.same(user.p('name'), 'methodTest', 'The super test method did not properly handle arguments');
   t.done();
 };
