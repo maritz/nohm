@@ -356,8 +356,8 @@ This means that if you haven't either manually set the id or load()ed the instan
 Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
 
 {% highlight js %}
-user.save(function (success) {
-  if ( ! success) {
+user.save(function (err) {
+  if ( ! err) {
     this.errors; // the errors in validation
   } else {
     // it's in the db :)
@@ -502,7 +502,7 @@ The relation is only written to the DB when User1 is saved. (not when Admin is s
 {% highlight js %}
 User1.save(function (err) {
   if ( ! err) {
-    // User1 is saved
+    // User1 and Admin are saved
   } else {
     // an error occured while saving.
   }
@@ -517,9 +517,33 @@ Otherwise Admin is validated. If Admin is invalid the save callback is called wi
 If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
 
 
-This process works inifinitely deep. However, I recommend to not do this since the process is not atomic!
+This process works infinitely deep. However, I recommend to not do this since the process is not atomic!
 
 If you define a callback in the link() call, that callback is called right after the link is stored to the db. This may make error handling in deep linked instances a little easier.
+
+If you call save on an object that has relations to other objects that aren't saved yet, these objects are then saved as well.
+That includes an internal call to .valid() on each relation.  
+If you have an error in a related object, you still get an error in your original save, but the object is saved regardless.
+
+To make it a little easier to manage such errors there are two more arguments passed to the save callback.  
+The first is a boolean to tell you that the error was in a relation, the second is the modelName of that object.
+
+{% highlight js %}
+User1.save(function (err, relationError, relationName) {
+  if ( ! err) {
+    // User1 and Admin are saved
+  } else {
+    if (relationError) {
+      // User1 is saved, Admin not.
+      console.dir(Admin.errors); // holds the errors
+      console.dir(relationName); // is the same as Admin.modelName
+    } else {
+      // neither User nor Admin are saved because User had an error
+    }
+  }
+});
+{% endhighlight %}
+
 
 #### unlink(otherInstance, [relationName,] [callback])
 Removes the relation to another instance and otherwise works the same as link.
