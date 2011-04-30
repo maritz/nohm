@@ -170,13 +170,13 @@ exports.deeplink = function (t) {
     }
     t.ok(userLinkCallbackCalled, 'The user link callback was not called.');
     t.ok(commentLinkCallbackCalled, 'The comment link callback was not called.');
-    t.ok(user.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
+    t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
     t.ok(comment.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
     redis.smembers(relationsprefix + comment.modelName + ':parent:' +
                     user.modelName + ':' + comment.id,
                     function (err, value) {
                       if (!err) {
-                        t.equals(value, user.id, 'The comment does not have the neccessary relations saved. There are probably more problems, if this occurs.');
+                        t.equals(value, user.id, 'The user does not have the neccessary relations saved. There are probably more problems, if this occurs.');
                       } else {
                         console.dir(err);
                       }
@@ -312,6 +312,29 @@ exports.numLinks = function (t) {
       t.same(value, 2, 'The number of links was not returned correctly');
       t.done();
     });
+  });
+};
+
+
+exports.deeplinkError = function (t) {
+  var user = new UserLinkMockup(),
+  role = new RoleLinkMockup(),
+  comment = new CommentLinkMockup(),
+  userLinkCallbackCalled = false,
+  commentLinkCallbackCalled = false;
+  t.expect(5);
+
+  role.link(user);
+  user.link(comment);
+  comment.p('text', ''); // makes the comment fail
+
+  role.save(function (err, childFail, childName) {
+    t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
+    t.same(comment.id, null, 'The deeplinked erroneous comment does not have an id and thus is probably saved.');
+    t.same(err, 'invalid', 'The deeplinked role did not fail.');
+    t.same(childFail, true, 'The deeplinked role did not fail in a child or reported it wrong.');
+    t.same(childName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
+    t.done();
   });
 };
  

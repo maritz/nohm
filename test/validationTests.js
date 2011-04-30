@@ -473,3 +473,15 @@ exports.customErrorNames = function (t) {
     t.done();
   });
 };
+
+exports.invalidSaveResetsId = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+  
+  user.p('name', '');
+  
+  user.save(function (err) {
+    t.same(user.id, null, 'The id of an invalid user was not reset properly.');
+    t.done();
+  });
+};
