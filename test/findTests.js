@@ -464,3 +464,28 @@ exports.findNumericWithoutLimit = function (t) {
     user.save(loopUserCreation);
   }
 };
+
+exports.findExactNumeric = function (t) {
+  var user = new UserFindMockup(),
+      findUser = new UserFindMockup(),
+      num = 999876543;
+  t.expect(2);
+      
+  user.p('number', num);
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+    }
+    findUser.find({
+      number: num
+    }, function (err, ids) {
+      t.same(ids, [user.id], 'Did not find an exact number match');
+      findUser.find({
+        number: (num-1)
+      }, function (err, ids) {
+        t.same(ids, [], 'Searching for a nonexistant number did not return an empty array.');
+        t.done();
+      });
+    });
+  });
+};
