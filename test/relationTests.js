@@ -234,7 +234,7 @@ exports.removeUnlinks = function (t) {
   });
 };
 
-exports.has = function (t) {
+exports.belongsTo = function (t) {
   var user = new UserLinkMockup(),
   role = new RoleLinkMockup();
   t.expect(1);
@@ -246,12 +246,12 @@ exports.has = function (t) {
       console.dir(err);
       t.done();
     }
-    user.has(role, function (err, value) {
+    user.belongsTo(role, function (err, value) {
       if (err) {
         console.dir(err);
         t.done();
       }
-      t.equals(value, true, 'The link was not detected correctly by has()');
+      t.equals(value, true, 'The link was not detected correctly by belongsTo()');
       t.done();
     });
   });
