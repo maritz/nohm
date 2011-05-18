@@ -1,6 +1,6 @@
 ### v0.5
    - "value" in model properties renamed to "defaultValue"
-   - "has()" renamed to "blongsTo()"
+   - "has()" renamed to "belongsTo()"
    - bug fixes
 ### v0.4
    - documentation
