@@ -29,14 +29,14 @@ Then run
 
     node test/tests.js
 
-*Careful*: This requires a running redis server with the default port on the localhost. (a fix for this will come soon)
+*Careful*: This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)  
 The tests also create a lot of keys in your database that look something like this: 
 
-    tests:something:something
+    nohmtests:something:something
 
-After the tests have run all keys that match the pattern test:* are deleted!
+After the tests have run all keys that match the pattern nohmtests:* are deleted!
 You can prevent this by passing --no-cleanup (which will leave hundreds or thousands of test keys in your database).
-You may also change the prefix (the "test") part doing something like
+You may also change the prefix ("nohmtests") part doing something like
 
     node test/tests.js --nohm-prefix YourNewPrefix
 

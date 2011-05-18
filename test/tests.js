@@ -54,9 +54,11 @@ run = function(files){
 };
 
 
-var prefix = 'tests',
+var prefix = 'nohmtests',
     noCleanup = false,
-    setMeta = false;
+    setMeta = false,
+    redis_host = '127.0.0.1',
+    redis_port = 6379;
 
 process.argv.forEach(function (val, index) {
   if (val === '--nohm-prefix') {
@@ -68,6 +70,12 @@ process.argv.forEach(function (val, index) {
   if (val === '--set-meta') {
     setMeta = true;
   }
+  if (val === '--redis-host') {
+    redis_host = process.argv[index + 1];
+  }
+  if (val === '--redis-port') {
+    redis_port = process.argv[index + 1];
+  }
 });
 
 var runner = function () {
@@ -76,7 +84,7 @@ var runner = function () {
 }
 
 
-var redis = require('redis').createClient(),
+var redis = require('redis').createClient(redis_port, redis_host),
     cleanup = function (cb, force) {
       if ( ! force && noCleanup === true)
         return cb();
