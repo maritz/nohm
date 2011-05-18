@@ -6,32 +6,32 @@ var UserMockup = nohm.model('UserMockup', {
   properties: {
     name: {
       type: 'string',
-      value: 'test',
+      defaultValue: 'test',
       validations: [
         'notEmpty'
       ]
     },
     castInteger: {
       type: 'integer',
-      value: 2
+      defaultValue: 2
     },
     castFloat: {
       type: 'float',
-      value: 2.5
+      defaultValue: 2.5
     },
     castTimestamp: {
       type: 'timestamp',
-      value: 100000
+      defaultValue: 100000
     },
     behaviour: {
       type: function incrby(value, key, old) {
         return old + value;
       },
-      value: 1
+      defaultValue: 1
     },
     minMax: {
       type: 'integer',
-      value: 5,
+      defaultValue: 5,
       validations: [
         ['min', 2],
         ['max', 20]
@@ -39,84 +39,84 @@ var UserMockup = nohm.model('UserMockup', {
     },
     minOptional: {
       type: 'integer',
-      value: 0,
+      defaultValue: 0,
       validations: [
         ['min', 10, 'optional']
       ]
     },
     email: {
       type: 'string',
-      value: 'blub@bla.de',
+      defaultValue: 'blub@bla.de',
       validations: [
         'email'
       ]
     },
     optionalEmail: {
       type: 'string',
-      value: '',
+      defaultValue: '',
       validations: [
         ['email', true]
       ]
     },
     minLength: {
       type: 'string',
-      value: 'asd',
+      defaultValue: 'asd',
       validations: [
         ['minLength', 3]
       ]
     },
     minLength2: {
       type: 'string',
-      value: '',
+      defaultValue: '',
       validations: [
         ['minLength', 3, 'optional']
       ]
     },
     maxLength: {
       type: 'string',
-      value: 'asd',
+      defaultValue: 'asd',
       validations: [
         ['maxLength', 5]
       ]
     },
     number: {
       type: 'string',
-      value: '1,000.5623',
+      defaultValue: '1,000.5623',
       validations: [
         'number'
       ]
     },
     numberUS: {
       type: 'string',
-      value: '2,000.5623',
+      defaultValue: '2,000.5623',
       validations: [
         'numberUS'
       ]
     },
     numberEU: {
       type: 'string',
-      value: '3.000,5623',
+      defaultValue: '3.000,5623',
       validations: [
         'numberEU'
       ]
     },
     numberSI: {
       type: 'string',
-      value: '4 000,5623',
+      defaultValue: '4 000,5623',
       validations: [
         'numberSI'
       ]
     },
     url: {
       type: 'string',
-      value: 'http://test.de',
+      defaultValue: 'http://test.de',
       validations: [
         'url'
       ]
     },
     custom: {
       type: 'string',
-      value: 'valid',
+      defaultValue: 'valid',
       validations: [
         function (value) {
           return value === 'valid';
@@ -125,7 +125,7 @@ var UserMockup = nohm.model('UserMockup', {
     },
     custom2: {
       type: 'string',
-      value: 'valid2',
+      defaultValue: 'valid2',
       validations: [
         function (value) {
           return value === 'valid2';
@@ -134,7 +134,7 @@ var UserMockup = nohm.model('UserMockup', {
     },
     customNamed: {
       type: 'string',
-      value: 'validNamed',
+      defaultValue: 'validNamed',
       validations: [
         function customNamed (value) {
           return value === 'validNamed';
@@ -335,7 +335,7 @@ exports.intSize = function (t) {
 };
 
 exports.email = function (t) {
-  // oh gawd...
+  // this isn't really sufficient to ensure that the regex is really working correctly, but it's good enough for now.
   var user = new UserMockup();
   t.expect(4);
 

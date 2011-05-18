@@ -33,7 +33,7 @@ var redis = require('redis').createClient(),
       properties: {
         name: {
           type: 'string',
-          value: 'test',
+          defaultValue: 'test',
           unique: true,
           validations: [
             'notEmpty'
@@ -46,14 +46,14 @@ var redis = require('redis').createClient(),
         email: {
           type: 'string',
           unique: true,
-          value: 'email@email.de',
+          defaultValue: 'email@email.de',
           validations: [
             'email'
           ]
         },
         country: {
           type: 'string',
-          value: 'Tibet',
+          defaultValue: 'Tibet',
           index: true,
           validations: [
             'notEmpty'
@@ -61,7 +61,7 @@ var redis = require('redis').createClient(),
         },
         json: {
           type: 'json',
-          value: '{}'
+          defaultValue: '{}'
         }
       },
       methods: {
@@ -581,4 +581,18 @@ exports.methodsSuper = function (t) {
   user.prop('name', 'methodTest');
   t.same(user.p('name'), 'methodTest', 'The super test method did not properly handle arguments');
   t.done();
+};
+
+exports.uniqueDefaultOverwritten = function (t) {
+  var user = new UserMockup();
+  var user2 = new UserMockup();
+  t.expect(2);
+  
+  user.save(function (err) {
+    user2.save(function (err) {
+      t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
+      t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: '+user2.errors.name);
+      t.done();
+    });
+  });
 };

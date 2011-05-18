@@ -6,8 +6,7 @@ var util = require('util'),
     properties: {
       name: {
         type: 'string',
-        value: 'testName',
-        unique: true,
+        defaultValue: 'testName',
         validations: [
           'notEmpty'
         ]
@@ -18,7 +17,7 @@ var util = require('util'),
     properties: {
       text: {
         type: 'string',
-        value: 'this is a comment! REALLY!',
+        defaultValue: 'this is a comment! REALLY!',
         validations: [
           'notEmpty'
         ]
@@ -29,7 +28,7 @@ var util = require('util'),
     properties: {
       name: {
         type: 'string',
-        value: 'user'
+        defaultValue: 'user'
       }
     }
   });
@@ -143,6 +142,7 @@ exports.unlink = function (t) {
       });
     } else {
       console.dir(err);
+      console.dir(user.errors);
       t.done();
     }
   });

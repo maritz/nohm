@@ -9,7 +9,7 @@ var UserFindMockup = nohm.model('UserFindMockup', {
   properties: {
     name: {
       type: 'string',
-      value: 'testName',
+      defaultValue: 'testName',
       index: true,
       validations: [
         'notEmpty'
@@ -17,26 +17,26 @@ var UserFindMockup = nohm.model('UserFindMockup', {
     },
     email: {
       type: 'string',
-      value: 'testMail@test.de',
+      defaultValue: 'testMail@test.de',
       unique: true
     },
     json: {
       type: 'json',
-      value: '{}'
+      defaultValue: '{}'
     },
     number: {
       type: 'integer',
-      value: 1,
+      defaultValue: 1,
       index: true
     },
     number2: {
       type: 'integer',
-      value: 200,
+      defaultValue: 200,
       index: true
     },
     bool: {
       type: 'bool',
-      value: false
+      defaultValue: false
     }
   }
 });
@@ -471,7 +471,11 @@ exports.findExactNumeric = function (t) {
       num = 999876543;
   t.expect(2);
       
-  user.p('number', num);
+  user.p({
+    name: 'findExactNumeric',
+    email: 'findExactNumeric@hurgel.de',
+    number: num
+  });
   user.save(function (err) {
     if (err) {
       console.dir(err);
