@@ -137,7 +137,7 @@ A property can have the following options: (explained in more detail later)
     You can also define a behaviour. This is a function that type-casts the value in whatever way you want.
   </dd>
   <dt>
-    value <span class="additionalInfo">Any value</span>
+    defaultValue <span class="additionalInfo">Any value</span>
   </dt>
   <dd>
     The default value a property will have when the model is initialized.
@@ -185,7 +185,7 @@ var User = nohm.model('User', {
       ]
     },
     password: {
-      value: '',
+      defaultValue: '',
       type: function (value) {
         return value + 'someSeed'; // and hash it of course, but to make this short that is omitted in this example
       },
@@ -234,7 +234,7 @@ A simple example:
 var User = nohm.model('User', {
   properties: {
     balance: {
-      value: 0,
+      defaultValue: 0,
       type: function changeBalance(value, key, old) {
         return old + value;
       }
@@ -451,6 +451,7 @@ SomeModel.find({
   });
 {% endhighlight %}
 
+You can also search for exact numeric values by using the syntax of a simple index search.
 
 ### Relations
 Relations (links) are dynamically defined for each instance and not for a model. This differs from traditional ORMs that use RDBMS and thus need a predefined set of tables or columns to maintain these relations.  
