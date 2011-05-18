@@ -1,3 +1,7 @@
+### v0.5
+   - "value" in model properties renamed to "defaultValue"
+   - "has()" renamed to "blongsTo()"
+   - bug fixes
 ### v0.4
    - documentation
    - added instance.exists(id, callback)
