@@ -1,4 +1,5 @@
 var util = require('util');
+var args = require('testArgs');
 
 exports.checkModules = function (t) {
   var redis, nohm, async;
@@ -16,16 +17,10 @@ exports.checkModules = function (t) {
   t.done();
 };
 
-var prefix = 'tests';
-
-process.argv.forEach(function (val, index) {
-  if (val === '--nohm-prefix') {
-    prefix = process.argv[index + 1];
-  }
-});
+var prefix = args.prefix;
 
 // real tests start in 3.. 2.. 1.. NOW!
-var redis = require('redis').createClient(),
+var redis = args.redis,
     nohm = require(__dirname+'/../lib/nohm').Nohm,
     helper = require(__dirname+'/../lib/helpers'),
     async = require('async'),
@@ -160,6 +155,15 @@ exports.setRedisClient = function (t) {
   nohm.setClient(redis);
   user = new UserMockup();
   t.equals(typeof(user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
+  t.done();
+};
+
+exports.setPrefix = function (t) {
+  var oldPrefix = nohm.prefix;
+  t.expect(1);
+  nohm.setPrefix('hurgel');
+  t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
+  nohm.prefix = oldPrefix;
   t.done();
 };
 
@@ -309,6 +313,8 @@ exports.create = function (t) {
   user.save(function (err) {
     t.ok(!err, 'Saving a user did not work.');
     if (err) {
+      console.dir(err);
+      console.dir(user.errors);
       t.done();
     }
     redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
@@ -541,15 +547,6 @@ exports.__updated = function (t) {
       t.done();
     });
   });
-};
-
-exports.setPrefix = function (t) {
-  var oldPrefix = nohm.prefix;
-  t.expect(1);
-  nohm.setPrefix('hurgel');
-  t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
-  nohm.prefix = oldPrefix;
-  t.done();
 };
 
 exports.deleteNonExistant = function (t) {

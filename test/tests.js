@@ -54,29 +54,7 @@ run = function(files){
 };
 
 
-var prefix = 'nohmtests',
-    noCleanup = false,
-    setMeta = false,
-    redis_host = '127.0.0.1',
-    redis_port = 6379;
-
-process.argv.forEach(function (val, index) {
-  if (val === '--nohm-prefix') {
-    prefix = process.argv[index + 1];
-  }
-  if (val === '--no-cleanup') {
-    noCleanup = true;
-  }
-  if (val === '--set-meta') {
-    setMeta = true;
-  }
-  if (val === '--redis-host') {
-    redis_host = process.argv[index + 1];
-  }
-  if (val === '--redis-port') {
-    redis_port = process.argv[index + 1];
-  }
-});
+var args = require('testArgs');
 
 var runner = function () {
   process.chdir(__dirname);
@@ -84,11 +62,11 @@ var runner = function () {
 }
 
 
-var redis = require('redis').createClient(redis_port, redis_host),
+var redis = args.redis,
     cleanup = function (cb, force) {
-      if ( ! force && noCleanup === true)
+      if ( ! force && args.noCleanup === true)
         return cb();
-      redis.keys(prefix + ':*', function (err, keys) {
+      redis.keys(args.prefix + ':*', function (err, keys) {
         if (!keys || keys.length == 0) {
           return cb();
         }
@@ -103,5 +81,6 @@ var redis = require('redis').createClient(redis_port, redis_host),
       });
     },
     Nohm = require(__dirname+'/../lib/nohm').Nohm;
-Nohm.meta = setMeta;
+    Nohm.setPrefix(args.prefix);
+Nohm.meta = args.setMeta;
 cleanup(runner, true);
