@@ -351,14 +351,14 @@ There are a few things to note here:
 
 
 ### Saving
-Saving an instance automatically decides whether it needs to be created or updated on the base of checking for this.id.
+Saving an instance automatically decides whether it needs to be created or updated on the base of checking for user.id.
 This means that if you haven't either manually set the id or load()ed the instance from the database, it will try to create a new instance.
 Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
 
 {% highlight js %}
 user.save(function (err) {
   if ( ! err) {
-    this.errors; // the errors in validation
+    user.errors; // the errors in validation
   } else {
     // it's in the db :)
   }
@@ -376,7 +376,7 @@ user.load(1234, function (err) {
   if (err) {
     // err may be a redis error or "not found" if the id was not found in the db.
   } else {
-    this.allProperties(); // all the properties - now loaded from the db
+    user.allProperties(); // all the properties - now loaded from the db
   }
 });
 {% endhighlight %}
