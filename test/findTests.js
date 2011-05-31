@@ -493,3 +493,34 @@ exports.findExactNumeric = function (t) {
     });
   });
 };
+
+exports.loadReturnsProps = function (t) {
+  var user = new UserFindMockup(),
+  findUser = new UserFindMockup();
+  t.expect(1);
+
+  user.p({
+    name: 'loadReturnsProps',
+    email: 'loadReturnsProps@hurgel.de',
+    json: { test: 1 }
+  });
+
+  user.save(function (err) {
+    if (err) {
+      console.dir(err);
+      t.done();
+    }
+    findUser.load(user.id, function (err, props) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      var testProps = user.allProperties();
+      delete testProps.id;
+      t.same(props, testProps, 'The loaded properties are not the same as allProperties() (without id).');
+      t.done();
+    });
+  });
+};
+
+// TODO: write load_pure tests & docs

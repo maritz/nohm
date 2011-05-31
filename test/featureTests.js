@@ -293,7 +293,7 @@ exports.allProperties = function (t) {
     visits: user.p('visits'),
     email: user.p('email'),
     country: user.p('country'),
-    json: '{}',
+    json: {},
     id: user.id
   }; // yes, this absolutely must be set correct for this test to work. sorry
 
@@ -591,5 +591,17 @@ exports.uniqueDefaultOverwritten = function (t) {
       t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: '+user2.errors.name);
       t.done();
     });
+  });
+};
+
+exports.allPropertiesJson = function (t) {
+  var user = new UserMockup();
+  user.p('json', {test: 1});
+  t.expect(1);
+  
+  user.save(function (err) {
+    var testProps = user.allProperties();
+    t.same(testProps.json, user.p('json'), 'allProperties did not properly parse json properties');
+    t.done();
   });
 };
