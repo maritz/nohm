@@ -1,5 +1,5 @@
 var nohm        = require(__dirname+'/../lib/nohm').Nohm,
-    iterations = 1, // Around 10k total model inserts.
+    iterations = 100000,
     user;
     
 nohm.setPrefix('stress');
@@ -38,14 +38,19 @@ var save = function (err) {
     process.exit();
   }
   counter++;
+  process.stdout.write("\r"+counter);
   if (counter >= iterations) {
-    update();
+    //update();
+    console.log('done');
+    console.log((+ new Date()) - start+' ms for '+counter+' User saves and an equal amount of updates.');
+    nohm.client.quit();
   }
 };
 
 for (var i = 0; i < iterations; i++) {
-  users[i] = new UserModel();
-  users[i].p({name: 'Bob', key: i});
-  users[i].save(save);
+  var user = new UserModel();
+  user.p({name: 'Bob', key: i});
+  user.save(save);
+  delete user;
 }
 

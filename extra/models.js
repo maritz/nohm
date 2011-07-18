@@ -4,21 +4,14 @@ var UserMockup = exports.user = nohm.model('UserMockup', {
   properties: {
     name: {
       type: 'string',
-      value: 'test',
+      defaultValue: 'test',
       validations: [
         'notEmpty'
       ]
     },
-    email: {
-      type: 'string',
-      unique: true,
-      value: 'email@email.de',
-      validations: [
-        'email'
-      ]
-    },
     key: {
-      type: 'integer'
+      type: 'integer',
+      index: true
     }
   }
 });

@@ -605,3 +605,49 @@ exports.allPropertiesJson = function (t) {
     t.done();
   });
 };
+
+exports.thisInCallbacks = function (t) {
+  var user = new UserMockup();
+  var checkCounter = 0;
+  var checkSum = 13;
+  var checkThis = function (name, cb) {
+    return function () {
+      checkCounter++;
+      t.ok(this instanceof UserMockup, '`this` is not set to the instance in '+name);
+      if (checkCounter === checkSum) {
+        done();
+      } else if (typeof(cb) === 'function') {
+        cb();
+      }
+    };
+  };
+  t.expect(checkSum+1);
+  
+  var done = function () {
+    user.remove(checkThis('remove', function () {
+      t.done();
+    }));
+  };
+  
+  user.save(checkThis('createError', function () {
+    user.p({
+      name: 'thisInCallbacks',
+      email: 'thisInCallbacks@test.de'
+    });
+    user.link(user, checkThis('link'));
+    user.save(checkThis('create', function () {
+      user.load(user.id, checkThis('load'));
+      user.find({name: 'thisInCallbacks'}, checkThis('find'));
+      user.save(checkThis('update', function (){
+        user.p('email', 'asd');
+        user.save(checkThis('updateError'));
+      }));
+      user.belongsTo(user, checkThis('belongsTo'));
+      user.getAll('UserMockup', checkThis('getAll'));
+      user.numLinks('UserMockup', checkThis('numLinks'));
+      user.link(user, 'childa', true, checkThis('linkDirect'));
+      user.unlink(user, 'childa', true, checkThis('linkDirect'));
+      user.unlinkAll(null, checkThis('linkDirect'));
+    }));
+  }));
+};

@@ -337,6 +337,18 @@ exports.deeplinkError = function (t) {
     t.done();
   });
 };
+
+exports.linkToSelf = function (t) {
+  var user = new UserLinkMockup();
+  t.expect(1);
+
+  user.link(user);
+
+  user.save(function (err) {
+    t.ok(!err, 'Linking an object to itself failed.');
+    t.done();
+  });
+};
  
 /* Maybe this isn't such a good idea. I like that model definitions are completely
    lacking relation definitions.
