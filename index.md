@@ -372,11 +372,12 @@ This only works on instances where the id is set (manually or from load()).
 ### Loading
 To populate the properties of an existing instance you have to load it via ID.
 {% highlight js %}
-user.load(1234, function (err) {
+user.load(1234, function (err, properties) {
   if (err) {
     // err may be a redis error or "not found" if the id was not found in the db.
   } else {
-    user.allProperties(); // all the properties - now loaded from the db
+    console.log(properties);
+    // you could use this.allProperties() instead, which also gives you the 'id' property
   }
 });
 {% endhighlight %}
