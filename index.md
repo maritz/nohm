@@ -46,6 +46,8 @@ layout: default
    * [has](#hasotherinstance_relationname)
    * [numLinks](#numlinksmodelname_relationame)
    * [getAll](#getallmodelname_relationame)
+* [Extras](#extras)
+   * [Short forms](#short_forms)
 
 
 ### Overview
@@ -605,3 +607,31 @@ User2.getAll('RoleModel', 'temp', function (err, roleIds) {
   // roleIds = [3]
 });
 {% endhighlight %}
+
+
+### Extras
+
+Some things that don't really fit anywhere else in this documentation.
+
+#### Short Forms
+
+For some functions there are short forms.
+
+Instead of having to do something like:
+{% highlight js %}
+  var user = new User();
+  user.load(1, function () {
+    user.p('name', 'test');
+  });
+{% endhighlight %}
+
+You can do this:
+
+{% highlight js %}
+  User.load(1, function () {
+    this.p('name', 'test');
+  });
+{% endhighlight %}
+
+This currently works for the following functions: load, find, save and remove.
+It is really only a shortcut.
