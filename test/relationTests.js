@@ -11,7 +11,8 @@ var util = require('util'),
           'notEmpty'
         ]
       }
-    }
+    },
+    idGenerator: 'increment'
   }),
   CommentLinkMockup = nohm.model('CommentLinkMockup', {
     properties: {
@@ -22,7 +23,8 @@ var util = require('util'),
           'notEmpty'
         ]
       }
-    }
+    },
+    idGenerator: 'increment'
   }),
   RoleLinkMockup = nohm.model('RoleLinkMockup', {
     properties: {
@@ -30,7 +32,8 @@ var util = require('util'),
         type: 'string',
         defaultValue: 'user'
       }
-    }
+    },
+    idGenerator: 'increment'
   });
 
 exports.instances = function (t) {

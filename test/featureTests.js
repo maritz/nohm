@@ -69,7 +69,8 @@ var redis = args.redis,
           else 
             return this._super_prop.apply(this, arguments, 0);
         }
-      }
+      },
+      idGenerator: 'increment'
     });
 
 exports.redisClean = function (t) {
@@ -675,3 +676,23 @@ exports.defaultAsFunction = function (t) {
     t.done();
   }, 10);
 };
+
+exports.defaultIdGeneration = function (t) {t.expect(3);
+  t.expect(2);
+  
+  var TestMockup = nohm.model('TestMockup', {
+      properties: {
+        name: {
+          type: 'string',
+          defaultValue: 'defaultIdGeneration'
+        }
+      }
+    });
+  var test1 = new TestMockup();
+  test1.save(function (err) {
+    t.ok(!err, 'There was an error while saving.');
+    t.same(typeof(test1.id), 'string', 'The generated id was not a string');
+    console.dir(test1.id);
+    t.done();
+  });
+}

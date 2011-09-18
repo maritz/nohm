@@ -38,7 +38,8 @@ var UserFindMockup = nohm.model('UserFindMockup', {
       type: 'bool',
       defaultValue: false
     }
-  }
+  },
+  idGenerator: 'increment'
 });
 
 var RoleFindMockup = nohm.model('RoleFindMockup', {
@@ -47,7 +48,8 @@ var RoleFindMockup = nohm.model('RoleFindMockup', {
       type: 'string',
       value: 'user'
     }
-  }
+  },
+  idGenerator: 'increment'
 });
 
 var errLogger = function (err) {
@@ -535,7 +537,8 @@ exports.shortForms = function (t) {
           'notEmpty'
         ]
       }
-    }
+    },
+    idGenerator: 'increment'
   });
   
   shortFormMockup.save(function (err) {
@@ -561,6 +564,45 @@ exports.shortForms = function (t) {
               t.done();
             });
           });
+        });
+      });
+    });
+  });
+}
+
+exports.uuidLoadFind = function (t) {
+  t.expect(6);
+  var uuidMockup = nohm.model('uuidMockup', {
+    properties: {
+      name: {
+        type: 'string',
+        defaultValue: 'testName',
+        index: true,
+        validations: [
+          'notEmpty'
+        ]
+      }
+    }
+  });
+  
+  var test = new uuidMockup();
+  test.p('name', 'uuid');
+  
+  var test2 = new uuidMockup();
+  test2.p('name', 'uuid2');
+  
+  test.save(function (err) {
+    t.ok(test.id.length > 0, 'There was no proper id generated');
+    test2.save(function (err) {
+      t.ok(test.id !== test2.id, 'The uuids were the same.... ');
+      var loader = new uuidMockup();
+      loader.load(test.id, function (err, props) {
+        t.ok(!err, 'There was an error while loading');
+        t.same(props.name, test.p('name'), 'The loaded properties were not correct.');
+        uuidMockup.find({name: test.p('name')}, function (err, ids) {
+          t.ok(!err, 'There was an error while finding.');
+          t.same([test.id], ids, 'Did not find the correct ids');
+          t.done();
         });
       });
     });
