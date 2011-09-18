@@ -1,3 +1,10 @@
+### v0.6
+   - changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILTY)
+   - added ability to choose from different id generation mechanisms (for example incremental or custom functions)
+   - added short forms of functions where you don't need to create a new instance first to save/load/find/remove
+   - changed `this` in callbacks to be the instance you manipulated/loaded
+   - bug fixes
+
 ### v0.5
    - "value" in model properties renamed to "defaultValue"
    - "has()" renamed to "belongsTo()"
