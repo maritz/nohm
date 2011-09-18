@@ -140,7 +140,7 @@ A property can have the following options: (explained in more detail later)
     defaultValue <span class="additionalInfo">Any value</span>
   </dt>
   <dd>
-    The default value a property will have when the model is initialized.
+    The default value a property will have when the model is initialized. Can even be a function that will be called each time a new instance is created and the return value will be the value of the property.
     **Note**: If you do not define a default value, it will be 0.
   </dd>
   <dt>
