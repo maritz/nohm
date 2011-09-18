@@ -28,6 +28,7 @@ layout: default
       * [Json](#json)
       * [Behaviour](#behaviour)
       * [Validators](#validators)
+      * [Pure value loading](#pure_value_loading)
    * [ID generation](#id_generation)
 * [Setting/Getting properties](#settinggetting_properties)
 * [Validating](#validating)
@@ -165,6 +166,12 @@ A property can have the following options: (explained in more detail later)
   </dt>
   <dd>
     Whether the value should be unique among all instances of this model.
+  </dd>
+  <dt>
+    load_pure <span class="additionalInfo">Boolean</span>
+  </dt>
+  <dd>
+    Per default this is false and values loaded are put through the type casting/behaviours. If you want to prevent this you can set this to true and it will not be altered from the data that redis delivers.
   </dd>
 </dl>
 <p><small><bold>bold</bold> = mandatory</small></p>
