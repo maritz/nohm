@@ -145,7 +145,7 @@ A property can have the following options: (explained in more detail later)
     The default value a property will have when the model is initialized.<br/>
     Can even be a function that will be called each time a new instance is created and the return value will be the value of the property.<br/>
 
-    <b>Note<b>: If you do not define a default value, it will be 0.
+    <b>Note</b>: If you do not define a default value, it will be 0.
   </dd>
   <dt>
     validations <span class="additionalInfo">Array of arrays/functions</span>
