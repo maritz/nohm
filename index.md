@@ -28,6 +28,7 @@ layout: default
       * [Json](#json)
       * [Behaviour](#behaviour)
       * [Validators](#validators)
+   * [ID generation](#id_generation)
 * [Setting/Getting properties](#settinggetting_properties)
 * [Validating](#validating)
    * [On setting a property](#on_setting_a_property)
@@ -291,6 +292,46 @@ var validatorModel = nohm.model('validatorModel', {
 {% endhighlight %}
 
 You can find the documentation of the [built-in validations in the api](api/symbols/validators.html)
+
+#### ID generation
+
+By default the ids of instances are unique strings and generated at the time of the first save call. You can however either choose an incremental id scheme or provide a custom function for generating ids.
+
+{% highlight js %}
+var incremental = nohm.model('incrementalIdModel', {
+  properties: {
+    name: {
+      type: 'string',
+      validations: [
+        'notEmpty'
+      ]
+    }
+  },
+  idGenerator: 'increment'
+});
+//ids of incremental will be 1, 2, 3 ...
+
+var prefix = 'bob';
+var counter = 200;
+var step = 50;
+var custom = Nohm.model('customIdModel', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'tom',
+      validations: [
+        'notEmpty'
+      ]
+    }
+  },
+  idGenerator: function (cb) {
+    counter += step;
+    cb(prefix+counter);
+  }
+});
+// ids of custom will be bob250, bob300, bob350 ...
+{% endhighlight %}
+
 
 ### Setting/Getting properties
 The function p/prop/property (all the same) gets and sets properties of an instance.
