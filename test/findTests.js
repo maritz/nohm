@@ -523,4 +523,46 @@ exports.loadReturnsProps = function (t) {
   });
 };
 
-// TODO: write load_pure tests & docs
+exports.shortForms = function (t) {
+  t.expect(11);
+  var shortFormMockup = nohm.model('shortFormMockup', {
+    properties: {
+      name: {
+        type: 'string',
+        defaultValue: 'testName',
+        index: true,
+        validations: [
+          'notEmpty'
+        ]
+      }
+    }
+  });
+  
+  shortFormMockup.save(function (err) {
+    var id = this.id;
+    t.ok(!err, 'There was an error while saving');
+    t.ok(this instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
+    t.ok(id > 0, 'The id was not set properly');
+    this.p('name', 'shortForm');
+    this.save(function () {
+      this.p('name', 'asdasd'); // make sure our comparisons in load aren't bogus
+      shortFormMockup.load(id, function (err, props) {
+        t.ok(!err, 'There was an error while loading.');
+        t.ok(props.hasOwnProperty('name') && props.name === 'shortForm', 'The props argument was not properly passed in load.');
+        t.same(this.p('name'), 'shortForm', 'The `this` instance has some property issues.');
+        shortFormMockup.find({name: 'shortForm'}, function (err, ids) {
+          t.ok(!err, 'There was an error while finding');
+          t.same(ids, [id], 'The found ids do not match [id]');
+          shortFormMockup.remove(id, function (err) {
+            t.ok(!err, 'There was an error while removing');
+            shortFormMockup.find({name: 'shortForm'}, function (err, ids) {
+              t.ok(!err, 'There was en error while finding the second time');
+              t.same(ids, [], 'Remove did not remove the correct instance. Uh-Oh.... :D ');
+              t.done();
+            });
+          });
+        });
+      });
+    });
+  });
+}

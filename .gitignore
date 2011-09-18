@@ -6,3 +6,4 @@ admin/*.sh
 .sass-cache
 dump.rdb
 style.css
+experiments.js
