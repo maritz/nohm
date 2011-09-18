@@ -651,3 +651,27 @@ exports.thisInCallbacks = function (t) {
     }));
   }));
 };
+
+exports.defaultAsFunction = function (t) {
+  t.expect(3);
+  
+  var TestMockup = nohm.model('TestMockup', {
+      properties: {
+        time: {
+          type: 'timestamp',
+          defaultValue: function () {
+            return (+ new Date());
+          }
+        }
+      }
+    });
+  var test1 = new TestMockup();
+  setTimeout(function () {
+    var test2 = new TestMockup();
+    
+    t.ok(typeof(test1.p('time')) === 'number', 'time of test1 is not a number');
+    t.ok(typeof(test2.p('time')) === 'number', 'time of test2 is not a number');
+    t.ok(test1.p('time') < test2.p('time'), 'time of test2 is not lower than test1');
+    t.done();
+  }, 10);
+};
