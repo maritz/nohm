@@ -136,7 +136,7 @@ exports.idIntersection = function (t) {
   
   testIntersection(
     [arr6, arr7],
-    [28,39]
+    ['hurgelwurz',28,39]
   );
   
   testIntersection(
@@ -692,7 +692,6 @@ exports.defaultIdGeneration = function (t) {t.expect(3);
   test1.save(function (err) {
     t.ok(!err, 'There was an error while saving.');
     t.same(typeof(test1.id), 'string', 'The generated id was not a string');
-    console.dir(test1.id);
     t.done();
   });
 }
