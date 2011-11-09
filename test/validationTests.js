@@ -140,6 +140,13 @@ var UserMockup = nohm.model('UserMockup', {
           return value === 'validNamed';
         }
       ]
+    },
+    alphanumeric: {
+      type: 'string',
+      defaultValue: 'hurgel1234',
+      validations: [
+        'alphanumeric'
+      ]
     }
   }
 });
@@ -292,12 +299,15 @@ exports.setterValidation = function (t) {
 
 exports.notEmpty = function (t) {
   var user = new UserMockup();
-  t.expect(2);
+  t.expect(3);
 
   t.ok(user.valid('name'), 'Notempty field `name` was valid but not accepted.');
 
   user.p('name', '');
   t.ok(!user.valid('name'), 'Notempty field `name` was accepted as an empty string.');
+  
+  user.p('name', '  ');
+  t.ok(!user.valid('name'), 'Notempty field `name` was accepted as a string with only spaces.');
 
   t.done();
 };
@@ -484,4 +494,19 @@ exports.invalidSaveResetsId = function (t) {
     t.same(user.id, null, 'The id of an invalid user was not reset properly.');
     t.done();
   });
+};
+
+exports.alphanumeric = function (t) {
+  var user = new UserMockup();
+  t.expect(4);
+
+  t.ok(user.p('alphanumeric', 'asd', true), 'Alphanumeric was not accepted.');
+
+  t.ok(user.p('alphanumeric', '1234', true), 'Alphanumeric was not accepted.');
+
+  t.ok( ! user.p('alphanumeric', ' asd', true), 'Non-Alphanumeric was not accepted.');
+
+
+  t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was not accepted.');
+  t.done();
 };
