@@ -1,3 +1,5 @@
+.settings.xml
+node_modules
 .project
 nohm.komodoproject
 benchmark.js.js
