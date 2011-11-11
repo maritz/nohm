@@ -147,6 +147,13 @@ var UserMockup = nohm.model('UserMockup', {
       validations: [
         'alphanumeric'
       ]
+    },
+    notExported: {
+      type: 'string',
+      defaultValue: '123',
+      validations: [
+        'notEmpty'
+      ]
     }
   }
 });
@@ -510,3 +517,13 @@ exports.alphanumeric = function (t) {
   t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was not accepted.');
   t.done();
 };
+
+exports.connectValidationMiddleware = function (t) {
+  var middleware = nohm.getConnectValidationMiddleware([{
+    model: UserMockup,
+    blacklist: ['notExported']
+  }]);
+  console.dir(middleware);
+  
+  process.exit();
+}
