@@ -167,54 +167,73 @@ exports.general = function (t) {
   t.done();
 };
 
+function testSimpleProps(t, props, dontExpect) {
+  if ( ! dontExpect) {
+    t.expect(props.tests.length);
+  }
+  props.tests.forEach(function (prop) {
+    var user = new UserMockup();
+    user.p(props.name, prop.input);
+    t.same(user.p(props.name), prop.expected, 'Setting the property '+props.name+
+      ' to '+util.inspect(prop.input)+' did not cast it to '+util.inspect(prop.expected));
+  });
+}
+
 exports.castString = function (t) {
-  var user = new UserMockup();
-  t.expect(6);
-
-  // is this overkill? i believe so... but a little copy and paste doesn't take that much time ;D
-  user.p('name', null);
-  t.ok(user.p('name') === '', 'Setting a String to null did not cast it to an empty string.');
-
-  user.p('name', false);
-  t.ok(user.p('name') === '', 'Setting a String to false did not cast it to an empty string.');
-
-  user.p('name', true);
-  t.ok(user.p('name') === '', 'Setting a String to true did not cast it to an empty string.');
-
-  user.p('name', 0);
-  t.ok(user.p('name') === '', 'Setting a String to 0 did not cast it to an empty string.');
-
-  user.p('name', {});
-  t.ok(user.p('name') === '', 'Setting a String to {} did not cast it to an empty string.');
-
-  user.p('name', []);
-  t.ok(user.p('name') === '', 'Setting a String to [] did not cast it to an empty string.');
+  var tests = {
+    name: 'name',
+    tests: [{
+      input: null,
+      expected: ''
+    }, {
+      input: false,
+      expected: ''
+    }, {
+      input: true,
+      expected: ''
+    }, {
+      input: 0,
+      expected: ''
+    }, {
+      input: {},
+      expected: ''
+    }, {
+      input: [],
+      expected: ''
+    }]
+  };
+  
+  testSimpleProps(t, tests);
 
   t.done();
 };
 
 exports.castInteger = function (t) {
-  var user = new UserMockup();
-  t.expect(6);
-
-  user.p('castInteger', '15');
-  t.ok(user.p('castInteger') === 15, 'Setting an Integer to a string "15" did not cast it to 15.');
-
-  user.p('castInteger', '15asd');
-  t.ok(user.p('castInteger') === 15, 'Setting an Integer to a string "15asd" did not cast it to 15.');
-
-  user.p('castInteger', '1.5');
-  t.ok(user.p('castInteger') === 1, 'Setting an Integer to a string "1.5" did not cast it to 1.');
-
-  user.p('castInteger', '0x15');
-  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string "0x1.5" did not cast it to 0.');
-
-  user.p('castInteger', '.5');
-  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string ".5" did not cast it to 0.');
-
-  user.p('castInteger', '0.1e2');
-  t.ok(user.p('castInteger') === 0, 'Setting an Integer to a string "0.1e2" did not cast it to 0.');
-
+  var tests = {
+    name: 'castInteger',
+    tests: [{
+      input: '15',
+      expected: 15
+    }, {
+      input: '15asd',
+      expected: 15
+    }, {
+      input: '1.5',
+      expected: 1
+    }, {
+      input: '0x15',
+      expected: 0
+    }, {
+      input: '.5',
+      expected: 0
+    }, {
+      input: '0.1e2',
+      expected: 0
+    }]
+  };
+  
+  testSimpleProps(t, tests);
+  
   t.done();
 };
 
@@ -517,13 +536,3 @@ exports.alphanumeric = function (t) {
   t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was not accepted.');
   t.done();
 };
-
-exports.connectValidationMiddleware = function (t) {
-  var middleware = nohm.getConnectValidationMiddleware([{
-    model: UserMockup,
-    blacklist: ['notExported']
-  }]);
-  console.dir(middleware);
-  
-  process.exit();
-}
