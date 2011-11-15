@@ -16,6 +16,13 @@ Nohm is an object relational mapper (ORM) written for node.js and redis.
 ## Documentation
 http://maritz.github.com/nohm/
 
+## Examples
+
+* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server) very basic user example (needs express)
+* [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi
+
+Do you have code that should/could be listed here? Message me!
+
 ## Contribute?
 
 Yes, please contact me or just fork and request pulls. Any help or feedback is appreciated. If you use nohm I'd also be happy if you just drop me a quick msg about it.
