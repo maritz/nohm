@@ -41,6 +41,12 @@ var userModel = module.exports = nohm.model('User', {
         ['email', true] // this means only values that pass the email regexp are accepted. BUT it is also optional, thus a falsy value is accepted as well.
       ]
     },
+    someRegex: {
+      type: 'string',
+      validations: [
+        ['regexp', /^asd$/, true]   
+      ]
+    },
     password: {
       load_pure: true, // this ensures that there is no typecasting when loading from the db.
       type: function (value, key, old) { // because when typecasting, we create a new salt and hash the pw.

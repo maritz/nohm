@@ -148,11 +148,18 @@ var UserMockup = nohm.model('UserMockup', {
         'alphanumeric'
       ]
     },
-    notExported: {
+    noRegexp: {
       type: 'string',
-      defaultValue: '123',
+      defaultValue: 'hurgel1234',
       validations: [
-        'notEmpty'
+        'regexp'
+      ]
+    },
+    regexp: {
+      type: 'string',
+      defaultValue: 'asd1',
+      validations: [
+        ['regexp', /^asd[\d]+$/, true]
       ]
     }
   }
@@ -161,8 +168,14 @@ var UserMockup = nohm.model('UserMockup', {
 exports.general = function (t) {
   var user = new UserMockup();
   t.expect(1);
+  
+  var valid = user.valid();
+  
+  if (!valid) {
+    console.dir(user.errors);
+  }
 
-  t.ok(user.valid(), 'The Model was not recognized as valid. Is it? Should be!');
+  t.ok(valid, 'The Model was not recognized as valid. Is it? Should be!');
 
   t.done();
 };
@@ -530,9 +543,25 @@ exports.alphanumeric = function (t) {
 
   t.ok(user.p('alphanumeric', '1234', true), 'Alphanumeric was not accepted.');
 
-  t.ok( ! user.p('alphanumeric', ' asd', true), 'Non-Alphanumeric was not accepted.');
+  t.ok( ! user.p('alphanumeric', ' asd', true), 'Non-Alphanumeric was accepted.');
 
 
-  t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was not accepted.');
+  t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was accepted.');
+  t.done();
+};
+
+exports.regexp = function (t) {
+  var user = new UserMockup();
+  t.expect(5);
+
+  t.ok(user.p('regexp', 'asd1234123', true), 'regexp-matching was not accepted.');
+
+  t.ok(user.p('regexp', 'asd1', true), 'regexp-matching was not accepted.');
+
+  t.ok(user.p('regexp', '', true), 'regexp-matching was not accepted.');
+  
+  t.ok( ! user.p('regexp', ' asd', true), 'Non-regexp-matching value was accepted.');
+
+  t.ok( ! user.p('regexp', '12345', true), 'Non-regexp-matching value was accepted.');
   t.done();
 };
