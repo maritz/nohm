@@ -677,7 +677,7 @@ exports.defaultAsFunction = function (t) {
   }, 10);
 };
 
-exports.defaultIdGeneration = function (t) {t.expect(3);
+exports.defaultIdGeneration = function (t) {
   t.expect(2);
   
   var TestMockup = nohm.model('TestMockup', {
@@ -694,4 +694,26 @@ exports.defaultIdGeneration = function (t) {t.expect(3);
     t.same(typeof(test1.id), 'string', 'The generated id was not a string');
     t.done();
   });
+}
+
+exports.instanceLoad = function (t) {
+  t.expect(1);
+  var user = new UserMockup(1123123, function (err) {
+    t.same(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
+    t.done();
+  });;
+}
+
+exports.factory = function (t) {
+  t.expect(4);
+  var name = 'UserMockup';
+  var user = nohm.factory(name);
+  t.same(user.modelName, name, 'Using the factory to get an instance did not work.');
+  
+  var user2 = nohm.factory(name, 1234124235, function (err) {
+    t.same(err, 'not found', 'Instantiating a user via factory with an id and callback did not try to load it');
+    t.same(user.modelName, name, 'Using the factory to get an instance (with id) did not work.');
+    t.done();
+  });
+  t.ok(user2, 'Using the factory with an id and callback returned false');
 }

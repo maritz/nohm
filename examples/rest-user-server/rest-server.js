@@ -1,4 +1,4 @@
-var express = require(__dirname+'/../../../stack/node_modules/express');
+var express = require('express');
 var Nohm = require(__dirname+'/../../lib/nohm.js').Nohm;
 var UserModel = require(__dirname+'/UserModel.js');
 var redis = require('redis');
