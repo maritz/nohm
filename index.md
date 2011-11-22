@@ -339,12 +339,44 @@ var custom = Nohm.model('customIdModel', {
 // ids of custom will be bob250, bob300, bob350 ...
 {% endhighlight %}
 
+### Creating an instance
+There are two basic ways to create an instance of a model.
+
+#### Manual
+Using the new keyword on the return of Nohm.model.
+
+{% highlight js %}
+var UserModel = Nohm.model('UserModel', {});
+var user = new UserModel();
+{% endhighlight %}
+
+This has the drawback that you need to keep track of your models.
+
+#### Factory
+This is the easier and preferred method.
+
+{% highlight js %}
+Nohm.model('UserModel', {});
+var user = Nohm.factory('UserModel');
+{% endhighlight %}
+
+You can also pass an id and callback as the 2nd and 3rd arguments to immediately load the data from db.
+
+{% highlight js %}
+Nohm.model('UserModel', {});
+var user = Nohm.factory('UserModel', 123, function (err) {
+  if (err) {
+    // db error or id not found
+  }
+});
+{% endhighlight %}
+
 
 ### Setting/Getting properties
 The function p/prop/property (all the same) gets and sets properties of an instance.
 
 {% highlight js %}
-var user = new User;
+var user = new User();
 user.p('name', 'test');
 user.p('name'); // returns 'test'
 user.p({
