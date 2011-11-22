@@ -5,6 +5,12 @@
         "node" : ">=0.4.0" 
     },
     "author": "Moritz Peters",
+    "repository" : { 
+        "type" : "git", 
+        "url" : "https://github.com/maritz/nohm.git"
+    }, 
+    "bugs" : { 
+        "url" : "https://github.com/maritz/nohm/issues" },
     "directories": {
         "lib": "./lib"
     },
