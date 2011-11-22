@@ -30,6 +30,7 @@ layout: default
       * [Validators](#validators)
       * [Pure value loading](#pure_value_loading)
    * [ID generation](#id_generation)
+* [Creating an instance](#creating_an_instance)
 * [Setting/Getting properties](#settinggetting_properties)
 * [Validating](#validating)
    * [On setting a property](#on_setting_a_property)
