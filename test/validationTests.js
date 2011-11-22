@@ -1,5 +1,7 @@
 var util = require('util'),
     nohm = require(__dirname+'/../lib/nohm').Nohm;
+    
+nohm.setExtraValidations(__dirname+'/custom_validations.js');
 
 // !!! this mockup must be defined valid from the start for most tests !!!
 var UserMockup = nohm.model('UserMockup', {
@@ -160,6 +162,20 @@ var UserMockup = nohm.model('UserMockup', {
       defaultValue: 'asd1',
       validations: [
         ['regexp', /^asd[\d]+$/, true]
+      ]
+    },
+    customValidationFile: {
+      type: 'string',
+      defaultValue: 'customValidationFile',
+      validations: [
+        'customValidationFile'
+      ]
+    },
+    customValidationFileOptional: {
+      type: 'string',
+      defaultValue: 'customValidationFile',
+      validations: [
+        ['customValidationFile', true]
       ]
     }
   }
@@ -563,5 +579,16 @@ exports.regexp = function (t) {
   t.ok( ! user.p('regexp', ' asd', true), 'Non-regexp-matching value was accepted.');
 
   t.ok( ! user.p('regexp', '12345', true), 'Non-regexp-matching value was accepted.');
+  t.done();
+};
+
+exports.customValidationFile = function (t) {
+  var user = new UserMockup();
+  t.expect(2);
+
+  t.ok( ! user.p('customValidationFile', 'somethingelse', true), 'Not customValidationFile was accepted.');
+
+  t.ok(user.p('customValidationFileOptional', '', true), 'customValidationFile optional and empty was not accepted.');
+
   t.done();
 };

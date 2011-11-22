@@ -44,7 +44,7 @@ var userModel = module.exports = nohm.model('User', {
     someRegex: {
       type: 'string',
       validations: [
-        ['regexp', /^asd$/, true]   
+        ['regexp', /^asd$/, true]
       ]
     },
     password: {

@@ -55,10 +55,12 @@ server.get('/User/create', function (req, res, next) {
   });
 });
 
-server.use(Nohm.getConnectValidationMiddleware([{
+server.use(Nohm.connect([{
   model: UserModel,
   blacklist: ['salt']
-}]));
+}], {
+  extraFiles: __dirname+'/custom_validations.js'
+}));
 
 server.use(function (err, req, res, next) {
   if (err instanceof Error) {
