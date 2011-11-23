@@ -58,7 +58,7 @@ var args = require('testArgs');
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js']);
+  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js']);
 }
 
 
