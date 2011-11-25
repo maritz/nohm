@@ -1,7 +1,5 @@
-var util = require('util');
 var Nohm = require(__dirname+'/../lib/nohm').Nohm;
-var redis = Nohm.client;
-var UserConnectMockup = Nohm.model('UserConnectMockup', {
+Nohm.model('UserConnectMockup', {
   properties: {
     name: {
       type: 'string',
@@ -99,7 +97,6 @@ var setup = function (t, expected, options, callback) {
 };
 
 exports.connectNoOptions = function (t) {
-  var user = new UserConnectMockup();
   
   setup(t, 2, undefined, function (sandbox, str) {
     var val = sandbox.nohmValidations.models.UserConnectMockup;
@@ -107,10 +104,10 @@ exports.connectNoOptions = function (t) {
     t.same(val.name[1], ['minLength', 2], 'UserConnectMockup did not have the proper validations');
     t.done();
   });
+  
 };
 
 exports.connectValidate = function (t) {
-  var user = new UserConnectMockup();
   
   setup(t, 2, undefined, function (sandbox, str) {
     var val = sandbox.nohmValidations.validate;
@@ -124,16 +121,15 @@ exports.connectValidate = function (t) {
 };
 
 exports.connectOptions = function (t) {
-  var user = new UserConnectMockup();
   
   setup(t, 1, {url: './nohm.js', namespace: 'hurgel'}, function (sandbox, str) {
     t.ok(sandbox.hurgel, 'Namespace option not successful');
     t.done();
   });
+  
 };
 
 exports.connectExtraFiles = function (t) {
-  var user = new UserConnectMockup();
   
   setup(t, 1, {extraFiles: __dirname+'/custom_validations2.js'}, function (sandbox, str) {
     var errors = sandbox.nohmValidations.validate('UserConnectMockup', {
@@ -146,10 +142,10 @@ exports.connectExtraFiles = function (t) {
       }, 'Validate did not work as expected.');
     t.done();
   });
+  
 };
 
 exports.connectExceptions = function (t) {
-  var user = new UserConnectMockup();
   
   setup(t, 2, {exclusions: {
     UserConnectMockup: {
@@ -173,4 +169,5 @@ exports.connectExceptions = function (t) {
     }
     t.done();
   });
+  
 };
