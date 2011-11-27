@@ -6,12 +6,10 @@ Nohm.model('UserConnectMockup', {
       defaultValue: 'testName',
       validations: [
         'notEmpty',
-        {
-          name: 'length', 
-          options: {
+        ['length', {
             min: 2
           }
-        }
+        ]
       ]
     },
     customValidationFile: {
@@ -40,12 +38,10 @@ Nohm.model('UserConnectMockup', {
       defaultValue: 'asd',
       validations: [
         'notEmpty',
-        {
-          name: 'length', 
-          options: {
+        ['length', {
             min: 2
           }
-        }
+        ]
       ]
     }
   }
@@ -111,12 +107,11 @@ exports.connectNoOptions = function (t) {
   setup(t, 2, undefined, function (sandbox, str) {
     var val = sandbox.nohmValidations.models.UserConnectMockup;
     t.ok(val.name.indexOf('notEmpty') === 0, 'UserConnectMockup did not have the proper validations');
-    t.same(val.name[1], {
-        name: 'length', 
-        options: {
+    t.same(val.name[1], [
+      'length', {
           min: 2
         }
-      }, 'UserConnectMockup did not have the proper validations');
+      ], 'UserConnectMockup did not have the proper validations');
     t.done();
   });
   

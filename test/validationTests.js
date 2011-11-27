@@ -37,26 +37,22 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'integer',
       defaultValue: 5,
       validations: [
-        {
-          name: 'minMax',
-          options: {
+        ['minMax', {
             min: 2,
             max: 20
           }
-        }
+        ]
       ]
     },
     minOptional: {
       type: 'integer',
       defaultValue: 0,
       validations: [
-        {
-          name: 'minMax',
-          options: {
+        ['minMax', {
             min: 10,
             optional: true // this is a bit stupid. because 0 will trigger it as optional
           }
-        }
+        ]
       ]
     },
     email: {
@@ -70,49 +66,41 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: '',
       validations: [
-        {
-          name: 'email', 
-          options: {
+        ['email', {
             optional: true
           }
-        }
+        ]
       ]
     },
     minLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        {
-          name: 'length',
-          options: {
+        ['length', {
             min: 3
           }
-        }
+        ]
       ]
     },
     minLength2: {
       type: 'string',
       defaultValue: '',
       validations: [
-        {
-          name: 'length',
-          options: {
+        ['length', {
             min: 3,
             optional: true
           }
-        }
+        ]
       ]
     },
     maxLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        {
-          name: 'length',
-          options: {
+        ['length', {
             max: 5
           }
-        }
+        ]
       ]
     },
     number: {
@@ -195,13 +183,11 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'asd1',
       validations: [
-        {
-          name: 'regexp', 
-          options: {
+        ['regexp', {
             regex: /^asd[\d]+$/, 
             optional: true
           }
-        }
+        ]
       ]
     },
     customValidationFile: {
@@ -215,12 +201,10 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'customValidationFile',
       validations: [
-        {
-          name: 'customValidationFile', 
-          options: {
+        ['customValidationFile', {
             optional: true
           }
-        }
+        ]
       ]
     }
   }

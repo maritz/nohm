@@ -517,8 +517,8 @@ exports.uniqueCaseInSensitive = function (t) {
     t.ok( ! err, 'Saving failed');
     user2.valid(function (valid) {
       t.ok( ! valid, 'A duplicate (different case) unique property was validated.');
-      t.same(user2.errors.name, ['notUnique'], 'The error for name were not correct.');
-      t.same(user2.errors.email, ['notUnique'], 'The error for email were not correct.');
+      t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
+      t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
       t.done();
     });
   });
