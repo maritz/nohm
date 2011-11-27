@@ -1,8 +1,8 @@
 {
     "name": "nohm",
-    "version": "0.6.3",
+    "version": "0.6.4",
     "engines": {
-        "node" : ">=0.4.0" 
+        "node" : ">=0.4.0 || >= 0.6.3" 
     },
     "author": "Moritz Peters",
     "repository" : { 
@@ -19,5 +19,8 @@
     "dependencies": {
       "async": "0.1.15",
       "redis": ">=0.7.1"
+    },
+    "devDependencies": {
+      "nodeunit": "0.6.4"
     }
 }

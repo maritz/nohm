@@ -1,6 +1,3 @@
-require.paths.unshift(__dirname); //tests
-require.paths.unshift(__dirname + '/../lib'); // nohm itself
-
 var nodeunit = require('nodeunit')
     , util = require('util');
 
@@ -14,47 +11,15 @@ run = function(files){
 
     var start = new Date().getTime();
 
-    nodeunit.runFiles(files, {
-        moduleStart: function(name){
-            util.puts('\n' + bold(name));
-        },
-        testDone: function(name, assertions){
-            if(!assertions.failures){
-                util.puts('✔ ' + name);
-            }
-            else {
-                util.puts(red('✖ ' + name) + '\n');
-                assertions.forEach(function(assertion){
-                    if(assertion.failed()){
-                        util.puts(assertion.message);
-                        util.puts(assertion.error.stack + '\n');
-                    }
-                });
-            }
-        },
-        done: function(assertions){
-          cleanup(function () {
-            if (assertions.failures) {
-              util.puts(
-                '\n' + bold(red('FAILURES: ')) + assertions.failures +
-                '/' + assertions.length + ' assertions failed (' +
-                assertions.duration + 'ms)'
-              );
-              process.exit(1);
-            } else {
-                util.puts(
-                    '\n' + bold(green('OK: ')) + assertions.length +
-                    ' assertions (' + assertions.duration + 'ms)'
-                  );
-                process.exit(0);
-            }
-          });
-        }
+    nodeunit.reporters.default.run(files, undefined, function () {
+      cleanup(function () {
+        redis.end();
+      });
     });
 };
 
 
-var args = require('testArgs');
+var args = require(__dirname+'/testArgs.js');
 
 var runner = function () {
   process.chdir(__dirname);

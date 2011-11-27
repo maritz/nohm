@@ -28,9 +28,10 @@ Do you have code that should/could be listed here? Message me!
 Yes, please contact me or just fork and request pulls. Any help or feedback is appreciated. If you use nohm I'd also be happy if you just drop me a quick msg about it.
 
 ## Running tests
-To run the tests you need to have nodeunit\@0.1.0:
+To run the tests you need to have nodeunit v0.6.4. This will be installed if you installed nohm with the --dev argument.
+Otherwise you can run:
 
-    npm install nodeunit@0.1.0
+    npm install nodeunit@0.6.4
 
 Then run
 

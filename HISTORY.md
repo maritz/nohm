@@ -1,3 +1,7 @@
+### v0.6.4
+   - unique values are now case insensitive when validating or searching
+   - now compatible with node v0.6.3
+   - now uses nodeunit v0.6.4
 
 ### v0.6.3
 

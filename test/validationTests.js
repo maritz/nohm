@@ -351,11 +351,11 @@ exports.castTimestamp = function (t) {
   user.p('castTimestamp', '1988-03-12T00:00:00Z');
   t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00Z" did not cast it to ' + should);
 
-  user.p('castTimestamp', '1988-03-12T04:30:00+04:30');
-  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00+04:30" did not cast it to ' + should);
+  user.p('castTimestamp', '1988-03-12 04:30:00 +04:30');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12 04:30:00 +04:30" did not cast it to ' + should);
 
-  user.p('castTimestamp', '1988-03-11T20:30:00-04:30');
-  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00+04:30" did not cast it to ' + should);
+  user.p('castTimestamp', '1988-03-11 20:30:00 -04:30');
+  t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-11 20:30:00 -04:30" did not cast it to ' + should);
 
   user.p('castTimestamp', 'Sat, 12 Mar 1988 00:00:00');
   t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "Sat, 12 Mar 1988 00:00:00" did not cast it to ' + should);
