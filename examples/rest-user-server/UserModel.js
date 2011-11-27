@@ -24,7 +24,7 @@ var password_minlength = 6; // we use this multiple times and store it here to o
 /**
  * Model definition of a simple user
  */
-var userModel = module.exports = nohm.model('User', {
+module.exports = nohm.model('User', {
   idGenerator: 'increment',
   properties: {
     name: {
@@ -32,19 +32,26 @@ var userModel = module.exports = nohm.model('User', {
       unique: true,
       validations: [
         'notEmpty',
-        ['minLength', 4]
+        ['length', {
+          length: 4
+        }]
       ]
     },
     email: {
       type: 'string',
       validations: [
-        ['email', true] // this means only values that pass the email regexp are accepted. BUT it is also optional, thus a falsy value is accepted as well.
+        ['email', {
+          optional: true
+        }] // this means only values that pass the email regexp are accepted. BUT it is also optional, thus a falsy value is accepted as well.
       ]
     },
     someRegex: {
       type: 'string',
       validations: [
-        ['regexp', /^asd$/, true]
+        ['regexp', {
+          regex: /^asd$/, 
+          optional: true
+        }]
       ]
     },
     password: {
@@ -67,7 +74,9 @@ var userModel = module.exports = nohm.model('User', {
       },
       validations: [
         'notEmpty',
-        ['minLength', password_minlength]
+        ['length', {
+          min: password_minlength
+        }]
       ]
     },
     salt: {
@@ -112,8 +121,6 @@ var userModel = module.exports = nohm.model('User', {
      */
     fill: function (data, fields, fieldCheck) {
       var props = {},
-          passwordInField,
-          passwordChanged = false,
           self = this,
           doFieldCheck = typeof(fieldCheck) === 'function';
           
@@ -162,7 +169,6 @@ var userModel = module.exports = nohm.model('User', {
      * This makes it easier to check user input.
      */
     checkProperties: function (data, fields, callback) {
-      var self = this;    
       callback = typeof(fields) === 'function' ? fields : callback;
       
       this.fill(data, fields);

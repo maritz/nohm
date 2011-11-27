@@ -42,8 +42,7 @@ server.get('/User/create', function (req, res, next) {
     password: req.param('password'),
     email: req.param('email')
   };
-  
-  var user = new UserModel();
+  var user = Nohm.factory('User');
   user.store(data, function (err) {
     if (err === 'invalid') {
       next(user.errors);
