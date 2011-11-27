@@ -228,6 +228,34 @@ exports.findByUnique = function (t) {
   });
 };
 
+exports.findByUniqueOtherCase = function (t) {
+  var findUser = new UserFindMockup();
+  t.expect(1);
+
+  findUser.find({
+    email: userUnique.p('email').toUpperCase()
+  }, function (err, ids) {
+    if (err) {
+      console.dir(err);
+    }
+    t.same(ids, [userUnique.id], 'The found id did not match the id of the saved object.');
+    t.done();
+  });
+};
+
+exports.findByUniqueInvalidSearch = function (t) {
+  var findUser = new UserFindMockup();
+  t.expect(1);
+  
+  console.log('There should be an errro in the next line');
+  findUser.find({
+    email: {}
+  }, function (err, ids) {
+    t.same(err, 'invalid search parameters', 'The found id did not match the id of the saved object.');
+    t.done();
+  });
+};
+
 exports.findByStringIndex = function (t) {
   var findUser = new UserFindMockup();
   t.expect(1);
