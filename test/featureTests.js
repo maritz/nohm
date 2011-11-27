@@ -489,6 +489,31 @@ exports.uniqueDeletion = function (t) {
   });
 };
 
+exports.uniqueCaseInSensitive = function (t) {
+  var user = new UserMockup();
+  var user2 = new UserMockup();
+  t.expect(4);
+
+  user.p({
+    'name': 'uniqueCaseInSensitive',
+    'email': 'uniqueCaseInSensitive@test.de'
+  });
+  user2.p({
+    'name': user.p('name').toLowerCase(),
+    'email': user.p('email').toLowerCase()
+  });
+  
+  user.save(function (err) {
+    t.ok( ! err, 'Saving failed');
+    user2.valid(function (valid) {
+      t.ok( ! valid, 'A duplicate (different case) unique property was validated.');
+      t.same(user2.errors.name, ['notUnique'], 'The error for name were not correct.');
+      t.same(user2.errors.email, ['notUnique'], 'The error for email were not correct.');
+      t.done();
+    });
+  });
+};
+
 exports.indexes = function (t) {
   var user = new UserMockup();
   t.expect(7);
