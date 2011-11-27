@@ -1,5 +1,7 @@
-var util = require('util'),
-    nohm = require(__dirname+'/../lib/nohm').Nohm;
+var util = require('util');
+var nohm = require(__dirname+'/../lib/nohm').Nohm;
+var async = require('async');
+var util = require('util');
     
 nohm.setExtraValidations(__dirname+'/custom_validations.js');
 
@@ -35,15 +37,26 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'integer',
       defaultValue: 5,
       validations: [
-        ['min', 2],
-        ['max', 20]
+        {
+          name: 'minMax',
+          options: {
+            min: 2,
+            max: 20
+          }
+        }
       ]
     },
     minOptional: {
       type: 'integer',
       defaultValue: 0,
       validations: [
-        ['min', 10, 'optional']
+        {
+          name: 'minMax',
+          options: {
+            min: 10,
+            optional: true // this is a bit stupid. because 0 will trigger it as optional
+          }
+        }
       ]
     },
     email: {
@@ -57,28 +70,49 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: '',
       validations: [
-        ['email', true]
+        {
+          name: 'email', 
+          options: {
+            optional: true
+          }
+        }
       ]
     },
     minLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        ['minLength', 3]
+        {
+          name: 'length',
+          options: {
+            min: 3
+          }
+        }
       ]
     },
     minLength2: {
       type: 'string',
       defaultValue: '',
       validations: [
-        ['minLength', 3, 'optional']
+        {
+          name: 'length',
+          options: {
+            min: 3,
+            optional: true
+          }
+        }
       ]
     },
     maxLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        ['maxLength', 5]
+        {
+          name: 'length',
+          options: {
+            max: 5
+          }
+        }
       ]
     },
     number: {
@@ -120,8 +154,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid',
       validations: [
-        function (value) {
-          return value === 'valid';
+        function (value, opt, callback) {
+          callback(value === 'valid');
         }
       ]
     },
@@ -129,8 +163,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid2',
       validations: [
-        function (value) {
-          return value === 'valid2';
+        function (value, opt, callback) {
+          callback(value === 'valid2');
         }
       ]
     },
@@ -138,8 +172,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'validNamed',
       validations: [
-        function customNamed (value) {
-          return value === 'validNamed';
+        function customNamed (value, opt, callback) {
+          callback(value === 'validNamed');
         }
       ]
     },
@@ -161,7 +195,13 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'asd1',
       validations: [
-        ['regexp', /^asd[\d]+$/, true]
+        {
+          name: 'regexp', 
+          options: {
+            regex: /^asd[\d]+$/, 
+            optional: true
+          }
+        }
       ]
     },
     customValidationFile: {
@@ -175,7 +215,12 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'customValidationFile',
       validations: [
-        ['customValidationFile', true]
+        {
+          name: 'customValidationFile', 
+          options: {
+            optional: true
+          }
+        }
       ]
     }
   }
@@ -185,15 +230,15 @@ exports.general = function (t) {
   var user = new UserMockup();
   t.expect(1);
   
-  var valid = user.valid();
+  user.valid(function (valid) {
+    if (!valid) {
+      console.dir(user.errors);
+    }
   
-  if (!valid) {
-    console.dir(user.errors);
-  }
-
-  t.ok(valid, 'The Model was not recognized as valid. Is it? Should be!');
-
-  t.done();
+    t.ok(valid, 'The Model was not recognized as valid. Is it? Should be!');
+  
+    t.done();
+  });
 };
 
 function testSimpleProps(t, props, dontExpect) {
@@ -203,6 +248,7 @@ function testSimpleProps(t, props, dontExpect) {
   props.tests.forEach(function (prop) {
     var user = new UserMockup();
     user.p(props.name, prop.input);
+    
     t.same(user.p(props.name), prop.expected, 'Setting the property '+props.name+
       ' to '+util.inspect(prop.input)+' did not cast it to '+util.inspect(prop.expected));
   });
@@ -333,131 +379,181 @@ exports.behaviours = function (t) {
   t.done();
 };
 
-exports.setterValidation = function (t) {
-  var user = new UserMockup();
-  t.expect(6);
 
-  t.ok(user.p('name', 'hurz', true), 'Setting a property to a correct value with validation did not return true.');
 
-  t.ok(user.p('name') === 'hurz', 'Setting a property to a correct value with validation did not set the value.');
-
-  t.ok(!user.p('name', '', true), 'Setting a property to a wrong value with validation did not return false.');
-
-  t.ok(user.p('name') === 'hurz', 'Setting a property to a wrong value with validation did set the value.');
-  
-  t.ok(user.p({name: 'hurgel'}, true), 'Setting a property by passing an object and with validation did not return true.');
-  
-  t.ok(user.p('name') === 'hurgel', 'Setting a property by passing an object and with validation did set the value.');
-
-  t.done();
-};
+function testValidateProp (t, objectName, propName, error) {
+  var tests = {};
+  var parallel = [];
+  tests.push = function (expected, setValue) {
+    parallel.push(function (callback) {
+      var obj = nohm.factory(objectName);
+      if (typeof(setValue) !== 'undefined') {
+        var setReturn = obj.p(propName, setValue);
+      }
+      obj.valid(propName, function (valid) {
+        var errorStr = "Property '"+propName+"' was not validated properly. Details:"+
+          "\nobject: "+objectName+
+          "\nprop: "+propName+
+          "\nvalue: "+util.inspect(setValue)+
+          "\nafter casting: "+util.inspect(setReturn)+
+          "\nerrors: "+util.inspect(obj.errors);
+        t.same(expected, valid, errorStr);
+        callback();
+      });
+    });
+  };
+  tests.launch = function () {
+    t.expect(parallel.length);
+    async.parallel(parallel, function () {
+      t.done();
+    });
+  };
+  return tests;
+}
 
 exports.notEmpty = function (t) {
-  var user = new UserMockup();
-  t.expect(3);
-
-  t.ok(user.valid('name'), 'Notempty field `name` was valid but not accepted.');
-
-  user.p('name', '');
-  t.ok(!user.valid('name'), 'Notempty field `name` was accepted as an empty string.');
+  var tests = testValidateProp(t, 'UserMockup', 'name');
   
-  user.p('name', '  ');
-  t.ok(!user.valid('name'), 'Notempty field `name` was accepted as a string with only spaces.');
-
-  t.done();
+  tests.push(false, '');
+  tests.push(false, '  ');
+  
+  tests.launch();
 };
 
-exports.stringLength = function (t) {
-  var user = new UserMockup();
-  t.expect(5);
-
-  t.ok(user.valid('minLength'), 'Valid minLength was not accepted.');
-
-
-  t.ok(!user.p('minLength', 'as', true), 'String shorter than minLength was accepted.');
-
-
-  t.ok(!user.p('minLength2', 'as', true), 'String shorter than minLength was accepted. (optional but 2 chars)');
-
-  t.ok(user.valid('maxLength'), 'Valid maxLength was not accepted');
-
-  t.ok(!user.p('maxLength', 'asdasd', true), 'Invalid maxLength was accepted.');
-
-  t.done();
+exports.stringMinLength = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'minLength');
+  
+  tests.push(false, 'as');
+  
+  tests.launch();
 };
 
-exports.intSize = function (t) {
-  var user = new UserMockup();
-  t.expect(3);
+exports.stringMaxLength = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'maxLength');
+  
+  tests.push(false, 'asdasd');
+  
+  tests.launch();
+};
 
-  t.ok(!user.p('minMax', 1, true), 'Integer lower than min was accepted.');
+exports.stringLengthOptional = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'minLength2');
+  
+  tests.push(true, '');
+  tests.push(false, 'as');
+  
+  tests.launch();
+};
 
-  t.ok(!user.p('minMax', 21, true), 'Integer higher than min was accepted.');
+exports.minMax = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'minMax');
+  
+  tests.push(false, 1);
+  tests.push(false, 21);
+  
+  tests.launch();
+};
 
-  t.ok(user.p('minOptional', 0, true), 'Integer as 0 and optional was not accepted.');
-
-  t.done();
+exports.minOptional = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'minOptional');
+  
+  tests.push(true, 0);
+  
+  tests.launch();
 };
 
 exports.email = function (t) {
   // this isn't really sufficient to ensure that the regex is really working correctly, but it's good enough for now.
-  var user = new UserMockup();
-  t.expect(4);
-
-  t.ok(user.valid('email'), 'Valid email was not recognized.');
-
-  user.p('email', 'asdasd@asd');
-  t.ok(!user.valid('email'), 'Invalid email was recognized.');
-
-  user.p('email', 'as"da"s.d@asd.asd.asd.de');
-  t.ok(!user.valid('email'), 'Invalid email was recognized.');
-
-  t.ok(user.valid('optionalEmail'), 'Optional email was not recognized.');
-
-  t.done();
+  
+  var tests = testValidateProp(t, 'UserMockup', 'email');
+  
+  tests.push(true, 'asdasd@asd.de');
+  tests.push(true, 'asdasd+asd@asd.de');
+  tests.push(true, '"Abc\\@def"@example.com');
+  tests.push(true, '"Fred Bloggs"@example.com');
+  tests.push(true, '"Joe\\Blow"@example.com');
+  tests.push(true, '"Abc@def"@example.com');
+  tests.push(true, 'customer/department=shipping@example.com');
+  tests.push(true, '$A12345@example.com');
+  tests.push(true, '!def!xyz%abc@example.com');
+  tests.push(true, '_somename@example.com');
+  tests.push(false, 'somename@example');
+  tests.push(false, '@example.com');
+  tests.push(false, 'example');
+  tests.push(false, 'asd');
+  tests.launch();
 };
 
 exports.number = function (t) {
-  var user = new UserMockup();
-  t.expect(11);
-
-  t.ok(user.p('number', '0', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '-1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '10', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1000', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1.000,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1,000.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1 000.1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  t.ok(user.p('number', '1 000,1', true), 'Valid number was not accepted. (look at stacktrace for line :P )');
-
-  // TODO: write tests for US, EU, SI specifically
-
-  t.done();
+  var tests = testValidateProp(t, 'UserMockup', 'number');
+  
+  tests.push(true, '0');
+  tests.push(true, '1');
+  tests.push(true, '-1');
+  tests.push(true, '10');
+  tests.push(true, '1000');
+  tests.push(true, '1,1');
+  tests.push(true, '1.1');
+  tests.push(true, '1.000,1');
+  tests.push(true, '1,000.1');
+  tests.push(true, '1 000.1');
+  tests.push(true, '1 000,1');
+  
+  tests.launch();
 };
 
+exports.alphanumeric = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'alphanumeric');
+  
+  tests.push(true, 'asd');
+  tests.push(true, '1234');
+  tests.push(false, ' asd');
+  tests.push(false, 'a$aa');
+  
+  tests.launch();
+};
+
+exports.regexp = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'regexp');
+  
+  tests.push(true, 'asd1234123');
+  tests.push(true, 'asd1');
+  tests.push(true, '');
+  tests.push(false, ' asd');
+  tests.push(false, '12345');
+  
+  tests.launch();
+};
+
+exports.customValidationFile = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'customValidationFile');
+  
+  tests.push(false, 'somethingelse');
+  
+  tests.launch();
+};
+
+exports.customValidationFile = function (t) {
+  var tests = testValidateProp(t, 'UserMockup', 'customValidationFileOptional');
+  
+  tests.push(true, '');
+  
+  tests.launch();
+};
 
 exports.consistency = function (t) {
   var user = new UserMockup();
   t.expect(2);
 
-  t.ok(user.valid('name') === user.valid('email'), 'Validating two valid properties resulted in different outputs.');
-
-  t.ok(user.valid('name') === user.valid(), 'Validating the entire Model had a different result than validating a single property.');
-
-  t.done();
+  user.valid('name', function (valid1) {
+    user.valid('email', function (valid2) {
+      t.same(valid1, valid2, 'Validating two valid properties resulted in different outputs.');
+      user.valid(function (valid3) {
+        t.same(valid1, valid3, 'Validating the entire Model had a different result than validating a single property.');
+        t.done();
+      });
+    });
+  });
 };
 
 exports.functionArgument = function (t) {
@@ -466,7 +562,7 @@ exports.functionArgument = function (t) {
 
   
   user.valid(function (valid) {
-    t.same(valid, true, 'Validating with a function as the first arg did not call the callback with false as its first arg');
+    t.same(valid, true, 'Validating with a function as the first arg did not call the callback with true as its first arg');
 
     user.p({
       name: '',
@@ -549,46 +645,4 @@ exports.invalidSaveResetsId = function (t) {
     t.same(user.id, null, 'The id of an invalid user was not reset properly.');
     t.done();
   });
-};
-
-exports.alphanumeric = function (t) {
-  var user = new UserMockup();
-  t.expect(4);
-
-  t.ok(user.p('alphanumeric', 'asd', true), 'Alphanumeric was not accepted.');
-
-  t.ok(user.p('alphanumeric', '1234', true), 'Alphanumeric was not accepted.');
-
-  t.ok( ! user.p('alphanumeric', ' asd', true), 'Non-Alphanumeric was accepted.');
-
-
-  t.ok( ! user.p('alphanumeric', 'a$aa', true), 'Non-Alphanumeric was accepted.');
-  t.done();
-};
-
-exports.regexp = function (t) {
-  var user = new UserMockup();
-  t.expect(5);
-
-  t.ok(user.p('regexp', 'asd1234123', true), 'regexp-matching was not accepted.');
-
-  t.ok(user.p('regexp', 'asd1', true), 'regexp-matching was not accepted.');
-
-  t.ok(user.p('regexp', '', true), 'regexp-matching was not accepted.');
-  
-  t.ok( ! user.p('regexp', ' asd', true), 'Non-regexp-matching value was accepted.');
-
-  t.ok( ! user.p('regexp', '12345', true), 'Non-regexp-matching value was accepted.');
-  t.done();
-};
-
-exports.customValidationFile = function (t) {
-  var user = new UserMockup();
-  t.expect(2);
-
-  t.ok( ! user.p('customValidationFile', 'somethingelse', true), 'Not customValidationFile was accepted.');
-
-  t.ok(user.p('customValidationFileOptional', '', true), 'customValidationFile optional and empty was not accepted.');
-
-  t.done();
 };

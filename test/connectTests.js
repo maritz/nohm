@@ -6,7 +6,12 @@ Nohm.model('UserConnectMockup', {
       defaultValue: 'testName',
       validations: [
         'notEmpty',
-        ['minLength', 2]
+        {
+          name: 'length', 
+          options: {
+            min: 2
+          }
+        }
       ]
     },
     customValidationFile: {
@@ -23,19 +28,24 @@ Nohm.model('UserConnectMockup', {
         'customValidationFileTimesTwo'
       ]
     },
-    ecludedProperty: {
+    excludedProperty: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
         'notEmpty'
       ]
     },
-    ecludedValidation: {
+    excludedValidation: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
         'notEmpty',
-        ['minLength', 2]
+        {
+          name: 'length', 
+          options: {
+            min: 2
+          }
+        }
       ]
     }
   }
@@ -101,7 +111,12 @@ exports.connectNoOptions = function (t) {
   setup(t, 2, undefined, function (sandbox, str) {
     var val = sandbox.nohmValidations.models.UserConnectMockup;
     t.ok(val.name.indexOf('notEmpty') === 0, 'UserConnectMockup did not have the proper validations');
-    t.same(val.name[1], ['minLength', 2], 'UserConnectMockup did not have the proper validations');
+    t.same(val.name[1], {
+        name: 'length', 
+        options: {
+          min: 2
+        }
+      }, 'UserConnectMockup did not have the proper validations');
     t.done();
   });
   
@@ -111,12 +126,14 @@ exports.connectValidate = function (t) {
   
   setup(t, 2, undefined, function (sandbox, str) {
     var val = sandbox.nohmValidations.validate;
-    var valid = val('UserConnectMockup', {name: 'asd'});
-    t.same(valid, true, 'Validate did not work as expected.');
+    val('UserConnectMockup', {name: 'asd', excludedProperty: 'asd', excludedValidation: 'asd'}, function (valid, errors) {
+      t.same(valid, true, 'Validate did not work as expected.');
     
-    var errors = val('UserConnectMockup', {name: 'a'});
-    t.same(errors, {name: ['minLength']}, 'Validate did not work as expected.');
-    t.done();
+      val('UserConnectMockup', {name: 'a', excludedProperty: '', excludedValidation: 'a'}, function (valid, errors) {
+        t.same(errors, {name: ['length'], excludedProperty: ['notEmpty'], excludedValidation: ['length']}, 'Validate did not work as expected.');
+        t.done();
+      });
+    });
   });
 };
 
@@ -132,15 +149,16 @@ exports.connectOptions = function (t) {
 exports.connectExtraFiles = function (t) {
   
   setup(t, 1, {extraFiles: __dirname+'/custom_validations2.js'}, function (sandbox, str) {
-    var errors = sandbox.nohmValidations.validate('UserConnectMockup', {
+    sandbox.nohmValidations.validate('UserConnectMockup', {
       customValidationFile: 'NOPE',
       customValidationFileTimesTwo: 'NOPE'
+      }, function (valid, errors) {
+        t.same(errors, {
+            customValidationFile: ['customValidationFile'],
+            customValidationFileTimesTwo: ['customValidationFileTimesTwo']
+          }, 'Validate did not work as expected.');
+        t.done();
       });
-    t.same(errors, {
-        customValidationFile: ['customValidationFile'],
-        customValidationFileTimesTwo: ['customValidationFileTimesTwo']
-      }, 'Validate did not work as expected.');
-    t.done();
   });
   
 };
@@ -154,20 +172,25 @@ exports.connectExceptions = function (t) {
     },
     ExcludedConnectMockup: true
   }}, function (sandbox, str) {
-    var errors = sandbox.nohmValidations.validate('UserConnectMockup', {
+    var validate = sandbox.nohmValidations.validate;
+    validate('UserConnectMockup', {
       excludedValidation: 'a',
       excludedProperty: ''
-    });
-    t.same(errors, true, 'Validate did not work as expected with exclusions.');
+    }, function (valid, errors) {
+      t.same(valid, true, 'Validate did not work as expected with exclusions.');
   
-    try {
-      errors = sandbox.nohmValidations.validate('ExcludedConenctMockup', {
-        name: ''
-      });
-    } catch (e) {
-      t.same(e.message, 'Invalid modelName passed to nohm or model was not properly exported.', 'Validate did not work as expected with exclusions.');
-    }
-    t.done();
+      try {
+        validate('ExcludedConnectMockup', {
+          name: ''
+        }, function () {
+          t.ok(false, 'Validate should have thrown an error about an invalid modelname');
+          t.done();
+        });
+      } catch (e) {
+        t.same(e.message, 'Invalid modelName passed to nohm or model was not properly exported.', 'Validate did not work as expected with exclusions.');
+      }
+      t.done();
+    });
   });
   
 };
