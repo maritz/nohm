@@ -1,5 +1,5 @@
 var util = require('util');
-var args = require('testArgs');
+var args = require(__dirname+'/testArgs.js');
 
 exports.checkModules = function (t) {
   var redis, nohm, async;
