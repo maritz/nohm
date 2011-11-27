@@ -525,6 +525,17 @@ exports.customValidationFile = function (t) {
   tests.launch();
 };
 
+exports.errorFromObject = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+  
+  user.p('minMax', 'a');
+  user.valid('minMax', function (valid) {
+    t.same(user.errors.minMax, ['minMax'], 'Error was incorrect');
+    t.done();
+  });
+};
+
 exports.consistency = function (t) {
   var user = new UserMockup();
   t.expect(2);
