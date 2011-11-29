@@ -1,6 +1,9 @@
 var nodeunit = require('nodeunit')
     , util = require('util');
 
+var furtherTests = ['validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js'];
+var next;
+var error_sum = 0;
 
 // testrunner copied from nodeunit and edited a little
 run = function(files){
@@ -9,12 +12,27 @@ run = function(files){
     var green = function(str){return "\033[32m" + str + "\033[39m"};
     var bold  = function(str){return "\033[1m" + str + "\033[22m"};
 
-    var start = new Date().getTime();
-
-    nodeunit.reporters.default.run(files, undefined, function () {
-      cleanup(function () {
-        redis.end();
-      });
+    nodeunit.reporters.default.run(files, undefined, function (error) {
+      if (error instanceof Error) {
+        error_sum++;
+      }
+      
+      next = furtherTests.splice(0, 1);
+      if (next.length > 0) { // this is a hack to make the tests run serially
+        run(next);
+      } else {
+        if (error_sum > 0) {
+          console.log(
+              '\n' + bold(red('FAILURES: ')) + error_sum +
+              ' Modules failed.');
+        } else {
+          console.log(
+              '\n' + bold(green('SUCCESS!'))+' No assertions failed');
+        }
+        cleanup(function () {
+          redis.end();
+        });
+      }
     });
 };
 
@@ -23,7 +41,7 @@ var args = require(__dirname+'/testArgs.js');
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js']);
+  run(['featureTests.js']);
 }
 
 

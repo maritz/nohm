@@ -119,9 +119,9 @@ exports.connectNoOptions = function (t) {
 
 exports.connectValidate = function (t) {
   
-  setup(t, 2, undefined, function (sandbox, str) {
+  setup(t, 2, undefined, function (sandbox) {
     var val = sandbox.nohmValidations.validate;
-    val('UserConnectMockup', {name: 'asd', excludedProperty: 'asd', excludedValidation: 'asd'}, function (valid, errors) {
+    val('UserConnectMockup', {name: 'asd', excludedProperty: 'asd', excludedValidation: 'asd'}, function (valid) {
       t.same(valid, true, 'Validate did not work as expected.');
     
       val('UserConnectMockup', {name: 'a', excludedProperty: '', excludedValidation: 'a'}, function (valid, errors) {
@@ -134,7 +134,7 @@ exports.connectValidate = function (t) {
 
 exports.connectOptions = function (t) {
   
-  setup(t, 1, {url: './nohm.js', namespace: 'hurgel'}, function (sandbox, str) {
+  setup(t, 1, {url: './nohm.js', namespace: 'hurgel'}, function (sandbox) {
     t.ok(sandbox.hurgel, 'Namespace option not successful');
     t.done();
   });
@@ -143,7 +143,7 @@ exports.connectOptions = function (t) {
 
 exports.connectExtraFiles = function (t) {
   
-  setup(t, 1, {extraFiles: __dirname+'/custom_validations2.js'}, function (sandbox, str) {
+  setup(t, 1, {extraFiles: __dirname+'/custom_validations2.js'}, function (sandbox) {
     sandbox.nohmValidations.validate('UserConnectMockup', {
       customValidationFile: 'NOPE',
       customValidationFileTimesTwo: 'NOPE'
@@ -166,12 +166,12 @@ exports.connectExceptions = function (t) {
       excludedProperty: true
     },
     ExcludedConnectMockup: true
-  }}, function (sandbox, str) {
+  }}, function (sandbox) {
     var validate = sandbox.nohmValidations.validate;
     validate('UserConnectMockup', {
       excludedValidation: 'a',
       excludedProperty: ''
-    }, function (valid, errors) {
+    }, function (valid) {
       t.same(valid, true, 'Validate did not work as expected with exclusions.');
   
       try {
@@ -188,4 +188,15 @@ exports.connectExceptions = function (t) {
     });
   });
   
+};
+
+exports.connectValidateEmpty = function (t) {
+  
+  setup(t, 1, undefined, function (sandbox) {
+    var val = sandbox.nohmValidations.validate;
+    val('UserConnectMockup', {excludedProperty: 'asd', excludedValidation: 'asd'}, function (valid) {
+      t.same(valid, true, 'Validate did not work as expected.');
+      t.done();
+    });
+  });
 };
