@@ -46,6 +46,16 @@ var redis = args.redis,
             'email'
           ]
         },
+        emailOptional: {
+          type: 'string',
+          unique: true,
+          defaultValue: '',
+          validations: [
+            ['email', {
+              optional: true
+            }]
+          ]
+        },
         country: {
           type: 'string',
           defaultValue: 'Tibet',
@@ -290,6 +300,7 @@ exports.allProperties = function (t) {
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email'),
+    emailOptional: user.p('emailOptional'),
     country: user.p('country'),
     json: {},
     id: user.id
@@ -327,8 +338,7 @@ exports.create = function (t) {
 
 exports.remove = function (t) {
   var user = new UserMockup(),
-  testExists,
-  testBattery;
+  testExists;
   t.expect(9);
 
   testExists = function (what, key, callback) {
@@ -524,6 +534,29 @@ exports.uniqueCaseInSensitive = function (t) {
   });
 };
 
+exports.uniqueEmpty = function (t) {
+  var user = new UserMockup();
+  t.expect(5);
+  
+  redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
+    t.ok( ! err, 'redis.keys failed.');
+    t.same(exists, 0, 'An empty unique was set before the test for it was run');
+    user.p({
+      'name': 'emailOptional',
+      'email': 'emailOptionalTest@test.de',
+      'emailOptional': ''
+    });
+    user.save(function (err) {
+      t.ok( ! err, 'Saving failed.');
+      redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
+        t.ok( ! err, 'redis.keys failed.');
+        t.same(keys.length, 0, 'An empty unique was set');
+        t.done();
+      });
+    });
+  });
+};
+
 exports.indexes = function (t) {
   var user = new UserMockup();
   t.expect(7);
@@ -564,9 +597,10 @@ exports.indexes = function (t) {
 exports.__updated = function (t) {
   var user = new UserMockup();
   t.expect(2);
+  user.p('email', '__updatedTest@test.de');
   user.save(function (err) {
     if (err) {
-      util.debug('Error while saving user in __updated.');
+      t.ok(false, 'Error while saving user in test for __updated.');
     }
     user.p('name', 'hurgelwurz');
     user.p('name', 'test');
