@@ -33,7 +33,7 @@ module.exports = nohm.model('User', {
       validations: [
         'notEmpty',
         ['length', {
-          length: 4
+          min: 4
         }]
       ]
     },
