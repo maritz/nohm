@@ -247,11 +247,11 @@ exports.findByUniqueInvalidSearch = function (t) {
   var findUser = new UserFindMockup();
   t.expect(1);
   
-  console.log('There should be an errro in the next line');
+  console.log('There should be an error in the next line');
   findUser.find({
     email: {}
   }, function (err, ids) {
-    t.same(err, 'invalid search parameters', 'The found id did not match the id of the saved object.');
+    t.same(0, err.indexOf('Invalid search parameters'), 'The found id did not match the id of the saved object.');
     t.done();
   });
 };

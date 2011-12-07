@@ -2,6 +2,7 @@ var express = require('express');
 var Nohm = require(__dirname+'/../../lib/nohm.js').Nohm;
 var UserModel = require(__dirname+'/UserModel.js');
 var redis = require('redis');
+var fs = require('fs');
 
 var redisClient = redis.createClient();
 
@@ -9,6 +10,8 @@ Nohm.setPrefix('rest-user-server-example');
 Nohm.setClient(redisClient);
 
 var server = express.createServer();
+
+server.use(express.bodyParser());
 
 server.get('/User/list', function (req, res, next) {
   UserModel.find(function (err, ids) {
@@ -27,7 +30,7 @@ server.get('/User/list', function (req, res, next) {
         if (err) {
           return next(err);
         }
-        users.push({id: this.id, name: props.name});
+        users.push({id: this.id, name: props.name, email: props.email});
         if (++count === len) {
           res.json(users);
         }
@@ -36,14 +39,13 @@ server.get('/User/list', function (req, res, next) {
   });
 });
 
-server.get('/User/create', function (req, res, next) {
+server.post('/User/create', function (req, res, next) {
   var data = {
     name: req.param('name'),
     password: req.param('password'),
     email: req.param('email')
   };
-  
-  var user = new UserModel();
+  var user = Nohm.factory('User');
   user.store(data, function (err) {
     if (err === 'invalid') {
       next(user.errors);
@@ -54,6 +56,21 @@ server.get('/User/create', function (req, res, next) {
     }
   });
 });
+
+server.get('/', function (req, res) {
+  res.send(fs.readFileSync(__dirname+'/index.html', 'utf-8'));
+});
+
+server.get('/client.js', function (req, res) {
+  res.send(fs.readFileSync(__dirname+'/client.js', 'utf-8'), { 'Content-Type': 'text/javascript' });
+});
+
+server.use(Nohm.connect([{
+  model: UserModel,
+  blacklist: ['salt']
+}], {
+  extraFiles: __dirname+'/custom_validations.js'
+}));
 
 server.use(function (err, req, res, next) {
   if (err instanceof Error) {

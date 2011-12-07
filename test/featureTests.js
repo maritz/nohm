@@ -46,6 +46,16 @@ var redis = args.redis,
             'email'
           ]
         },
+        emailOptional: {
+          type: 'string',
+          unique: true,
+          defaultValue: '',
+          validations: [
+            ['email', {
+              optional: true
+            }]
+          ]
+        },
         country: {
           type: 'string',
           defaultValue: 'Tibet',
@@ -169,8 +179,7 @@ exports.setPrefix = function (t) {
 };
 
 exports.propertyGetter = function (t) {
-  var user = new UserMockup(),
-  exceptionThrown;
+  var user = new UserMockup();
   t.expect(7);
 
   t.equals(typeof(user.p), 'function', 'Property getter short p is not available.');
@@ -193,16 +202,14 @@ exports.propertyGetter = function (t) {
 
 
 exports.propertySetter = function (t) {
-  var user = new UserMockup(),
-  result,
-  controlUser = new UserMockup();
-  t.expect(7);
+  var user = new UserMockup();
+  var controlUser = new UserMockup();
+  t.expect(6);
 
-  t.ok(user.p('email', 'asdasd'), 'Setting a property without validation did not return `true`.');
-
+  t.same(user.p('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
+  
+  user.p('email', 'asdasd');
   t.equals(user.p('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
-
-  t.ok(user.p('email', null), 'Setting a property without validation did not return `true`.');
 
   user.p('email', 'test@test.de');
   t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
@@ -293,6 +300,7 @@ exports.allProperties = function (t) {
     name: user.p('name'),
     visits: user.p('visits'),
     email: user.p('email'),
+    emailOptional: user.p('emailOptional'),
     country: user.p('country'),
     json: {},
     id: user.id
@@ -330,8 +338,7 @@ exports.create = function (t) {
 
 exports.remove = function (t) {
   var user = new UserMockup(),
-  testExists,
-  testBattery;
+  testExists;
   t.expect(9);
 
   testExists = function (what, key, callback) {
@@ -443,7 +450,7 @@ exports.unique = function (t) {
   user1.p('name', 'dubplicateTest');
   user1.p('email', 'dubplicateTest@test.de');
   user2.p('name', 'dubplicateTest');
-  user2.p('email', 'dubbplicateTest@test.de');
+  user2.p('email', 'dubbplicateTest@test.de'); // intentional typo dubb
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
     redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
@@ -467,6 +474,19 @@ exports.unique = function (t) {
     if (err) {
       t.done();
     }
+  });
+};
+
+exports.uniqueOnlyCheckSpecified = function (t) {
+  var user1 = new UserMockup();
+  t.expect(2);
+
+  user1.p('name', 'dubplicateTest');
+  user1.p('email', 'dubplicateTest@test.de');
+  user1.valid('name', function (valid) {
+    t.same(valid, false, 'Checking the duplication status failed in valid().');
+    t.same(user1.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
+    t.done();
   });
 };
 
@@ -507,9 +527,32 @@ exports.uniqueCaseInSensitive = function (t) {
     t.ok( ! err, 'Saving failed');
     user2.valid(function (valid) {
       t.ok( ! valid, 'A duplicate (different case) unique property was validated.');
-      t.same(user2.errors.name, ['notUnique'], 'The error for name were not correct.');
-      t.same(user2.errors.email, ['notUnique'], 'The error for email were not correct.');
+      t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
+      t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
       t.done();
+    });
+  });
+};
+
+exports.uniqueEmpty = function (t) {
+  var user = new UserMockup();
+  t.expect(5);
+  
+  redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
+    t.ok( ! err, 'redis.keys failed.');
+    t.same(exists, 0, 'An empty unique was set before the test for it was run');
+    user.p({
+      'name': 'emailOptional',
+      'email': 'emailOptionalTest@test.de',
+      'emailOptional': ''
+    });
+    user.save(function (err) {
+      t.ok( ! err, 'Saving failed.');
+      redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
+        t.ok( ! err, 'redis.keys failed.');
+        t.same(keys.length, 0, 'An empty unique was set');
+        t.done();
+      });
     });
   });
 };
@@ -554,9 +597,10 @@ exports.indexes = function (t) {
 exports.__updated = function (t) {
   var user = new UserMockup();
   t.expect(2);
+  user.p('email', '__updatedTest@test.de');
   user.save(function (err) {
     if (err) {
-      util.debug('Error while saving user in __updated.');
+      t.ok(false, 'Error while saving user in test for __updated.');
     }
     user.p('name', 'hurgelwurz');
     user.p('name', 'test');
@@ -719,15 +763,15 @@ exports.defaultIdGeneration = function (t) {
     t.same(typeof(test1.id), 'string', 'The generated id was not a string');
     t.done();
   });
-}
+};
 
 exports.instanceLoad = function (t) {
   t.expect(1);
-  var user = new UserMockup(1123123, function (err) {
+  new UserMockup(1123123, function (err) {
     t.same(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
     t.done();
-  });;
-}
+  });
+};
 
 exports.factory = function (t) {
   t.expect(4);
@@ -741,4 +785,4 @@ exports.factory = function (t) {
     t.done();
   });
   t.ok(user2, 'Using the factory with an id and callback returned false');
-}
+};
