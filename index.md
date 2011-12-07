@@ -35,6 +35,7 @@ layout: default
 * [Validating](#validating)
    * [On setting a property](#on_setting_a_property)
    * [Calling valid()](#calling_valid)
+   * [Browser validation](#browser_validation)
 * [Saving](#saving)
 * [Deleting](#deleting)
 * [Loading](#loading)
@@ -50,7 +51,7 @@ layout: default
    * [numLinks](#numlinksmodelname_relationame)
    * [getAll](#getallmodelname_relationame)
 * [Extras](#extras)
-   * [Short forms](#short_forms)
+   * [Short Forms](#short_forms)
 
 
 ### Overview
@@ -151,7 +152,7 @@ A property can have the following options: (explained in more detail later)
     <b>Note</b>: If you do not define a default value, it will be 0.
   </dd>
   <dt>
-    validations <span class="additionalInfo">Array of arrays/functions</span>
+    validations <span class="additionalInfo">Array of strings/arrays/functions</span>
   </dt>
   <dd>
     An array of validations for the property. There are a few built-ins but you can define a custom function here as well.
@@ -166,7 +167,7 @@ A property can have the following options: (explained in more detail later)
     unique <span class="additionalInfo">Boolean</span>
   </dt>
   <dd>
-    Whether the value should be unique among all instances of this model.
+    Whether the value should be unique among all instances of this model. (case insensitive. empty strings are not counted as unique.)
   </dd>
   <dt>
     load_pure <span class="additionalInfo">Boolean</span>
@@ -203,7 +204,9 @@ var User = nohm.model('User', {
         return value + 'someSeed'; // and hash it of course, but to make this short that is omitted in this example
       },
       validations: [
-        ['minLength', 6]
+        ['length', {
+          min: 6
+        }]
       ]
     },
     visits: {
@@ -238,7 +241,7 @@ Note that properties with the type of JSON will be returned as parsed objects!
 
 ###### Behaviour
 This can be any function you want.  
-Its `this` keyword is the instance of the model and it receives the arguments newValue, name and oldValue.
+Its `this` keyword is the instance of the model and it receives the arguments new_value, name and old_value.
 The return value of the function will be the new value of the property.
 Note that the redis client will convert everything to strings before storing!
 
@@ -267,7 +270,11 @@ test.p('balance'); // 9
 
 ##### Validators
 A property can have multiple validators. These are invoked whenever a model is saved or manually validated.
-Validations of a property are defined as an array of strings, arrays and functions.
+Validations of a property are defined as an array of strings, objects and functions.
+
+Functions must be asynchronous and accept 3 arguments: new_value, options and callback.
+The callback expects one argument: (bool) whether the value is valid or not.
+*Note*: Functions included like this cannot be exported to the browser!
 
 Here's an example with all three ways:
 {% highlight js %}
@@ -276,22 +283,26 @@ var validatorModel = nohm.model('validatorModel', {
     builtIns: {
       type: 'string',
       validations: [
-        'notEmpty', // would be the same as ['notEmpty']
-        ['maxLength', 20] // 20 will be the second parameter given to the maxLength validator function (the first being the new value)
+        'notEmpty',
+        ['length', {
+          max: 20 // 20 will be the second parameter given to the maxLength validator function (the first being the new value)
+        }]
       ]
     },
     optionalEmail: {
       type: 'string',
       unique: true,
       validations: [
-        ['email', true]
+        ['email', {
+          optional: true // every validation supports the optional option
+        }]
       ]
     },
     customValidation: {
       type: 'integer',
       validations: [
-        function checkIsFour(value) {
-          return value === 4;
+        function checkIsFour(value, options, callback) {
+          callback(value === 4);
         }
       ]
     }
@@ -299,7 +310,52 @@ var validatorModel = nohm.model('validatorModel', {
 });
 {% endhighlight %}
 
-You can find the documentation of the [built-in validations in the api](api/symbols/validators.html)
+You can find the documentation of the [built-in validations in the api](api/symbols/validators.html) or look directly [at the source code](https://github.com/maritz/nohm/blob/master/lib/validators.js).
+
+
+##### Custom validations in extra files
+
+If you need to define custom validations as functions and want them to be exportable for the browser validations, you need to include them from an external file.
+
+Example customValidation.js:
+
+{% highlight js %}
+exports.usernameIsAnton= function (value, options) {
+  if (options.revert) {
+    callback(value !== 'Anton');
+  } else {
+    callback(value === 'Anton');
+  }
+};
+{% endhighlight %}
+
+
+This is then included like this: 
+
+{% highlight js %}
+Nohm.setExtraValidations('customValidation.js')
+{% endhighlight %}
+
+
+Now you can use this validation in your model definitions like this:
+
+{% highlight js %}
+nohm.model('validatorModel', {
+  properties: {
+    customValidation: {
+      type: 'string',
+      validations: [
+        'usernameIsAnton',
+        // or
+        ['usernameIsAnton', {
+          revert: true
+        }]
+      ]
+    }
+  }
+});
+{% endhighlight %}
+
 
 #### ID generation
 
@@ -340,10 +396,14 @@ var custom = Nohm.model('customIdModel', {
 // ids of custom will be bob250, bob300, bob350 ...
 {% endhighlight %}
 
+
 ### Creating an instance
+
 There are two basic ways to create an instance of a model.
 
+
 #### Manual
+
 Using the new keyword on the return of Nohm.model.
 
 {% highlight js %}
@@ -353,7 +413,9 @@ var user = new UserModel();
 
 This has the drawback that you need to keep track of your models.
 
+
 #### Factory
+
 This is the easier and preferred method.
 
 {% highlight js %}
@@ -374,6 +436,7 @@ var user = Nohm.factory('UserModel', 123, function (err) {
 
 
 ### Setting/Getting properties
+
 The function p/prop/property (all the same) gets and sets properties of an instance.
 
 {% highlight js %}
@@ -392,37 +455,21 @@ There are several other methods for dealing with properties: [allProperties](api
 
 
 ### Validating
+
 Your model instance is automatically validated on saving but you can manually validate it as well.  
-There are two ways to do that. In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
-
-#### On setting a property
-Passing true as the third parameter (or second if the first is an object of all properties) validates the property and only changes it if the new value validates.
-{% highlight js %}
-var test = new validatorModel();
-test.p('builtIns', '', true); // returns false and does NOT change the property
-test.p('builtIns', 'asd', true); // returns true and changes the property
-test.p('optionalEmail', 'asd@asd.de', true); // returns true and changes the property - even if the email is used already, see below
-{% endhighlight %}
-
-This is limited to the normal validators and does **not** check uniqueness.
+In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
 
 #### Calling valid()
+
 {% highlight js %}
 user.p({
   builtIns: 'teststringlongerthan20chars',
   optionalEmail: 'hurgs',
   customValidation: 3
 });
-user.valid(); // returns false
-user.errors; // { builtIns: ['maxLength'], optionalEmail: ['email'], customValidation: ['custom'] }
-user.p({
-  builtIns: 'hurgs',
-  optionalEmail: 'valid@email.de',
-  customValidation: 4
-});
 user.valid(false, false, function (valid) {
   if ( ! valid) {
-    user.errors; // if the email is already taken this will be: { optionalEmail: ['unique'] }
+    user.errors; // { builtIns: ['length'], optionalEmail: ['email'], customValidation: ['custom'] }
   } else {
     // valid! YEHAA!
   }
@@ -435,7 +482,60 @@ There are a few things to note here:
 * The second argument to valid is to tell the unique check whether it should lock the unique. The unique checks are the last validation and if the model is not valid by the time the uniques are checked, this argument is ignored and no unique is locked. If the unique check of any property results in an error all unique locks that were done in the process of the previous checks are removed (however not the old unique locks of the last valid state).
 
 
+#### Browser validation
+
+You can also do most validations in the browser by using the nohm-connect-middleware. (except custom validations defined in the model definition)
+This is useful if you don't want to do the ajax round trip for every small validation you might have.
+
+{% highlight js %}
+Nohm.connect(options);
+{% endhighlight %}
+
+Connect takes an argument containing the following options:
+ *    `url`         - Url under which the js file will be available. Default: '/nohmValidations.js'
+ *    `exclusions`  - Object containing exclusions for the validations export - see example for details
+ *    `namespace`   - Namespace to be used by the js file in the browser. Default: 'nohmValidations'
+ *    `extraFiles`  - Extra files containing validations. You should only use this if they are not already set via Nohm.setExtraValidations as nohm.connect automatically includes those.
+ *    `maxAge`      - Cache control (in seconds)
+
+{% highlight js %}
+server.use(nohm.connect(
+  // options object
+  {
+  url: '/nohm.js',
+  namespace: 'nohm',
+  exclusions: {
+    User: { // modelName
+      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
+      salt: true // this will completely ignore all validations for the salt property
+    },
+    Privileges: true // this will completely ignore the Priviledges model
+  }
+}));
+{% endhighlight %}
+
+If you now include /nohm.js (or default /nohmValidations.js) in your page, you can validate any model in the browser like this:
+
+
+{% highlight js %}
+// using defined namespace from above. default would be nohmValidations
+nohm.validate('User', {
+  name: 'test123',
+  email: 'test@test.de',
+  password: '******'
+}, function (valid, errors) {
+  if (valid) {
+    alert('User is valid!');
+  } else {
+    alert('Oh no, your user data was not accepted!');
+    // errors is the same format as on the server model.errors
+  }
+});
+{% endhighlight %}
+
+
 ### Saving
+
 Saving an instance automatically decides whether it needs to be created or updated on the base of checking for user.id.
 This means that if you haven't either manually set the id or load()ed the instance from the database, it will try to create a new instance.
 Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
@@ -450,11 +550,15 @@ user.save(function (err) {
 });
 {% endhighlight %}
 
+
 ### Deleting
+
 Calling remove() completely removes the instance from the db, including relations.
 This only works on instances where the id is set (manually or from load()).
 
+
 ### Loading
+
 To populate the properties of an existing instance you have to load it via ID.
 {% highlight js %}
 user.load(1234, function (err, properties) {
@@ -469,11 +573,14 @@ user.load(1234, function (err, properties) {
 
 
 ### Finding
+
 To find an ID of an instance (e.g. to load it) Nohm offers a few simple search functionalities.
 The function to do so is always .find(), but what it does depends on the arguments given.
 Note that the ID array is sorted by default from lowest to highest.
 
+
 #### Finding all instances of a model
+
 Simply calling find() with only a callback will retrieve all IDs.
 
 {% highlight js %}
@@ -482,15 +589,34 @@ Simply calling find() with only a callback will retrieve all IDs.
   });
 {% endhighlight %}
 
+
 #### Finding by Index
+
 To specify indexes to search for you have to pass in an object as the first parameter.  
 There are three kinds of indexes: unique, simple and numeric.  
 Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.  
 You can mix the three search queries within one find call.  
 After all search queries of a find() have been processed the intersection of the found IDs is returned.  
-To limit/filter/sort the overall result you have to manually edit the returned array.
+To limit/filter/sort the overall res
+{% highlight js %}
+server.use(nohm.connect(
+  // options object
+  {
+  url: '/nohm.js',
+  namespace: 'nohm',
+  exclusions: {
+    User: { // modelName
+      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
+      salt: true // this will completely ignore all validations for the salt property
+    },
+    Privileges: true // this will completely ignore the Priviledges model
+  }
+}));
+{% endhighlight %}ult you have to manually edit the returned array.
+
 
 ##### Finding by simple index
+
 Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behaviour).
 
 Example:
@@ -505,6 +631,7 @@ SomeModel.find({
 
 
 ##### Finding by numeric index
+
 Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.  
 The search needs to be an object that optionaly contains further filters: min, max, offset and limit.  
 This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)  
@@ -539,7 +666,9 @@ SomeModel.find({
 
 You can also search for exact numeric values by using the syntax of a simple index search.
 
+
 ### Relations
+
 Relations (links) are dynamically defined for each instance and not for a model. This differs from traditional ORMs that use RDBMS and thus need a predefined set of tables or columns to maintain these relations.  
 In nohm this is not necessary making it possible for one instance of a model to have relations to models that other instances of the same model do not have.
 
@@ -574,9 +703,26 @@ Now (after saving) these relations exist:
 
 Tip: Be careful with naming and don't overuse it!
 
+
 #### link(otherInstance, [relationName,] [callback])
+
 This creates a relation (link) to another instance.
-The most basic usage is to just use the first argument 'otherInstance':
+The most basic usage is to just use 
+{% highlight js %}
+server.use(nohm.connect(
+  // options object
+  {
+  url: '/nohm.js',
+  namespace: 'nohm',
+  exclusions: {
+    User: { // modelName
+      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
+      salt: true // this will completely ignore all validations for the salt property
+    },
+    Privileges: true // this will completely ignore the Priviledges model
+  }
+}));
+{% endhighlight %}the first argument 'otherInstance':
 
 {% highlight js %}
 User1.link(Admin);
@@ -633,10 +779,12 @@ User1.save(function (err, relationError, relationName) {
 
 
 #### unlink(otherInstance, [relationName,] [callback])
+
 Removes the relation to another instance and otherwise works the same as link.
 
 
 #### has(otherInstance, [relationName,] [callback])
+
 This checks if an instance has a relationship to another relationship.
 
 {% highlight js %}
@@ -649,7 +797,9 @@ User1.has(Admin, function (err, hasAdmin) {
 
 This requires that User1 as well as Admin are loaded from DB. (Or the same object was previously saved and thus still has the correct id)
 
+
 #### numLinks(modelName, [relatioName,] [callback])
+
 This checks how many relations of one name pair an Instance has to another Model.
 
 {% highlight js %}
@@ -673,6 +823,7 @@ User1.numLinks('RoleModel', 'temp', function (err, num) {
 
 
 #### getAll(modelName, [relatioName,] [callback])
+
 This gets the IDs of all linked instances.
 
 {% highlight js %}
@@ -693,6 +844,7 @@ User2.getAll('RoleModel', 'temp', function (err, roleIds) {
 ### Extras
 
 Some things that don't really fit anywhere else in this documentation.
+
 
 #### Short Forms
 
@@ -716,3 +868,4 @@ You can do this:
 
 This currently works for the following functions: load, find, save and remove.
 It is really only a shortcut.
+
