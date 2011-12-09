@@ -453,16 +453,16 @@ exports.unique = function (t) {
   user2.p('email', 'dubbplicateTest@test.de'); // intentional typo dubb
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
+    redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
       t.ok(user1.id, 'Userid b0rked while checking uniques');
       t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
       user2.valid(false, false, function (valid) {
         t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
         user2.save(function (err) {
           t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
-          redis.exists(prefix + ':uniques:UserMockup:email:dubbplicateTest@test.de', function (err, value) {
+          redis.exists(prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de', function (err, value) {
             t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
-            redis.get(prefix + ':uniques:UserMockup:name:dubplicateTest', function (err, value) {
+            redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
               t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
               t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
               t.done();
@@ -474,6 +474,54 @@ exports.unique = function (t) {
     if (err) {
       t.done();
     }
+  });
+};
+
+exports.uniqueLowerCase = function (t) {
+  var user1 = new UserMockup(),
+  user2 = new UserMockup();
+  t.expect(6);
+
+  user1.p('name', 'LowerCaseTest');
+  user1.p('email', 'LowerCaseTest@test.de');
+  user2.p('name', 'lowercasetest');
+  user2.p('email', 'lowercasetest@test.de');
+  user1.save(function (err) {
+    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
+    redis.get(prefix + ':uniques:UserMockup:name:'+user1.p('name').toLowerCase(), function (err, value) {
+      t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
+      user2.valid(false, false, function (valid) {
+        t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
+        user2.save(function (err) {
+          t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+          redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
+            t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
+            t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+            t.done();
+          });
+        });
+      });
+    });
+    if (err) {
+      t.done();
+    }
+  });
+};
+
+exports.uniqueDeleteWhenOtherFails = function (t) {
+  var user1 = new UserMockup(),
+  user2 = new UserMockup();
+  t.expect(2);
+
+  user1.p('name', 'uniqueDeleteTest');
+  user1.p('email', 'uniqueDeleteTest@test.de');
+  user1.p('country', '');
+  user1.save(function (err) {
+    t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
+    redis.exists(prefix + ':uniques:UserMockup:name:'+user1.p('name').toLowerCase(), function (err, value) {
+      t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
+      t.done();
+    });
   });
 };
 
