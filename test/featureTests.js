@@ -464,7 +464,7 @@ exports.unique = function (t) {
             t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
             redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
               t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-              t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+              t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
               t.done();
             });
           });
@@ -496,7 +496,7 @@ exports.uniqueLowerCase = function (t) {
           t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
           redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
             t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-            t.ok(parseInt(value, 10) === user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+            t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
             t.done();
           });
         });
