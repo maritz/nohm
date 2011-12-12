@@ -27,6 +27,18 @@ var after = function (times, fn) {
   };
 };
 
+/*
+exports.setUp = function (cb) {
+  nohm.initializePubSub();
+  cb();
+};
+
+exports.tearDown = function (cb) {
+  nohm.closePubSub();
+  cb();
+};
+*/
+
 exports.afterLimiter = function(t) {
 
   var counter = 0;
@@ -57,6 +69,7 @@ exports.creationOnce = function(t) {
     var expectedPayload = {
       target: {
         id: obj.id,
+        model: 'Tester',
         properties: {
           dummy: 'some string',
           id: obj.id
@@ -102,6 +115,7 @@ exports.removeOnce = function (t) {
     var expectedPayload = {
       target: {
         id: _id,
+        model: 'Tester',
         properties: {
           id: 0,
           dummy: 'some string'
@@ -127,7 +141,7 @@ exports.removeOnce = function (t) {
 
 };
 
-exports.silencedCreation = function (t) {
+exports.silencedUpdate = function (t) {
 
   t.expect(0);
 
@@ -141,9 +155,9 @@ exports.silencedCreation = function (t) {
 
   obj.p({ dummy: 'some strings' });
 
-  Tester.subscribe('create', function (payload) {
+  Tester.subscribe('update', function (payload) {
     var msg = run == 1 ? 'first run' : 'second run, listener not unsubscribed';
-    t.ok(false, 'The subscriber has run, during silenced actions ('+msg+')');
+    t.ok(false, 'The subscriber has run, during silent creation ('+msg+')');
   });
 
   run = 1;
@@ -154,7 +168,7 @@ exports.silencedCreation = function (t) {
 
   setTimeout(function(){
 
-    Tester.unsubscribe('create');
+    Tester.unsubscribe('update');
 
     run = 2;
     obj.p({ dummy: 'some other string' });
@@ -164,6 +178,28 @@ exports.silencedCreation = function (t) {
     });
 
   }, 500);
+
+};
+
+exports.silencedRemoval = function (t) {
+  
+  t.expect(0);
+
+  var _done = after(2, function () {
+    t.done();
+  });
+
+  Tester.subscribe('remove', function (payload) {
+    t.ok(false, 'The subscriber has run, during silent removal.')
+  });
+
+  obj.remove({ silent: true }, function () {
+    _done();    
+  });
+
+  setTimeout(function () {
+    _done();
+  }, 500)
 
 };
 
