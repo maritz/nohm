@@ -1,7 +1,13 @@
 var nodeunit = require('nodeunit')
     , util = require('util');
 
-var furtherTests = ['validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js'];
+var furtherTests = [
+    'validationTests.js',
+    'relationTests.js',
+    'findTests.js',
+    'connectTests.js',
+    'pubsubTests.js'
+  ];
 var next;
 var error_sum = 0;
 
