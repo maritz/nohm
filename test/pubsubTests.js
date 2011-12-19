@@ -1,10 +1,7 @@
 
 var redis = require('redis');
-var util = require('util');
-var args = require(__dirname+'/testArgs.js');
 
 var nohm = require(__dirname+'/../lib/nohm').Nohm;
-var primaryClient = nohm.client;
 var secondaryClient = redis.createClient();
 
 nohm.setPubSubClient(secondaryClient);
@@ -177,7 +174,7 @@ exports.silencedUpdate = function (t) {
       _done();
     });
 
-  }, 500);
+  }, 100);
 
 };
 
@@ -199,7 +196,16 @@ exports.silencedRemoval = function (t) {
 
   setTimeout(function () {
     _done();
-  }, 500)
+  }, 100)
 
 };
+
+exports.closePubSub = function (t) {
+  t.expect(1);
+  nohm.closePubSub(function (client) {
+    t.equal(false, client.subscriptions, 'closePubSub() did not unsubcribe from all channels.');
+    client.end();
+    t.done();
+  });
+}
 
