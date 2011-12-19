@@ -834,3 +834,34 @@ exports.factory = function (t) {
   });
   t.ok(user2, 'Using the factory with an id and callback returned false');
 };
+
+exports.purgeDB = function (t) {
+  var expected = 1;
+  var countKeys = function (prefix, callback) {
+    redis.keys(prefix+'*', function (err, orig_num) {
+      callback(err, orig_num.length);
+    });
+  };
+  
+  var tests = [];
+  Object.keys(nohm.prefix).forEach(function (key) {
+    expected += 2;
+    tests.push(async.apply(countKeys, nohm.prefix[key]));
+  });
+  
+  async.series(tests, function (err, num_arr) {
+    t.ok(!err, 'Unexpected redis error');
+    var count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+    t.ok(count > 0, 'Database did not have any keys');
+    nohm.purgeDb(function (err) {
+      t.ok(!err, 'Unexpected redis error');
+      async.series(tests, function (err, num_arr) {
+        t.ok(!err, 'Unexpected redis error');
+        var count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+        t.same(count, 0, 'Database did have keys left after purging.');
+        t.done();
+      });
+    });
+  });
+};
+
