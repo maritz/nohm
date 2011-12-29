@@ -542,7 +542,7 @@ Saving automatically validates the entire instance. If it is not valid, nothing 
 
 {% highlight js %}
 user.save(function (err) {
-  if ( ! err) {
+  if (err) {
     user.errors; // the errors in validation
   } else {
     // it's in the db :)
