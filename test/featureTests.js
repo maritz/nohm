@@ -82,235 +82,212 @@ var redis = args.redis,
       },
       idGenerator: 'increment'
     });
+    
+    
+exports.prepare = {
+  redisClean: function(t) {
+    t.expect(1);
+    redis.keys(prefix + ':*:*Mockup:*', function(err, value) {
+      var check = (Array.isArray(value) && value.length === 0) || value === null;
+      t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS ' + prefix + ':*:*Mockup:*" to see what keys could be the cause.');
+      t.done();
+    });
+  },
 
-exports.redisClean = function (t) {
-  t.expect(1);
-  redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
-    var check = (Array.isArray(value) && value.length === 0) || value === null;
-    t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS '+prefix+':*:*Mockup:*" to see what keys could be the cause.');
-    t.done();
-  });
-};
-
-exports.idIntersection = function (t) {
-  var arr1 = [1,2,3,4,5,6,7,8,9],
-      arr2 = [2,3,4,10],
-      arr3 = [2,3,4,10],
-      arr4 = [],
-      arr5 = [16,28,39],
-      arr6 = ['hurgelwurz',28,39],
-      arr7 = ['hurgelwurz',28,39],
-      arr8 = [10,3,2],
-      testIntersection = function (arrs, resultTest) {
+  idIntersection: function(t) {
+    var arr1 = [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        arr2 = [2, 3, 4, 10],
+        arr3 = [2, 3, 4, 10],
+        arr4 = [],
+        arr5 = [16, 28, 39],
+        arr6 = ['hurgelwurz', 28, 39],
+        arr7 = ['hurgelwurz', 28, 39],
+        arr8 = [10, 3, 2],
+        testIntersection = function(arrs, resultTest) {
         var result;
-            
+
         result = helper.idIntersection.apply(null, arrs);
         t.same(result, resultTest, 'idIntersection did not perform correctly.');
-      };
-  t.expect(9);
-  
-  testIntersection(
-    [arr1],
-    arr1
-  );
-  
-  testIntersection(
-    [arr1, arr2],
-    [2,3,4]
-  );
-  
-  testIntersection(
-    [arr1, arr2, arr3],
-    [2,3,4]
-  );
-  
-  testIntersection(
-    [arr2, arr3],
-    [2,3,4, 10]
-  );
-  
-  testIntersection(
-    [arr1, arr2, arr3, arr4],
-    []
-  );
-  
-  testIntersection(
-    [arr1, arr2, arr3, arr5],
-    []
-  );
-  
-  testIntersection(
-    [arr5, arr6],
-    [28,39]
-  );
-  
-  testIntersection(
-    [arr6, arr7],
-    ['hurgelwurz',28,39]
-  );
-  
-  testIntersection(
-    [arr3, arr8],
-    [10, 3, 2]
-  );
-    
-  t.done();
+        };
+    t.expect(9);
+
+    testIntersection([arr1], arr1);
+
+    testIntersection([arr1, arr2], [2, 3, 4]);
+
+    testIntersection([arr1, arr2, arr3], [2, 3, 4]);
+
+    testIntersection([arr2, arr3], [2, 3, 4, 10]);
+
+    testIntersection([arr1, arr2, arr3, arr4], []);
+
+    testIntersection([arr1, arr2, arr3, arr5], []);
+
+    testIntersection([arr5, arr6], [28, 39]);
+
+    testIntersection([arr6, arr7], ['hurgelwurz', 28, 39]);
+
+    testIntersection([arr3, arr8], [10, 3, 2]);
+
+    t.done();
+  },
+
+  setRedisClient: function(t) {
+    t.expect(2);
+    console.log('Note: there should be an error message in the next line. (intended behaviour)');
+    nohm.client = null;
+    var user = new UserMockup();
+    t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
+
+    nohm.setClient(redis);
+    user = new UserMockup();
+    t.equals(typeof(user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
+    t.done();
+  },
+
+  setPrefix: function(t) {
+    var oldPrefix = nohm.prefix;
+    t.expect(1);
+    nohm.setPrefix('hurgel');
+    t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
+    nohm.prefix = oldPrefix;
+    t.done();
+  }
 };
 
-exports.setRedisClient = function (t) {
-  t.expect(2);
-  console.log('Note: there should be an error message in the next line. (intended behaviour)');
-  var user = new UserMockup();
-  t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
-  
-  nohm.setClient(redis);
-  user = new UserMockup();
-  t.equals(typeof(user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
-  t.done();
-};
+exports.propertyTests = {
+  propertyGetter: function(t) {
+    var user = new UserMockup();
+    t.expect(7);
 
-exports.setPrefix = function (t) {
-  var oldPrefix = nohm.prefix;
-  t.expect(1);
-  nohm.setPrefix('hurgel');
-  t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
-  nohm.prefix = oldPrefix;
-  t.done();
-};
+    t.equals(typeof(user.p), 'function', 'Property getter short p is not available.');
 
-exports.propertyGetter = function (t) {
-  var user = new UserMockup();
-  t.expect(7);
+    t.equals(typeof(user.prop), 'function', 'Property getter short prop is not available.');
 
-  t.equals(typeof(user.p), 'function', 'Property getter short p is not available.');
+    t.equals(typeof(user.property), 'function', 'Property getter is not available.');
 
-  t.equals(typeof(user.prop), 'function', 'Property getter short prop is not available.');
+    t.equals(user.p('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
 
-  t.equals(typeof(user.property), 'function', 'Property getter is not available.');
+    t.equals(user.p('name'), 'test', 'Property getter did not return the correct value for name.');
 
-  t.equals(user.p('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
+    console.log('Note: there should be an error message in the next line. (intended behaviour)');
+    t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
 
-  t.equals(user.p('name'), 'test', 'Property getter did not return the correct value for name.');
+    t.same(user.p('json'), {}, 'Property getter did not return the correct value for json.');
 
-  console.log('Note: there should be an error message in the next line. (intended behaviour)');
-  t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
-
-  t.same(user.p('json'), {}, 'Property getter did not return the correct value for json.');
-
-  t.done();
-};
+    t.done();
+  },
 
 
-exports.propertySetter = function (t) {
-  var user = new UserMockup();
-  var controlUser = new UserMockup();
-  t.expect(6);
+  propertySetter: function(t) {
+    var user = new UserMockup();
+    var controlUser = new UserMockup();
+    t.expect(6);
 
-  t.same(user.p('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
-  
-  user.p('email', 'asdasd');
-  t.equals(user.p('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
+    t.same(user.p('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
 
-  user.p('email', 'test@test.de');
-  t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
+    user.p('email', 'asdasd');
+    t.equals(user.p('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
 
-  user.p({
-    name: 'objectTest',
-    email: 'object@test.de'
-  });
+    user.p('email', 'test@test.de');
+    t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
 
-  t.equals(user.p('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
-  t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
+    user.p({
+      name: 'objectTest',
+      email: 'object@test.de'
+    });
 
-  user.p('json', {
-    test: 1
-  });
+    t.equals(user.p('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
+    t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
 
-  t.equals(user.p('json').test, 1, 'Setting a json property did not work correctly.');
+    user.p('json', {
+      test: 1
+    });
 
-  t.done();
-};
+    t.equals(user.p('json').test, 1, 'Setting a json property did not work correctly.');
 
-
-exports.propertyDiff = function (t) {
-  var user = new UserMockup(),
-  should = [],
-  beforeName = user.p('name'),
-  beforeEmail = user.p('email');
-  t.expect(5);
-
-  t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
-
-  user.p('name', 'hurgelwurz');
-  should.push({
-    key: 'name',
-    before: beforeName,
-    after: 'hurgelwurz'
-  });
-  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
-
-  user.p('email', 'asdasd');
-  t.same(should, user.propertyDiff('name'), 'Property diff did not correctly search for changes only in `name`.');
-
-  should.push({
-    key: 'email',
-    before: beforeEmail,
-    after: 'asdasd'
-  });
-  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
-
-  should.shift();
-  user.p('name', beforeName);
-  t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
-
-  t.done();
-};
+    t.done();
+  },
 
 
-exports.propertyReset = function (t) {
-  var user = new UserMockup(),
-  beforeName = user.p('name'),
-  beforeEmail = user.p('email');
-  t.expect(4);
+  propertyDiff: function(t) {
+    var user = new UserMockup(),
+        should = [],
+        beforeName = user.p('name'),
+        beforeEmail = user.p('email');
+    t.expect(5);
 
-  user.p('name', user.p('name') + 'hurgelwurz');
-  user.p('email', user.p('email') + 'asdasd');
-  t.ok(user.propertyReset('name'), 'Property reset did not return true.'); // uhm... needed? i don't know
+    t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
 
-  t.ok(user.p('name') === beforeName, 'Property reset did not properly reset `name`.');
+    user.p('name', 'hurgelwurz');
+    should.push({
+      key: 'name',
+      before: beforeName,
+      after: 'hurgelwurz'
+    });
+    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
 
-  t.ok(user.p('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
+    user.p('email', 'asdasd');
+    t.same(should, user.propertyDiff('name'), 'Property diff did not correctly search for changes only in `name`.');
 
-  user.p('name', user.p('name') + 'hurgelwurz');
-  user.propertyReset();
-  t.ok(user.p('name') === beforeName && user.p('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
+    should.push({
+      key: 'email',
+      before: beforeEmail,
+      after: 'asdasd'
+    });
+    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
 
-  t.done();
-};
+    should.shift();
+    user.p('name', beforeName);
+    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
+
+    t.done();
+  },
 
 
-exports.allProperties = function (t) {
-  var user = new UserMockup(),
-  should;
-  t.expect(2);
+  propertyReset: function(t) {
+    var user = new UserMockup(),
+        beforeName = user.p('name'),
+        beforeEmail = user.p('email');
+    t.expect(4);
 
-  user.p('name', 'hurgelwurz');
-  user.p('email', 'hurgelwurz@test.de');
-  should = {
-    name: user.p('name'),
-    visits: user.p('visits'),
-    email: user.p('email'),
-    emailOptional: user.p('emailOptional'),
-    country: user.p('country'),
-    json: {},
-    id: user.id
-  }; // yes, this absolutely must be set correct for this test to work. sorry
+    user.p('name', user.p('name') + 'hurgelwurz');
+    user.p('email', user.p('email') + 'asdasd');
+    t.ok(user.propertyReset('name'), 'Property reset did not return true.'); // uhm... needed? i don't know
+    t.ok(user.p('name') === beforeName, 'Property reset did not properly reset `name`.');
 
-  t.same(should, user.allProperties(), 'Getting all properties failed.');
-  
-  t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
+    t.ok(user.p('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
 
-  t.done();
+    user.p('name', user.p('name') + 'hurgelwurz');
+    user.propertyReset();
+    t.ok(user.p('name') === beforeName && user.p('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
+
+    t.done();
+  },
+
+
+  allProperties: function(t) {
+    var user = new UserMockup(),
+        should;
+    t.expect(2);
+
+    user.p('name', 'hurgelwurz');
+    user.p('email', 'hurgelwurz@test.de');
+    should = {
+      name: user.p('name'),
+      visits: user.p('visits'),
+      email: user.p('email'),
+      emailOptional: user.p('emailOptional'),
+      country: user.p('country'),
+      json: {},
+      id: user.id
+    }; // yes, this absolutely must be set correct for this test to work. sorry
+    t.same(should, user.allProperties(), 'Getting all properties failed.');
+
+    t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
+
+    t.done();
+  }
 };
 
 exports.create = function (t) {
