@@ -5,7 +5,6 @@ var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
 
-// please do not prepend saving tests before the findAll tests
 var UserFindMockup = nohm.model('UserFindMockup', {
   properties: {
     name: {
@@ -43,40 +42,38 @@ var UserFindMockup = nohm.model('UserFindMockup', {
   idGenerator: 'increment'
 });
 
-var errLogger = function(err) {
-    if (err) {
-      console.dir(err);
+var UserFindNoIncrementMockup = nohm.model('UserFindNoIncrementMockup', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'testName',
+      index: true,
+      validations: [
+        'notEmpty'
+        ]
+    },
+    number: {
+      type: 'integer',
+      defaultValue: 1,
+      index: true
     }
-    };
+  }
+});
 
-var createUsers = function(callback) {
-  var props = [{
-    name: 'numericindextest',
-    email: 'numericindextest@hurgel.de',
-    number: 3
-  }, {
-    name: 'numericindextest',
-    email: 'numericindextest2@hurgel.de',
-    number: 4,
-    number2: 33
-  }, {
-    name: 'numericindextest',
-    email: 'numericindextest3@hurgel.de',
-    number: 4,
-    number2: 1
-  }, {
-    name: 'uniquefind',
-    email: 'uniquefind@hurgel.de'
-  }, {
-    name: 'indextest',
-    email: 'indextest@hurgel.de'
-  }, {
-    name: 'indextest',
-    email: 'indextest2@hurgel.de'
-  }];
+var errLogger = function(err) {
+  if (err) {
+    console.dir(err);
+  }
+};
+
+var createUsers = function(props, modelName, callback) {
+  if (typeof(modelName) === 'function') {
+    callback = modelName;
+    modelName = 'UserFindMockup';
+  }
   var makeSeries = function(prop) {
     return function(next) {
-      var user = new UserFindMockup();
+      var user = nohm.factory(modelName);
       user.p(prop);
       user.save(function (err) {
         next(err, user);
@@ -104,7 +101,38 @@ exports.find = {
     }
     var t = this;
     h.cleanUp(redis, args.prefix, function() {
-      createUsers(function(users, ids) {
+      createUsers([{
+        name: 'numericindextest',
+        email: 'numericindextest@hurgel.de',
+        number: 3
+      }, {
+        name: 'numericindextest',
+        email: 'numericindextest2@hurgel.de',
+        number: 4,
+        number2: 33
+      }, {
+        name: 'numericindextest',
+        email: 'numericindextest3@hurgel.de',
+        number: 4,
+        number2: 1
+      }, {
+        name: 'uniquefind',
+        email: 'uniquefind@hurgel.de'
+      }, {
+        name: 'indextest',
+        email: 'indextest@hurgel.de'
+      }, {
+        name: 'indextest',
+        email: 'indextest2@hurgel.de'
+      }, {
+        name: 'a_sort_first',
+        email: 'a_sort_first@hurgel.de',
+        number: 1
+      }, {
+        name: 'z_sort_last',
+        email: 'z_sort_last@hurgel.de',
+        number: 100000
+      }], function(users, ids) {
         t.users = users;
         t.userIds = ids;
         next();
@@ -291,172 +319,104 @@ loadArray: function (t) {
   },
 
   findByMixedIndex: function(t) {
-    var user = new UserFindMockup(),
-        user2 = new UserFindMockup(),
-        user3 = new UserFindMockup(),
-        user4 = new UserFindMockup(),
-        findUser = new UserFindMockup();
+    var findUser = new UserFindMockup();
     t.expect(1);
 
-    user.p({
+    createUsers([{
       name: 'mixedindextest',
       email: 'mixedindextest@hurgel.de',
       number: 3,
       number2: 33
-    });
-
-    user2.p({
+    }, {
       name: 'mixedindextest',
       email: 'mixedindextest2@hurgel.de',
       number: 4,
       number2: 33
-    });
-
-    user3.p({
+    }, {
       name: 'mixedindextestNOT',
       email: 'mixedindextest3@hurgel.de',
       number: 4,
       number2: 1
-    });
-
-    user4.p({
+    }, {
       name: 'mixedindextest',
       email: 'mixedindextest4@hurgel.de',
       number: 1,
       number2: 33
-    });
+    }], function (users, ids) {
 
-    user.save(function(err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user2.save(function(err) {
+      findUser.find({
+        number: {
+          min: 2
+        },
+        number2: {
+          max: 100
+        },
+        name: 'mixedindextest'
+      }, function(err, ids) {
         if (err) {
           console.dir(err);
-          t.done();
         }
-        user3.save(function(err) {
-          if (err) {
-            console.dir(err);
-            t.done();
-          }
-          user4.save(function(err) {
-            if (err) {
-              console.dir(err);
-              t.done();
-            }
-            findUser.find({
-              number: {
-                min: 2
-              },
-              number2: {
-                max: 100
-              },
-              name: 'mixedindextest'
-            }, function(err, ids) {
-              if (err) {
-                console.dir(err);
-              }
-              t.same(ids, [user.id, user2.id], 'The found id did not match the id of the saved object.');
-              t.done();
-            });
-          });
-        });
+        t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
+        t.done();
       });
     });
   },
 
   findSameNumericTwice: function(t) {
-    var user = new UserFindMockup(),
-        user2 = new UserFindMockup(),
-        findUser = new UserFindMockup();
-    t.expect(1);
+    var self = this;
+    var findUser = new UserFindMockup();
+    t.expect(2);
 
-    user.p({
+
+    createUsers([{
       name: 'SameNumericTwice',
       email: 'SameNumericTwice@hurgel.de',
       number: 3000
-    });
-
-    user2.p({
+    }, {
       name: 'SameNumericTwice2',
       email: 'SameNumericTwice2@hurgel.de',
       number: 3000
-    });
-
-    user.save(function(err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user2.save(function(err) {
+    }], function (users, userIds) {
+      findUser.find({
+        number: {
+          min: 3000
+        }
+      }, function(err, ids) {
         if (err) {
           console.dir(err);
-          t.done();
         }
-        findUser.find({
-          number: {
-            min: 3000
-          }
-        }, function(err, ids) {
-          if (err) {
-            console.dir(err);
-          }
-          t.same(ids, [user.id, user2.id], 'The found id did not match the id of the saved objects.');
-          t.done();
-        });
+        userIds.push(self.userIds[self.userIds.length-1]);
+        t.same(userIds.length, 3, 'Didn\'t create 2 users, instead: '+userIds.length);
+        t.same(ids.sort(), userIds.sort(), 'The found id did not match the id of the saved objects.');
+        t.done();
       });
     });
   },
 
   findByMixedIndexMissing: function(t) {
-    var user = new UserFindMockup(),
-        user2 = new UserFindMockup(),
-        user3 = new UserFindMockup(),
-        findUser = new UserFindMockup();
+    var findUser = new UserFindMockup();
     t.expect(1);
-
-    user2.p({
+    
+    createUsers([{
       name: 'mixedindextestMissing',
       email: 'mixedindextestMissing@hurgel.de',
       number: 4
-    });
-
-    user3.p({
+    }, {
       name: 'mixedindextestMissing2',
       email: 'mixedindextestMissing2@hurgel.de',
       number: 4
-    });
-
-    user.save(function(err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user2.save(function(err) {
+    }], function () {
+      findUser.find({
+        number: {
+          min: 2
+        },
+        name: 'mixedindextASDASDestMISSING'
+      }, function(err, ids) {
         if (err) {
           console.dir(err);
-          t.done();
         }
-        user3.save(function(err) {
-          if (err) {
-            console.dir(err);
-            t.done();
-          }
-          findUser.find({
-            number: {
-              min: 2
-            },
-            name: 'mixedindextASDASDestMISSING'
-          }, function(err, ids) {
-            if (err) {
-              console.dir(err);
-            }
-            t.same(ids, [], 'Ids were found even though the name should not be findable.');
-            t.done();
-          });
-        });
+        t.same(ids, [], 'Ids were found even though the name should not be findable.');
+        t.done();
       });
     });
   },
@@ -642,5 +602,88 @@ loadArray: function (t) {
         });
       });
     });
+  },
+  
+  normalIds: {
+    setUp: function (next) {
+      var self = this;
+      createUsers([{ 
+      }, {
+        name: 'blablub'
+      }], 'UserFindNoIncrementMockup', function (users, ids) {
+        self.users = users;
+        self.userIds = ids;
+        next();
+      });
+    },
+    tearDown: function (next) {
+      h.cleanUp(redis, args.prefix, next);
+    },
+    
+    find: function (t) {
+      t.expect(2);
+      var self = this;
+      
+      UserFindNoIncrementMockup.find({
+        name: 'blablub'
+      }, function (err, ids) {
+        t.same(ids.length, 1, 'Did not find the correct number of ids for non-incremental id model.');
+        t.same(ids[0], self.userIds[1], 'Did not find the correct id for non-incremental id model.');
+        t.done();
+      });
+    }
+  },
+  
+  sort: {
+    
+    "all by name": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('name');
+        b = b.p('name');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'name'
+      }, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    "all by number": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('number');
+        b = b.p('number');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'number'
+      }, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    }
+    /*
+    "provided and default": function (t) {
+      t.expect(2);
+      
+      var sort_ids = [5,1,6,2,3];
+      UserFindMockup.sort({}, sort_ids, function (err, ids) {
+        t.same(null, err, 'Sorting without options caused an error');
+        t.same(sort_ids.sort(), ids, 'Sorting incremental model without options did not sort them by id.');
+        t.done();
+      });
+    }*/
   }
 };
