@@ -1,4 +1,3 @@
-var util = require('util');
 var async = require('async');
 var nohm = require(__dirname + '/../lib/nohm').Nohm;
 var h = require(__dirname + '/helper.js');
@@ -313,7 +312,7 @@ loadArray: function (t) {
       }
     }, function(err, ids) {
       errLogger(err);
-      t.same(ids, [users[0].id, users[1].id], 'The found id did not match the id of the saved object.');
+      t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
       t.done();
     });
   },
@@ -342,7 +341,7 @@ loadArray: function (t) {
       email: 'mixedindextest4@hurgel.de',
       number: 1,
       number2: 33
-    }], function (users, ids) {
+    }], function (users, inserted_ids) {
 
       findUser.find({
         number: {
@@ -356,6 +355,7 @@ loadArray: function (t) {
         if (err) {
           console.dir(err);
         }
+        console.log(ids.sort());
         t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
         t.done();
       });
@@ -668,6 +668,27 @@ loadArray: function (t) {
       
       UserFindMockup.sort({
         field: 'number'
+      }, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    "all by number DESC": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        var id_sort = a.id < b.id ? 1 : -1;
+        a = a.p('number');
+        b = b.p('number');
+        return a < b ? 1 : (a > b ? -1 : id_sort);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'number',
+        direction: 'DESC'
       }, function (err, ids) {
         t.same(null, err, 'Sorting caused an error: '+err);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
