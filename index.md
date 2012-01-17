@@ -576,7 +576,6 @@ user.load(1234, function (err, properties) {
 
 To find an ID of an instance (e.g. to load it) Nohm offers a few simple search functionalities.
 The function to do so is always .find(), but what it does depends on the arguments given.
-Note that the ID array is sorted by default from lowest to highest.
 
 
 #### Finding all instances of a model
@@ -597,22 +596,7 @@ There are three kinds of indexes: unique, simple and numeric.
 Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.  
 You can mix the three search queries within one find call.  
 After all search queries of a find() have been processed the intersection of the found IDs is returned.  
-To limit/filter/sort the overall res
-{% highlight js %}
-server.use(nohm.connect(
-  // options object
-  {
-  url: '/nohm.js',
-  namespace: 'nohm',
-  exclusions: {
-    User: { // modelName
-      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-      salt: true // this will completely ignore all validations for the salt property
-    },
-    Privileges: true // this will completely ignore the Priviledges model
-  }
-}));
-{% endhighlight %}ult you have to manually edit the returned array.
+To limit/filter/sort the overall result you have to manually edit the returned array.
 
 
 ##### Finding by simple index
@@ -640,7 +624,7 @@ They default to this:
 {
   min: '-inf',
   max: '+inf',
-  offset: '+inf', // only used if you a limit is defined
+  offset: '+inf', // only used if a limit is defined
   limit: undefined
 }
 {% endhighlight %}
@@ -653,7 +637,7 @@ SomeModel.find({
     someInteger: {
       min: 10,
       max: 40,
-      offset: 15, // this in combination with the limit would work as a kind of pagination where only the 
+      offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
       limit: 5
     },
     SomeTimestamp: {
@@ -663,6 +647,9 @@ SomeModel.find({
     
   });
 {% endhighlight %}
+
+*Important*: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smalles search has. If you limit multiple searches you might also end up with 0 results even though each search resultet in more ids because there may be no intersection.
+It is simpler and recommended to either only limit one search or manually limit the result array in the callback.
 
 You can also search for exact numeric values by using the syntax of a simple index search.
 
