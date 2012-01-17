@@ -750,7 +750,7 @@ loadArray: function (t) {
       }).slice(3, 6)
       .map(function (user) {
         return ''+user.id;
-      });      
+      });
       
       UserFindMockup.sort({
         field: 'number',
@@ -760,17 +760,132 @@ loadArray: function (t) {
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
       });
-    }
-    /*
-    "provided and default": function (t) {
+    },
+    "provided by name": function (t) {
       t.expect(2);
       
-      var sort_ids = [5,1,6,2,3];
-      UserFindMockup.sort({}, sort_ids, function (err, ids) {
-        t.same(null, err, 'Sorting without options caused an error');
-        t.same(sort_ids.sort(), ids, 'Sorting incremental model without options did not sort them by id.');
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('name');
+        b = b.p('name');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'name'
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
       });
-    }*/
+    },
+    
+    "provided by name DESC": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('name');
+        b = b.p('name');
+        return a < b ? 1 : (a > b ? -1 : 0);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'name',
+        direction: 'DESC'
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    
+    "provided by name LIMIT 2, 3": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('name');
+        b = b.p('name');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).slice(2, 5)
+      .map(function (user) {
+        return ''+user.id;
+      });      
+      
+      UserFindMockup.sort({
+        field: 'name',
+        limit: [2,3]
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    
+    "provided by number": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('number');
+        b = b.p('number');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'number'
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    
+    "provided by number DESC": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        var id_sort = a.id < b.id ? 1 : -1;
+        a = a.p('number');
+        b = b.p('number');
+        return a < b ? 1 : (a > b ? -1 : id_sort);
+      }).map(function (user) {
+        return ''+user.id;
+      });
+      
+      UserFindMockup.sort({
+        field: 'number',
+        direction: 'DESC'
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    },
+    
+    "provided by number LIMIT 3, 3": function (t) {
+      t.expect(2);
+      
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.p('number');
+        b = b.p('number');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).slice(3, 6)
+      .map(function (user) {
+        return ''+user.id;
+      });      
+      
+      UserFindMockup.sort({
+        field: 'number',
+        limit: [3,3]
+      }, this.userIds, function (err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(sorted_ids, ids, 'Sorting went wrong.');
+        t.done();
+      });
+    }
   }
 };
