@@ -648,7 +648,10 @@ SomeModel.find({
   });
 {% endhighlight %}
 
-*Important*: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smalles search has. If you limit multiple searches you might also end up with 0 results even though each search resultet in more ids because there may be no intersection.
+**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smalles search has. 
+
+If you limit multiple searches you might also end up with 0 results even though each search resulted in more ids because there may be no intersection.
+
 It is simpler and recommended to either only limit one search or manually limit the result array in the callback.
 
 You can also search for exact numeric values by using the syntax of a simple index search.
