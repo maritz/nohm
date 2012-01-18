@@ -697,22 +697,7 @@ Tip: Be careful with naming and don't overuse it!
 #### link(otherInstance, [relationName,] [callback])
 
 This creates a relation (link) to another instance.
-The most basic usage is to just use 
-{% highlight js %}
-server.use(nohm.connect(
-  // options object
-  {
-  url: '/nohm.js',
-  namespace: 'nohm',
-  exclusions: {
-    User: { // modelName
-      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-      salt: true // this will completely ignore all validations for the salt property
-    },
-    Privileges: true // this will completely ignore the Priviledges model
-  }
-}));
-{% endhighlight %}the first argument 'otherInstance':
+The most basic usage is to just use the first argument:
 
 {% highlight js %}
 User1.link(Admin);
@@ -736,17 +721,17 @@ There are several things that happen here:
 First User1 is validated. If User1 is invalid the save callback is called with the error.  
 If User1 is valid, User1 is stored.  
 If Admin has an ID, the relation is stored and the save callback is called.  
-Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (currently you have to manually check where the error is. This is a known bug and should soon be fixed)  
+Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (arguments to the callback would be 'invalid', true, Admin.modelName)
 If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
 
 
-This process works infinitely deep. However, I recommend to not do this since the process is not atomic!
+This process works infinitely deep. However it's not recommend to do this since the process is not atomic!
 
 If you define a callback in the link() call, that callback is called right after the link is stored to the db. This may make error handling in deep linked instances a little easier.
 
 If you call save on an object that has relations to other objects that aren't saved yet, these objects are then saved as well.
 That includes an internal call to .valid() on each relation.  
-If you have an error in a related object, you still get an error in your original save, but the object is saved regardless.
+If you have an error in a related object, you still get an error in your original save, but the original object is saved regardless.
 
 To make it a little easier to manage such errors there are two more arguments passed to the save callback.  
 The first is a boolean to tell you that the error was in a relation, the second is the modelName of that object.
@@ -785,7 +770,7 @@ User1.has(Admin, function (err, hasAdmin) {
 });
 {% endhighlight %}
 
-This requires that User1 as well as Admin are loaded from DB. (Or the same object was previously saved and thus still has the correct id)
+This requires that User1 as well as Admin are loaded from DB. (Or saved on the variable holding the instance)
 
 
 #### numLinks(modelName, [relatioName,] [callback])
