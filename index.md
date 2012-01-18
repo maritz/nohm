@@ -694,7 +694,7 @@ Now (after saving) these relations exist:
 Tip: Be careful with naming and don't overuse it!
 
 
-#### link(otherInstance, [relationName,] [callback])
+#### link(otherInstance, \[relationName,\] \[callback\])
 
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
@@ -753,12 +753,12 @@ User1.save(function (err, relationError, relationName) {
 {% endhighlight %}
 
 
-#### unlink(otherInstance, [relationName,] [callback])
+#### unlink(otherInstance, \[relationName,\] \[callback\])
 
 Removes the relation to another instance and otherwise works the same as link.
 
 
-#### has(otherInstance, [relationName,] [callback])
+#### has(otherInstance, \[relationName,\] \[callback\])
 
 This checks if an instance has a relationship to another relationship.
 
@@ -773,7 +773,7 @@ User1.has(Admin, function (err, hasAdmin) {
 This requires that User1 as well as Admin are loaded from DB. (Or saved on the variable holding the instance)
 
 
-#### numLinks(modelName, [relatioName,] [callback])
+#### numLinks(modelName, \[relationName,\] \[callback\])
 
 This checks how many relations of one name pair an Instance has to another Model.
 
@@ -797,7 +797,7 @@ User1.numLinks('RoleModel', 'temp', function (err, num) {
 {% endhighlight %}
 
 
-#### getAll(modelName, [relatioName,] [callback])
+#### getAll(modelName, \[relationName,\] \[callback\])
 
 This gets the IDs of all linked instances.
 
