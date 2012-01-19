@@ -545,7 +545,7 @@ Saving automatically validates the entire instance. If it is not valid, nothing 
 
 {% highlight js %}
 user.save(function (err) {
-  if ( ! err) {
+  if (err) {
     user.errors; // the errors in validation
   } else {
     // it's in the db :)
@@ -579,7 +579,6 @@ user.load(1234, function (err, properties) {
 
 To find an ID of an instance (e.g. to load it) Nohm offers a few simple search functionalities.
 The function to do so is always .find(), but what it does depends on the arguments given.
-Note that the ID array is sorted by default from lowest to highest.
 
 
 #### Finding all instances of a model
@@ -600,22 +599,7 @@ There are three kinds of indexes: unique, simple and numeric.
 Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.  
 You can mix the three search queries within one find call.  
 After all search queries of a find() have been processed the intersection of the found IDs is returned.  
-To limit/filter/sort the overall res
-{% highlight js %}
-server.use(nohm.connect(
-  // options object
-  {
-  url: '/nohm.js',
-  namespace: 'nohm',
-  exclusions: {
-    User: { // modelName
-      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-      salt: true // this will completely ignore all validations for the salt property
-    },
-    Privileges: true // this will completely ignore the Priviledges model
-  }
-}));
-{% endhighlight %}ult you have to manually edit the returned array.
+To limit/filter/sort the overall result you have to manually edit the returned array.
 
 
 ##### Finding by simple index
@@ -643,7 +627,7 @@ They default to this:
 {
   min: '-inf',
   max: '+inf',
-  offset: '+inf', // only used if you a limit is defined
+  offset: '+inf', // only used if a limit is defined
   limit: undefined
 }
 {% endhighlight %}
@@ -656,7 +640,7 @@ SomeModel.find({
     someInteger: {
       min: 10,
       max: 40,
-      offset: 15, // this in combination with the limit would work as a kind of pagination where only the 
+      offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
       limit: 5
     },
     SomeTimestamp: {
@@ -666,6 +650,12 @@ SomeModel.find({
     
   });
 {% endhighlight %}
+
+**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smalles search has. 
+
+If you limit multiple searches you might also end up with 0 results even though each search resulted in more ids because there may be no intersection.
+
+It is simpler and recommended to either only limit one search or manually limit the result array in the callback.
 
 You can also search for exact numeric values by using the syntax of a simple index search.
 
@@ -790,25 +780,10 @@ Now (after saving) these relations exist:
 Tip: Be careful with naming and don't overuse it!
 
 
-#### link(otherInstance, [relationName,] [callback])
+#### link(otherInstance, \[relationName,\] \[callback\])
 
 This creates a relation (link) to another instance.
-The most basic usage is to just use 
-{% highlight js %}
-server.use(nohm.connect(
-  // options object
-  {
-  url: '/nohm.js',
-  namespace: 'nohm',
-  exclusions: {
-    User: { // modelName
-      name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-      salt: true // this will completely ignore all validations for the salt property
-    },
-    Privileges: true // this will completely ignore the Priviledges model
-  }
-}));
-{% endhighlight %}the first argument 'otherInstance':
+The most basic usage is to just use the first argument:
 
 {% highlight js %}
 User1.link(Admin);
@@ -832,17 +807,17 @@ There are several things that happen here:
 First User1 is validated. If User1 is invalid the save callback is called with the error.  
 If User1 is valid, User1 is stored.  
 If Admin has an ID, the relation is stored and the save callback is called.  
-Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (currently you have to manually check where the error is. This is a known bug and should soon be fixed)  
+Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (arguments to the callback would be 'invalid', true, Admin.modelName)
 If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
 
 
-This process works infinitely deep. However, I recommend to not do this since the process is not atomic!
+This process works infinitely deep. However it's not recommend to do this since the process is not atomic!
 
 If you define a callback in the link() call, that callback is called right after the link is stored to the db. This may make error handling in deep linked instances a little easier.
 
 If you call save on an object that has relations to other objects that aren't saved yet, these objects are then saved as well.
 That includes an internal call to .valid() on each relation.  
-If you have an error in a related object, you still get an error in your original save, but the object is saved regardless.
+If you have an error in a related object, you still get an error in your original save, but the original object is saved regardless.
 
 To make it a little easier to manage such errors there are two more arguments passed to the save callback.  
 The first is a boolean to tell you that the error was in a relation, the second is the modelName of that object.
@@ -864,12 +839,12 @@ User1.save(function (err, relationError, relationName) {
 {% endhighlight %}
 
 
-#### unlink(otherInstance, [relationName,] [callback])
+#### unlink(otherInstance, \[relationName,\] \[callback\])
 
 Removes the relation to another instance and otherwise works the same as link.
 
 
-#### has(otherInstance, [relationName,] [callback])
+#### has(otherInstance, \[relationName,\] \[callback\])
 
 This checks if an instance has a relationship to another relationship.
 
@@ -881,10 +856,10 @@ User1.has(Admin, function (err, hasAdmin) {
 });
 {% endhighlight %}
 
-This requires that User1 as well as Admin are loaded from DB. (Or the same object was previously saved and thus still has the correct id)
+This requires that User1 as well as Admin are loaded from DB. (Or saved on the variable holding the instance)
 
 
-#### numLinks(modelName, [relatioName,] [callback])
+#### numLinks(modelName, \[relationName,\] \[callback\])
 
 This checks how many relations of one name pair an Instance has to another Model.
 
@@ -908,7 +883,7 @@ User1.numLinks('RoleModel', 'temp', function (err, num) {
 {% endhighlight %}
 
 
-#### getAll(modelName, [relatioName,] [callback])
+#### getAll(modelName, \[relationName,\] \[callback\])
 
 This gets the IDs of all linked instances.
 
