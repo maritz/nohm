@@ -44,6 +44,9 @@ layout: default
    * [Finding by Index](#finding_by_index)
    * [Finding by simple index](#finding_by_simple_index)
    * [Finding by numeric index](#finding_by_numeric_index)
+* [Sorting](#sorting)
+   * [Sort all from DB](#sort_all_from_db)
+   * [Sort a subset by given IDs](#sort_a_subset_by_given_ids)
 * [Relations](#relations)
    * [link](#linkotherinstance_relationname)
    * [unlink](#unlinkotherinstance_relationname)
@@ -665,6 +668,89 @@ SomeModel.find({
 {% endhighlight %}
 
 You can also search for exact numeric values by using the syntax of a simple index search.
+
+
+### Sorting
+
+You can sort your models in a few basic ways with the build-in .sort() method.
+However it might be a good idea to do more complex sorts manually.
+
+#### Sort all from DB
+
+
+{% highlight js %}
+SomeModel.sort({ // options object
+  field: 'name' // field is mandatory
+}, function (err, ids) {
+  // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically ascending by name
+});
+
+SomeModel.sort({
+  field: 'name',
+  direction: 'DESC'
+}, function (err, ids) {
+  // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically descending by name
+});
+
+SomeModel.sort({
+  field: 'name',
+  direction: 'DESC',
+  start: 50
+}, function (err, ids) {
+  // ids is an array of 100 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+});
+
+SomeModel.sort({
+  field: 'name',
+  direction: 'DESC',
+  start: 50,
+  amount: 50
+}, function (err, ids) {
+  // ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+});
+
+
+// this
+SomeModel.sort({
+  field: 'last_edit',
+  start: -10,
+  amount: 10
+}, function (err, ids) {
+  // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+});
+// would have the same result as:
+SomeModel.sort({
+  field: 'last_edit',
+  direction: 'DESC',
+  start: 0,
+  amount: 10
+}, function (err, ids) {
+  // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+});
+{% endhighlight %}
+
+
+#### Sort a subset by given IDs
+
+If you have an array of IDs and want them in a sorted order, you can use the same method with the same options but giving the array as the second argument. This is especially useful if combined with find().
+
+{% highlight js %}
+// assuming car model
+Car.find({
+  manufacturer: 'ferrari',
+}, function (err, ferrari_ids) {
+  Car.sort({
+      field: 'build_year'
+    },
+    ferrari_ids, // array of found ferrari car ids
+    function (err, sorted_ids) {
+      // sorted_ids =  max. 100 oldest ferrari cars
+    }
+  );
+});
+{% endhighlight %}
+
+*Note*; If performance is very important it might be a good idea to do this kind of find/sort combination yourself in a multi query to the redis DB.
 
 
 ### Relations
