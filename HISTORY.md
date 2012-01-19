@@ -1,3 +1,6 @@
+### v0.7.2 - 2012-01-19
+  - add .sort()
+
 ### v0.7.1
   - Fix unique handling bugs
 
