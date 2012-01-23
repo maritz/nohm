@@ -4,10 +4,11 @@
 
 Nohm is an object relational mapper (ORM) written for node.js and redis.
 
-## Install
-### If you haven't done this yet: install npm 
+## Requirements
 
-    curl http://npmjs.org/install.sh | sh
+* redis >= 2.4
+
+## Install
 
 ### Installing nohm
 
@@ -18,7 +19,88 @@ http://maritz.github.com/nohm/
 
 ## Examples
 
-* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server) very basic user example (needs express)
+~~~~ javascript
+  var nohm = require('nohm').Nohm;
+  var redis = require('redis').createClient();
+  
+  nohm.setClient(redis);
+
+  nohm.model('User', {
+    properties: {
+      name: {
+        type: 'string',
+        unique: true,
+        validations: [
+          'notEmpty'
+        ]
+      },
+      email: {
+        type: 'string',
+        unique: true,
+        validations: [
+          'email'
+        ]
+      },
+      country: {
+        type: 'string',
+        defaultValue: 'Tibet',
+        validations: [
+          'notEmpty'
+        ]
+      },
+      visits: {
+        type: function incrVisitsBy(value, key, old) {
+          return old + value;
+        },
+        defaultValue: 0,
+        index: true
+      }
+    },
+    methods: {
+      getContryFlag: function () {
+        return 'http://example.com/flag_'+this.p('country')+'.png';
+      },
+    }
+  });
+
+  var user = nohm.factory('User');
+  user.p({
+    name: 'Mark',
+    email: 'mark@example.com',
+    country: 'Mexico',
+    visits: 1
+  });
+  user.save(function (err) {
+    if (err === 'invalid') {
+      console.log('properties were invalid: ', user.errors);
+    } else if (err) {
+      console.log(err); // database or unknown error
+    } else {
+      console.log('saved user! :-)');
+      user.remove(function (err) {
+        if (err) {
+          console.log(err); // database or unknown error
+        } else {
+          console.log('successfully removed user');
+        }
+      });
+    }
+  });
+
+  // try to load a user from the db
+  var otherUser = nohm.factory('User', 522, function (err) {
+    if (err === 'not found') {
+      console.log('no user with id 522 found :-(');
+    } else if (err) {
+      console.log(err); // database or unknown error
+    } else {
+      console.log(otherUser.allProperties());
+    }
+  });
+~~~~
+
+
+* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server) (needs express)
 * [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi
 
 Do you have code that should/could be listed here? Message me!

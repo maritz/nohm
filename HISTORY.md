@@ -1,3 +1,9 @@
+### v0.7.2 - 2012-01-19
+  - add .sort()
+
+### v0.7.1
+  - Fix unique handling bugs
+
 ### v0.7.0
   - BREAKS BACKWARDS COMPATIBILTY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
   - add nohm.connect() connect middleware that delivers browser validation js
