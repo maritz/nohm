@@ -1,8 +1,8 @@
 {
     "name": "nohm",
-    "version": "0.7.0",
+    "version": "0.7.2",
     "engines": {
-        "node" : ">=0.4.0 || >= 0.6.3" 
+        "node" : ">= 0.4.12 && < 0.7.0" 
     },
     "author": "Moritz Peters",
     "repository" : { 
