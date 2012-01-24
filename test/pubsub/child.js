@@ -7,6 +7,8 @@ nohm.setClient(args.setClient);
 require(__dirname+'/Model.js');
 
 process.on('message', function (msg) {
+  var event, modelName, fn;
+  
   switch (msg.question) {
     case 'does nohm have pubsub?':
       process.send({
@@ -26,14 +28,36 @@ process.on('message', function (msg) {
     break;
     
     case 'subscribe':
-      var event = msg.args.event;
-      var modelName = msg.args.modelName;
+      event = msg.args.event;
+      modelName = msg.args.modelName;
       nohm.factory(modelName).subscribe(event, function (change) {
         process.send({
           question: 'subscribe',
           answer: change
         })
       });
+    break;
+    
+    case 'subscribeOnce':
+      event = msg.args.event;
+      modelName = msg.args.modelName;
+      nohm.factory(modelName).subscribeOnce(event, function (change) {
+        process.send({
+          question: 'subscribeOnce',
+          answer: change
+        })
+      });
+    break;
+    
+    case 'unsubscribe':
+      event = msg.args.event;
+      modelName = msg.args.modelName;
+      fn = msg.args.fn;
+      nohm.factory(modelName).unsubscribe(event, fn);
+      process.send({
+        question: 'unsubscribe',
+        answer: true
+      })
     break;
   }
 });
