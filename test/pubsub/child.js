@@ -33,7 +33,8 @@ process.on('message', function (msg) {
       nohm.factory(modelName).subscribe(event, function (change) {
         process.send({
           question: 'subscribe',
-          answer: change
+          answer: change,
+          event: event
         })
       });
     break;

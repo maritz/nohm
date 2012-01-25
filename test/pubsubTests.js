@@ -16,8 +16,6 @@ var after = function (times, fn) {
 
 var error_callback = function (t) {
   return function (err) {
-    if (err)
-      console.log(arguments);
     t.ok(!err, 'Callback received an error');
   };
 };
@@ -109,7 +107,7 @@ module.exports = {
         child.send(request);
         child.on('message', function (msg) {
           if (msg.question === request.question) {
-            callback(msg.answer);
+            callback(msg);
           }
         });
       };
@@ -135,11 +133,12 @@ module.exports = {
           event: 'create',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var target = msg.answer.target;
         t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
-        t.same(instance.id, answer.target.id, 'Id from create event wrong');
-        t.same(instance.modelName, answer.target.modelName, 'Modelname from create event wrong');
-        t.same(instance.allProperties(), answer.target.properties, 'Properties from create event wrong');
+        t.same(instance.id, target.id, 'Id from create event wrong');
+        t.same(instance.modelName, target.modelName, 'Modelname from create event wrong');
+        t.same(instance.allProperties(), target.properties, 'Properties from create event wrong');
         t.done();
       });
       
@@ -158,7 +157,8 @@ module.exports = {
           event: 'update',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
         t.same(instance.id, answer.target.id, 'Id from update event wrong');
         t.same(instance.modelName, answer.target.modelName, 'Modelname from update event wrong');
@@ -190,7 +190,8 @@ module.exports = {
           event: 'save',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
         t.same(instance.id, answer.target.id, 'Id from save event wrong');
         t.same(instance.modelName, answer.target.modelName, 'Modelname from save event wrong');
@@ -222,7 +223,8 @@ module.exports = {
           event: 'remove',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         t.same(instance.id, 0, 'ID was not reset properly before the child returned the event.');
         t.same(old_id, answer.target.id, 'Id from remove event wrong');
         t.same(instance.modelName, answer.target.modelName, 'Modelname from remove event wrong');
@@ -251,7 +253,8 @@ module.exports = {
           event: 'link',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         t.ok(instance_child.id.length > 0, 'ID was not set properly before the child returned the event.');
         t.same(instance_child.id, answer.child.id, 'Id from link event wrong');
         t.same(instance_child.modelName, answer.child.modelName, 'Modelname from link event wrong');
@@ -281,7 +284,8 @@ module.exports = {
           event: 'unlink',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         t.ok(instance_child.id.length > 0, 'ID was not set properly before the child returned the event.');
         t.same(instance_child.id, answer.child.id, 'Id from unlink event wrong');
         t.same(instance_child.modelName, answer.child.modelName, 'Modelname from unlink event wrong');
@@ -297,7 +301,7 @@ module.exports = {
       instance_child.save(function (err) {
         error_callback(t)(err);
         instance_child.unlink(instance_parent);
-        instance_child.save(error_callback(t))
+        instance_child.save(error_callback(t));
       });
     },
     
@@ -314,7 +318,8 @@ module.exports = {
           event: 'create',
           modelName: 'Tester'
         }
-      }, function (answer) {
+      }, function (msg) {
+        var answer = msg.answer;
         once_done++;
         t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
         t.same(instance.id, answer.target.id, 'Id from createOnce event wrong');
@@ -332,6 +337,55 @@ module.exports = {
       });
       
       instance.save(error_callback(t));
+    },
+    
+    'silenced': function (t) {
+      t.expect(6);
+      var self = this;
+      var instance = nohm.factory('Tester');
+      instance.p('dummy', 'silenced');
+      var answered = false;
+      
+      var events = ['create', 'update', 'save', 'remove', 'link', 'unlink'];
+      
+      events.forEach(function (event) {
+        self.child.ask({
+          question: 'subscribe',
+          args: {
+            event: event,
+            modelName: 'Tester'
+          }
+        }, function (msg) {
+          if (msg.event === event) {
+            console.log(msg);
+            answered = true;
+          }
+        });
+      });
+      
+      instance.save({silent: true}, function (err) {
+        t.ok(!err, 'There was an error while saving silenced.');
+        instance.p('dummy', 'updated');
+        instance.save({silent: true}, function (err) {
+          t.ok(!err, 'There was an error while updating silenced.');
+          var second = nohm.factory('Tester');
+          instance.link(second);
+          instance.save({silent: true}, function (err) {
+            t.ok(!err, 'There was an error while linking silenced.');
+            instance.unlink(second);
+            instance.save({silent: true}, function (err) {
+              t.ok(!err, 'There was an error while unlinking silenced.');
+              instance.remove({silent: true}, function (err) {
+                t.ok(!err, 'There was an error while removing silenced.');
+                setTimeout(function () {
+                  t.same(answered, false, 'There was an event!');
+                  t.done();
+                }, 150);
+              });
+            });
+          });
+        });
+      });
     }
   }
 };
