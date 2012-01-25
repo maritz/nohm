@@ -633,6 +633,18 @@ loadArray: function (t) {
     }
   },
   
+  "search unique that doesn't exists": function (t) {
+    t.expect(2);
+    var test = nohm.factory('UserFindMockup');
+    test.find({
+      email: 'this_user_email_should_absolutely_not_exist. it\'s not even a valid email...'
+    }, function (err, ids) {
+      t.ok(!err, 'There was an error while searching an inexistant unique value.');
+      t.same([], ids, 'The return of a search that didn\'t find anything was wrong.');
+      t.done();
+    })
+  },
+  
   sort: {
     
     "all by name": function (t) {
