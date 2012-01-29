@@ -603,7 +603,7 @@ loadArray: function (t) {
     });
   },
   
-  normalIds: {
+  "normal string IDs": {
     setUp: function (next) {
       var self = this;
       createUsers([{ 
@@ -630,6 +630,17 @@ loadArray: function (t) {
         t.same(ids[0], self.userIds[1], 'Did not find the correct id for non-incremental id model.');
         t.done();
       });
+    },
+  
+    "load via constructor": function (t) {
+      t.expect(2);
+      var self = this;
+      
+      var test = new UserFindNoIncrementMockup(this.userIds[0], function (err) {
+        t.ok(!err, 'There was an error while loading a model via constructor.');
+        t.same(test.allProperties(), self.users[0].allProperties(), 'A loaded user did not match what should\'ve been saved.');
+        t.done();
+      });
     }
   },
   
@@ -642,6 +653,20 @@ loadArray: function (t) {
       t.ok(!err, 'There was an error while searching an inexistant unique value.');
       t.same([], ids, 'The return of a search that didn\'t find anything was wrong.');
       t.done();
+    })
+  },
+  
+  "load via constructor": function (t) {
+    t.expect(3);
+    var test = nohm.factory('UserFindMockup');
+    test.save(function (err) {
+      t.ok(!err, 'There was an error while saving.');
+      
+      var test2 = new UserFindMockup(test.id, function (err) {
+        t.ok(!err, 'There was an error while loading a model via constructor.');
+        t.same(test2.allProperties(), test.allProperties(), 'The return of a search that didn\'t find anything was wrong.');
+        t.done();
+      });
     })
   },
   
