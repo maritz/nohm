@@ -7,7 +7,7 @@ var run = function(files){
     var green = function(str){return "\033[32m" + str + "\033[39m"};
     var bold  = function(str){return "\033[1m" + str + "\033[22m"};
 
-    nodeunit.reporters.default.run(files, undefined, function (error) {
+    nodeunit.reporters['default'].run(files, undefined, function (error) {
       cleanup(function () {
         redis.end();
       });
@@ -19,7 +19,7 @@ var args = require(__dirname+'/testArgs.js');
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js']);
+  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js', 'pubsubTests.js']);
 };
 
 
