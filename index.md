@@ -53,6 +53,9 @@ layout: default
    * [has](#hasotherinstance_relationname)
    * [numLinks](#numlinksmodelname_relationame)
    * [getAll](#getallmodelname_relationame)
+* [Publish / Subscribe](#publish__subscribe)
+   * [Configuration](#configuration)
+   * [Usage](#usage)
 * [Extras](#extras)
    * [Short Forms](#short_forms)
 
@@ -899,6 +902,158 @@ User1.getAll('RoleModel', 'createdBy', function (err, roleIds) {
 User2.getAll('RoleModel', 'temp', function (err, roleIds) {
   // roleIds = [3]
 });
+{% endhighlight %}
+
+
+### Publish / Subscribe
+
+Nohm supports a way for seperate clients to get notified of nohm actions in other clients, if they are connected to the same redis database and PubSub is activated.
+
+
+#### Configuration
+
+To use PubSub 2 steps are required:
+
+1. setting a seperate redis client for subscribing
+2. configuring either nohm or models to publish
+
+##### Setting the second redis client
+
+{% highlight js %}
+var secondClient = require('redis').createClient();
+nohm.setPubSubClient(secondClient, function (err) {
+  if (err) {
+    console.log('Error while initializing the second redis client');
+  } else {
+    // Yey, we can start subscribing :)  
+  }
+});
+{% endhighlight %}
+
+##### Configuring nohm globally to publish
+
+{% highlight js %}
+nohm.setPublish(true); // this client will publish on all models
+nohm.setPublish(false); // this client will only publish on models that are configured to publish themselves
+{% endhighlight %}
+
+##### Configuring models to publish
+
+{% highlight js %}
+// This model will publish no matter what the global publish setting is.
+nohm.model('Publish', {
+  properties: {},
+  publish: true
+}):
+
+// This model will only publish if the global setting is set to true.
+nohm.model('No_publish', {
+  properties: {}
+});
+{% endhighlight %}
+
+#### Checking if a model is set to publish
+
+{% highlight js %}
+nohm.factory('someModelName').getPublish(); // returns whether the model someModelName will publish
+{% endhighlight %}
+
+#### Usage
+
+There are 6 events that get published: 
+
+* 'create'   -- a new instance is getting created.
+* 'update'   -- an instance is getting updated with new values.
+* 'save'     -- an instance is getting created OR updated (in addition to one of the above).
+* 'remove'   -- an instance is getting removed (although you get an id here, the data is not in the db anymore)
+* 'link'     -- instances are getting linked
+* 'unlink'   -- instances are getting unlinked
+
+All\* these event callbacks get an object containing these properties:
+
+{% highlight js %}
+{
+  target: {
+    id: 'id_of_the_instance',
+    modelName: 'name_of_the_model',
+    properties: {} // instance.allProperties() from where the event was fired
+    
+    // only in save/update:
+    diff: {} // instance.propertyDiff()
+  }
+}
+{% endhighlight %}
+
+\*The Exceptions are link and unlink:
+
+{% highlight js %}
+{
+  child: {
+    id: 'id_of_the_child_instance',
+    modelName: 'name_of_the_child_model',
+    properties: {} // child.allProperties() from where the event was fired
+  },
+  parent: {
+    id: 'id_of_the_parent_instance',
+    modelName: 'name_of_the_parent_model',
+    properties: {} // parent.allProperties() from where the event was fired
+  },
+  relation: 'child' // relation name
+}
+{% endhighlight %}
+
+
+To handle subscribing to these events there are 3 functions to use: model.subscribe, model.subscribeOnce and model.unsubscribe.
+
+
+##### model.subscribe
+
+Subscribe to all actions of a specified event type on a model.
+
+Example:
+
+{% highlight js %}
+nohm.factory('someModel').subscribe('update', function (event) {
+  console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+});
+{% endhighlight %}
+
+
+##### model.subscribeOnce
+
+Subscribe and after it is fired once, unsubcsribe.
+
+Example:
+
+{% highlight js %}
+var updates = 0;
+nohm.factory('someModel').subscribeOnce('update', function (event) {
+  // will only be called once no matter how many updates happen after 1 has published
+  updates++;
+  console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+  console.log(updates);
+});
+{% endhighlight %}
+
+
+##### model.unsubscribe
+
+Unsubscribe one or all listeners.
+
+Example:
+
+{% highlight js %}
+var model = nohm.factory('someModel');
+var callback = function (event) {
+  console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+};
+model.subscribe('update', callback);
+
+// to unsubscribe only one:
+model.unsubscribe('update', callback);
+
+// or unsubscribe all
+model.unsubscribe('update');
 {% endhighlight %}
 
 
