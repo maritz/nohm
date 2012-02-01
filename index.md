@@ -926,6 +926,12 @@ nohm.setPubSubClient(secondClient, function (err) {
     console.log('Error while initializing the second redis client');
   } else {
     // Yey, we can start subscribing :)  
+    
+    // to close the pubsub connection and make the redis client available for normal commands again:
+    nohm.closePubSub(function (err, client) {
+      // client == secondClient
+      // nohm will still publish though
+    });
   }
 });
 {% endhighlight %}
