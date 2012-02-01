@@ -1,6 +1,6 @@
 {
     "name": "nohm",
-    "version": "0.7.2",
+    "version": "0.8.0",
     "engines": {
         "node" : ">= 0.4.12 && < 0.7.0" 
     },
@@ -22,5 +22,9 @@
     },
     "devDependencies": {
       "nodeunit": "0.6.4"
-    }
+    },
+    "contributors": [{
+      "name": "Pier Paolo Ramon",
+      "url": "https://github.com/yuchi"
+    }]
 }

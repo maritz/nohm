@@ -1,3 +1,7 @@
+### v0.8.0 - 2012-02-01
+  - add Publish/Subscribe support
+  - fix regressions
+
 ### v0.7.2 - 2012-01-19
   - add .sort()
 
