@@ -666,12 +666,21 @@ exports.methods = function (t) {
 
 exports.methodsSuper = function (t) {
   var user = new UserMockup();
-  t.expect(3);
+  t.expect(4);
   
   t.same(typeof(user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
+  t.same(typeof(user._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
   t.same(user.prop('super'), user.p('name'), 'The super test method did not work properly.');
   user.prop('name', 'methodTest');
   t.same(user.p('name'), 'methodTest', 'The super test method did not properly handle arguments');
+  t.done();
+};
+
+exports["no super method if none needed"] = function (t) {
+  var user = new UserMockup();
+  t.expect(1);
+  
+  t.ok(!user.hasOwnProperty('_super_test'), 'Defining a method that does not overwrite a nohm method created a _super_.');
   t.done();
 };
 
