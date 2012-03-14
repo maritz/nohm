@@ -952,5 +952,39 @@ loadArray: function (t) {
         t.done();
       });
     }
+  },
+
+  "load hash with extra properties": function(t) {
+    var user = new UserFindMockup(),
+        findUser = new UserFindMockup();
+    t.expect(7);
+
+    user.p({
+      name: 'hurgelwurz',
+      email: 'hurgelwurz@hurgel.de',
+      json: {
+        test: 1
+      }
+    });
+
+    user.save(function(err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      redis.hset(nohm.prefix.hash+findUser.modelName+':'+user.id, 'not_a_real_property', 'something... :-)', function (err) {
+        t.ok(!err, 'Unexpected redis error in custom query');
+        console.log('There should be an error in the next line');
+        findUser.load(user.id, function(err) {
+          t.ok(!err, 'Unexpected load error');
+          t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
+          t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
+          t.equals(findUser.p('json').test, 1, 'The loaded version of the json was not the same as the set one.');
+          t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
+          t.equals(user.p('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
+          t.done();
+        });
+      });
+    });
   }
 };
