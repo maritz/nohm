@@ -84,9 +84,18 @@ var UserMockup = nohm.model('UserMockup', {
       idGenerator: 'increment'
     });
     
-var NonIncrement = nohm.model('NonIncrement', {
+nohm.model('NonIncrement', {
   properties: {
     name: 'No name'
+  }
+});
+
+nohm.model('UniqueInteger', {
+  properties: {
+    unique: {
+      type: 'integer',
+      unique: true
+    }
   }
 });
     
@@ -493,16 +502,16 @@ exports.uniqueLowerCase = function (t) {
 };
 
 exports.uniqueDeleteWhenOtherFails = function (t) {
-  var user1 = new UserMockup(),
+  var user = new UserMockup(),
   user2 = new UserMockup();
   t.expect(2);
 
-  user1.p('name', 'uniqueDeleteTest');
-  user1.p('email', 'uniqueDeleteTest@test.de');
-  user1.p('country', '');
-  user1.save(function (err) {
+  user.p('name', 'uniqueDeleteTest');
+  user.p('email', 'uniqueDeleteTest@test.de');
+  user.p('country', '');
+  user.save(function (err) {
     t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.exists(prefix + ':uniques:UserMockup:name:'+user1.p('name').toLowerCase(), function (err, value) {
+    redis.exists(prefix + ':uniques:UserMockup:name:'+user.p('name').toLowerCase(), function (err, value) {
       t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
       t.done();
     });
@@ -510,14 +519,14 @@ exports.uniqueDeleteWhenOtherFails = function (t) {
 };
 
 exports.uniqueOnlyCheckSpecified = function (t) {
-  var user1 = new UserMockup();
+  var user = new UserMockup();
   t.expect(2);
 
-  user1.p('name', 'dubplicateTest');
-  user1.p('email', 'dubplicateTest@test.de');
-  user1.valid('name', function (valid) {
+  user.p('name', 'dubplicateTest');
+  user.p('email', 'dubplicateTest@test.de');
+  user.valid('name', function (valid) {
     t.same(valid, false, 'Checking the duplication status failed in valid().');
-    t.same(user1.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
+    t.same(user.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
     t.done();
   });
 };
@@ -871,3 +880,28 @@ exports.purgeDB = function (t) {
   });
 };
 
+exports["integer uniques"] = function (t) {
+  t.expect(5);
+  var obj = nohm.factory('UniqueInteger');
+  var obj2 = nohm.factory('UniqueInteger');
+  obj.p('unique', 123);
+  obj2.p('unique', 123);
+  
+  obj.save(function (err) {
+    t.ok(!err, 'Unexpected saving error');
+    t.same(obj.allProperties(), {
+      unique: 123,
+      id: obj.id
+    }, 'Properties not correct');
+    obj2.save(function (err) {
+      t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
+      obj.remove(function (err) {
+        t.ok(!err, 'Unexpected removing error');
+        obj2.save(function () {
+          t.ok(!err, 'Unexpected saving error');
+          t.done();
+        });
+      });
+    });
+  });
+};
