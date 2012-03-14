@@ -175,7 +175,8 @@ exports.find = {
       email: 'hurgelwurz@hurgel.de',
       json: {
         test: 1
-      }
+      },
+      bool: 'true'
     });
 
     user.save(function(err) {
@@ -192,7 +193,7 @@ exports.find = {
         t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
         t.equals(findUser.p('json').test, 1, 'The loaded version of the json was not the same as the set one.');
         t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
-        t.equals(user.p('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
+        t.equals(findUser.p('bool'), true, 'The loaded version of the boolean was not the same as a set one.');
         t.done();
       });
     });
