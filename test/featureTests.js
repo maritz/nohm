@@ -20,11 +20,12 @@ exports.checkModules = function (t) {
 var prefix = args.prefix;
 
 // real tests start in 3.. 2.. 1.. NOW!
-var redis = args.redis,
-    nohm = require(__dirname+'/../lib/nohm').Nohm,
-    helper = require(__dirname+'/../lib/helpers'),
-    async = require('async'),
-    UserMockup = nohm.model('UserMockup', {
+var redis = args.redis;
+var nohm = require(__dirname+'/../lib/nohm').Nohm;
+var helper = require(__dirname+'/../lib/helpers');
+var async = require('async');
+
+var UserMockup = nohm.model('UserMockup', {
       properties: {
         name: {
           type: 'string',
@@ -82,6 +83,12 @@ var redis = args.redis,
       },
       idGenerator: 'increment'
     });
+    
+var NonIncrement = nohm.model('NonIncrement', {
+  properties: {
+    name: 'No name'
+  }
+});
     
     
 exports.prepare = {
@@ -817,6 +824,21 @@ exports.factory = function (t) {
     t.done();
   });
   t.ok(user2, 'Using the factory with an id and callback returned false');
+};
+
+exports["factory with non-integer id"] = function (t) {
+  t.expect(3);
+  var name = 'NonIncrement';
+  var obj = nohm.factory(name);
+  obj.p('name', 'factory_non_integer_load');
+  obj.save(function (err) {
+    t.ok(!err, 'Unexpected saving error');
+    var obj2 = nohm.factory(name, obj.id, function (err) {
+      t.ok(!err, 'Unexpected factory loading error');
+      t.same(obj2.allProperties(), obj.allProperties(), 'The loaded object seems to have wrong properties');
+      t.done();
+    });
+  });
 };
 
 exports.purgeDB = function (t) {
