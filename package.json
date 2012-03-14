@@ -1,8 +1,8 @@
 {
     "name": "nohm",
-    "version": "0.8.0",
+    "version": "0.9.0-pre",
     "engines": {
-        "node" : ">= 0.4.12 && < 0.7.0" 
+        "node" : "0.6" 
     },
     "author": "Moritz Peters",
     "repository" : { 
@@ -17,7 +17,7 @@
     "description": "redis ORM (Object relational mapper)",
     "main": "./lib/nohm",
     "dependencies": {
-      "async": "0.1.15",
+      "async": "0.1.18",
       "redis": ">=0.7.1"
     },
     "devDependencies": {

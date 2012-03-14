@@ -1,6 +1,7 @@
-### v0.8.0 - 2012-02-01
-  - add Publish/Subscribe support
-  - fix regressions
+### v0.9.0-pre - 2012-03-14
+  - BREAKS BACKWARDS COMPATIBILITY! change relation names for clearer handling ("child" is now "default", "xyzParent" is now "xyzForeign")
+  - Added error handler to link/unlink
+  - Bug fixes
 
 ### v0.7.2 - 2012-01-19
   - add .sort()
