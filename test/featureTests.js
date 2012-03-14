@@ -713,7 +713,7 @@ exports.allPropertiesJson = function (t) {
 exports.thisInCallbacks = function (t) {
   var user = new UserMockup();
   var checkCounter = 0;
-  var checkSum = 13;
+  var checkSum = 11;
   var checkThis = function (name, cb) {
     return function () {
       checkCounter++;
@@ -749,9 +749,7 @@ exports.thisInCallbacks = function (t) {
       user.belongsTo(user, checkThis('belongsTo'));
       user.getAll('UserMockup', checkThis('getAll'));
       user.numLinks('UserMockup', checkThis('numLinks'));
-      user.link(user, 'childa', true, checkThis('linkDirect'));
-      user.unlink(user, 'childa', true, checkThis('linkDirect'));
-      user.unlinkAll(null, checkThis('linkDirect'));
+      user.unlinkAll(null, checkThis('unlinkAll'));
     }));
   }));
 };
