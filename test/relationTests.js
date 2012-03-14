@@ -450,9 +450,8 @@ exports.relation = {
     });
     comment.p('text', ''); // makes the first comment fail
   
-    role.save({continueOnLinkError: true}, function () {
-      redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' +
-        user.modelName + ':' + comment3.id, user.id,
+    role.save({continue_on_link_error: true}, function () {
+      redis.sismember(relationsprefix+comment3.modelName+':defaultForeign:'+user.modelName+':'+comment3.id, user.id,
         function (err, value) {
           t.ok(!err, 'There was a redis error');
           t.same(value, "1", 'The comment3 relation was not saved');
