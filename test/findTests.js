@@ -59,6 +59,15 @@ var UserFindNoIncrementMockup = nohm.model('UserFindNoIncrementMockup', {
   }
 });
 
+nohm.model('UniqueIntegerFind', {
+  properties: {
+    unique: {
+      type: 'integer',
+      unique: true
+    }
+  }
+});
+
 var errLogger = function(err) {
   if (err) {
     console.dir(err);
@@ -274,6 +283,25 @@ loadArray: function (t) {
     }, function(err) {
       t.same(0, err.indexOf('Invalid search parameters'), 'The found id did not match the id of the saved object.');
       t.done();
+    });
+  },
+  
+  findByIntegerUnique: function(t) {
+    var saveObj = nohm.factory('UniqueIntegerFind');
+    var findObj = nohm.factory('UniqueIntegerFind');
+    t.expect(3);
+    
+    saveObj.p('unique', 123);
+    saveObj.save(function (err) {
+      t.ok(!err, 'Unexpected saving error');
+
+      findObj.find({
+        unique: saveObj.p('unique')
+      }, function(err, ids) {
+        t.ok(!err, 'Unexpected finding error');
+        t.same(ids, [saveObj.id], 'The found id did not match the id of the saved object.');
+        t.done();
+      });
     });
   },
 
