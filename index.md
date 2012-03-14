@@ -40,7 +40,7 @@ layout: default
 * [Deleting](#deleting)
 * [Loading](#loading)
 * [Finding](#finding)
-   * [Finding all instances of a model](#finding_all_instances_of_a_model)
+   * [Finding all ids of a model](#finding_all_ids_of_a_model)
    * [Finding by Index](#finding_by_index)
    * [Finding by simple index](#finding_by_simple_index)
    * [Finding by numeric index](#finding_by_numeric_index)
@@ -48,8 +48,8 @@ layout: default
    * [Sort all from DB](#sort_all_from_db)
    * [Sort a subset by given IDs](#sort_a_subset_by_given_ids)
 * [Relations](#relations)
-   * [link](#linkotherinstance_relationname)
-   * [unlink](#unlinkotherinstance_relationname)
+   * [link](#linkotherinstance_options_relationname)
+   * [unlink](#unlinkotherinstance_options_relationname)
    * [has](#hasotherinstance_relationname)
    * [numLinks](#numlinksmodelname_relationame)
    * [getAll](#getallmodelname_relationame)
@@ -556,11 +556,31 @@ user.save(function (err) {
 });
 {% endhighlight %}
 
+Save can take an optional object containing options, which defaults to this:
+
+{% highlight js %}
+user.save({
+  silent: false, // if true, no events from this save are published
+  continue_on_link_error: false // by default if user was linked to to objects before saving and the first linking fails, the second link will not be saved either. 
+                                // set this to true to try saving all relations, regardless of previous linking errors.
+}, function (err) {
+});
+{% endhighlight %}
+
 
 ### Deleting
 
-Calling remove() completely removes the instance from the db, including relations.
+Calling remove() completely removes the instance from the db, including realtions (but not the related instances - so it is not a cascading remove).
 This only works on instances where the id is set (manually or from load()).
+
+{% highlight js %}
+var user = nohm.factory('User');
+user.id = 123;
+user.remove({ // options object can be omitted
+  silent: true, // whether remove event is published. defaults to false.
+}, function (err) {
+  // user is gone.
+});
 
 
 ### Loading
@@ -584,7 +604,7 @@ To find an ID of an instance (e.g. to load it) Nohm offers a few simple search f
 The function to do so is always .find(), but what it does depends on the arguments given.
 
 
-#### Finding all instances of a model
+#### Finding all ids of a model
 
 Simply calling find() with only a callback will retrieve all IDs.
 
@@ -654,7 +674,7 @@ SomeModel.find({
   });
 {% endhighlight %}
 
-**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smalles search has. 
+**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smallest search has. 
 
 If you limit multiple searches you might also end up with 0 results even though each search resulted in more ids because there may be no intersection.
 
@@ -753,7 +773,7 @@ In nohm this is not necessary making it possible for one instance of a model to 
 
 A simple example:  
 We have 2 instances of the UserModel: User1, User2  
-We have 3 instances the RoleModel: Admin, Author, UserManager  
+We have 3 instances the RoleModel: AdminRole, AuthorRole, UserManagerRole
 A user can have 0-3 roles.  
 This creates an N:M relationship. In a traditional DB you'd now need a [pivot table](http://www.wellho.net/solutions/mysql-many-to-many-table-mapping-pivot-tables.html) and then you'd have to somehow tell your ORM that it should use that table to map these relations.  
 In nohm this step is not needed.  
@@ -761,43 +781,43 @@ Instead we just tell every UserModel instance whatever relationships it has.
 
 This has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.  
 
-In nohm all relations have a name pair. By default this pair is "child" and "parent". The instance that initiated the relationship is the child.  
+In nohm all relations have a name pair. By default this pair is "edfault" and "defaultForeign". The instance that initiated the relationship is the "default" the one that is linked to it is the "defaultForeign" ("Foreign" is attached to custom link names for this).  
 This again has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations. 
 
 Some Examples:
 
 
 {% highlight js %}
-User1.link(Admin);
-User1.link(Author);
-User2.link(UserManager, 'createdBy');
-User2.link(UserManager, 'temp');
+User1.link(AdminRole);
+User1.link(AuthorRole);
+User2.link(UserManagerRole, 'createdBy');
+User2.link(UserManagerRole, 'temp');
 {% endhighlight %}
 
 Now (after saving) these relations exist:
-* User1 (child) -> Admin (parent)
-* User1 (child) -> Author (parent)
-* User1 (createdBy) -> UserManager (createdByParent)
-* User2 (temp) -> UserManager (tempParent)
+* User1 (default) -> AdminRole (defaultForeign)
+* User1 (default) -> AuthorRole (defaultForeign)
+* User1 (createdBy) -> UserManagerRole (createdByForeign)
+* User2 (temp) -> UserManagerRole (tempForeign)
 
 Tip: Be careful with naming and don't overuse it!
 
 
-#### link(otherInstance, \[relationName,\] \[callback\])
+#### link(otherInstance, \[options,\] \[callback\])
 
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
 
 {% highlight js %}
-User1.link(Admin);
+User1.link(AdminRole);
 {% endhighlight %}
 
-This only creates the relation on the object holding the instance. In this case User1.
-User1 as well as Admin may be unsaved instances at this time.
-The relation is only written to the DB when User1 is saved. (not when Admin is saved manually though!)
+The relation is only written to the DB when User1 is saved. (not when saving Admin!)
 
 {% highlight js %}
-User1.save(function (err) {
+var User = nohm.factory('User');
+User.link(AdminRole);
+User.save(function (err, is_link_error, link_error_model_name) {
   if ( ! err) {
     // User1 and Admin are saved
   } else {
@@ -810,39 +830,30 @@ There are several things that happen here:
 First User1 is validated. If User1 is invalid the save callback is called with the error.  
 If User1 is valid, User1 is stored.  
 If Admin has an ID, the relation is stored and the save callback is called.  
-Otherwise Admin is validated. If Admin is invalid the save callback is called with the error. (arguments to the callback would be 'invalid', true, Admin.modelName)
+Otherwise Admin is validated. If Admin is invalid an optional error callback is called and execution returns to the save of User. (arguments to the save callback would be 'invalid', true, Admin.modelName)
 If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
 
 
-This process works infinitely deep. However it's not recommend to do this since the process is not atomic!
+This process works infinitely deep. However this process is not atomic, thus it might be a better idea to save the elements individually and then link them!
 
-If you define a callback in the link() call, that callback is called right after the link is stored to the db. This may make error handling in deep linked instances a little easier.
 
-If you call save on an object that has relations to other objects that aren't saved yet, these objects are then saved as well.
-That includes an internal call to .valid() on each relation.  
-If you have an error in a related object, you still get an error in your original save, but the original object is saved regardless.
-
-To make it a little easier to manage such errors there are two more arguments passed to the save callback.  
-The first is a boolean to tell you that the error was in a relation, the second is the modelName of that object.
+link can take an optional options object or link name as the second argument. If it is a string, it's assumed to be the link name.
+The options object has 2 available options:
 
 {% highlight js %}
-User1.save(function (err, relationError, relationName) {
-  if ( ! err) {
-    // User1 and Admin are saved
-  } else {
-    if (relationError) {
-      // User1 is saved, Admin not.
-      console.dir(Admin.errors); // holds the errors
-      console.dir(relationName); // is the same as Admin.modelName
-    } else {
-      // neither User nor Admin are saved because User had an error
-    }
+User1.link(ManagerRole, {
+  name: 'hasRole', // otherwise defaults to "default"
+  error: function (error_mesage, validation_errors, object) {
+    // this is called if there was an error while saving the linked object (ManagerRole in this case)
+    // error_message is the error ManagerRole.save() reported
+    // validation_errors is ManagerRole.errors
+    // object is ManagerRole
   }
 });
 {% endhighlight %}
 
 
-#### unlink(otherInstance, \[relationName,\] \[callback\])
+#### unlink(otherInstance, \[options,\] \[callback\])
 
 Removes the relation to another instance and otherwise works the same as link.
 
