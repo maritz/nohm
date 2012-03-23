@@ -528,7 +528,7 @@ If you now include /nohm.js (or default /nohmValidations.js) in your page, you c
 nohm.validate('User', {
   name: 'test123',
   email: 'test@test.de',
-  password: '******'
+  password: '\*\*\*\*\*\*'
 }, function (valid, errors) {
   if (valid) {
     alert('User is valid!');
@@ -581,6 +581,7 @@ user.remove({ // options object can be omitted
 }, function (err) {
   // user is gone.
 });
+{% endhighlight %}
 
 
 ### Loading
