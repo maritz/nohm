@@ -145,7 +145,7 @@ A property can have the following options: (explained in more detail later)
   <dd>
     The variable type/behaviour of the property. All values will be cast to this value.<br/>
     There are a few built-in types:<br/>
-      <code>string, integer, float, boolean, timestamp and json</code><br/>
+      <code>string, integer, float, bool, timestamp and json</code><br/>
     You can also define a behaviour. This is a function that type-casts the value in whatever way you want.
   </dd>
   <dt>
@@ -231,7 +231,7 @@ Normal javascript string.
 ###### Integer / Float
 The value is parsed to an Int(base 10) or Float and defaults to 0 if NaN.
 
-###### Boolean
+###### Bool
 Casts to boolean - except 'false' (string) which will be cast to false (boolean).
 
 ###### Timestamp
