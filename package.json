@@ -1,6 +1,6 @@
 {
     "name": "nohm",
-    "version": "0.9.0-pre",
+    "version": "0.9.0-pre3",
     "engines": {
         "node" : "0.6" 
     },

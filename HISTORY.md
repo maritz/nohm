@@ -1,3 +1,7 @@
+### v0.9.0-pre3 - 04.03.2012
+  - Support for common variants on bool/string/integer/timestamp
+  - Bug fixes
+
 ### v0.9.0-pre - 2012-03-14
   - BREAKS BACKWARDS COMPATIBILITY! change relation names for clearer handling ("child" is now "default", "xyzParent" is now "xyzForeign")
   - Added error handler to link/unlink
