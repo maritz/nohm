@@ -1,5 +1,6 @@
 var util = require('util');
 var args = require(__dirname+'/testArgs.js');
+var h = require('./helper.js');
 
 exports.checkModules = function (t) {
   var redis, nohm, async;
@@ -502,8 +503,7 @@ exports.uniqueLowerCase = function (t) {
 };
 
 exports.uniqueDeleteWhenOtherFails = function (t) {
-  var user = new UserMockup(),
-  user2 = new UserMockup();
+  var user = new UserMockup();
   t.expect(2);
 
   user.p('name', 'uniqueDeleteTest');
@@ -910,4 +910,46 @@ exports["integer uniques"] = function (t) {
       });
     });
   });
+};
+
+exports["no key left behind"] = function (t) {
+  var user = nohm.factory('UserMockup');
+  var user2 = nohm.factory('UserMockup');
+  t.expect(3);
+  
+  user2.p({
+    name: 'user2',
+    email: 'user2@test.com'
+  });
+  
+  user.link(user2);
+  user2.link(user, 'father');
+  
+  async.series([
+    async.apply(h.cleanUp, redis, args.prefix),
+    function (cb) {
+      user.save(cb);
+    },
+    function (cb) {
+      user2.save(cb);
+    },
+    function (cb) {
+      user.unlink(user2);
+      user2.save(cb);
+    },
+    function (cb) {
+      user2.remove(cb);
+    },
+    function (cb) {
+      user.remove(cb);
+    }
+  ], function (err) {
+      t.ok(!err, 'Unexpected saving error');
+      redis.keys(prefix + ':*', function (err, keys) {
+        t.ok(!err, 'Unexpected saving error');
+        t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets, so it should be 1 here.
+        t.done();
+      });
+    }
+  );
 };
