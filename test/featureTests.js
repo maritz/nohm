@@ -703,9 +703,10 @@ exports["no super method if none needed"] = function (t) {
 exports.uniqueDefaultOverwritten = function (t) {
   var user = new UserMockup();
   var user2 = new UserMockup();
-  t.expect(2);
+  t.expect(3);
   
   user.save(function (err) {
+    t.ok(!err, 'Unexpected saving error.');
     user2.save(function (err) {
       t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
       t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: '+user2.errors.name);
@@ -717,9 +718,14 @@ exports.uniqueDefaultOverwritten = function (t) {
 exports.allPropertiesJson = function (t) {
   var user = new UserMockup();
   user.p('json', {test: 1});
-  t.expect(1);
+  user.p({
+    name: 'allPropertiesJson',
+    email: 'allPropertiesJson@test.de'
+  });
+  t.expect(2);
   
   user.save(function (err) {
+    t.ok(!err, 'Unexpected saving error.');
     var testProps = user.allProperties();
     t.same(testProps.json, user.p('json'), 'allProperties did not properly parse json properties');
     t.done();
