@@ -19,6 +19,9 @@ var UserFindMockup = nohm.model('UserFindMockup', {
       defaultValue: 'testMail@test.de',
       unique: true
     },
+    gender: {
+      type: 'string'
+    },
     json: {
       type: 'json',
       defaultValue: '{}'
@@ -112,15 +115,18 @@ exports.find = {
       createUsers([{
         name: 'numericindextest',
         email: 'numericindextest@hurgel.de',
+        gender: 'male',
         number: 3
       }, {
         name: 'numericindextest',
         email: 'numericindextest2@hurgel.de',
+        gender: 'male',
         number: 4,
         number2: 33
       }, {
         name: 'numericindextest',
         email: 'numericindextest3@hurgel.de',
+        gender: 'female',
         number: 4,
         number2: 1
       }, {
@@ -237,6 +243,19 @@ loadArray: function (t) {
     t.same(all.length, users.length, 'load()ing an array of ids did not return an array with the coorect length');
   });
 },*/
+
+  findByInvalidSearch: function(t) {
+    var findUser = new UserFindMockup();
+    t.expect(1);
+
+    console.log('There should be an error in the next line');
+    findUser.find({
+      gender: 'male'
+    }, function(err, ids) {
+      t.same(0, ids.length, 'Searching for a nonexistant index did not return an empty array.');
+      t.done();
+    });
+  },
 
   findByUnique: function(t) {
     var findUser = new UserFindMockup();
