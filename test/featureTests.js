@@ -155,6 +155,9 @@ exports.prepare = {
     nohm.client = null;
     var user = new UserMockup();
     t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
+    
+    console.log('Note: there should be an error message in the next line. (intended behaviour)');
+    nohm.setClient(require('redis').createClient(80, '123.123.123.123')); // this should not connect.
 
     nohm.setClient(redis);
     user = new UserMockup();

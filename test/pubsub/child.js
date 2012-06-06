@@ -3,7 +3,7 @@ var nohm = require(__dirname+'/../../lib/nohm').Nohm;
 var args = require(__dirname+'/../testArgs.js');
 
 nohm.setPrefix(args.prefix);
-nohm.setClient(args.setClient);
+nohm.setClient(args.redis);
 require(__dirname+'/Model.js');
 
 process.on('message', function (msg) {
@@ -35,7 +35,7 @@ process.on('message', function (msg) {
           question: 'subscribe',
           answer: change,
           event: event
-        })
+        });
       });
     break;
     
@@ -46,7 +46,7 @@ process.on('message', function (msg) {
         process.send({
           question: 'subscribeOnce',
           answer: change
-        })
+        });
       });
     break;
     
@@ -58,7 +58,7 @@ process.on('message', function (msg) {
       process.send({
         question: 'unsubscribe',
         answer: true
-      })
+      });
     break;
   }
 });
