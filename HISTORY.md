@@ -1,3 +1,7 @@
+### v0.9.0 - 06.06.2012
+  - setClient/getClient now issue warnings on unconnected clients
+  - Bug fixes
+
 ### v0.9.0-pre3 - 04.03.2012
   - Support for common variants on bool/string/integer/timestamp
   - Bug fixes
