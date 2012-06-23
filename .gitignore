@@ -9,3 +9,5 @@ admin/*.sh
 dump.rdb
 style.css
 experiments.js
+.c9revisions
+.settings
