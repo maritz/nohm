@@ -11,9 +11,6 @@ process.argv.forEach(function (val, index) {
   if (val === '--no-cleanup') {
     exports.noCleanup = true;
   }
-  if (val === '--set-meta') {
-    exports.setMeta = true;
-  }
   if (val === '--redis-host') {
     exports.redis_host = process.argv[index + 1];
   }

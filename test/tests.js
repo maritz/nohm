@@ -20,7 +20,7 @@ var args = require(__dirname+'/testArgs.js');
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js', 'pubsubTests.js']);
+  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js', 'metaTests.js', 'pubsubTests.js']);
 };
 
 
@@ -32,5 +32,4 @@ var redis = args.redis,
     },
     Nohm = require(__dirname+'/../lib/nohm').Nohm;
     Nohm.setPrefix(args.prefix);
-Nohm.meta = args.setMeta;
 cleanup(runner, true);

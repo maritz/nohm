@@ -950,7 +950,7 @@ exports["no key left behind"] = function (t) {
       t.ok(!err, 'Unexpected saving error');
       redis.keys(prefix + ':*', function (err, keys) {
         t.ok(!err, 'Unexpected saving error');
-        t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets, so it should be 1 here.
+        t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
         t.done();
       });
     }
