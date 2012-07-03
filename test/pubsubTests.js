@@ -44,7 +44,7 @@ module.exports = {
     nohm.setPubSubClient(secondaryClient, function (err) {
       t.ok(!err, 'There was an error while subscribing');
       t.same(nohm.getPubSubClient(), secondaryClient, 'Second redis client wasn\'t set properly');
-      t.ok(nohm.getPubSubClient().subscriptions, 'Second redis client isn\'t subscribed to anything');
+      t.ok(nohm.getPubSubClient().subscription_set, 'Second redis client isn\'t subscribed to anything');
       t.done();
     });
   },
