@@ -4,6 +4,7 @@ var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
 var crypto = require('crypto');
+var traverse = require('traverse');
 
 var prefix = args.prefix;
 
@@ -99,6 +100,16 @@ var createUsers = function(props, modelName, callback) {
 
 var users_created = false;
 
+var stringify_functions = function (obj) {
+  return traverse(obj).map(function (x) { 
+    if (typeof x === 'function') {
+      return String(x) 
+    } else {
+      return x;
+    }
+  });
+}
+
 exports.meta = {
   
   setUp: function(next) {
@@ -193,14 +204,14 @@ exports.meta = {
       function (next) {
         redis.get(prefix+':meta:properties:UserMetaMockup', function (err, properties) {
           errLogger(err);
-          t.same(JSON.stringify(user.meta.properties), properties, 'Properties of the user did not match.');
+          t.same(JSON.stringify(stringify_functions(user.meta.properties)), properties, 'Properties of the user did not match.');
           next();
         });
       },
       function (next) {
         redis.get(prefix+':meta:properties:CommentMetaMockup', function (err, properties)  {
           errLogger(err);
-          t.same(JSON.stringify(comment.meta.properties), properties, 'Properties of the comment did not match.');
+          t.same(JSON.stringify(stringify_functions(comment.meta.properties)), properties, 'Properties of the comment did not match.');
           next();
         });
       }
