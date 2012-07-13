@@ -956,3 +956,22 @@ exports["no key left behind"] = function (t) {
     }
   );
 };
+
+exports["temporary model definitions"] = function (t) {
+  t.expect(2);
+  var user = nohm.factory('UserMockup');
+  var user2 = nohm.factory('UserMockup');
+  
+  var TempUserMockup = nohm.model('UserMockup', {
+    properties: {
+      well_shit: {
+        type: 'string'
+      }
+    }
+  }, true);
+  var new_user = new TempUserMockup();
+  
+  t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
+  t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');
+  t.done();
+};
