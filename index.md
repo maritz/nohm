@@ -782,7 +782,7 @@ Instead we just tell every UserModel instance whatever relationships it has.
 
 This has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.  
 
-In nohm all relations have a name pair. By default this pair is "edfault" and "defaultForeign". The instance that initiated the relationship is the "default" the one that is linked to it is the "defaultForeign" ("Foreign" is attached to custom link names for this).  
+In nohm all relations have a name pair. By default this pair is "default" and "defaultForeign". The instance that initiated the relationship is the "default" the one that is linked to it is the "defaultForeign" ("Foreign" is attached to custom link names for this).  
 This again has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations. 
 
 Some Examples:
