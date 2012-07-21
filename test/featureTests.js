@@ -601,6 +601,32 @@ exports.uniqueEmpty = function (t) {
   });
 };
 
+exports["integer uniques"] = function (t) {
+  t.expect(5);
+  var obj = nohm.factory('UniqueInteger');
+  var obj2 = nohm.factory('UniqueInteger');
+  obj.p('unique', 123);
+  obj2.p('unique', 123);
+  
+  obj.save(function (err) {
+    t.ok(!err, 'Unexpected saving error');
+    t.same(obj.allProperties(), {
+      unique: 123,
+      id: obj.id
+    }, 'Properties not correct');
+    obj2.save(function (err) {
+      t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
+      obj.remove(function (err) {
+        t.ok(!err, 'Unexpected removing error');
+        obj2.save(function () {
+          t.ok(!err, 'Unexpected saving error');
+          t.done();
+        });
+      });
+    });
+  });
+};
+
 exports.indexes = function (t) {
   var user = new UserMockup();
   t.expect(7);
@@ -644,6 +670,7 @@ exports.__updated = function (t) {
   user.p('email', '__updatedTest@test.de');
   user.save(function (err) {
     if (err) {
+      console.log(err);
       t.ok(false, 'Error while saving user in test for __updated.');
     }
     user.p('name', 'hurgelwurz');
@@ -889,32 +916,6 @@ exports.purgeDB = function (t) {
   });
 };
 
-exports["integer uniques"] = function (t) {
-  t.expect(5);
-  var obj = nohm.factory('UniqueInteger');
-  var obj2 = nohm.factory('UniqueInteger');
-  obj.p('unique', 123);
-  obj2.p('unique', 123);
-  
-  obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error');
-    t.same(obj.allProperties(), {
-      unique: 123,
-      id: obj.id
-    }, 'Properties not correct');
-    obj2.save(function (err) {
-      t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
-      obj.remove(function (err) {
-        t.ok(!err, 'Unexpected removing error');
-        obj2.save(function () {
-          t.ok(!err, 'Unexpected saving error');
-          t.done();
-        });
-      });
-    });
-  });
-};
-
 exports["no key left behind"] = function (t) {
   var user = nohm.factory('UserMockup');
   var user2 = nohm.factory('UserMockup');
@@ -974,4 +975,30 @@ exports["temporary model definitions"] = function (t) {
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
   t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');
   t.done();
+};
+  
+exports["changing unique frees old unique with uppercase values"] = function (t) {
+  t.expect(3);
+  var obj = nohm.factory('UserMockup');
+  var obj2 = nohm.factory('UserMockup');
+  var obj3 = nohm.factory('UserMockup');
+  var old = "Changing Unique Property Frees The Value";
+  obj.p('name', old);
+  
+  obj.save(function (err) {
+    t.ok(!err, 'Unexpected saving error');
+    obj2.load(obj.id, function () {
+      obj2.p('name', "changing unique property frees the value to something else");
+      obj2.save(function (err) {
+        t.ok(!err, 'Unexpected saving error');
+        obj3.load(obj.id, function () {
+          obj2.p('name', old);
+          obj2.save(function (err) {
+            t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
+            t.done();
+          });
+        });
+      });
+    });
+  });
 };
