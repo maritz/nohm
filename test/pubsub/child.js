@@ -3,7 +3,9 @@ var nohm = require(__dirname+'/../../lib/nohm').Nohm;
 var args = require(__dirname+'/../testArgs.js');
 
 nohm.setPrefix(args.prefix);
-nohm.setClient(args.redis);
+args.redis.on('ready', function () {
+  nohm.setClient(args.redis);
+});
 require(__dirname+'/Model.js');
 
 process.on('message', function (msg) {
