@@ -33,7 +33,6 @@ layout: default
 * [Creating an instance](#creating_an_instance)
 * [Setting/Getting properties](#settinggetting_properties)
 * [Validating](#validating)
-   * [On setting a property](#on_setting_a_property)
    * [Calling valid()](#calling_valid)
    * [Browser validation](#browser_validation)
 * [Saving](#saving)
