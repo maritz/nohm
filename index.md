@@ -50,7 +50,7 @@ layout: default
 * [Relations](#relations)
    * [link](#link)
    * [unlink](#unlink)
-   * [belongsTo](#belongsTo)
+   * [belongsTo](#belongsto)
    * [numLinks](#numlinks)
    * [getAll](#getall)
 * [Publish / Subscribe](#publish__subscribe)
