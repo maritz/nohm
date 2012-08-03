@@ -48,11 +48,11 @@ layout: default
    * [Sort all from DB](#sort_all_from_db)
    * [Sort a subset by given IDs](#sort_a_subset_by_given_ids)
 * [Relations](#relations)
-   * [link](#linkotherinstance_options_relationname)
-   * [unlink](#unlinkotherinstance_options_relationname)
-   * [has](#hasotherinstance_relationname)
-   * [numLinks](#numlinksmodelname_relationame)
-   * [getAll](#getallmodelname_relationame)
+   * [link](#link)
+   * [unlink](#unlink)
+   * [belongsTo](#belongsTo)
+   * [numLinks](#numlinks)
+   * [getAll](#getall)
 * [Publish / Subscribe](#publish__subscribe)
    * [Configuration](#configuration)
    * [Usage](#usage)
@@ -804,8 +804,10 @@ Now (after saving) these relations exist:
 Tip: Be careful with naming and don't overuse it!
 
 
-#### link(otherInstance, \[options,\] \[callback\])
+#### link
 
+Usage: instance.link(otherInstance, \[options,\] \[callback\])
+  
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
 
@@ -854,12 +856,16 @@ User1.link(ManagerRole, {
 {% endhighlight %}
 
 
-#### unlink(otherInstance, \[options,\] \[callback\])
+#### unlink
+
+Usage: instance.unlink(otherInstance, \[options,\] \[callback\])
 
 Removes the relation to another instance and otherwise works the same as link.
 
 
-#### belongsTo(otherInstance, \[relationName,\] \[callback\])
+#### belongsTo
+
+Usage: instance.belongsTo(otherInstance, \[relationName,\] \[callback\])
 
 This checks if an instance has a relationship to another relationship.
 
@@ -874,7 +880,9 @@ User1.belongsTo(ManagerRole, function (err, is_manager) {
 This requires that User1 as well as Admin are loaded from DB. (Or saved on the variable holding the instance)
 
 
-#### numLinks(modelName, \[relationName,\] \[callback\])
+#### numLinks
+
+Usage: instance.numLinks(modelName, \[relationName,\] \[callback\])
 
 This checks how many relations of one name pair an Instance has to another Model.
 
@@ -898,7 +906,9 @@ User1.numLinks('RoleModel', 'temp', function (err, num) {
 {% endhighlight %}
 
 
-#### getAll(modelName, \[relationName,\] \[callback\])
+#### getAll
+
+Usage: instance.getAll(modelName, \[relationName,\] \[callback\])
 
 This gets the IDs of all linked instances.
 
