@@ -859,14 +859,14 @@ User1.link(ManagerRole, {
 Removes the relation to another instance and otherwise works the same as link.
 
 
-#### has(otherInstance, \[relationName,\] \[callback\])
+#### belongsTo(otherInstance, \[relationName,\] \[callback\])
 
 This checks if an instance has a relationship to another relationship.
 
 {% highlight js %}
-User1.has(Admin, function (err, hasAdmin) {
-  if (hasAdmin) {
-    // the user has the admin role!
+User1.belongsTo(ManagerRole, function (err, is_manager) {
+  if (is_manager) {
+    // User1 is linked to ManagerRole
   }
 });
 {% endhighlight %}
