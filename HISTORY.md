@@ -1,3 +1,6 @@
+### v0.9.1 - 21.08.2012
+  - Fix uniques to now be completely case-insensitive
+
 ### v0.9.0 - 06.06.2012
   - setClient/getClient now issue warnings on unconnected clients
   - Bug fixes
