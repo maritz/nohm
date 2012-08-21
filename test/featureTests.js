@@ -984,6 +984,7 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
   var obj3 = nohm.factory('UserMockup');
   var old = "Changing Unique Property Frees The Value";
   obj.p('name', old);
+  obj.p('email', 'change_frees@unique.de');
   
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
@@ -998,6 +999,27 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
             t.done();
           });
         });
+      });
+    });
+  });
+};
+  
+exports["removing unique frees unique with uppercase values"] = function (t) {
+  t.expect(3);
+  var obj = nohm.factory('UserMockup');
+  var obj2 = nohm.factory('UserMockup');
+  var old = "Removing Unique Property Frees The Value";
+  obj.p('name', old);
+  obj.p('email', 'remove_frees@unique.de');
+  
+  obj.save(function (err) {
+    t.ok(!err, 'Unexpected saving error: '+err);
+    obj.remove(obj.id, function (err) {
+      t.ok(!err, 'Unexpected removing error: '+err);
+      obj2.p('name', old);
+      obj2.save(function (err) {
+        t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
+        t.done();
       });
     });
   });
