@@ -1,3 +1,7 @@
+### v0.9.2 - 04.12.2012
+  - Add findAndLoad as a convenience method
+  - Fix a problem with getAll if different idGenerators were used
+
 ### v0.9.1 - 21.08.2012
   - Fix uniques to now be completely case-insensitive
 
