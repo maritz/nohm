@@ -57,6 +57,7 @@ layout: default
    * [Usage](#usage)
 * [Extras](#extras)
    * [Short Forms](#short_forms)
+   * [Find and load in one](#findAndLoad)
 
 
 ### Overview
@@ -1111,4 +1112,22 @@ You can do this:
 
 This currently works for the following functions: load, find, save and remove.
 It is really only a shortcut.
+
+
+#### findAndLoad
+
+A shortcut for find() and load(). 
+
+{% highlight js %}
+  CarModel.findAndLoad({
+    manufacturer: 'ferrari'
+  }, function (err, cars) {
+    // cars = array of nohm instances of ferraris
+    cars.forEach(function (car) {
+      if (car.p('build_year') < 1990)) {
+        console.log('You should probably check out', car.id);
+      }
+    });
+  });
+{% endhighlight %}
 
