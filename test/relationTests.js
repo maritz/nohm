@@ -326,6 +326,30 @@ exports.relation = {
     });
   },
   
+  'getAll with different id generators': function (t) {
+    var user = new UserLinkMockup(),
+    comment = new CommentLinkMockup();
+    t.expect(1);
+  
+    user.link(comment);
+  
+    user.save(function (err) {
+      if (err) {
+        console.dir(err);
+        t.done();
+      }
+      var should = [comment.id];
+      user.getAll(comment.modelName, function (err, values) {
+        if (err) {
+          console.dir(err);
+          t.done();
+        }
+        t.same(values, should, 'getAll() did not return the correct array');
+        t.done();
+      });
+    });
+  },
+  
   numLinks: function (t) {
     var user = new UserLinkMockup(),
     role = new RoleLinkMockup(),
