@@ -208,13 +208,25 @@ exports.find = {
 
   findAndLoad: function (t) {
     var user = new UserFindMockup();
+    var user2 = new UserFindMockup();
 
     user.p({
       name: 'hurgelwurz',
       email: 'hurgelwurz@hurgel.de',
     });
+    user2.p({
+      name: 'hurgelwurz',
+      email: 'hurgelwurz2@hurgel.de',
+    });
 
-    user.save(function(err) {
+    async.parallel([
+      function (done) {
+        user.save(done);
+      },
+      function (done) {
+        user2.save(done);
+      }
+    ], function(err) {
       if (err) {
         console.dir(err);
         t.done();
@@ -224,8 +236,8 @@ exports.find = {
           console.dir(err);
           t.done();
         }
-
-        t.equals(users.length, 1, 'The loaded number of users equals 1');
+        console.log(users[1].p('email'));
+        t.equals(users.length, 2, 'The loaded number of users was not 2.');
         t.equals(user.p('name'), users[0].p('name'), 'The loaded version of the name was not the same as a set one.');
         t.equals(user.p('email'), users[0].p('email'), 'The loaded version of the email was not the same as a set one.');
         t.equals(user.id, users[0].id, 'The loaded version of the email was not the same as a set one.');
