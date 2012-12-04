@@ -57,7 +57,7 @@ layout: default
    * [Usage](#usage)
 * [Extras](#extras)
    * [Short Forms](#short_forms)
-   * [Find and load in one](#findAndLoad)
+   * [Find and load in one](#findandload)
 
 
 ### Overview
