@@ -718,7 +718,7 @@ SomeModel.sort({
   field: 'name',
   direction: 'DESC',
   start: 50,
-  amount: 50
+  limit: 50
 }, function (err, ids) {
   // ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
 });
@@ -728,7 +728,7 @@ SomeModel.sort({
 SomeModel.sort({
   field: 'last_edit',
   start: -10,
-  amount: 10
+  limit: 10
 }, function (err, ids) {
   // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
 });
@@ -737,7 +737,7 @@ SomeModel.sort({
   field: 'last_edit',
   direction: 'DESC',
   start: 0,
-  amount: 10
+  limit: 10
 }, function (err, ids) {
   // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
 });
