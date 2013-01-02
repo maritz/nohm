@@ -1048,5 +1048,24 @@ loadArray: function (t) {
         });
       });
     });
-  }
+  },
+  findInDescendingOrder: function(t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      number: {
+        min: 4,
+        max: '-inf',
+        endpoint: '(]',
+        limit: 1
+      }
+    }, function(err, ids) {
+      t.same(1, ids.length, 'Searching when min>max condition(ZREVRANGEBYSCORE) is invalid.');
+      findUser.load(ids[0], function(err) {
+        t.same(3, findUser.p('number'), 'Result of searching when min>max condition is invalid.');
+        t.done();
+      });
+    });
+  },
 };
