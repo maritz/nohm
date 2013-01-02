@@ -1013,6 +1013,19 @@ loadArray: function (t) {
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
       });
+    },
+
+    "provided empty list": function (t) {
+      t.expect(2);
+
+      UserFindMockup.sort({
+        field: 'number',
+        limit: [0, 10]
+      }, [], function(err, ids) {
+        t.same(null, err, 'Sorting caused an error: '+err);
+        t.same(0, ids.length, 'Sorting went wrong when ids.length is 0.');
+        t.done();
+      });
     }
   },
 
