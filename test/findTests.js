@@ -431,7 +431,7 @@ loadArray: function (t) {
       email: 'mixedindextest4@hurgel.de',
       number: 1,
       number2: 33
-    }], function (users, inserted_ids) {
+    }], function (users) {
 
       findUser.find({
         number: {
@@ -514,20 +514,23 @@ loadArray: function (t) {
   findNumericWithoutLimit: function(t) {
     var findUser = new UserFindMockup(),
         usersLooped = 0,
-        loopUserCreation = function() {
-        usersLooped++;
-        if (usersLooped === 55) {
-          findUser.find({
-            number: {
-              min: 1,
-              limit: 0
-            }
-          }, function(err, ids) {
-            errLogger(err);
-            t.ok(ids.length > 54, 'The limit: 0 option did not return more than 50 ids.');
-            t.done();
-          });
-        }
+        loopUserCreation = function(err) {
+          if (err) {
+            t.ok(false, 'Error while creating findUsers');
+          }
+          usersLooped++;
+          if (usersLooped === 55) {
+            findUser.find({
+              number: {
+                min: 1,
+                limit: 0
+              }
+            }, function(err, ids) {
+              errLogger(err);
+              t.ok(ids.length > 54, 'The limit: 0 option did not return more than 50 ids.');
+              t.done();
+            });
+          }
         };
     t.expect(1);
 
@@ -604,7 +607,7 @@ loadArray: function (t) {
   },
 
   shortForms: function(t) {
-    t.expect(11);
+    t.expect(12);
     var shortFormMockup = nohm.model('shortFormMockup', {
       properties: {
         name: {
@@ -619,14 +622,15 @@ loadArray: function (t) {
       idGenerator: 'increment'
     });
 
-    shortFormMockup.save(function(err) {
-      var id = this.id;
+    var saved = shortFormMockup.save(function(err) {
+      t.same(saved, this, '`this` is not equal to the return value of save().');
+      var id = saved.id;
       t.ok(!err, 'There was an error while saving');
-      t.ok(this instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
+      t.ok(saved instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
       t.ok(id > 0, 'The id was not set properly');
-      this.p('name', 'shortForm');
-      this.save(function() {
-        this.p('name', 'asdasd'); // make sure our comparisons in load aren't bogus
+      saved.p('name', 'shortForm');
+      saved.save(function() {
+        saved.p('name', 'asdasd'); // make sure our comparisons in load aren't bogus
         shortFormMockup.load(id, function(err, props) {
           t.ok(!err, 'There was an error while loading.');
           t.ok(props.hasOwnProperty('name') && props.name === 'shortForm', 'The props argument was not properly passed in load.');
@@ -743,7 +747,7 @@ loadArray: function (t) {
       t.ok(!err, 'There was an error while searching an inexistant unique value.');
       t.same([], ids, 'The return of a search that didn\'t find anything was wrong.');
       t.done();
-    })
+    });
   },
   
   "load via constructor": function (t) {
@@ -757,7 +761,7 @@ loadArray: function (t) {
         t.same(test2.allProperties(), test.allProperties(), 'The return of a search that didn\'t find anything was wrong.');
         t.done();
       });
-    })
+    });
   },
   
   sort: {
@@ -1029,7 +1033,7 @@ loadArray: function (t) {
     }
   },
 
-  "load hash with extra properties": function(t) {
+  "load hash with extra properties": function (t) {
     var user = new UserFindMockup(),
         findUser = new UserFindMockup();
     t.expect(7);
@@ -1062,23 +1066,134 @@ loadArray: function (t) {
       });
     });
   },
-  findInDescendingOrder: function(t) {
+  
+  "descending order through higher min than max": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: '-inf'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([1, 7, 6, 5, 4], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) is invalid.');
+      t.done();
+    });
+  },
+  
+  "descending order through higher min than max with limit 2": function (t) { // should produce lexical ordering for the second which should be 7 (due)
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: '-inf',
+        limit: 2
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([1, 7], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) with limit is invalid.');
+      t.done();
+    });
+  },
+  
+  "endpoints exclude left": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: 1,
+        endpoints: '(]'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
+      t.done();
+    });
+  },
+  
+  "endpoints exclude right": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: 1,
+        endpoints: '[)'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([1], ids, 'Defining an endpoint failed.');
+      t.done();
+    });
+  },
+  
+  "endpoints exclude both": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: 1,
+        endpoints: '()'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([], ids, 'Defining an endpoint failed.');
+      t.done();
+    });
+  },
+  
+  "find numeric with offset and limit": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: 1,
+        limit: 3,
+        offset: 2
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [6, 7, 1], 'The found ids were incorrect.');
+      t.done();
+    });
+  },
+  
+  "find numeric with offset and limit were the offset reduces the set below the limit": function (t) {
     var findUser = new UserFindMockup();
     t.expect(2);
 
     findUser.find({
       number: {
-        min: 4,
-        max: '-inf',
-        endpoint: '(]',
-        limit: 1
+        min: 1,
+        limit: 3,
+        offset: 6
       }
     }, function(err, ids) {
-      t.same(1, ids.length, 'Searching when min>max condition(ZREVRANGEBYSCORE) is invalid.');
-      findUser.load(ids[0], function(err) {
-        t.same(3, findUser.p('number'), 'Result of searching when min>max condition is invalid.');
-        t.done();
-      });
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [3, 8], 'The found ids were incorrect.');
+      t.done();
     });
   },
+  
+  "find numeric with offset without limit": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      number: {
+        min: 1,
+        offset: 5
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [2, 3, 8], 'The found ids were incorrect.');
+      t.done();
+    });
+  }
+  
+  
 };
