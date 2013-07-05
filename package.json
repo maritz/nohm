@@ -17,8 +17,8 @@
     "description": "redis ORM (Object relational mapper)",
     "main": "./lib/nohm",
     "dependencies": {
-      "async": "0.1.22",
-      "redis": ">=0.7.2",
+      "async": "0.2.9",
+      "redis": "0.8.4",
       "traverse": "0.6.3"
     },
     "devDependencies": {
