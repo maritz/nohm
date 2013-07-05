@@ -1,3 +1,10 @@
+### v0.9.3 - 06.07.2013
+  - Add endpoints option to find() (thanks to interruptz)
+  - Add min>max options to find() that trigger descending search (thanks to interruptz)
+  - Add return of the instance on shortform functions
+  - Remove checking and setting meta.version on every model init
+  - Bug fixes
+
 ### v0.9.2 - 04.12.2012
   - Add findAndLoad as a convenience method
   - Fix a problem with getAll if different idGenerators were used
