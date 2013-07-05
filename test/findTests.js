@@ -236,7 +236,6 @@ exports.find = {
           console.dir(err);
           t.done();
         }
-        console.log(users[1].p('email'));
         t.equals(users.length, 2, 'The loaded number of users was not 2.');
         t.equals(user.p('name'), users[0].p('name'), 'The loaded version of the name was not the same as a set one.');
         t.equals(user.p('email'), users[0].p('email'), 'The loaded version of the email was not the same as a set one.');
