@@ -172,6 +172,54 @@ exports.meta = {
     });
   },
 
+  "meta callback and setting meta.inDb": function(t) {
+    t.expect(4);
+    var test, testInstance;
+    
+    
+    test = nohm.model('TestVersionMetaMockup', {
+      properties: {
+        name: {
+          type: 'string',
+          defaultValue: 'testPropertyy',
+        }
+      },
+      metaCallback: function (err, version) {
+        t.same(err, null, "Meta version callback had an error.");
+        t.same(test.prototype.meta.inDb, true, "Meta version inDb was not false.");
+        t.ok(version, "No version in meta.inDb callback");
+        t.done();
+      }
+    });
+    
+    testInstance = new test();
+    t.same(test.prototype.meta.inDb, false, "Meta version inDb was not false.");
+  },
+
+  "meta set inDb when version is correct": function(t) {
+    t.expect(4);
+    var test, testInstance;
+    
+    
+    test = nohm.model('TestVersionMetaMockup', {
+      properties: {
+        name: {
+          type: 'string',
+          defaultValue: 'testPropertyy',
+        }
+      },
+      metaCallback: function (err, version) {
+        t.same(err, null, "Meta version callback had an error.");
+        t.same(test.prototype.meta.inDb, true, "Meta version inDb was not false.");
+        t.ok(version, "No version in meta.inDb callback");
+        t.done();
+      }
+    });
+    
+    testInstance = new test();
+    t.same(test.prototype.meta.inDb, false, "Meta version inDb was not false.");
+  },
+
   idGenerator: function(t) {
     var user = nohm.factory('UserMetaMockup');
     var comment = nohm.factory('CommentMetaMockup');
