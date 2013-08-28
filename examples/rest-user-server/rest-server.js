@@ -9,7 +9,7 @@ var redisClient = redis.createClient();
 Nohm.setPrefix('rest-user-server-example');
 Nohm.setClient(redisClient);
 
-var server = express.createServer();
+var server = express();
 
 server.use(express.bodyParser());
 
@@ -62,7 +62,7 @@ server.get('/', function (req, res) {
 });
 
 server.get('/client.js', function (req, res) {
-  res.send(fs.readFileSync(__dirname+'/client.js', 'utf-8'), { 'Content-Type': 'text/javascript' });
+  res.send({ 'Content-Type': 'text/javascript' }, fs.readFileSync(__dirname+'/client.js', 'utf-8'));
 });
 
 server.use(Nohm.connect([{
