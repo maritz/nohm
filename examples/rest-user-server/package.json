@@ -1,0 +1,23 @@
+{
+  "name": "nohm-example-usage",
+  "version": "0.1.0",
+  "engines": {
+    "node" : ">=0.10"
+  },
+  "author": "Moritz Peters",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/maritz/nohm.git"
+  },
+  "bugs" : {
+    "url" : "https://github.com/maritz/nohm/issues"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "description": "small nohm example app",
+  "dependencies": {
+    "nohm": "0.9",
+    "express": "3.0"
+  }
+}

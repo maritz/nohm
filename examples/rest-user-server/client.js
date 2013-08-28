@@ -1,7 +1,7 @@
 $(function () {
   var updateUserList = function () {
     $.get('/User/list', function (response) {
-      $ul = $('#users');
+      var $ul = $('#users');
       $ul.empty();
       $.each(response, function (index, item) {
         $ul.append('<li>'+JSON.stringify(item)+'</li>');
@@ -10,10 +10,10 @@ $(function () {
   }
   updateUserList();
   $('#refreshusers').click(updateUserList);
-  
+
   $('form').submit(function (e) {
     e.preventDefault();
-    
+
     var data = {};
     $('input').each(function () {
       var $this = $(this);
