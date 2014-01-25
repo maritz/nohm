@@ -5,11 +5,11 @@
         "node" : ">=0.6"
     },
     "author": "Moritz Peters",
-    "repository" : { 
-        "type" : "git", 
+    "repository" : {
+        "type" : "git",
         "url" : "https://github.com/maritz/nohm.git"
-    }, 
-    "bugs" : { 
+    },
+    "bugs" : {
         "url" : "https://github.com/maritz/nohm/issues" },
     "directories": {
         "lib": "./lib"
@@ -18,7 +18,7 @@
     "main": "./lib/nohm",
     "dependencies": {
       "async": "0.2.9",
-      "redis": "0.8.4",
+      "redis": "0.10",
       "traverse": "0.6.3"
     },
     "devDependencies": {
