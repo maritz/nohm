@@ -71,9 +71,11 @@ var setup = function (t, expected, options, callback) {
   var headersSet = false;
   var namespace = (options && options.namespace) ? options.namespace : 'nohmValidations';
   var dummyRes = {
-    writeHead: function (status, headers) {
-      t.ok(headers['Content-Length'] > 0, 'Header Content-Length was 0');
-      length = headers['Content-Length'];
+    setHeader: function (name, value) {
+      if (name === "Content-Length") {
+        t.ok(value > 0, 'Header Content-Length was 0');
+        length = value;
+      }
       headersSet = true;
     },
     end: function (str) {
