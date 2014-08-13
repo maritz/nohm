@@ -384,7 +384,7 @@ exports.validation = {
     user.p('castTimestamp', '1988-03-12 04:30:00 +04:30');
     t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12 04:30:00 +04:30" did not cast it to ' + should);
 
-    user.p('castTimestamp', '1988-03-11 20:30:00 -04:30');
+    user.p('castTimestamp', '1988-03-11 19:30:00 -04:30');
     t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-11 20:30:00 -04:30" did not cast it to ' + should);
 
     user.p('castTimestamp', 'Sat, 12 Mar 1988 00:00:00');
