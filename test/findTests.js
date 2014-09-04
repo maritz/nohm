@@ -105,7 +105,7 @@ var createUsers = function(props, modelName, callback) {
 };
 
 exports.find = {
-  
+
   setUp: function(next) {
     if (!nohm.client) {
       nohm.setClient(redis);
@@ -277,7 +277,7 @@ exports.find = {
 loadArray: function (t) {
   var findUser = new UserFindMockup();
   t.expect(2);
-  
+
   findUser.load(all, function (err, users) {
     errLogger(err);
     t.ok(Array.isArray(users), 'load()ing an array of ids did not return an array');
@@ -346,12 +346,12 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   findByIntegerUnique: function(t) {
     var saveObj = nohm.factory('UniqueIntegerFind');
     var findObj = nohm.factory('UniqueIntegerFind');
     t.expect(3);
-    
+
     saveObj.p('unique', 123);
     saveObj.save(function (err) {
       t.ok(!err, 'Unexpected saving error');
@@ -484,7 +484,7 @@ loadArray: function (t) {
   findByMixedIndexMissing: function(t) {
     var findUser = new UserFindMockup();
     t.expect(1);
-    
+
     createUsers([{
       name: 'mixedindextestMissing',
       email: 'mixedindextestMissing@hurgel.de',
@@ -695,11 +695,11 @@ loadArray: function (t) {
       });
     });
   },
-  
+
   "normal string IDs": {
     setUp: function (next) {
       var self = this;
-      createUsers([{ 
+      createUsers([{
       }, {
         name: 'blablub'
       }], 'UserFindNoIncrementMockup', function (users, ids) {
@@ -711,11 +711,11 @@ loadArray: function (t) {
     tearDown: function (next) {
       h.cleanUp(redis, args.prefix, next);
     },
-    
+
     find: function (t) {
       t.expect(2);
       var self = this;
-      
+
       UserFindNoIncrementMockup.find({
         name: 'blablub'
       }, function (err, ids) {
@@ -724,11 +724,11 @@ loadArray: function (t) {
         t.done();
       });
     },
-  
+
     "load via constructor": function (t) {
       t.expect(2);
       var self = this;
-      
+
       var test = new UserFindNoIncrementMockup(this.userIds[0], function (err) {
         t.ok(!err, 'There was an error while loading a model via constructor.');
         t.same(test.allProperties(), self.users[0].allProperties(), 'A loaded user did not match what should\'ve been saved.');
@@ -736,7 +736,7 @@ loadArray: function (t) {
       });
     }
   },
-  
+
   "search unique that doesn't exists": function (t) {
     t.expect(2);
     var test = nohm.factory('UserFindMockup');
@@ -748,13 +748,13 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "load via constructor": function (t) {
     t.expect(3);
     var test = nohm.factory('UserFindMockup');
     test.save(function (err) {
       t.ok(!err, 'There was an error while saving.');
-      
+
       var test2 = new UserFindMockup(test.id, function (err) {
         t.ok(!err, 'There was an error while loading a model via constructor.');
         t.same(test2.allProperties(), test.allProperties(), 'The return of a search that didn\'t find anything was wrong.');
@@ -762,12 +762,12 @@ loadArray: function (t) {
       });
     });
   },
-  
+
   sort: {
-    
+
     "all by name": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -775,7 +775,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'name'
       }, function (err, ids) {
@@ -784,10 +784,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "all by name DESC": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -795,7 +795,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'name',
         direction: 'DESC'
@@ -805,10 +805,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "all by name LIMIT 2, 3": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -816,8 +816,8 @@ loadArray: function (t) {
       }).slice(2, 5)
       .map(function (user) {
         return ''+user.id;
-      });      
-      
+      });
+
       UserFindMockup.sort({
         field: 'name',
         limit: [2,3]
@@ -827,10 +827,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "all by number": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('number');
         b = b.p('number');
@@ -838,7 +838,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'number'
       }, function (err, ids) {
@@ -847,10 +847,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "all by number DESC": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
         a = a.p('number');
@@ -859,7 +859,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'number',
         direction: 'DESC'
@@ -869,10 +869,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "all by number LIMIT 3, 3": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('number');
         b = b.p('number');
@@ -881,7 +881,7 @@ loadArray: function (t) {
       .map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'number',
         limit: [3,3]
@@ -893,7 +893,7 @@ loadArray: function (t) {
     },
     "provided by name": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -901,7 +901,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'name'
       }, this.userIds, function (err, ids) {
@@ -910,10 +910,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "provided by name DESC": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -921,7 +921,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'name',
         direction: 'DESC'
@@ -931,10 +931,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "provided by name LIMIT 2, 3": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('name');
         b = b.p('name');
@@ -942,8 +942,8 @@ loadArray: function (t) {
       }).slice(2, 5)
       .map(function (user) {
         return ''+user.id;
-      });      
-      
+      });
+
       UserFindMockup.sort({
         field: 'name',
         limit: [2,3]
@@ -953,10 +953,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "provided by number": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('number');
         b = b.p('number');
@@ -964,7 +964,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'number'
       }, this.userIds, function (err, ids) {
@@ -973,10 +973,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "provided by number DESC": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
         a = a.p('number');
@@ -985,7 +985,7 @@ loadArray: function (t) {
       }).map(function (user) {
         return ''+user.id;
       });
-      
+
       UserFindMockup.sort({
         field: 'number',
         direction: 'DESC'
@@ -995,10 +995,10 @@ loadArray: function (t) {
         t.done();
       });
     },
-    
+
     "provided by number LIMIT 3, 3": function (t) {
       t.expect(2);
-      
+
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.p('number');
         b = b.p('number');
@@ -1006,8 +1006,8 @@ loadArray: function (t) {
       }).slice(3, 6)
       .map(function (user) {
         return ''+user.id;
-      });      
-      
+      });
+
       UserFindMockup.sort({
         field: 'number',
         limit: [3,3]
@@ -1065,7 +1065,7 @@ loadArray: function (t) {
       });
     });
   },
-  
+
   "descending order through higher min than max": function (t) {
     t.expect(2);
 
@@ -1080,7 +1080,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "descending order through higher min than max with limit 2": function (t) { // should produce lexical ordering for the second which should be 7 (due)
     t.expect(2);
 
@@ -1096,7 +1096,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "endpoints exclude left": function (t) {
     t.expect(2);
 
@@ -1112,7 +1112,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "endpoints exclude right": function (t) {
     t.expect(2);
 
@@ -1128,7 +1128,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "endpoints exclude both": function (t) {
     t.expect(2);
 
@@ -1144,7 +1144,51 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
+  "endpoints only specify one": function (t) {
+    t.expect(4);
+
+    UserFindMockup.find({
+      number: {
+        min: 3,
+        max: 1,
+        endpoints: '('
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
+      UserFindMockup.find({
+        number: {
+          min: 3,
+          max: 1,
+          endpoints: ')'
+        }
+      }, function(err, ids) {
+        t.ok(!err, 'Unexpected redis error in custom query');
+        t.same([1], ids, 'Defining an endpoint failed.');
+        t.done();
+      });
+    });
+  },
+
+  "find numeric options parsing and defaulting": function (t) {
+    t.expect(2);
+
+    UserFindMockup.find({
+      number: {
+        min: "1",
+        max: "not a number",
+        offset: [1],
+        limit: function () { return "Nope, not a number either." },
+        endpoints: '('
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [2, 3, 8], 'Invalid or parseAble find options caused wrong search results.');
+      t.done();
+    });
+  },
+
   "find numeric with offset and limit": function (t) {
     t.expect(2);
 
@@ -1160,7 +1204,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "find numeric with offset and limit were the offset reduces the set below the limit": function (t) {
     var findUser = new UserFindMockup();
     t.expect(2);
@@ -1177,7 +1221,7 @@ loadArray: function (t) {
       t.done();
     });
   },
-  
+
   "find numeric with offset without limit": function (t) {
     var findUser = new UserFindMockup();
     t.expect(2);
@@ -1193,6 +1237,6 @@ loadArray: function (t) {
       t.done();
     });
   }
-  
-  
+
+
 };
