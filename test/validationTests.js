@@ -658,12 +658,13 @@ exports.validation = {
 
   skipValidation: function(t) {
     var user = new UserMockup();
-    t.expect(1);
+    t.expect(2);
 
     user.p('name', '');
 
     user.save({ skip_validation: true }, function(err) {
-      t.strictEqual(err, undefined, 'The validation has been even though skip_validation was true.');
+      t.notEqual(user.id, null, 'The id of an invalid user was not reset properly.');
+      t.strictEqual(err, undefined, 'The validation has been run even though skip_validation was true.');
       t.done();
     });
   }
