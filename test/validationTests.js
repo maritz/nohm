@@ -663,7 +663,7 @@ exports.validation = {
     user.p('name', '');
 
     user.save({ skip_validation: true }, function(err) {
-      t.notEqual(user.id, null, 'The id of an invalid user was not reset properly.');
+      t.notEqual(user.id, null, 'The id of an invalid user with skip_validation was reset.');
       t.strictEqual(err, undefined, 'The validation has been run even though skip_validation was true.');
       t.done();
     });
