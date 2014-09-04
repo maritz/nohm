@@ -43,6 +43,7 @@ layout: default
    * [Finding by Index](#finding_by_index)
    * [Finding by simple index](#finding_by_simple_index)
    * [Finding by numeric index](#finding_by_numeric_index)
+   * [Exclusive Intervals](#exclusive_intervals)
 * [Sorting](#sorting)
    * [Sort all from DB](#sort_all_from_db)
    * [Sort a subset by given IDs](#sort_a_subset_by_given_ids)
@@ -61,13 +62,13 @@ layout: default
 
 
 ### Overview
-Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).  
-This How-To is intended to give you a good understanding of how nohm works. 
+Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
+This How-To is intended to give you a good understanding of how nohm works.
 
 ### Basics
 There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
 
-**Note:** Almost all code examples here assume the following code: 
+**Note:** Almost all code examples here assume the following code:
 {% highlight js %}
   var nohm = require('nohm').Nohm;
   var redisClient = require('redis').createClient();
@@ -111,7 +112,7 @@ By default nohm just logs errors it encounters to the console. However you can o
 You start by defining a Model. A model needs a name and properties and can optionally have custom methods and a redis client.
 
 
-{% highlight js %}    
+{% highlight js %}
 var someModel = nohm.model('YourModelName', {
   properties: {
     // ... here you'll define your properties
@@ -135,7 +136,7 @@ You can optionally set a redis client for a model. This means that you can theor
 **Important**: Currently relations between models on different dbs do NOT work! This might get implemented at a later stage if there's any interest for it.
 
 #### Properties
-Deinfing the properties is the most important part of a model.  
+Deinfing the properties is the most important part of a model.
 A property can have the following options: (explained in more detail later)
 
 <dl>
@@ -246,13 +247,13 @@ If a valid JSON string is entered nothing is done, anything else will get put th
 Note that properties with the type of JSON will be returned as parsed objects!
 
 ###### Behaviour
-This can be any function you want.  
+This can be any function you want.
 Its `this` keyword is the instance of the model and it receives the arguments new_value, name and old_value.
 The return value of the function will be the new value of the property.
 Note that the redis client will convert everything to strings before storing!
 
 A simple example:
-{% highlight js %} 
+{% highlight js %}
 var User = nohm.model('User', {
   properties: {
     balance: {
@@ -336,7 +337,7 @@ exports.usernameIsAnton= function (value, options) {
 {% endhighlight %}
 
 
-This is then included like this: 
+This is then included like this:
 
 {% highlight js %}
 Nohm.setExtraValidations('customValidation.js')
@@ -462,7 +463,7 @@ There are several other methods for dealing with properties: [allProperties](api
 
 ### Validating
 
-Your model instance is automatically validated on saving but you can manually validate it as well.  
+Your model instance is automatically validated on saving but you can manually validate it as well.
 In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
 
 #### Calling valid()
@@ -561,7 +562,7 @@ Save can take an optional object containing options, which defaults to this:
 {% highlight js %}
 user.save({
   silent: false, // if true, no events from this save are published
-  continue_on_link_error: false // by default if user was linked to to objects before saving and the first linking fails, the second link will not be saved either. 
+  continue_on_link_error: false // by default if user was linked to to objects before saving and the first linking fails, the second link will not be saved either.
                                 // set this to true to try saving all relations, regardless of previous linking errors.
 }, function (err) {
 });
@@ -618,11 +619,11 @@ Simply calling find() with only a callback will retrieve all IDs.
 
 #### Finding by Index
 
-To specify indexes to search for you have to pass in an object as the first parameter.  
-There are three kinds of indexes: unique, simple and numeric.  
-Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.  
-You can mix the three search queries within one find call.  
-After all search queries of a find() have been processed the intersection of the found IDs is returned.  
+To specify indexes to search for you have to pass in an object as the first parameter.
+There are three kinds of indexes: unique, simple and numeric.
+Unique is the fastest and if you look for a property that is unqiue all other search criterias are ignored.
+You can mix the three search queries within one find call.
+After all search queries of a find() have been processed the intersection of the found IDs is returned.
 To limit/filter/sort the overall result you have to manually edit the returned array.
 
 
@@ -643,9 +644,9 @@ SomeModel.find({
 
 ##### Finding by numeric index
 
-Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.  
-The search needs to be an object that optionaly contains further filters: min, max, offset and limit.  
-This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)  
+Numeric indexes are created for all properties that have `index` set to true and are of the type 'integer', 'float' or 'timestamp'.
+The search needs to be an object that optionaly contains further filters: min, max, offset and limit.
+This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)
 They default to this:
 {% highlight js %}
 {
@@ -671,17 +672,40 @@ SomeModel.find({
       max: + new Date() // timestamp before now
     }
   }, function (err, ids) {
-    
+
   });
 {% endhighlight %}
 
-**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smallest search has. 
+**Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smallest search has.
 
 If you limit multiple searches you might also end up with 0 results even though each search resulted in more ids because there may be no intersection.
 
 It is simpler and recommended to either only limit one search or manually limit the result array in the callback.
 
 You can also search for exact numeric values by using the syntax of a simple index search.
+
+#### Exclusive Intervals
+
+[Zrangebyscore](http://redis.io/commands/zrangebyscore) Quote:
+> By default, the interval specified by min and max is closed (inclusive). It is possible to specify an open interval (exclusive) by prefixing the score with the character (.
+
+In nohm you can do this by specifying an endpoints option. The default is '[]' which creates the redis default: inclusive queries.
+
+Example:
+{% highlight js %}
+SomeModel.find({
+    someInteger: {
+      min: 10,
+      max: 20,
+      endpoints: '(]'     // exclude models that have someInteger === 10, but include 20
+      // endpoints: '('   short form for the same as above
+      // endpoints: '[)'  would mean include 10, but exclude 20
+      // endpoints: '()'  would excludes 10 and 20
+    }
+  }, function (err, ids) {
+
+  });
+{% endhighlight %}
 
 
 ### Sorting
@@ -769,21 +793,21 @@ Car.find({
 
 ### Relations
 
-Relations (links) are dynamically defined for each instance and not for a model. This differs from traditional ORMs that use RDBMS and thus need a predefined set of tables or columns to maintain these relations.  
+Relations (links) are dynamically defined for each instance and not for a model. This differs from traditional ORMs that use RDBMS and thus need a predefined set of tables or columns to maintain these relations.
 In nohm this is not necessary making it possible for one instance of a model to have relations to models that other instances of the same model do not have.
 
-A simple example:  
-We have 2 instances of the UserModel: User1, User2  
+A simple example:
+We have 2 instances of the UserModel: User1, User2
 We have 3 instances the RoleModel: AdminRole, AuthorRole, UserManagerRole
-A user can have 0-3 roles.  
-This creates an N:M relationship. In a traditional DB you'd now need a [pivot table](http://www.wellho.net/solutions/mysql-many-to-many-table-mapping-pivot-tables.html) and then you'd have to somehow tell your ORM that it should use that table to map these relations.  
-In nohm this step is not needed.  
-Instead we just tell every UserModel instance whatever relationships it has.  
+A user can have 0-3 roles.
+This creates an N:M relationship. In a traditional DB you'd now need a [pivot table](http://www.wellho.net/solutions/mysql-many-to-many-table-mapping-pivot-tables.html) and then you'd have to somehow tell your ORM that it should use that table to map these relations.
+In nohm this step is not needed.
+Instead we just tell every UserModel instance whatever relationships it has.
 
-This has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.  
+This has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.
 
-In nohm all relations have a name pair. By default this pair is "default" and "defaultForeign". The instance that initiated the relationship is the "default" the one that is linked to it is the "defaultForeign" ("Foreign" is attached to custom link names for this).  
-This again has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations. 
+In nohm all relations have a name pair. By default this pair is "default" and "defaultForeign". The instance that initiated the relationship is the "default" the one that is linked to it is the "defaultForeign" ("Foreign" is attached to custom link names for this).
+This again has the upside of more flexibility in relations, but the downside of more complexity maintaining these relations.
 
 Some Examples:
 
@@ -807,7 +831,7 @@ Tip: Be careful with naming and don't overuse it!
 #### link
 
 Usage: instance.link(otherInstance, \[options,\] \[callback\])
-  
+
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
 
@@ -829,10 +853,10 @@ User.save(function (err, is_link_error, link_error_model_name) {
 });
 {% endhighlight %}
 
-There are several things that happen here:  
-First User1 is validated. If User1 is invalid the save callback is called with the error.  
-If User1 is valid, User1 is stored.  
-If Admin has an ID, the relation is stored and the save callback is called.  
+There are several things that happen here:
+First User1 is validated. If User1 is invalid the save callback is called with the error.
+If User1 is valid, User1 is stored.
+If Admin has an ID, the relation is stored and the save callback is called.
 Otherwise Admin is validated. If Admin is invalid an optional error callback is called and execution returns to the save of User. (arguments to the save callback would be 'invalid', true, Admin.modelName)
 If Admin is valid, Admin is stored, the relation is stored and the save callback is called.
 
@@ -947,8 +971,8 @@ nohm.setPubSubClient(secondClient, function (err) {
   if (err) {
     console.log('Error while initializing the second redis client');
   } else {
-    // Yey, we can start subscribing :)  
-    
+    // Yey, we can start subscribing :)
+
     // to close the pubsub connection and make the redis client available for normal commands again:
     nohm.closePubSub(function (err, client) {
       // client == secondClient
@@ -988,7 +1012,7 @@ nohm.factory('someModelName').getPublish(); // returns whether the model someMod
 
 #### Usage
 
-There are 6 events that get published: 
+There are 6 events that get published:
 
 * 'create'   -- a new instance is getting created.
 * 'update'   -- an instance is getting updated with new values.
@@ -1005,7 +1029,7 @@ All\* these event callbacks get an object containing these properties:
     id: 'id_of_the_instance',
     modelName: 'name_of_the_model',
     properties: {} // instance.allProperties() from where the event was fired
-    
+
     // only in save/update:
     diff: {} // instance.propertyDiff()
   }
@@ -1116,7 +1140,7 @@ It is really only a shortcut.
 
 #### findAndLoad
 
-A shortcut for find() and load(). 
+A shortcut for find() and load().
 
 {% highlight js %}
   CarModel.findAndLoad({
