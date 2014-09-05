@@ -1,5 +1,7 @@
 # Nohm
 
+[![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
+
 ## Description
 
 Nohm is an object relational mapper (ORM) written for node.js and redis.
@@ -22,7 +24,7 @@ http://maritz.github.com/nohm/
 ~~~~ javascript
   var nohm = require('nohm').Nohm;
   var redis = require('redis').createClient();
-  
+
   nohm.setClient(redis);
 
   nohm.model('User', {
@@ -119,8 +121,8 @@ Then run
 
     node test/tests.js
 
-*Careful*: This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)  
-The tests also create a lot of keys in your database that look something like this: 
+*Careful*: This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)
+The tests also create a lot of keys in your database that look something like this:
 
     nohmtests:something:something
 
