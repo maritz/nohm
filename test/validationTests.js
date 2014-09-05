@@ -654,5 +654,18 @@ exports.validation = {
       t.same(user.id, null, 'The id of an invalid user was not reset properly.');
       t.done();
     });
+  },
+
+  skipValidation: function(t) {
+    var user = new UserMockup();
+    t.expect(2);
+
+    user.p('name', '');
+
+    user.save({ skip_validation_and_unique_indexes: true }, function(err) {
+      t.notEqual(user.id, null, 'The id of an invalid user with skip_validation was reset.');
+      t.strictEqual(err, undefined, 'The validation has been run even though skip_validation was true.');
+      t.done();
+    });
   }
 };
