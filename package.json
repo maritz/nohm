@@ -16,6 +16,9 @@
     },
     "description": "redis ORM (Object relational mapper)",
     "main": "./lib/nohm",
+    "scripts": {
+        "test": "node test/tests.js"
+    },
     "dependencies": {
       "async": "^0.9.0",
       "redis": "^0.12.1",
