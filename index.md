@@ -561,12 +561,21 @@ Save can take an optional object containing options, which defaults to this:
 
 {% highlight js %}
 user.save({
-  silent: false, // if true, no events from this save are published
-  continue_on_link_error: false // by default if user was linked to to objects before saving and the first linking fails, the second link will not be saved either.
-                                // set this to true to try saving all relations, regardless of previous linking errors.
+    // If true, no events from this save are published
+  silent: false,
+
+    // By default if user was linked to two objects before saving and the first linking fails, the second link will not be saved either.
+    // Set this to true to try saving all relations, regardless of previous linking errors.
+  continue_on_link_error: false,
+
+    // Set to true to skip validation entirely.
+    // *WARNING*: This can cause severe problems. Think hard before using this
+    // It skips checking *and setting* unique indexes It is also NOT passed to linked objects that have to be saved.
+  skip_validation_and_unique_indexes: false
 }, function (err) {
 });
 {% endhighlight %}
+
 
 
 ### Deleting
