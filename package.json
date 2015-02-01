@@ -20,6 +20,7 @@
         "test": "node test/tests.js"
     },
     "dependencies": {
+      "bluebird": "^2.9.1",
       "async": "^0.9.0",
       "redis": "^0.12.1",
       "traverse": "^0.6.6"
