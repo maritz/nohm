@@ -1,3 +1,8 @@
+### v0.9.7 - 09.05.2015
+  - BREAKS BACKWARDS COMPATIBILITY! (but only slightly and shouldn't really be an issue for most uses)
+  - Fix for date parsing - only affects ISO date strings of format that has ' +HH:MM' or ' -HH:MM' at the end) and only on machines that are not set UTC (which servers usually are)
+  - Update async & nodeunit dependencies
+
 ### v0.9.6 - 05.09.2014
   - Add save option skip_validation_and_unique_indexes (thanks RoxasShadow)
   - Bug fixes (thanks exortech)
