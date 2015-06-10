@@ -1,6 +1,7 @@
 # Nohm
 
 [![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
+[![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 
 ## Description
 
