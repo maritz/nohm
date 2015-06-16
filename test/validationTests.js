@@ -213,6 +213,15 @@ var UserMockup = nohm.model('UserMockup', {
           }
         ]
       ]
+    },
+    customDependentValidation: {
+      type: 'string',
+      defaultValue: 'test',
+      validations: [
+        ['instanceValidation', {
+          property: 'name'
+        }]
+      ]
     }
   }
 });
@@ -535,6 +544,14 @@ exports.validation = {
     var tests = testValidateProp(t, 'UserMockup', 'customValidationFileOptional');
 
     tests.push(true, '');
+
+    tests.launch();
+  },
+
+  customDependentValidation: function(t) {
+    var tests = testValidateProp(t, 'UserMockup', 'customDependentValidation');
+
+    tests.push(true, 'test');
 
     tests.launch();
   },
