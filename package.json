@@ -22,11 +22,11 @@
   },
   "dependencies": {
     "async": "^1.2.1",
-    "redis": "^0.12.1",
+    "redis": "^2.4.2",
     "traverse": "^0.6.6"
   },
   "devDependencies": {
-    "nodeunit": "^0.9.0"
+    "nodeunit": "^0.9.1"
   },
   "contributors": [
     {
