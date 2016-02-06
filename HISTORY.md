@@ -1,3 +1,20 @@
+### v0.9.8 - 06.02.2016
+  - Add instance context to custom validators. (thanks johngeorgewright)
+
+    ~~~~ javascript
+    exports.instanceValidation = function (value, opt, callback) {
+        if (this.id < 50) {
+            callback(true);
+        } else {
+            callback(this.p(opt.property).includes(value));
+        }
+    };
+    ~~~~
+
+  - Update dependencies (thanks brysgo)
+    - redis 2.4.2
+    - (dev) nodeunit 0.9.1
+
 ### v0.9.7 - 09.05.2015
   - BREAKS BACKWARDS COMPATIBILITY! (but only slightly and shouldn't really be an issue for most uses)
   - Fix for date parsing - only affects ISO date strings of format that has ' +HH:MM' or ' -HH:MM' at the end) and only on machines that are not set UTC (which servers usually are)
