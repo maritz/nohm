@@ -1200,7 +1200,7 @@ loadArray: function (t) {
       }
     }, function(err, ids) {
       t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [1, 6, 7], 'The found ids were incorrect.');
+      t.same(ids, [6, 7, 1], 'The found ids were incorrect.');
       t.done();
     });
   },
