@@ -1155,7 +1155,7 @@ loadArray: function (t) {
         endpoints: '('
       }
     }, function(err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
+      t.ok(!err, 'Unexpected redis error in custom query :' + err);
       t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
       UserFindMockup.find({
         number: {
@@ -1200,7 +1200,7 @@ loadArray: function (t) {
       }
     }, function(err, ids) {
       t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [6, 7, 1], 'The found ids were incorrect.');
+      t.same(ids, [1, 6, 7], 'The found ids were incorrect.');
       t.done();
     });
   },
@@ -1236,7 +1236,161 @@ loadArray: function (t) {
       t.same(ids, [2, 3, 8], 'The found ids were incorrect.');
       t.done();
     });
-  }
+  },
 
+  "star '*pattern*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:'*numeric*'
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [], 'This shouldnt find any ids.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '*pattern*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'*numeric*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1,2,3], 'This should find three ids.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star 'pattern*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'unique*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [4], 'This should return one id.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '[p][a][t][t][e][r][n]*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'[u][n][i][q][u][e]*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [4], 'This should return one id.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '*[_]*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'*[_]*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [7,8], 'This should return two ids.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1,2,3,4,5,6,7,8], 'This should find all ids.');
+      t.done();
+    });
+  },
+
+  "regexp - unique field with star '*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      email:{
+        regexp:'*'
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1,2,3,4,5,6,7,8], 'This should find all ids.');
+      t.done();
+    });
+  },
+
+  "regexp - unique field with regexp field star '*'": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      name:{
+        regexp:'*'
+      },
+      email:'numericindextest@hurgel.de',
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1], 'This should find one id.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '*@hu*el.de' + numeric with min without limit": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      email:{
+        regexp:'*@hu*el.de'
+      },
+      number: {
+        min: 2,
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1, 2, 3, 8], 'The found ids were incorrect.');
+      t.done();
+    });
+  },
+
+  "regexp - field with star '*' + numeric with min without limit": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    findUser.find({
+      email:{
+        regexp:'*'
+      },
+      number: {
+        min: 0,
+      }
+    }, function(err, ids) {
+      t.ok(!err, 'Unexpected redis error in custom query');
+      t.same(ids, [1, 2, 3, 4, 5, 6, 7, 8], 'The found ids were incorrect.');
+      t.done();
+    });
+  }
 
 };
