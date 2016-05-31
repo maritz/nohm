@@ -60,7 +60,7 @@ http://maritz.github.com/nohm/
       }
     },
     methods: {
-      getContryFlag: function () {
+      getCountryFlag: function () {
         return 'http://example.com/flag_'+this.p('country')+'.png';
       },
     }
