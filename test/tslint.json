@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "max-classes-per-file": [
+      false
+    ]
+  }
+}
