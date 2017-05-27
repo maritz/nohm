@@ -18,7 +18,7 @@ var u_instances = null;
 var item = null;
 var has_zlink = false;
 var opt = {score: +new Date()};
-var ncreate = 2000;
+var ncreate = 10000;
 
 nohm.setPrefix('benchmark');
 rclient.select(15);
