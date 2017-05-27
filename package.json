@@ -26,6 +26,8 @@
     "traverse": "^0.6.6"
   },
   "devDependencies": {
+    "async": "^1.5.2",
+    "fastbench": "^1.0.1",
     "nodeunit": "^0.9.1"
   },
   "contributors": [
