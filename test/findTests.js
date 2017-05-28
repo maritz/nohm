@@ -261,7 +261,6 @@ exports.find = {
   findAll: function(t) {
     var self = this;
     var findUser = new UserFindMockup();
-    console.log('findUser', findUser)
     t.expect(1);
 
     findUser.find(function(err, ids) {
