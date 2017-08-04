@@ -4,7 +4,7 @@ import * as async from 'async';
 import * as traverse from 'traverse';
 
 import * as redis from 'redis';
-import { NohmModel, IModelOptions, IModelPropertyDefinition } from './model';
+import { NohmModel, IModelOptions, IModelPropertyDefinition, IModelPropertyDefinitions } from './model';
 
 export { NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
 
@@ -25,9 +25,18 @@ abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
    *
    * @protected
    */
-  protected prefix(): INohmPrefixes {
+  protected prefix(_prefix: keyof INohmPrefixes): string {
     // overwritten in NohmClass.model/register
-    throw new Error('Abstract method _getPrefix was not properly set in NohmClass.model or NohmClass.register.');
+    throw new Error('Abstract method prefix was not properly set in NohmClass.model or NohmClass.register.');
+  }
+  /**
+   * DO NOT OVERWRITE THIS; USED INTERNALLY
+   *
+   * @protected
+   */
+  protected rawPrefix(): INohmPrefixes {
+    // overwritten in NohmClass.model/register
+    throw new Error('Abstract method rawPrefix was not properly set in NohmClass.model or NohmClass.register.');
   }
 }
 
@@ -174,7 +183,11 @@ Consider waiting for an established connection before setting it.`);
         }
       }
 
-      protected prefix(): INohmPrefixes {
+      protected prefix(prefix: keyof INohmPrefixes): string {
+        return self.prefix[prefix] + name;
+      }
+
+      protected rawPrefix(): INohmPrefixes {
         return self.prefix;
       }
     }
@@ -252,7 +265,11 @@ Consider waiting for an established connection before setting it.`);
         }
       }
 
-      protected prefix(): INohmPrefixes {
+      protected prefix(prefix: keyof INohmPrefixes): string {
+        return self.prefix[prefix] + this.modelName;
+      }
+
+      protected rawPrefix(): INohmPrefixes {
         return self.prefix;
       }
     }

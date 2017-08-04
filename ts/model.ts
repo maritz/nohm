@@ -2,6 +2,7 @@ import * as redis from 'redis';
 import { createHash } from 'crypto';
 import * as _ from 'lodash';
 import * as traverse from 'traverse';
+import { v1 as uuid } from 'uuid';
 
 import { NohmClass, INohmPrefixes } from './index';
 import {
@@ -11,7 +12,7 @@ import {
   IModelOptions,
 } from './model.d';
 
-export { IModelPropertyDefinition, IModelOptions };
+export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
 export { NohmModel };
 
 interface IDictionary {
@@ -93,15 +94,18 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
         this.__resetProp(key);
         this.errors[key] = [];
       });
-
     }
 
-    if (this.options.hasOwnProperty('methods')) {
+    if (this.options.methods) {
       this.addMethods(this.options.methods);
     }
 
-    if (this.options.hasOwnProperty('publish')) {
+    if (this.options.publish) {
       this.publish = this.options.publish;
+    }
+
+    if (!this.options.idGenerator) {
+      this.options.idGenerator = 'default';
     }
 
     this.relationChanges = [];
@@ -128,9 +132,9 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   private updateMeta(
     callback: (error: string | Error | null, version?: string) => any = (..._args: Array<any>) => { /* noop */ }
   ) {
-    const versionKey = this.prefix().meta.version + this.modelName;
-    const idGeneratorKey = this.prefix().meta.idGenerator + this.modelName;
-    const propertiesKey = this.prefix().meta.properties + this.modelName;
+    const versionKey = this.rawPrefix().meta.version + this.modelName;
+    const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
+    const propertiesKey = this.rawPrefix().meta.properties + this.modelName;
     const properties = traverse(this.meta.properties).map((x) => {
       if (typeof x === 'function') {
         return String(x);
@@ -146,7 +150,8 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
       } else if (this.meta.version !== dbVersion) {
         async.parallel({
           idGenerator: (next) => {
-            this.client.set(idGeneratorKey, this.idGenerator.toString(), next);
+            const generator = this.options.idGenerator || 'default';
+            this.client.set(idGeneratorKey, generator.toString(), next);
           },
           properties: (next) => {
             this.client.set(propertiesKey, JSON.stringify(properties), next);
@@ -183,7 +188,30 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
    *
    * @protected
    */
-  protected abstract prefix(): INohmPrefixes;
+  protected abstract prefix(prefix: keyof INohmPrefixes): string;
+
+  /**
+   * DO NOT OVERWRITE THIS; USED INTERNALLY
+   *
+   * @protected
+   */
+  protected abstract rawPrefix(): INohmPrefixes;
+
+  protected idGenerator(): Promise<string> {
+    return Promise.resolve(uuid());
+  }
+
+  protected idGeneratorIncremental(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.client.incr(this.prefix('ids'), (err, newId) => {
+        if (err || newId.length < 1) {
+          reject(err || new Error('No new id was returned'));
+        } else {
+          resolve(newId[0]);
+        }
+      });
+    });
+  }
 
   protected generateMetaVersion(): string {
     const hash = createHash('sha1');
