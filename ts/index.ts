@@ -67,12 +67,6 @@ type Constructor<T> = new (...args: any[]) => T;
 export class NohmClass {
 
   /**
-   * The property types that get indexed in a sorted set.
-   * This should not be changed since it can invalidate already existing data.
-   */
-  private static indexNumberTypes = ['integer', 'float', 'timestamp'];
-
-  /**
    * The redis prefixed key object.
    * Defaults to prefixing with 'nohm' which then creates keys like 'nohm:idsets:someModel'.
    */

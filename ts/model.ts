@@ -19,6 +19,21 @@ interface IDictionary {
   [index: string]: any;
 }
 
+/**
+ * The property types that get indexed in a sorted set.
+ * This should not be changed since it can invalidate already existing data.
+ */
+const indexNumberTypes = ['integer', 'float', 'timestamp'];
+
+interface IProperties {
+  [key: string]: {
+    value: any;
+    __updated: boolean;
+    __oldValue: any;
+    __numericIndex: boolean;
+  };
+}
+
 abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
 
   public id: any;
@@ -34,12 +49,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     version: string,
   };
 
-  protected properties: {
-    [key: string]: {
-      value: any;
-      _updated: boolean;
-    };
-  };
+  protected properties: IProperties;
   protected options: IModelOptions;
   protected publish: boolean;
   protected abstract definitions: {
@@ -71,25 +81,21 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
 
     // initialize the properties
     if (this.options.hasOwnProperty('properties')) {
-      // TODO: fix "any, any" typing here
-      this.properties = _.transform<any, any>(this.definitions,
-        (result, definition: IModelPropertyDefinition, key: string) => {
-          let defaultValue = definition.defaultValue || 0;
-          if (typeof (defaultValue) === 'function') {
-            defaultValue = defaultValue();
-          }
-          result[key] = {
-            _updated: false,
-            value: defaultValue,
-          };
-        },
-      );
-
-      _.each(this.properties, (prop, key) => {
+      Object.keys(this.definitions).forEach((key: keyof TProps) => {
         const definition = this.definitions[key];
+        let defaultValue = definition.defaultValue || 0;
+        if (typeof (defaultValue) === 'function') {
+          defaultValue = defaultValue();
+        }
+        this.properties[key] = {
+          __numericIndex: false,
+          __oldValue: null,
+          __updated: false,
+          value: defaultValue,
+        };
         if (typeof (definition.type) !== 'function') {
           // behaviours should not be called on initialization - thus leaving it at defaultValue
-          this.property(key, prop.value); // this ensures typecasing
+          this.property(key, defaultValue); // this ensures typecasing
         }
         this.__resetProp(key);
         this.errors[key] = [];
@@ -115,6 +121,17 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     this.loaded = false;
   }
 
+  private __resetProp(property: keyof TProps) {
+    const tmp = this.properties[property];
+    tmp.__updated = false;
+    tmp.__oldValue = tmp.value;
+    type genericFunction = (...args: Array<any>) => any;
+    let type: string | genericFunction = this.definitions[property].type;
+    if (typeof (type) !== 'string') {
+      type = '__notIndexed__';
+    }
+    tmp.__numericIndex = indexNumberTypes.indexOf(type) > -1;
+  }
 
   private addMethods(methods?: { [name: string]: () => any }) {
     if (methods) {
@@ -130,7 +147,9 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   }
 
   private updateMeta(
-    callback: (error: string | Error | null, version?: string) => any = (..._args: Array<any>) => { /* noop */ }
+    callback: (
+      error: string | Error | null, version?: string,
+    ) => any = (..._args: Array<any>) => { /* noop */ },
   ) {
     const versionKey = this.rawPrefix().meta.version + this.modelName;
     const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
@@ -228,10 +247,10 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   /**
    * Read and write properties to the instance.
    *
-   * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where 
+   * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where
    * the keys are the names and the values the new values
    * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
-   * @returns {(any | void)} Returns the property value if the first parameter was string and 
+   * @returns {(any | void)} Returns the property value if the first parameter was string and
    * no second parameter is given
    */
   public property(key: keyof TProps): any;
