@@ -2,7 +2,7 @@ import { Nohm, NohmModel, IModelPropertyDefinitions } from '../ts/index';
 
 const nohm = Nohm;
 
-const args = require(__dirname+'/testArgs.js');
+const args = require(__dirname + '/testArgs.js');
 const async = require('async');
 const redis = args.redis;
 const h = require(__dirname + '/helper.js');
@@ -24,11 +24,15 @@ const userLinkMockup = nohm.register(class extends NohmModel {
   };
 });
 
+interface RoleLinkProps {
+  name: string;
+}
+
 const commentLinkMockup = nohm.register(class extends NohmModel {
   public modelName: 'CommentLinkMockup';
 
   protected definitions: {
-    text: {
+    name: {
       type: 'string',
       defaultValue: 'this is a comment! REALLY!',
       validations: [
@@ -36,9 +40,22 @@ const commentLinkMockup = nohm.register(class extends NohmModel {
       ]
     }
   };
+
+  public allProperties(json = false): RoleLinkProps {
+    return super.allProperties(json);
+  }
+
+  get pName(): string {
+    return this.allProperties().name;
+  }
+
+  set pName(value: string) {
+    this.setProperty('text', value);
+  }
 });
 
-const roleLinkMockup = nohm.register(class extends NohmModel {
+
+class RoleLinkMockup extends NohmModel {
   public modelName: 'RoleLinkMockup';
   protected definitions: {
     name: {
@@ -47,14 +64,18 @@ const roleLinkMockup = nohm.register(class extends NohmModel {
     }
   };
   protected idGenerator: 'increment';
-});
+  public foobar() {
+    console.log('this', this);
+  }
+}
 
+const roleLinkMockup = nohm.register(RoleLinkMockup);
 
 
 exports.relation = {
 
   setUp: function (next: Function) {
-    if ( ! nohm.client) {
+    if (!nohm.client) {
       nohm.setClient(redis);
     }
     next();
@@ -66,10 +87,12 @@ exports.relation = {
 
   instances: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2;
+      role = new roleLinkMockup(),
+      role2;
 
     t.expect(2);
+    const test = nohm.factory<RoleLinkMockup>('roleLinkMockup');
+    test.foobar();
 
     role.link(user);
 
@@ -84,10 +107,10 @@ exports.relation = {
 
   link: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2 = new roleLinkMockup(),
-    linkCallbackCalled = false,
-    linkCallbackCalled2 = false;
+      role = new roleLinkMockup(),
+      role2 = new roleLinkMockup(),
+      linkCallbackCalled = false,
+      linkCallbackCalled2 = false;
     t.expect(9);
 
     user.link(role, function (action, on, name, obj) {
@@ -110,16 +133,16 @@ exports.relation = {
         t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
         redis.keys(relationsprefix + '*', function (err, values) {
           var args = [],
-          key,
-          firstDone = false,
-          keyCheck = function (err, members) {
-            t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
-            if (firstDone === true) {
-              t.done();
-            } else {
-              firstDone = true;
-            }
-          };
+            key,
+            firstDone = false,
+            keyCheck = function (err, members) {
+              t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
+              if (firstDone === true) {
+                t.done();
+              } else {
+                firstDone = true;
+              }
+            };
           if (!err) {
             t.ok(values.length === 3, 'Linking an object did not create the correct number of keys.');
             redis.smembers(values[0].toString(), keyCheck);
@@ -138,10 +161,10 @@ exports.relation = {
 
   unlink: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2 = new roleLinkMockup(),
-    unlinkCallbackCalled = false,
-    unlinkCallbackCalled2 = false;
+      role = new roleLinkMockup(),
+      role2 = new roleLinkMockup(),
+      unlinkCallbackCalled = false,
+      unlinkCallbackCalled2 = false;
     t.expect(7);
 
     user.id = 1;
@@ -181,10 +204,10 @@ exports.relation = {
 
   deeplink: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    comment = new commentLinkMockup(),
-    userLinkCallbackCalled = false,
-    commentLinkCallbackCalled = false;
+      role = new roleLinkMockup(),
+      comment = new commentLinkMockup(),
+      userLinkCallbackCalled = false,
+      commentLinkCallbackCalled = false;
     t.expect(5);
 
     role.link(user, function () {
@@ -204,25 +227,25 @@ exports.relation = {
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
       t.ok(comment.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
       redis.smembers(relationsprefix + comment.modelName + ':defaultForeign:' +
-                      user.modelName + ':' + comment.id,
-                      function (err, value) {
-                        if (!err) {
-                          t.equals(value, user.id, 'The user does not have the neccessary relations saved. There are probably more problems, if this occurs.');
-                        } else {
-                          console.dir(err);
-                        }
-                        t.done();
-                      });
+        user.modelName + ':' + comment.id,
+        function (err, value) {
+          if (!err) {
+            t.equals(value, user.id, 'The user does not have the neccessary relations saved. There are probably more problems, if this occurs.');
+          } else {
+            console.dir(err);
+          }
+          t.done();
+        });
     });
   },
 
   removeUnlinks: function (t: any) {
     // uses unlinkAll in remove
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2 = new roleLinkMockup(),
-    comment = new commentLinkMockup(),
-    linkName = 'creator';
+      role = new roleLinkMockup(),
+      role2 = new roleLinkMockup(),
+      comment = new commentLinkMockup(),
+      linkName = 'creator';
     t.expect(8);
 
     user.p('name', 'removeUnlinks');
@@ -239,35 +262,35 @@ exports.relation = {
         t.ok(!err, 'An unexpected redis error occured.');
         async.parallel([
           function (next) {
-            redis.exists(relationsprefix+user.modelName+':'+linkName+'Foreign:'+role.modelName+':'+tmpid,
+            redis.exists(relationsprefix + user.modelName + ':' + linkName + 'Foreign:' + role.modelName + ':' + tmpid,
               function (err, value) {
                 t.equals(value, 0, 'The foreign link to the custom-link-name role was not deleted');
                 next(err);
-            });
+              });
           },
           function (next) {
-            redis.exists(relationsprefix+role.modelName+':'+linkName+':'+user.modelName+':'+role.id,
+            redis.exists(relationsprefix + role.modelName + ':' + linkName + ':' + user.modelName + ':' + role.id,
               function (err, value) {
                 t.equals(value, 0, 'The link to the custom-link-name role was not deleted');
                 next(err);
-            });
+              });
           },
           function (next) {
-            redis.exists(relationsprefix+user.modelName+':default:'+comment.modelName+':'+tmpid,
+            redis.exists(relationsprefix + user.modelName + ':default:' + comment.modelName + ':' + tmpid,
               function (err, value) {
                 t.equals(value, 0, 'The link to the child comment was not deleted');
                 next(err);
-            });
+              });
           },
           function (next) {
-            redis.sismember(relationsprefix+comment.modelName+':defaultForeign:'+user.modelName+':'+comment.id, tmpid,
+            redis.sismember(relationsprefix + comment.modelName + ':defaultForeign:' + user.modelName + ':' + comment.id, tmpid,
               function (err, value) {
                 t.equals(value, 0, 'The link to the comment parent was not deleted');
                 next(err);
-            });
+              });
           },
           function (next) {
-            redis.sismember(relationsprefix+role2.modelName+':default:'+user.modelName+':'+role2.id, tmpid,
+            redis.sismember(relationsprefix + role2.modelName + ':default:' + user.modelName + ':' + role2.id, tmpid,
               function (err, value) {
                 t.equals(value, 0, 'The removal did not delete the link from a parent to the object itself.');
                 next(err);
@@ -285,7 +308,7 @@ exports.relation = {
 
   belongsTo: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup();
+      role = new roleLinkMockup();
     t.expect(1);
 
     user.link(role);
@@ -308,8 +331,8 @@ exports.relation = {
 
   getAll: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2 = new roleLinkMockup();
+      role = new roleLinkMockup(),
+      role2 = new roleLinkMockup();
     t.expect(4);
 
     user.link(role);
@@ -341,7 +364,7 @@ exports.relation = {
 
   'getAll with different id generators': function (t: any) {
     var user = new userLinkMockup(),
-    comment = new commentLinkMockup();
+      comment = new commentLinkMockup();
     t.expect(1);
 
     user.link(comment);
@@ -365,8 +388,8 @@ exports.relation = {
 
   numLinks: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    role2 = new roleLinkMockup();
+      role = new roleLinkMockup(),
+      role2 = new roleLinkMockup();
     t.expect(1);
 
     user.link(role);
@@ -391,8 +414,8 @@ exports.relation = {
 
   deeplinkError: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    comment = new commentLinkMockup();
+      role = new roleLinkMockup(),
+      comment = new commentLinkMockup();
     t.expect(5);
 
     role.link(user);
@@ -423,8 +446,8 @@ exports.relation = {
 
   deppLinkErrorCallback: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    comment = new commentLinkMockup();
+      role = new roleLinkMockup(),
+      comment = new commentLinkMockup();
     t.expect(8);
 
     role.link(user, {
@@ -454,10 +477,10 @@ exports.relation = {
 
   contineOnError: function (t: any) {
     var user = new userLinkMockup(),
-    role = new roleLinkMockup(),
-    comment = new commentLinkMockup(),
-    comment2 = new commentLinkMockup(),
-    comment3 = new commentLinkMockup();
+      role = new roleLinkMockup(),
+      comment = new commentLinkMockup(),
+      comment2 = new commentLinkMockup(),
+      comment3 = new commentLinkMockup();
     t.expect(5);
 
     role.link(user, {
@@ -487,8 +510,8 @@ exports.relation = {
     });
     comment.p('text', ''); // makes the first comment fail
 
-    role.save({continue_on_link_error: true}, function () {
-      redis.sismember(relationsprefix+comment3.modelName+':defaultForeign:'+user.modelName+':'+comment3.id, user.id,
+    role.save({ continue_on_link_error: true }, function () {
+      redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' + user.modelName + ':' + comment3.id, user.id,
         function (err, value) {
           t.ok(!err, 'There was a redis error');
           t.same(value, "1", 'The comment3 relation was not saved');

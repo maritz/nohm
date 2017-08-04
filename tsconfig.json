@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "target": "es6",
     "module": "commonjs",
-
     "noImplicitAny": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
@@ -10,10 +10,8 @@
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "noUnusedParameters": true,
-
     "lib": [
       "es7"
     ]
   }
-
 }
