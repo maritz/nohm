@@ -32,16 +32,16 @@ const userLinkMockup = nohm.register(class extends NohmModel<UserLinkProps> {
 });
 
 interface RoleLinkProps {
-  name: string;
+  text: string;
 }
 
 const commentLinkMockup = nohm.register(class extends NohmModel<RoleLinkProps> {
   public modelName: 'CommentLinkMockup';
 
   protected definitions: {
-    [key in keyof UserLinkProps]: IModelPropertyDefinition;
+    [key in keyof RoleLinkProps]: IModelPropertyDefinition;
   } = {
-    name: {
+    text: {
       type: 'string',
       defaultValue: 'this is a comment! REALLY!',
       validations: [
@@ -51,13 +51,11 @@ const commentLinkMockup = nohm.register(class extends NohmModel<RoleLinkProps> {
   };
 
   get pName(): string {
-    return this.property('name');
+    return this.allProperties().text;
   }
 
   set pName(value: string) {
-    this.property({
-      name: value
-    });
+    this.property('text', value);
   }
 });
 

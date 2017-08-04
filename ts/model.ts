@@ -45,6 +45,9 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     [key in keyof TProps]: IModelPropertyDefinition;
   };
 
+  private allPropertiesCache: {
+    [key in keyof TProps]: any;
+  } & { id: any };
   private relationChanges: Array<any>;
   private inDb: boolean;
   private loaded: boolean;
@@ -60,6 +63,9 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
 
     this.properties = {};
+    this.allPropertiesCache = {
+      id: null,
+    } as any;
     this.errors = {};
 
     // initialize the properties
@@ -122,7 +128,6 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   private updateMeta(
     callback: (error: string | Error | null, version?: string) => any = (..._args: Array<any>) => { /* noop */ }
   ) {
-
     const versionKey = this.prefix().meta.version + this.modelName;
     const idGeneratorKey = this.prefix().meta.idGenerator + this.modelName;
     const propertiesKey = this.prefix().meta.properties + this.modelName;
@@ -211,6 +216,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
     if (value) {
       this.setProperty(keyOrValues, value);
+      this.allPropertiesCache[keyOrValues] = this.properties[keyOrValues].value;
     } else {
       return this.properties[keyOrValues].value;
     }
@@ -220,20 +226,11 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     this.properties[key] = value;
   }
 
-
-
   /**
    *  Get all properties with values either as an array or as json (param true)
    */
-  public allProperties(json = false): TProps & { id: any } {
-    const props: any = {};
-    for (const p in this.properties) {
-      if (this.properties.hasOwnProperty(p)) {
-        props[p] = this.property(p);
-      }
-    }
-    props.id = this.id;
-    return json ? JSON.stringify(props) : props;
+  public allProperties(): TProps & { id: any } {
+    return this.allPropertiesCache;
   }
 }
 
