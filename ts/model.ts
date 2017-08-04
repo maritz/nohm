@@ -4,12 +4,21 @@ import * as _ from 'lodash';
 import * as traverse from 'traverse';
 
 import { NohmClass, INohmPrefixes } from './index';
-import { INohmModel, IModelPropertyDefinitions, IModelOptions, PropertyObject } from './model.d';
+import {
+  INohmModel,
+  IModelPropertyDefinition,
+  IModelPropertyDefinitions,
+  IModelOptions,
+} from './model.d';
 
-export { IModelPropertyDefinitions, IModelOptions };
+export { IModelPropertyDefinition, IModelOptions };
 export { NohmModel };
 
-abstract class NohmModel implements INohmModel {
+interface IDictionary {
+  [index: string]: any;
+}
+
+abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
 
   public id: any;
 
@@ -32,7 +41,9 @@ abstract class NohmModel implements INohmModel {
   };
   protected options: IModelOptions;
   protected publish: boolean;
-  protected abstract definitions: IModelPropertyDefinitions;
+  protected abstract definitions: {
+    [key in keyof TProps]: IModelPropertyDefinition;
+  };
 
   private relationChanges: Array<any>;
   private inDb: boolean;
@@ -53,17 +64,19 @@ abstract class NohmModel implements INohmModel {
 
     // initialize the properties
     if (this.options.hasOwnProperty('properties')) {
-
-      this.properties = _.transform(this.definitions, (result, definition, key) => {
-        let defaultValue = definition.defaultValue || 0;
-        if (typeof (defaultValue) === 'function') {
-          defaultValue = defaultValue();
-        }
-        result[key] = {
-          _updated: false,
-          value: defaultValue,
-        };
-      });
+      // TODO: fix "any, any" typing here
+      this.properties = _.transform<any, any>(this.definitions,
+        (result, definition: IModelPropertyDefinition, key: string) => {
+          let defaultValue = definition.defaultValue || 0;
+          if (typeof (defaultValue) === 'function') {
+            defaultValue = defaultValue();
+          }
+          result[key] = {
+            _updated: false,
+            value: defaultValue,
+          };
+        },
+      );
 
       _.each(this.properties, (prop, key) => {
         const definition = this.definitions[key];
@@ -188,10 +201,10 @@ abstract class NohmModel implements INohmModel {
    * @returns {(any | void)} Returns the property value if the first parameter was string and 
    * no second parameter is given
    */
-  public property(key: string): any;
-  public property(key: string, value: any): void;
-  public property(values: PropertyObject): void;
-  public property(keyOrValues: string | PropertyObject, value?: any): any | void {
+  public property(key: keyof TProps): any;
+  public property(key: keyof TProps, value: any): void;
+  public property(values: {[key in keyof TProps]: any}): void;
+  public property(keyOrValues: keyof TProps | {[key in keyof TProps]: any}, value?: any): any | void {
     if (typeof (keyOrValues) !== 'string') {
       const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
       return obj;
@@ -212,7 +225,7 @@ abstract class NohmModel implements INohmModel {
   /**
    *  Get all properties with values either as an array or as json (param true)
    */
-  public allProperties(json = false) {
+  public allProperties(json = false): TProps & { id: any } {
     const props: any = {};
     for (const p in this.properties) {
       if (this.properties.hasOwnProperty(p)) {

@@ -1,4 +1,4 @@
-import { Nohm, NohmModel, IModelPropertyDefinitions } from '../ts/index';
+import { Nohm, NohmModel, IModelPropertyDefinition } from '../ts/index';
 
 const nohm = Nohm;
 
@@ -10,10 +10,17 @@ const h = require(__dirname + '/helper.js');
 
 const relationsprefix = nohm.prefix.relations;
 
-const userLinkMockup = nohm.register(class extends NohmModel {
+
+interface UserLinkProps {
+  name: string;
+}
+
+const userLinkMockup = nohm.register(class extends NohmModel<UserLinkProps> {
   public modelName = 'UserLinkMockup';
   protected idGenerator: 'increment';
-  protected definitions: IModelPropertyDefinitions = {
+  protected definitions: {
+    [key in keyof UserLinkProps]: IModelPropertyDefinition;
+  } = {
     name: {
       defaultValue: 'testName',
       type: 'string',
@@ -28,10 +35,12 @@ interface RoleLinkProps {
   name: string;
 }
 
-const commentLinkMockup = nohm.register(class extends NohmModel {
+const commentLinkMockup = nohm.register(class extends NohmModel<RoleLinkProps> {
   public modelName: 'CommentLinkMockup';
 
   protected definitions: {
+    [key in keyof UserLinkProps]: IModelPropertyDefinition;
+  } = {
     name: {
       type: 'string',
       defaultValue: 'this is a comment! REALLY!',
@@ -41,16 +50,14 @@ const commentLinkMockup = nohm.register(class extends NohmModel {
     }
   };
 
-  public allProperties(json = false): RoleLinkProps {
-    return super.allProperties(json);
-  }
-
   get pName(): string {
-    return this.allProperties().name;
+    return this.property('name');
   }
 
   set pName(value: string) {
-    this.setProperty('text', value);
+    this.property({
+      name: value
+    });
   }
 });
 

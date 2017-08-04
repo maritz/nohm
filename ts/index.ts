@@ -4,10 +4,12 @@ import * as async from 'async';
 import * as traverse from 'traverse';
 
 import * as redis from 'redis';
-import { NohmModel, IModelOptions, IModelPropertyDefinitions } from './model';
+import { NohmModel, IModelOptions, IModelPropertyDefinition } from './model';
+
+export { NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
-abstract class NohmModelExtendable extends NohmModel {
+abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
   public client: redis.RedisClient;
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -28,8 +30,6 @@ abstract class NohmModelExtendable extends NohmModel {
     throw new Error('Abstract method _getPrefix was not properly set in NohmClass.model or NohmClass.register.');
   }
 }
-
-export { NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinitions };
 
 export interface INohmOptions {
   prefix?: string;

@@ -12,15 +12,20 @@ export interface INohmModel {
 
 
 declare type PropertyBehaviour = <TModel extends INohmModel>(
-  this: TModel, newValue: any, key: string, oldValue: any
+  this: TModel,
+  newValue: any,
+  key: string,
+  oldValue: any
 ) => any;
 
+export interface IModelPropertyDefinition {
+  type: propertyTypeNames | PropertyBehaviour;
+  defaultValue?: any;
+  validations?: Array<any>;
+}
+
 export interface IModelPropertyDefinitions {
-  [propName: string]: {
-    type: propertyTypeNames | PropertyBehaviour;
-    defaultValue?: any;
-    validations?: Array<any>;
-  }
+  [propName: string]: IModelPropertyDefinition;
 }
 
 type idGenerators = 'default' | 'increment';
@@ -28,8 +33,8 @@ type idGenerators = 'default' | 'increment';
 export interface IModelOptions {
   metaCallback?: () => any;
   methods?: {
-    [name: string]: () => any
-  }
+    [name: string]: () => any;
+  };
   properties: IModelPropertyDefinitions;
   publish?: any;
   idGenerator?: idGenerators | (() => any);
