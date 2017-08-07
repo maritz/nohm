@@ -48,7 +48,7 @@ export interface INohmOptions {
 export interface INohmPrefixes {
   channel: string;
   hash: string;
-  ids: string;
+  incrementalIds: string;
   idsets: string;
   index: string;
   meta: {

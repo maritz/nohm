@@ -12,11 +12,19 @@ import {
   IModelOptions,
 } from './model.d';
 
+import { idGenerators } from './idGenerators';
+
 export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
 export { NohmModel };
 
 interface IDictionary {
   [index: string]: any;
+}
+
+interface ISaveOptions {
+  continue_on_link_error: boolean;
+  silent: boolean;
+  skip_validation_and_unique_indexes: boolean;
 }
 
 /**
@@ -25,14 +33,12 @@ interface IDictionary {
  */
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
-interface IProperties {
-  [key: string]: {
-    value: any;
-    __updated: boolean;
-    __oldValue: any;
-    __numericIndex: boolean;
-  };
-}
+type IProperties = Map<string, {
+  value: any;
+  __updated: boolean;
+  __oldValue: any;
+  __numericIndex: boolean;
+}>;
 
 abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
 
@@ -73,7 +79,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
       this.updateMeta(this.options.metaCallback);
     }
 
-    this.properties = {};
+    this.properties = new Map();
     this.allPropertiesCache = {
       id: null,
     } as any;
@@ -87,12 +93,12 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
         if (typeof (defaultValue) === 'function') {
           defaultValue = defaultValue();
         }
-        this.properties[key] = {
+        this.properties.set(key, {
           __numericIndex: false,
           __oldValue: null,
           __updated: false,
           value: defaultValue,
-        };
+        });
         if (typeof (definition.type) !== 'function') {
           // behaviours should not be called on initialization - thus leaving it at defaultValue
           this.property(key, defaultValue); // this ensures typecasing
@@ -122,7 +128,11 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   }
 
   private __resetProp(property: keyof TProps) {
-    const tmp = this.properties[property];
+    const tmp = this.properties.get(property);
+    if (!tmp) {
+      NohmClass.logError('Error: Internally __resetProp was called on undefined property.');
+      return;
+    }
     tmp.__updated = false;
     tmp.__oldValue = tmp.value;
     type genericFunction = (...args: Array<any>) => any;
@@ -167,6 +177,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
         NohmClass.logError(err);
         callback(err);
       } else if (this.meta.version !== dbVersion) {
+        // TODO: refactor promise based and without async.parallel
         async.parallel({
           idGenerator: (next) => {
             const generator = this.options.idGenerator || 'default';
@@ -216,22 +227,6 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
    */
   protected abstract rawPrefix(): INohmPrefixes;
 
-  protected idGenerator(): Promise<string> {
-    return Promise.resolve(uuid());
-  }
-
-  protected idGeneratorIncremental(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.incr(this.prefix('ids'), (err, newId) => {
-        if (err || newId.length < 1) {
-          reject(err || new Error('No new id was returned'));
-        } else {
-          resolve(newId[0]);
-        }
-      });
-    });
-  }
-
   protected generateMetaVersion(): string {
     const hash = createHash('sha1');
 
@@ -263,14 +258,18 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
     if (value) {
       this.setProperty(keyOrValues, value);
-      this.allPropertiesCache[keyOrValues] = this.properties[keyOrValues].value;
+      this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
     } else {
-      return this.properties[keyOrValues].value;
+      const prop = this.properties.get(keyOrValues);
+      if (!prop) {
+        throw new Error(`Invalid property key '${keyOrValues}'.`);
+      }
+      return prop.value;
     }
   }
 
   public setProperty(key: string, value: any): void {
-    this.properties[key] = value;
+    this.properties.set(key, value);
   }
 
   /**
@@ -278,6 +277,130 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
    */
   public allProperties(): TProps & { id: any } {
     return this.allPropertiesCache;
+  }
+
+  public save(options: ISaveOptions = {
+    continue_on_link_error: false,
+    silent: false,
+    skip_validation_and_unique_indexes: false,
+  }): Promise<any> {
+    return new Promise(async (resolve) => {
+      let action: 'update' | 'create' = 'update';
+      if (!this.id) {
+        action = 'create';
+        // create and set a unique temporary id
+        // TODO: determine if this is still needed or can be solved more elegantly.
+        // for example just ditching manual id creation and use uuid everywhere.
+        // that would also make clustered/shareded storage much more straight forward
+        // and remove quite a bit of code here.
+        this.id = uuid();
+      }
+      let isValid = true;
+      if (options.skip_validation_and_unique_indexes === false) {
+        isValid = await this.validate(null, true);
+      }
+      const idExists = await this.checkIdExists(this.id);
+      if (action === 'create' && !idExists) {
+        await this.create();
+      }
+      await this.update(options);
+      resolve();
+    });
+  }
+
+  private checkIdExists(id: any): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.client.sismember(this.prefix('idsets'), id, (err, found) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(!!found);
+        }
+      });
+    });
+  }
+
+  private async create() {
+    const id = this.generateId();
+    await this.storeId(id);
+    await this.setUniqueIds(id);
+    this.id = id;
+  }
+
+  private async generateId(): Promise<string> {
+    let id = null;
+    let generator = this.options.idGenerator;
+    if (typeof (generator) === 'function') {
+      id = await generator.call(this);
+    } else {
+      if (!generator || !idGenerators[generator]) {
+        generator = 'default';
+      }
+      id = await idGenerators[generator].call(idGenerators, this.client, this.prefix('incrementalIds'));
+    }
+    return id;
+  }
+
+  private storeId(id: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.client.SADD(this.prefix('idsets'), id, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Sets the unique ids of all unique property values in this instance to the given id.
+   * Warning: Only use this during create() when overwriting temporary ids!
+   */
+  private setUniqueIds(id: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const mSetArguments = [];
+      for (const [key, prop] of this.properties) {
+        const isUnique = this.definitions[key].unique;
+        const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
+        const isDirty = prop.__updated || !this.inDb;
+        if (isUnique && !isEmptyString && isDirty) {
+          let value = this.property(key);
+          if (this.definitions[key].type === 'string') {
+            value = (value as string).toLowerCase();
+          }
+          const prefix = this.prefix('unique');
+          mSetArguments.push(`${prefix}:${key}:${value}`, id);
+        }
+      }
+      if (mSetArguments.length === 0) {
+        resolve();
+      } else {
+        this.client.MSET(mSetArguments, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      }
+    });
+  }
+
+  private update(options: ISaveOptions): Promise<void> {
+    return new Promise((resolve) => {
+
+    });
+  }
+
+  public valid(property: keyof TProps | null, setDirectly = false) {
+    // TODO: decide whether actually deprecating this is worth it.
+    console.warn('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
+    this.validate(property, setDirectly);
+  }
+
+  public validate(_property: keyof TProps | null, _setDirectly = false) {
+    return Promise.resolve(true);
   }
 }
 

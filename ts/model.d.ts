@@ -22,6 +22,15 @@ export interface IModelPropertyDefinition {
   type: propertyTypeNames | PropertyBehaviour;
   defaultValue?: any;
   validations?: Array<any>;
+  unique?: boolean;
+  /**
+   * Whether the property should be indexed. Depending on type this creates different keys/collections.
+   * Does not work for all types. TODO: specify here which types.
+   * 
+   * @type {boolean}
+   * @memberof IModelPropertyDefinition
+   */
+  index?: boolean;
 }
 
 export interface IModelPropertyDefinitions {
