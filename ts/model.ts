@@ -40,6 +40,12 @@ interface IProperty {
   __numericIndex: boolean; // this is static but private so for now it might be better here than in definitions
 }
 
+export interface IPropertyDiff<TKeys extends string> {
+  key: TKeys;
+  before: any;
+  after: any;
+}
+
 abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
 
   public id: any;
@@ -55,7 +61,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     version: string,
   };
 
-  protected properties: Map<string, IProperty>;
+  protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
   protected publish: boolean;
   protected abstract definitions: {
@@ -128,11 +134,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   }
 
   private __resetProp(property: keyof TProps) {
-    const tmp = this.properties.get(property);
-    if (!tmp) {
-      NohmClass.logError('Error: Internally __resetProp was called on undefined property.');
-      return;
-    }
+    const tmp = this.getProperty(property);
     tmp.__updated = false;
     tmp.__oldValue = tmp.value;
     type genericFunction = (...args: Array<any>) => any;
@@ -261,18 +263,20 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
       this.setProperty(keyOrValues, value);
       this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
     }
-    const prop = this.properties.get(keyOrValues);
-    if (!prop) {
-      throw new Error(`Invalid property key '${keyOrValues}'.`);
-    }
+    const prop = this.getProperty(keyOrValues);
     return prop.value;
   }
 
-  public setProperty(key: string, value: any): void {
+  private getProperty(key: keyof TProps) {
     const prop = this.properties.get(key);
     if (!prop) {
       throw new Error(`Invalid property key '${key}'.`);
     }
+    return prop;
+  }
+
+  public setProperty(key: keyof TProps, value: any): void {
+    const prop = this.getProperty(key);
     if (prop.value !== value) {
       prop.value = this.castProperty(key, prop);
       prop.__updated = prop.value !== prop.__oldValue;
@@ -281,7 +285,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
   }
 
-  private castProperty(key: string, prop: IProperty): any {
+  private castProperty(key: keyof TProps, prop: IProperty): any {
     const type = this.definitions[key].type;
 
     if (typeof (type) === 'undefined') {
@@ -354,6 +358,35 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
         }
       default:
         return prop.value;
+    }
+  }
+
+  public propertyDiff(): Array<IPropertyDiff<keyof TProps>>;
+  public propertyDiff(key: keyof TProps): void | IPropertyDiff<keyof TProps>;
+  public propertyDiff(key?: keyof TProps): void | IPropertyDiff<keyof TProps> | Array<IPropertyDiff<keyof TProps>> {
+    // TODO: determine if returning an array is really the best option
+    if (key) {
+      return this.onePropertyDiff(key);
+    } else {
+      const diffResult: Array<IPropertyDiff<keyof TProps>> = [];
+      for (const [iterationKey] of this.properties) {
+        const diff = this.onePropertyDiff(iterationKey);
+        if (diff) {
+          diffResult.push(diff);
+        }
+      }
+      return diffResult;
+    }
+  }
+
+  private onePropertyDiff(key: keyof TProps): IPropertyDiff<keyof TProps> | void {
+    const prop = this.getProperty(key);
+    if (prop.__updated) {
+      return {
+        after: prop.value,
+        before: prop.__oldValue,
+        key,
+      };
     }
   }
 
