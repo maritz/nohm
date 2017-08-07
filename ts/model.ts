@@ -33,12 +33,12 @@ interface ISaveOptions {
  */
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
-type IProperties = Map<string, {
+interface IProperty {
   value: any;
   __updated: boolean;
   __oldValue: any;
   __numericIndex: boolean; // this is static but private so for now it might be better here than in definitions
-}>;
+}
 
 abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
 
@@ -55,7 +55,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     version: string,
   };
 
-  protected properties: IProperties;
+  protected properties: Map<string, IProperty>;
   protected options: IModelOptions;
   protected publish: boolean;
   protected abstract definitions: {
@@ -245,13 +245,14 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
    * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where
    * the keys are the names and the values the new values
    * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
-   * @returns {(any | void)} Returns the property value if the first parameter was string and
-   * no second parameter is given
+   * @returns {(any)} Returns the property as set after type casting
    */
   public property(key: keyof TProps): any;
-  public property(key: keyof TProps, value: any): void;
-  public property(values: {[key in keyof TProps]: any}): void;
-  public property(keyOrValues: keyof TProps | {[key in keyof TProps]: any}, value?: any): any | void {
+  // tslint:disable-next-line:unified-signatures
+  public property(key: keyof TProps, value: any): any;
+  // tslint:disable-next-line:unified-signatures
+  public property(valuesObject: {[key in keyof TProps]: any}): any;
+  public property(keyOrValues: keyof TProps | {[key in keyof TProps]: any}, value?: any): any {
     if (typeof (keyOrValues) !== 'string') {
       const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
       return obj;
@@ -259,17 +260,101 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     if (value) {
       this.setProperty(keyOrValues, value);
       this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
-    } else {
-      const prop = this.properties.get(keyOrValues);
-      if (!prop) {
-        throw new Error(`Invalid property key '${keyOrValues}'.`);
-      }
-      return prop.value;
     }
+    const prop = this.properties.get(keyOrValues);
+    if (!prop) {
+      throw new Error(`Invalid property key '${keyOrValues}'.`);
+    }
+    return prop.value;
   }
 
   public setProperty(key: string, value: any): void {
-    this.properties.set(key, value);
+    const prop = this.properties.get(key);
+    if (!prop) {
+      throw new Error(`Invalid property key '${key}'.`);
+    }
+    if (prop.value !== value) {
+      prop.value = this.castProperty(key, prop);
+      prop.__updated = prop.value !== prop.__oldValue;
+      // TODO: test if prop is a reference or a copy. if it's a reference, we don't need to set it.
+      this.properties.set(key, prop);
+    }
+  }
+
+  private castProperty(key: string, prop: IProperty): any {
+    const type = this.definitions[key].type;
+
+    if (typeof (type) === 'undefined') {
+      return prop.value;
+    }
+
+    if (typeof (type) === 'function') {
+      return type.call(this, prop.value, key, prop.__oldValue);
+    }
+
+    switch (type.toLowerCase()) {
+      case 'boolean':
+      case 'bool':
+        return prop.value === 'false' ? false : !!prop.value;
+      case 'string':
+      case 'string':
+        // no .toString() here. TODO: or should there be?
+        return (
+          (!(prop.value instanceof String) ||
+            prop.value.toString() === '') && typeof prop.value !== 'string'
+        ) ? ''
+          : prop.value;
+      case 'integer':
+      case 'int':
+        return isNaN(parseInt(prop.value, 10)) ? 0 : parseInt(prop.value, 10);
+      case 'float':
+        return isNaN(parseFloat(prop.value)) ? 0 : parseFloat(prop.value);
+      case 'date':
+      case 'time':
+      case 'timestamp':
+        // make it a timestamp aka. miliseconds from 1970
+        if (isNaN(prop.value) && typeof prop.value === 'string') {
+          let timezoneOffset: number;
+          // see if there is a timezone specified in the string
+          if (prop.value.match(/Z$/)) {
+            // UTC timezone in an ISO string (hopefully)
+            timezoneOffset = 0;
+          } else {
+            const matches = prop.value.match(/(\+|\-)([\d]{1,2})\:([\d]{2})$/);
+            if (matches) {
+              // +/- hours:minutes specified.
+              // calculating offsets in minutes and removing the offset from the string since new Date()
+              // can't handle those.
+              const hours = parseInt(matches[2], 10);
+              const minutes = parseInt(matches[3], 10);
+              timezoneOffset = hours * 60 + minutes;
+              if (matches[1] === '-') {
+                timezoneOffset *= -1;
+              }
+              // make sure it is set in UTC here
+              prop.value = prop.value.substring(0, prop.value.length - matches[0].length) + 'Z';
+            } else {
+              timezoneOffset = new Date(prop.value).getTimezoneOffset();
+            }
+          }
+          return new Date(prop.value).getTime() - timezoneOffset * 60 * 1000;
+        }
+        return parseInt(prop.value, 10);
+      case 'json':
+        if (typeof (prop.value) === 'object') {
+          return JSON.stringify(prop.value);
+        } else {
+          try {
+            // already is json, do nothing
+            JSON.parse(prop.value);
+            return prop.value;
+          } catch (e) {
+            return JSON.stringify(prop.value);
+          }
+        }
+      default:
+        return prop.value;
+    }
   }
 
   /**
@@ -415,6 +500,11 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
 
         // TODO: Relation changes go here
 
+        this.inDb = true;
+        for (const [key] of this.properties) {
+          this.__resetProp(key);
+        }
+
         // TODO: pubsub stuff goes here
 
         resolve();
@@ -463,7 +553,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     this.validate(property, setDirectly);
   }
 
-  public validate(_property: keyof TProps | null, _setDirectly = false) {
+  public validate(_property: keyof TProps | null, _setDirectly = false): Promise<boolean> {
     return Promise.resolve(true);
   }
 }
