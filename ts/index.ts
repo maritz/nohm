@@ -114,7 +114,7 @@ Consider waiting for an established connection before setting it.`);
     }
   }
 
-  public static logError(err: string | Error) {
+  public static logError(err: string | Error | null) {
     if (err) {
       console.dir({
         message: err,

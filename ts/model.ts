@@ -37,7 +37,7 @@ type IProperties = Map<string, {
   value: any;
   __updated: boolean;
   __oldValue: any;
-  __numericIndex: boolean;
+  __numericIndex: boolean; // this is static but private so for now it might be better here than in definitions
 }>;
 
 abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
@@ -361,7 +361,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     return new Promise((resolve, reject) => {
       const mSetArguments = [];
       for (const [key, prop] of this.properties) {
-        const isUnique = this.definitions[key].unique;
+        const isUnique = !!this.definitions[key].unique;
         const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
         const isDirty = prop.__updated || !this.inDb;
         if (isUnique && !isEmptyString && isDirty) {
@@ -388,9 +388,73 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   }
 
   private update(options: ISaveOptions): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const hmSetArguments = [];
+      const multi = this.client.MULTI();
+      const isCreate = !this.inDb;
 
+      hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
+
+      for (const [key, prop] of this.properties) {
+        if (isCreate || prop.__updated) {
+          hmSetArguments.push(key, prop.value);
+        }
+      }
+
+      if (hmSetArguments.length > 1) {
+        hmSetArguments.push('__meta_version', this.meta.version);
+        multi.HMSET.apply(multi, hmSetArguments);
+      }
+
+      this.setIndices(multi);
+
+      multi.exec((err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        // TODO: Relation changes go here
+
+        // TODO: pubsub stuff goes here
+
+        resolve();
+
+      });
     });
+  }
+
+  private setIndices(multi: redis.Multi | redis.RedisClient) {
+    for (const [key, prop] of this.properties) {
+      const isUnique = !!this.definitions[key].unique;
+      const isIndex = !!this.definitions[key].index;
+      const isDirty = prop.__updated || !this.inDb;
+
+      // free old uniques
+      if (isUnique && prop.__updated && this.inDb) {
+        let oldUniqueValue = prop.__oldValue;
+        if (this.definitions[key].type === 'string') {
+          oldUniqueValue = (oldUniqueValue as string).toLowerCase();
+        }
+        multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, NohmClass.logError);
+      }
+
+      // set new normal index
+      if (isIndex && isDirty) {
+        if (prop.__numericIndex) {
+          // we use scored sets for things like "get all users older than 5"
+          const scoredPrefix = this.prefix('scoredindex');
+          if (this.inDb) {
+            multi.ZREM(`${scoredPrefix}:${key}`, this.id, NohmClass.logError);
+          }
+          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.id, NohmClass.logError);
+        }
+        const prefix = this.prefix('index');
+        if (this.inDb) {
+          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.id, NohmClass.logError);
+        }
+        multi.SADD(`${prefix}:${key}:${prop.value}`, this.id, NohmClass.logError);
+      }
+    }
   }
 
   public valid(property: keyof TProps | null, setDirectly = false) {
