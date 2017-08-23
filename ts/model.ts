@@ -10,9 +10,15 @@ import {
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
   IModelOptions,
+  IProperty,
+  IPropertyDiff,
+  IValidationResult,
+  ISaveOptions,
+  validatiorFunction
 } from './model.d';
 
 import { idGenerators } from './idGenerators';
+import { validators } from './validators';
 
 export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
 export { NohmModel };
@@ -21,38 +27,20 @@ interface IDictionary {
   [index: string]: any;
 }
 
-interface ISaveOptions {
-  continue_on_link_error: boolean;
-  silent: boolean;
-  skip_validation_and_unique_indexes: boolean;
-}
-
 /**
  * The property types that get indexed in a sorted set.
  * This should not be changed since it can invalidate already existing data.
  */
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
-interface IProperty {
-  value: any;
-  __updated: boolean;
-  __oldValue: any;
-  __numericIndex: boolean; // this is static but private so for now it might be better here than in definitions
-}
 
-export interface IPropertyDiff<TKeys extends string> {
-  key: TKeys;
-  before: any;
-  after: any;
-}
-
-abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel {
+abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
   public id: any;
 
   public client: redis.RedisClient;
   public errors: {
-    [key: string]: Array<string>;
+    [key in keyof TProps]: Array<string>;
   };
   public readonly modelName: string;
   public meta: {
@@ -61,7 +49,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     version: string,
   };
 
-  protected properties: Map<keyof TProps, IProperty>;
+  protected properties: Map<string, IProperty>;
   protected options: IModelOptions;
   protected publish: boolean;
   protected abstract definitions: {
@@ -89,7 +77,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     this.allPropertiesCache = {
       id: null,
     } as any;
-    this.errors = {};
+    this.errors = {} as any;
 
     // initialize the properties
     if (this.options.hasOwnProperty('properties')) {
@@ -362,8 +350,8 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
   }
 
   public propertyDiff(): Array<IPropertyDiff<keyof TProps>>;
-  public propertyDiff(key: keyof TProps): void | IPropertyDiff<keyof TProps>;
-  public propertyDiff(key?: keyof TProps): void | IPropertyDiff<keyof TProps> | Array<IPropertyDiff<keyof TProps>> {
+  public propertyDiff(key: keyof TProps): void | IPropertyDiff;
+  public propertyDiff(key?: keyof TProps): void | IPropertyDiff | Array<IPropertyDiff> {
     // TODO: determine if returning an array is really the best option
     if (key) {
       return this.onePropertyDiff(key);
@@ -379,7 +367,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
   }
 
-  private onePropertyDiff(key: keyof TProps): IPropertyDiff<keyof TProps> | void {
+  private onePropertyDiff(key: keyof TProps): IPropertyDiff | void {
     const prop = this.getProperty(key);
     if (prop.__updated) {
       return {
@@ -415,7 +403,7 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
       }
       let isValid = true;
       if (options.skip_validation_and_unique_indexes === false) {
-        isValid = await this.validate(null, true);
+        isValid = await this.validate(undefined, true);
       }
       const idExists = await this.checkIdExists(this.id);
       if (action === 'create' && !idExists) {
@@ -580,14 +568,105 @@ abstract class NohmModel<TProps extends IDictionary = {}> implements INohmModel 
     }
   }
 
-  public valid(property: keyof TProps | null, setDirectly = false) {
+  public valid(property?: keyof TProps, setDirectly = false) {
     // TODO: decide whether actually deprecating this is worth it.
     console.warn('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
-    this.validate(property, setDirectly);
+    return this.validate(property, setDirectly);
   }
 
-  public validate(_property: keyof TProps | null, _setDirectly = false): Promise<boolean> {
-    return Promise.resolve(true);
+  public async validate(property?: keyof TProps, setDirectly = false): Promise<boolean> {
+    const nonUniqueValidations: Array<Promise<IValidationResult>> = [];
+    for (const [key, prop] of this.properties) {
+      if (!property || property === key) {
+        nonUniqueValidations.push(this.validateProperty(key, prop));
+      }
+    }
+    const validationResults = await Promise.all<IValidationResult>(nonUniqueValidations);
+
+    let valid = validationResults.some((result) => !result.valid);
+
+    if (!valid) {
+      // if nonUniuqeValidations failed, we don't want to set uniques while checking them
+      setDirectly = false;
+    }
+
+    const uniqueValidations: Array<Promise<IValidationResult>> = [];
+    for (const [key, prop] of this.properties) {
+      if (!property || property === key) {
+        uniqueValidations.push(this.checkUniques(setDirectly, key, prop));
+      }
+    }
+    validationResults.concat(await Promise.all<IValidationResult>(uniqueValidations));
+
+    validationResults.forEach((result) => {
+      this.errors[result.key] = [];
+      if (!result.valid) {
+        valid = false;
+        if (!result.error) {
+          throw new Error(`Validation failed but didn't provide an error message. Property name: ${result.key}.`);
+        }
+        this.errors[result.key].push(result.error);
+      }
+    });
+
+
+    return valid;
+  }
+
+  private async validateProperty(key: string, property: IProperty): Promise<IValidationResult> {
+    const result: IValidationResult = {
+      key,
+      valid: true,
+    };
+    const validations = this.definitions[key].validations;
+    if (validations) {
+      const validatorOptions = {
+        old: property.__oldValue,
+        optional: false,
+        trim: true,
+      };
+      const validationPromises: Array<Promise<boolean>> = validations.map((validator) => {
+        if (typeof (validator) === 'function') {
+          return validator(property.value, validatorOptions);
+        } else {
+          let validationFunction: validatiorFunction;
+          let localValidatorOptions = validatorOptions;
+          if (typeof (validator) === 'string') {
+            validationFunction = validators[validator];
+          } else if (validator && validator.name) {
+            validationFunction = validators[validator.name];
+            localValidatorOptions = {
+              ...validatorOptions,
+              ...validator.options,
+            };
+          } else {
+            throw new Error(
+              `Bad validation definition for model '${this.modelName}' in property '${key}': ${validator}`
+            );
+          }
+          return validationFunction(property.value, localValidatorOptions);
+        }
+      });
+    }
+    return result;
+  }
+
+  private async checkUniques(
+    setDirectly: boolean,
+    key: string,
+    property: IProperty,
+  ): Promise<IValidationResult> {
+    if (property.value === 'foo') {
+      return {
+        error: 'not foo... LUL',
+        key,
+        valid: false,
+      };
+    }
+    return {
+      key,
+      valid: true,
+    };
   }
 }
 

@@ -11,17 +11,19 @@ export interface INohmModel {
 }
 
 
-declare type PropertyBehaviour = <TModel extends INohmModel>(
+export type PropertyBehaviour = <TModel extends INohmModel>(
   this: TModel,
   newValue: any,
   key: string,
   oldValue: any
 ) => any;
 
+export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
+
 export interface IModelPropertyDefinition {
   type: propertyTypeNames | PropertyBehaviour;
   defaultValue?: any;
-  validations?: Array<any>;
+  validations?: Array<string | { name: string, options: any } | validatiorFunction>;
   unique?: boolean;
   /**
    * Whether the property should be indexed. Depending on type this creates different keys/collections.
@@ -47,4 +49,29 @@ export interface IModelOptions {
   properties: IModelPropertyDefinitions;
   publish?: any;
   idGenerator?: idGenerators | (() => any);
+}
+
+export interface ISaveOptions {
+  continue_on_link_error: boolean;
+  silent: boolean;
+  skip_validation_and_unique_indexes: boolean;
+}
+
+export interface IProperty {
+  value: any;
+  __updated: boolean;
+  __oldValue: any;
+  __numericIndex: boolean; // this is static but private so for now it might be better here than in definitions
+}
+
+export interface IPropertyDiff<TKeys = string> {
+  key: TKeys;
+  before: any;
+  after: any;
+}
+
+export interface IValidationResult {
+  key: string;
+  valid: boolean,
+  error?: string
 }

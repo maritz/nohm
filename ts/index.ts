@@ -85,7 +85,7 @@ export class NohmClass {
   private meta = true;
 
   private modelCache: {
-    [name: string]: Constructor<NohmModel>,
+    [name: string]: Constructor<NohmModel<any>>,
   } = {};
 
   constructor({ prefix, client }: INohmOptions) {
@@ -140,7 +140,7 @@ Consider waiting for an established connection before setting it.`);
    */
   public model(
     name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
-  ): Constructor<NohmModel> {
+  ): Constructor<NohmModel<any>> {
     if (!name) {
       NohmClass.logError('When creating a new model you have to provide a name!');
     }
@@ -226,9 +226,9 @@ Consider waiting for an established connection before setting it.`);
    *   const bar = new User();
    *   bar.foo(); // no error
    */
-  public register<T extends Constructor<NohmModel>>(
+  public register<T extends Constructor<NohmModel<any>>>(
     subClass: T, temp = false,
-  ): Constructor<NohmModel> & T {
+  ): Constructor<NohmModel<any>> & T {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
 
@@ -285,16 +285,16 @@ Consider waiting for an established connection before setting it.`);
     return this.modelCache;
   }
 
-  public factory<T extends NohmModel>(
+  public factory<T extends NohmModel<any>>(
     name: string,
   ): T;
-  public factory<T extends NohmModel>(
+  public factory<T extends NohmModel<any>>(
     name: string, id: number,
   ): Promise<T>;
-  /*public factory<T extends NohmModel>(
+  /*public factory<T extends NohmModel<any>>(
     name: string, id?: number, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
   ): Promise<T>*/
-  public factory<T extends NohmModel>(
+  public factory<T extends NohmModel<any>>(
     name: string, id?: number, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
   ): T | Promise<T> {
     if (typeof callback === 'function') {

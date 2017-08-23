@@ -14,8 +14,7 @@ const relationsprefix = nohm.prefix.relations;
 interface UserLinkProps {
   name: string;
 }
-
-const userLinkMockup = nohm.register(class extends NohmModel<UserLinkProps> {
+class UserLinkMockup extends NohmModel<UserLinkProps> {
   public modelName = 'UserLinkMockup';
   protected idGenerator: 'increment';
   protected definitions: {
@@ -29,7 +28,20 @@ const userLinkMockup = nohm.register(class extends NohmModel<UserLinkProps> {
       ],
     },
   };
-});
+}
+
+const userLinkMockup = nohm.register(UserLinkMockup);
+const userLinkMockup2 = nohm.factory<UserLinkMockup>('UserLinkMockup');
+
+const test = new userLinkMockup();
+const test3 = userLinkMockup2.allProperties().name;
+
+async function foobar() {
+  const test2 = await test.valid();
+  console.log('test2', test2, test.errors)
+  console.log('test3', test3)
+}
+foobar();
 
 interface RoleLinkProps {
   text: string;
