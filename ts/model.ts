@@ -575,6 +575,16 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return this.validate(property, setDirectly);
   }
 
+  /**
+   * Check if one or all properties are valid and optionally set the unique indices immediately.
+   * If a property is invalid the errors object will be populated with error messages.
+   *
+   * @param {keyof TProps} [property] Property name if you only want to check one property for validity or
+   * null for all properties
+   * @param {boolean} [setDirectly=false] Set to true to immediately set the unique indices while checking.
+   * This prevents race conditions but should probably only be used internally
+   * @returns {Promise<boolean>} Promise resolves to true if checked properties are valid.
+   */
   public async validate(property?: keyof TProps, setDirectly = false): Promise<boolean> {
     const nonUniqueValidations: Array<Promise<IValidationResult>> = [];
     for (const [key, prop] of this.properties) {
@@ -582,7 +592,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
-    const validationResults = await Promise.all<IValidationResult>(nonUniqueValidations);
+    const validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(nonUniqueValidations);
 
     let valid = validationResults.some((result) => !result.valid);
 
@@ -610,6 +620,15 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       }
     });
 
+    if (setDirectly && valid === false) {
+      const clearPromises: Array<Promise<void>> = [];
+      for (const [key, prop] of this.properties) {
+        if (!property || property === key) {
+          clearPromises.push(this.clearTemporaryUniques(key, prop));
+        }
+      }
+      await Promise.all(clearPromises);
+    }
 
     return valid;
   }
@@ -677,22 +696,107 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
   }
 
+  private isUpdatedUnique(key: keyof TProps, property: IProperty): boolean {
+    const definition = this.definitions[key];
+    if (!definition || !definition.unique) {
+      return false;
+    }
+    if (property.value === '') {
+      return false; // empty string is not valid unique value
+    }
+    if (!property.__updated && this.inDb) {
+      // neither updated nor new
+      return false;
+    }
+    return true;
+  }
+
+  private isUniquqKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      function checkCallback(err: Error | null, dbValue: number) {
+        if (err) {
+          return reject(err);
+        } else {
+          let isFreeUnique = false;
+          if (setDirectly && dbValue === 1) {
+            // setDirectly === true means using setnx which returns 1 if the value did *not* exist
+            isFreeUnique = true;
+          } else if (!setDirectly && dbValue === 0) {
+            // setDirectly === false means using exists which returns 0 if the value did *not* exist
+            isFreeUnique = true;
+          }
+          return resolve(isFreeUnique);
+        }
+      }
+      if (setDirectly) {
+        /*
+        * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
+        * when really saving it. (or we free the unique slot if we're not saving)
+        */
+        this.client.setnx(key, this.id, checkCallback);
+      } else {
+        this.client.exists(key, checkCallback);
+      }
+    });
+  }
+
+  private getUniqueKey(key: keyof TProps, property: IProperty): string {
+    let uniqueValue = property.value;
+    if (this.definitions[key].type === 'string') {
+      uniqueValue = String.prototype.toLowerCase.call(property.value);
+    }
+    return `${this.prefix('unique')}:${key}:${uniqueValue}`;
+  }
+
   private async checkUniques(
     setDirectly: boolean,
-    key: string,
+    key: keyof TProps,
     property: IProperty,
   ): Promise<IValidationResult> {
-    if (property.value === 'foo') {
+    const successReturn = {
+      key,
+      valid: true,
+    };
+    const isUpdatedUnique = this.isUpdatedUnique(key, property);
+    if (!isUpdatedUnique) {
+      return successReturn;
+    }
+    const uniqueKey = this.getUniqueKey(key, property);
+    const isFree = await this.isUniquqKeyFree(uniqueKey, setDirectly);
+    if (!isFree) {
       return {
-        error: 'not foo... LUL',
+        error: 'notUnique',
         key,
         valid: false,
       };
     }
-    return {
-      key,
-      valid: true,
-    };
+    return successReturn;
+  }
+
+  /**
+   * Used after a failed validation with setDirectly=true to remove the temporary unique keys
+   *
+   * @param {keyof TProps} key
+   * @param {IProperty} property
+   * @returns {Promise<void>}
+   */
+  private async clearTemporaryUniques(
+    key: keyof TProps,
+    property: IProperty,
+  ): Promise<void> {
+    const isUpdatedUnique = this.isUpdatedUnique(key, property);
+    if (isUpdatedUnique) {
+      const uniqueKey = this.getUniqueKey(key, property);
+      return new Promise<void>((resolve, reject) => {
+        this.client.del(uniqueKey, (err: Error | null) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
   }
 }
 
