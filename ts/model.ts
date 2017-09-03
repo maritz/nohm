@@ -1,3 +1,4 @@
+import { TValidationDefinition } from './model';
 import * as redis from 'redis';
 import { createHash } from 'crypto';
 import * as _ from 'lodash';
@@ -14,7 +15,7 @@ import {
   IPropertyDiff,
   IValidationResult,
   ISaveOptions,
-  validatiorFunction
+  IValidationObject,
 } from './model.d';
 
 import { idGenerators } from './idGenerators';
@@ -570,7 +571,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
   public valid(property?: keyof TProps, setDirectly = false) {
     // TODO: decide whether actually deprecating this is worth it.
-    console.warn('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
+    console.log('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
     return this.validate(property, setDirectly);
   }
 
@@ -625,30 +626,55 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         optional: false,
         trim: true,
       };
-      const validationPromises: Array<Promise<boolean>> = validations.map((validator) => {
-        if (typeof (validator) === 'function') {
-          return validator(property.value, validatorOptions);
-        } else {
-          let validationFunction: validatiorFunction;
-          let localValidatorOptions = validatorOptions;
-          if (typeof (validator) === 'string') {
-            validationFunction = validators[validator];
-          } else if (validator && validator.name) {
-            validationFunction = validators[validator.name];
-            localValidatorOptions = {
-              ...validatorOptions,
-              ...validator.options,
-            };
-          } else {
-            throw new Error(
-              `Bad validation definition for model '${this.modelName}' in property '${key}': ${validator}`
-            );
-          }
-          return validationFunction(property.value, localValidatorOptions);
+      const validationObjects = validations.map(this.getValidationObject);
+      const validationPromises: Array<Promise<void>> = validationObjects.map(async (validationObject) => {
+        const valid = await validationObject.validator.call(
+          this,
+          property.value,
+          {
+            ...validatorOptions,
+            ...validationObject.options,
+          },
+        );
+        if (!valid) {
+          result.valid = false;
+          this.errors[key].push(validationObject.name);
         }
       });
+      await Promise.all(validationPromises);
     }
     return result;
+  }
+
+  private getValidationObject(validator: TValidationDefinition): IValidationObject {
+    if (typeof (validator) === 'function') {
+      const funcName = validator.toString().match(/^function ([\w]*)[\s]?\(/);
+      return {
+        name: `custom_${(funcName && funcName[1] ? funcName[1] : 'unknown')}`,
+        options: {},
+        validator,
+      };
+    } else {
+      if (typeof (validator) === 'string') {
+        // predefined validator method
+        return {
+          name: validator,
+          options: {},
+          validator: validators[validator],
+        };
+      } else if (validator && validator.name) {
+        // predefined validator method with options
+        return {
+          name: validator.name,
+          options: validator.options,
+          validator: validators[validator.name],
+        };
+      } else {
+        throw new Error(
+          `Bad validation definition for model '${this.modelName}' in property '${key}': ${validator}`
+        );
+      }
+    }
   }
 
   private async checkUniques(

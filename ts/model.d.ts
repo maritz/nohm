@@ -20,10 +20,18 @@ export type PropertyBehaviour = <TModel extends INohmModel>(
 
 export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
 
+export interface IValidationObject {
+  name: string;
+  options: {};
+  validator: validatiorFunction;
+};
+
+export type TValidationDefinition = Array<string | { name: string, options: any } | validatiorFunction>;
+
 export interface IModelPropertyDefinition {
   type: propertyTypeNames | PropertyBehaviour;
   defaultValue?: any;
-  validations?: Array<string | { name: string, options: any } | validatiorFunction>;
+  validations?: TValidationDefinition;
   unique?: boolean;
   /**
    * Whether the property should be indexed. Depending on type this creates different keys/collections.
