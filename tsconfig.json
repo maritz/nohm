@@ -12,6 +12,13 @@
     "noUnusedParameters": true,
     "lib": [
       "es7"
-    ]
-  }
+    ],
+    "outDir": "./tsOut"
+  },
+  "files": [
+    "./ts/index.ts"
+  ],
+  "exclude": [
+    "./lib/*.js"
+  ]
 }
