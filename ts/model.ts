@@ -1,4 +1,4 @@
-import { TValidationDefinition } from './model';
+import { TValidationDefinition } from './model.d';
 import * as redis from 'redis';
 import { createHash } from 'crypto';
 import * as _ from 'lodash';
@@ -690,7 +690,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         };
       } else {
         throw new Error(
-          `Bad validation definition for model '${this.modelName}' in property '${key}': ${validator}`
+          `Bad validation definition for model '${this.modelName}' for validator '${validator}'.`,
         );
       }
     }

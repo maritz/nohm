@@ -1,12 +1,9 @@
-import h = require('../lib/helpers');
-
-import * as async from 'async';
-import * as traverse from 'traverse';
-
 import * as redis from 'redis';
+
+import { INohmPrefixes, getPrefix } from './helpers';
 import { NohmModel, IModelOptions, IModelPropertyDefinition, IModelPropertyDefinitions } from './model';
 
-export { NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
+export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
@@ -45,23 +42,6 @@ export interface INohmOptions {
   client?: redis.RedisClient;
 }
 
-export interface INohmPrefixes {
-  channel: string;
-  hash: string;
-  incrementalIds: string;
-  idsets: string;
-  index: string;
-  meta: {
-    version: string;
-    idGenerator: string;
-    properties: string;
-  };
-  relationKeys: string;
-  relations: string;
-  scoredindex: string;
-  unique: string;
-}
-
 type Constructor<T> = new (...args: any[]) => T;
 
 export class NohmClass {
@@ -98,7 +78,7 @@ export class NohmClass {
    * Note: this will not affect models that have a client set on their own.
    */
   public setPrefix(prefix = 'nohm') {
-    this.prefix = h.getPrefix(prefix);
+    this.prefix = getPrefix(prefix);
   }
 
   /**
@@ -324,219 +304,3 @@ export default nohm;
 
 // old js code copy-pasted follows for now
 
-
-NohmClass.__validators = {};
-var __extraValidators = [];
-/**
- * Set some extra validator files. These will also be exported to the browser via connect middleware if used.
- * @static
- */
-NohmClass.setExtraValidations = function (files) {
-  if (!Array.isArray(files)) {
-    files = [files];
-  }
-  files.forEach(function (path) {
-    if (__extraValidators.indexOf(path) === -1) {
-      __extraValidators.push(path);
-      var validators = require(path);
-      Object.keys(validators).forEach(function (name) {
-        NohmClass.__validators[name] = validators[name];
-      });
-    }
-  });
-};
-
-NohmClass.getExtraValidatorFileNames = function () {
-  return __extraValidators;
-};
-
-// prototype methods:
-
-/**
- * Returns the key needed to retreive a hash (properties) of an instance.
- * @param {Number} id Id of the model instance.
- */
-NohmClass.prototype.getHashKey = function (id) {
-  return NohmClass.prefix.hash + this.modelName + ':' + id;
-};
-
-/**
- * Returns the client of either the model (if set) or the global Nohm object.
- */
-NohmClass.prototype.getClient = function () {
-  var client = this.client || NohmClass.client;
-  if (!client.connected) {
-    NohmClass.logError('Warning: Tried accessing a redis client that is not connected to a database. The redis client should buffer the commands and send them once connected. But if it can\'t connect they are lost.');
-  }
-  return client;
-};
-
-var addMethods = function (methods) {
-  for (var name in methods) {
-    if (methods.hasOwnProperty(name) && typeof (methods[name]) === 'function') {
-      if (this[name]) {
-        this['_super_' + name] = this[name];
-      }
-      this[name] = methods[name].bind(this);
-    }
-  }
-};
-
-NohmClass.prototype.init = function (options) {
-  if (typeof (options.client) === 'undefined' && NohmClass.client === null) {
-    NohmClass.logError('Did not find a viable redis client in Nohm or the model: ' + this.modelName);
-    return false;
-  }
-
-  if (!this.meta.inDb) {
-    __updateMeta.call(this, options.metaCallback);
-  }
-
-  if (typeof (options.client) !== 'undefined') {
-    this.client = options.client;
-  }
-
-  this.properties = {};
-  this.errors = {};
-
-  // initialize the properties
-  if (options.hasOwnProperty('properties')) {
-
-    for (var p in options.properties) {
-      if (options.properties.hasOwnProperty(p)) {
-        this.properties[p] = h.$extend(true, {}, options.properties[p]); // deep copy
-        var defaultValue = options.properties[p].defaultValue || 0;
-        if (typeof (defaultValue) === 'function') {
-          defaultValue = defaultValue();
-        }
-        if (typeof (options.properties[p].type) === 'function') {
-          // behaviours should not be called on initialization
-          this.properties[p].value = defaultValue;
-        } else {
-          this.property(p, defaultValue); // this ensures typecasing
-        }
-        this.__resetProp(p);
-        this.errors[p] = [];
-      }
-    }
-  }
-
-  if (options.hasOwnProperty('methods')) {
-    addMethods.call(this, options.methods);
-  }
-
-  if (options.hasOwnProperty('publish')) {
-    this.publish = options.publish;
-  }
-
-  this.relationChanges = [];
-
-  this.id = null;
-  this.__inDB = false;
-  this.__loaded = false;
-};
-
-
-
-var __updateMeta = function (callback) {
-  if (!NohmClass.meta) {
-    return false;
-  }
-
-  if (typeof (callback) !== 'function') {
-    callback = function () { };
-  }
-
-  var self = this;
-
-  var version_key = NohmClass.prefix.meta.version + this.modelName;
-  var idGenerator_key = NohmClass.prefix.meta.idGenerator + this.modelName;
-  var properties_key = NohmClass.prefix.meta.properties + this.modelName;
-  var properties = traverse(self.meta.properties).map(function (x) {
-    if (typeof x === 'function') {
-      return String(x);
-    } else {
-      return x;
-    }
-  });
-
-  this.getClient().get(version_key, function (err, db_version) {
-    if (err) {
-      NohmClass.logError(err);
-      callback(err);
-    } else if (self.meta.version !== db_version) {
-      async.parallel({
-        version: function (next) {
-          self.getClient().set(version_key, self.meta.version, next);
-        },
-        idGenerator: function (next) {
-          self.getClient().set(idGenerator_key, self.idGenerator.toString(), next);
-        },
-        properties: function (next) {
-          self.getClient().set(properties_key, JSON.stringify(properties), next);
-        },
-      }, function (err) {
-        if (err) {
-          NohmClass.logError(err);
-          callback(err, self.meta.version);
-        } else {
-          self.meta.inDb = true;
-          callback(null, self.meta.version);
-        }
-      });
-    } else {
-      self.meta.inDb = true;
-      callback(null, self.meta.version);
-    }
-  });
-};
-
-/**
- * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
- *
- * Deletes any keys from the db that start with nohm prefixes.
- *
- * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
- *
- * @param {Object} [redis] You can specify the redis client to use. Default: Nohm.client
- * @param {Function} [callback] Called after all keys are deleted.
- */
-NohmClass.purgeDb = function (redis, callback) {
-  callback = h.getCallback(arguments);
-  redis = typeof (redis) !== 'function' || NohmClass.client;
-  var delKeys = function (prefix, next) {
-    redis.keys(prefix + '*', function (err, keys) {
-      if (err || keys.length === 0) {
-        next(err);
-      } else {
-        keys.push(next);
-        redis.del.apply(redis, keys);
-      }
-    });
-  };
-  let deletes = [];
-
-  Object.keys(NohmClass.prefix).forEach(function (key) {
-    deletes.push(async.apply(delKeys, NohmClass.prefix[key]));
-  });
-
-  async.series(deletes, function (err) {
-    callback(err);
-  });
-};
-
-let moduleNames = ['properties', 'retrieve', 'validation', 'store', 'relations', 'connectMiddleware', 'pubsub'],
-  modules = {};
-
-moduleNames.forEach(function (name) {
-  // first integrate all the modules
-  modules[name] = require(__dirname + '/' + name);
-  h.prototypeModule(NohmClass, modules[name]);
-});
-moduleNames.forEach(function (name) {
-  // then give them the complete Nohm.
-  if (typeof (modules[name].setNohm) !== 'undefined')
-    modules[name].setNohm(NohmClass);
-});
-
-exports.Nohm = NohmClass;
