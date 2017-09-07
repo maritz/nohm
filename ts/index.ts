@@ -152,6 +152,11 @@ Consider waiting for an established connection before setting it.`);
         of making subclasses of subclasses impossible and restricting constructor argument freedom. */
       protected _initOptions() {
         this.options = options || { properties: {} };
+        this.meta = {
+          inDb: false,
+          properties: {},
+          version: '',
+        };
         if (!this.client) {
           this.client = self.client;
         }
@@ -234,6 +239,11 @@ Consider waiting for an established connection before setting it.`);
         if (!this.client) {
           this.client = self.client;
         }
+        this.meta = {
+          inDb: false,
+          properties: {},
+          version: '',
+        };
         if (!this.options.idGenerator) {
           this.options.idGenerator = 'default';
         }
