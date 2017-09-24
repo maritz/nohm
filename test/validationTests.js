@@ -1,4 +1,4 @@
-var nohm = require(__dirname + '/../lib/nohm').Nohm;
+var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
 var async = require('async');
 var util = require('util');
 
@@ -147,7 +147,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid',
       validations: [
-        function(value, opt, callback) {
+        function (value, opt, callback) {
           callback(value === 'valid');
         }
       ]
@@ -156,7 +156,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid2',
       validations: [
-        function(value, opt, callback) {
+        function (value, opt, callback) {
           callback(value === 'valid2');
         }
       ]
@@ -230,7 +230,7 @@ function testSimpleProps(t, props, dontExpect) {
   if (!dontExpect) {
     t.expect(props.tests.length);
   }
-  props.tests.forEach(function(prop) {
+  props.tests.forEach(function (prop) {
     var user = new UserMockup();
     user.p(props.name, prop.input);
 
@@ -241,35 +241,35 @@ function testSimpleProps(t, props, dontExpect) {
 function testValidateProp(t, objectName, propName) {
   var tests = {};
   var parallel = [];
-  tests.push = function(expected, setValue) {
-    parallel.push(function(callback) {
+  tests.push = function (expected, setValue) {
+    parallel.push(function (callback) {
       var obj = nohm.factory(objectName);
-      if (typeof(setValue) !== 'undefined') {
+      if (typeof (setValue) !== 'undefined') {
         var setReturn = obj.p(propName, setValue);
       }
-      obj.valid(propName, function(valid) {
+      obj.valid(propName, function (valid) {
         var errorStr = "Property '" + propName + "' was not validated properly. Details:" + "\nobject: " + objectName + "\nprop: " + propName + "\nvalue: " + util.inspect(setValue) + "\nafter casting: " + util.inspect(setReturn) + "\nerrors: " + util.inspect(obj.errors);
         t.same(expected, valid, errorStr);
         callback();
       });
     });
   };
-  tests.launch = function() {
+  tests.launch = function () {
     t.expect(parallel.length);
-    async.parallel(parallel, function() {
+    async.parallel(parallel, function () {
       t.done();
     });
   };
   return tests;
 }
 
-var args = require(__dirname+'/testArgs.js');
+var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
-var h = require(__dirname+'/helper.js');
+var h = require(__dirname + '/helper.js');
 
 exports.validation = {
   setUp: function (next) {
-    if ( ! nohm.client) {
+    if (!nohm.client) {
       nohm.setClient(redis);
     }
     next();
@@ -277,11 +277,11 @@ exports.validation = {
   tearDown: function (next) {
     h.cleanUp(redis, args.prefix, next);
   },
-  general: function(t) {
+  general: function (t) {
     var user = new UserMockup();
     t.expect(1);
 
-    user.valid(function(valid) {
+    user.valid(function (valid) {
       if (!valid) {
         console.dir(user.errors);
       }
@@ -293,7 +293,7 @@ exports.validation = {
   },
 
 
-  castString: function(t) {
+  castString: function (t) {
     var tests = {
       name: 'name',
       tests: [{
@@ -322,7 +322,7 @@ exports.validation = {
     t.done();
   },
 
-  castInteger: function(t) {
+  castInteger: function (t) {
     var tests = {
       name: 'castInteger',
       tests: [{
@@ -351,7 +351,7 @@ exports.validation = {
     t.done();
   },
 
-  castFloat: function(t) {
+  castFloat: function (t) {
     var user = new UserMockup();
     t.expect(6);
 
@@ -376,9 +376,9 @@ exports.validation = {
     t.done();
   },
 
-  castTimestamp: function(t) {
+  castTimestamp: function (t) {
     var user = new UserMockup(),
-        should = new Date('1988-03-12T00:00:00Z').getTime();
+      should = new Date('1988-03-12T00:00:00Z').getTime();
     t.expect(8);
 
     user.p('castTimestamp', should);
@@ -408,7 +408,7 @@ exports.validation = {
     t.done();
   },
 
-  behaviours: function(t) {
+  behaviours: function (t) {
     var user = new UserMockup();
     t.expect(1);
 
@@ -419,7 +419,7 @@ exports.validation = {
   },
 
 
-  notEmpty: function(t) {
+  notEmpty: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'name');
 
     tests.push(false, '');
@@ -428,7 +428,7 @@ exports.validation = {
     tests.launch();
   },
 
-  stringMinLength: function(t) {
+  stringMinLength: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'minLength');
 
     tests.push(false, 'as');
@@ -436,7 +436,7 @@ exports.validation = {
     tests.launch();
   },
 
-  stringMaxLength: function(t) {
+  stringMaxLength: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'maxLength');
 
     tests.push(false, 'asdasd');
@@ -444,7 +444,7 @@ exports.validation = {
     tests.launch();
   },
 
-  stringLengthOptional: function(t) {
+  stringLengthOptional: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'minLength2');
 
     tests.push(true, '');
@@ -453,7 +453,7 @@ exports.validation = {
     tests.launch();
   },
 
-  minMax: function(t) {
+  minMax: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'minMax');
 
     tests.push(false, 1);
@@ -462,7 +462,7 @@ exports.validation = {
     tests.launch();
   },
 
-  minOptional: function(t) {
+  minOptional: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'minOptional');
 
     tests.push(true, 0);
@@ -470,7 +470,7 @@ exports.validation = {
     tests.launch();
   },
 
-  email: function(t) {
+  email: function (t) {
     // this isn't really sufficient to ensure that the regex is really working correctly, but it's good enough for now.
     var tests = testValidateProp(t, 'UserMockup', 'email');
 
@@ -491,7 +491,7 @@ exports.validation = {
     tests.launch();
   },
 
-  number: function(t) {
+  number: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'number');
 
     tests.push(true, '0');
@@ -509,7 +509,7 @@ exports.validation = {
     tests.launch();
   },
 
-  alphanumeric: function(t) {
+  alphanumeric: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'alphanumeric');
 
     tests.push(true, 'asd');
@@ -520,7 +520,7 @@ exports.validation = {
     tests.launch();
   },
 
-  regexp: function(t) {
+  regexp: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'regexp');
 
     tests.push(true, 'asd1234123');
@@ -532,7 +532,7 @@ exports.validation = {
     tests.launch();
   },
 
-  customValidationFile: function(t) {
+  customValidationFile: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'customValidationFile');
 
     tests.push(false, 'somethingelse');
@@ -540,7 +540,7 @@ exports.validation = {
     tests.launch();
   },
 
-  customValidationFileOptional: function(t) {
+  customValidationFileOptional: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'customValidationFileOptional');
 
     tests.push(true, '');
@@ -548,7 +548,7 @@ exports.validation = {
     tests.launch();
   },
 
-  customDependentValidation: function(t) {
+  customDependentValidation: function (t) {
     var tests = testValidateProp(t, 'UserMockup', 'customDependentValidation');
 
     tests.push(true, 'test');
@@ -556,25 +556,25 @@ exports.validation = {
     tests.launch();
   },
 
-  errorFromObject: function(t) {
+  errorFromObject: function (t) {
     var user = new UserMockup();
     t.expect(1);
 
     user.p('minMax', 'a');
-    user.valid('minMax', function() {
+    user.valid('minMax', function () {
       t.same(user.errors.minMax, ['minMax'], 'Error was incorrect');
       t.done();
     });
   },
 
-  consistency: function(t) {
+  consistency: function (t) {
     var user = new UserMockup();
     t.expect(2);
 
-    user.valid('name', function(valid1) {
-      user.valid('email', function(valid2) {
+    user.valid('name', function (valid1) {
+      user.valid('email', function (valid2) {
         t.same(valid1, valid2, 'Validating two valid properties resulted in different outputs.');
-        user.valid(function(valid3) {
+        user.valid(function (valid3) {
           t.same(valid1, valid3, 'Validating the entire Model had a different result than validating a single property.');
           t.done();
         });
@@ -582,12 +582,12 @@ exports.validation = {
     });
   },
 
-  functionArgument: function(t) {
+  functionArgument: function (t) {
     var user = new UserMockup();
     t.expect(2);
 
 
-    user.valid(function(valid) {
+    user.valid(function (valid) {
       t.same(valid, true, 'Validating with a function as the first arg did not call the callback with true as its first arg');
 
       user.p({
@@ -595,7 +595,7 @@ exports.validation = {
         email: 'asd'
       });
 
-      user.valid(function(valid2) {
+      user.valid(function (valid2) {
         t.same(valid2, false, 'Validating with a function as the first arg did not call the callback with false as its first arg');
         t.done();
       });
@@ -603,7 +603,7 @@ exports.validation = {
   },
 
 
-  errorsCleared: function(t) {
+  errorsCleared: function (t) {
     var user = new UserMockup();
     t.expect(2);
 
@@ -612,32 +612,32 @@ exports.validation = {
       email: 'asd'
     });
 
-    user.valid(function() {
+    user.valid(function () {
       t.same({
         user: user.errors.name,
         email: user.errors.email
       }, {
-        user: ['notEmpty'],
-        email: ['email']
-      }, 'Validating a user did not set the user.errors properly.');
+          user: ['notEmpty'],
+          email: ['email']
+        }, 'Validating a user did not set the user.errors properly.');
       user.p({
         name: 'test'
       });
-      user.valid(function() {
+      user.valid(function () {
         t.same({
           user: user.errors.name,
           email: user.errors.email
         }, {
-          user: [],
-          email: ['email']
-        }, 'Validating a user did not REset the user.errors properly.');
+            user: [],
+            email: ['email']
+          }, 'Validating a user did not REset the user.errors properly.');
       });
       t.done();
     });
   },
 
 
-  customErrorNames: function(t) {
+  customErrorNames: function (t) {
     var user = new UserMockup();
     t.expect(1);
 
@@ -647,39 +647,39 @@ exports.validation = {
       customNamed: 'INVALID'
     });
 
-    user.valid(function() {
+    user.valid(function () {
       t.same({
         custom: user.errors.custom,
         custom2: user.errors.custom2,
         customNamed: user.errors.customNamed
       }, {
-        custom: ['custom_custom'],
-        custom2: ['custom_custom2'],
-        customNamed: ['custom_customNamed']
-      }, 'Validating a user with custom validations failing did not put the proper error messages in user.errors.');
+          custom: ['custom_custom'],
+          custom2: ['custom_custom2'],
+          customNamed: ['custom_customNamed']
+        }, 'Validating a user with custom validations failing did not put the proper error messages in user.errors.');
       t.done();
     });
   },
 
-  invalidSaveResetsId: function(t) {
+  invalidSaveResetsId: function (t) {
     var user = new UserMockup();
     t.expect(1);
 
     user.p('name', '');
 
-    user.save(function() {
+    user.save(function () {
       t.same(user.id, null, 'The id of an invalid user was not reset properly.');
       t.done();
     });
   },
 
-  skipValidation: function(t) {
+  skipValidation: function (t) {
     var user = new UserMockup();
     t.expect(2);
 
     user.p('name', '');
 
-    user.save({ skip_validation_and_unique_indexes: true }, function(err) {
+    user.save({ skip_validation_and_unique_indexes: true }, function (err) {
       t.notEqual(user.id, null, 'The id of an invalid user with skip_validation was reset.');
       t.strictEqual(err, undefined, 'The validation has been run even though skip_validation was true.');
       t.done();

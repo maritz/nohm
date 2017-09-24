@@ -1,5 +1,5 @@
 var async = require('async');
-var nohm = require(__dirname + '/../lib/nohm').Nohm;
+var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
 var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;

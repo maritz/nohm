@@ -1,5 +1,5 @@
 var util = require('util');
-var args = require(__dirname+'/testArgs.js');
+var args = require(__dirname + '/testArgs.js');
 var h = require('./helper.js');
 
 exports.checkModules = function (t) {
@@ -9,8 +9,8 @@ exports.checkModules = function (t) {
   redis = require('redis');
   t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
 
-  nohm = require(__dirname+'/../lib/nohm');
-  t.ok(typeof nohm.Nohm === 'function', 'nohm should be available -- something is fishy here.');
+  nohm = require(__dirname + '/../tsOut');
+  t.ok(typeof nohm === 'object', 'nohm should be available -- something is fishy here.');
 
   async = require('async');
   t.ok(typeof async !== 'undefined', 'async should be available.');
@@ -22,69 +22,69 @@ var prefix = args.prefix;
 
 // real tests start in 3.. 2.. 1.. NOW!
 var redis = args.redis;
-var nohm = require(__dirname+'/../lib/nohm').Nohm;
-var helper = require(__dirname+'/../lib/helpers');
+var nohm = require(__dirname + '/../tsOut').Nohm;
+var helper = require(__dirname + '/../lib/helpers');
 var async = require('async');
 
 var UserMockup = nohm.model('UserMockup', {
-      properties: {
-        name: {
-          type: 'string',
-          defaultValue: 'test',
-          unique: true,
-          validations: [
-            'notEmpty'
-          ]
-        },
-        visits: {
-          type: 'integer',
-          index: true
-        },
-        email: {
-          type: 'string',
-          unique: true,
-          defaultValue: 'email@email.de',
-          validations: [
-            'email'
-          ]
-        },
-        emailOptional: {
-          type: 'string',
-          unique: true,
-          defaultValue: '',
-          validations: [
-            ['email', {
-              optional: true
-            }]
-          ]
-        },
-        country: {
-          type: 'string',
-          defaultValue: 'Tibet',
-          index: true,
-          validations: [
-            'notEmpty'
-          ]
-        },
-        json: {
-          type: 'json',
-          defaultValue: '{}'
-        }
-      },
-      methods: {
-        test: function test () {
-          return this.p('name');
-        },
-        prop: function prop (name) {
-          if (name === 'super')
-            return this._super_prop('name');
-          else 
-            return this._super_prop.apply(this, arguments, 0);
-        }
-      },
-      idGenerator: 'increment'
-    });
-    
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'test',
+      unique: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+    visits: {
+      type: 'integer',
+      index: true
+    },
+    email: {
+      type: 'string',
+      unique: true,
+      defaultValue: 'email@email.de',
+      validations: [
+        'email'
+      ]
+    },
+    emailOptional: {
+      type: 'string',
+      unique: true,
+      defaultValue: '',
+      validations: [
+        ['email', {
+          optional: true
+        }]
+      ]
+    },
+    country: {
+      type: 'string',
+      defaultValue: 'Tibet',
+      index: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+    json: {
+      type: 'json',
+      defaultValue: '{}'
+    }
+  },
+  methods: {
+    test: function test() {
+      return this.p('name');
+    },
+    prop: function prop(name) {
+      if (name === 'super')
+        return this._super_prop('name');
+      else
+        return this._super_prop.apply(this, arguments, 0);
+    }
+  },
+  idGenerator: 'increment'
+});
+
 nohm.model('NonIncrement', {
   properties: {
     name: 'No name'
@@ -99,33 +99,33 @@ nohm.model('UniqueInteger', {
     }
   }
 });
-    
-    
+
+
 exports.prepare = {
-  redisClean: function(t) {
+  redisClean: function (t) {
     t.expect(1);
-    redis.keys(prefix + ':*:*Mockup:*', function(err, value) {
+    redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
       var check = (Array.isArray(value) && value.length === 0) || value === null;
       t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS ' + prefix + ':*:*Mockup:*" to see what keys could be the cause.');
       t.done();
     });
   },
 
-  idIntersection: function(t) {
+  idIntersection: function (t) {
     var arr1 = [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        arr2 = [2, 3, 4, 10],
-        arr3 = [2, 3, 4, 10],
-        arr4 = [],
-        arr5 = [16, 28, 39],
-        arr6 = ['hurgelwurz', 28, 39],
-        arr7 = ['hurgelwurz', 28, 39],
-        arr8 = [10, 3, 2],
-        testIntersection = function(arrs, resultTest) {
+      arr2 = [2, 3, 4, 10],
+      arr3 = [2, 3, 4, 10],
+      arr4 = [],
+      arr5 = [16, 28, 39],
+      arr6 = ['hurgelwurz', 28, 39],
+      arr7 = ['hurgelwurz', 28, 39],
+      arr8 = [10, 3, 2],
+      testIntersection = function (arrs, resultTest) {
         var result;
 
         result = helper.idIntersection.apply(null, arrs);
         t.same(result, resultTest, 'idIntersection did not perform correctly.');
-        };
+      };
     t.expect(9);
 
     testIntersection([arr1], arr1);
@@ -149,23 +149,23 @@ exports.prepare = {
     t.done();
   },
 
-  setRedisClient: function(t) {
+  setRedisClient: function (t) {
     t.expect(2);
     console.log('Note: there should be an error message in the next line. (intended behaviour)');
     nohm.client = null;
     var user = new UserMockup();
     t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
-    
+
     console.log('Note: there should be an error message in the next line. (intended behaviour)');
     nohm.setClient(require('redis').createClient(80, '123.123.123.123')); // this should not connect.
 
     nohm.setClient(redis);
     user = new UserMockup();
-    t.equals(typeof(user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
+    t.equals(typeof (user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
     t.done();
   },
 
-  setPrefix: function(t) {
+  setPrefix: function (t) {
     var oldPrefix = nohm.prefix;
     t.expect(1);
     nohm.setPrefix('hurgel');
@@ -176,15 +176,15 @@ exports.prepare = {
 };
 
 exports.propertyTests = {
-  propertyGetter: function(t) {
+  propertyGetter: function (t) {
     var user = new UserMockup();
     t.expect(7);
 
-    t.equals(typeof(user.p), 'function', 'Property getter short p is not available.');
+    t.equals(typeof (user.p), 'function', 'Property getter short p is not available.');
 
-    t.equals(typeof(user.prop), 'function', 'Property getter short prop is not available.');
+    t.equals(typeof (user.prop), 'function', 'Property getter short prop is not available.');
 
-    t.equals(typeof(user.property), 'function', 'Property getter is not available.');
+    t.equals(typeof (user.property), 'function', 'Property getter is not available.');
 
     t.equals(user.p('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
 
@@ -199,7 +199,7 @@ exports.propertyTests = {
   },
 
 
-  propertySetter: function(t) {
+  propertySetter: function (t) {
     var user = new UserMockup();
     var controlUser = new UserMockup();
     t.expect(6);
@@ -230,11 +230,11 @@ exports.propertyTests = {
   },
 
 
-  propertyDiff: function(t) {
+  propertyDiff: function (t) {
     var user = new UserMockup(),
-        should = [],
-        beforeName = user.p('name'),
-        beforeEmail = user.p('email');
+      should = [],
+      beforeName = user.p('name'),
+      beforeEmail = user.p('email');
     t.expect(5);
 
     t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
@@ -265,10 +265,10 @@ exports.propertyTests = {
   },
 
 
-  propertyReset: function(t) {
+  propertyReset: function (t) {
     var user = new UserMockup(),
-        beforeName = user.p('name'),
-        beforeEmail = user.p('email');
+      beforeName = user.p('name'),
+      beforeEmail = user.p('email');
     t.expect(4);
 
     user.p('name', user.p('name') + 'hurgelwurz');
@@ -286,9 +286,9 @@ exports.propertyTests = {
   },
 
 
-  allProperties: function(t) {
+  allProperties: function (t) {
     var user = new UserMockup(),
-        should;
+      should;
     t.expect(2);
 
     user.p('name', 'hurgelwurz');
@@ -335,15 +335,15 @@ exports.create = function (t) {
 
 exports.remove = function (t) {
   var user = new UserMockup(),
-  testExists;
+    testExists;
   t.expect(9);
 
   testExists = function (what, key, callback) {
     redis.exists(key, function (err, value) {
-        t.ok(!err, 'There was a redis error in the remove test check.');
-        t.ok(value === 0, 'Deleting a user did not work: '+what+', key: '+key);
-        callback();
-      });
+      t.ok(!err, 'There was a redis error in the remove test check.');
+      t.ok(value === 0, 'Deleting a user did not work: ' + what + ', key: ' + key);
+      callback();
+    });
   };
 
   user.p('name', 'deleteTest');
@@ -387,7 +387,7 @@ exports.remove = function (t) {
 
 exports.idSets = function (t) {
   var user = new UserMockup(),
-  tmpid = 0;
+    tmpid = 0;
   t.expect(6);
   user.p('name', 'idSetTest');
   user.save(function (err) {
@@ -441,7 +441,7 @@ exports.update = function (t) {
 
 exports.unique = function (t) {
   var user1 = new UserMockup(),
-  user2 = new UserMockup();
+    user2 = new UserMockup();
   t.expect(8);
 
   user1.p('name', 'dubplicateTest');
@@ -476,7 +476,7 @@ exports.unique = function (t) {
 
 exports.uniqueLowerCase = function (t) {
   var user1 = new UserMockup(),
-  user2 = new UserMockup();
+    user2 = new UserMockup();
   t.expect(6);
 
   user1.p('name', 'LowerCaseTest');
@@ -485,7 +485,7 @@ exports.uniqueLowerCase = function (t) {
   user2.p('email', 'lowercasetest@test.de');
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.get(prefix + ':uniques:UserMockup:name:'+user1.p('name').toLowerCase(), function (err, value) {
+    redis.get(prefix + ':uniques:UserMockup:name:' + user1.p('name').toLowerCase(), function (err, value) {
       t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
       user2.valid(false, false, function (valid) {
         t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
@@ -514,7 +514,7 @@ exports.uniqueDeleteWhenOtherFails = function (t) {
   user.p('country', '');
   user.save(function (err) {
     t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.exists(prefix + ':uniques:UserMockup:name:'+user.p('name').toLowerCase(), function (err, value) {
+    redis.exists(prefix + ':uniques:UserMockup:name:' + user.p('name').toLowerCase(), function (err, value) {
       t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
       t.done();
     });
@@ -543,7 +543,7 @@ exports.uniqueDeletion = function (t) {
     'email': 'dubplicateDeletionTest@test.de',
     'country': ''
   });
-  
+
   user.save(function (err) {
     t.ok(err, 'The invalid property country did not trigger a failure.');
     redis.exists(prefix + ':uniques:UserMockup:name:dubplicateDeletionTest', function (err, value) {
@@ -566,11 +566,11 @@ exports.uniqueCaseInSensitive = function (t) {
     'name': user.p('name').toLowerCase(),
     'email': user.p('email').toLowerCase()
   });
-  
+
   user.save(function (err) {
-    t.ok( ! err, 'Saving failed');
+    t.ok(!err, 'Saving failed');
     user2.valid(function (valid) {
-      t.ok( ! valid, 'A duplicate (different case) unique property was validated.');
+      t.ok(!valid, 'A duplicate (different case) unique property was validated.');
       t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
       t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
       t.done();
@@ -581,9 +581,9 @@ exports.uniqueCaseInSensitive = function (t) {
 exports.uniqueEmpty = function (t) {
   var user = new UserMockup();
   t.expect(5);
-  
+
   redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
-    t.ok( ! err, 'redis.keys failed.');
+    t.ok(!err, 'redis.keys failed.');
     t.same(exists, 0, 'An empty unique was set before the test for it was run');
     user.p({
       'name': 'emailOptional',
@@ -591,9 +591,9 @@ exports.uniqueEmpty = function (t) {
       'emailOptional': ''
     });
     user.save(function (err) {
-      t.ok( ! err, 'Saving failed.');
+      t.ok(!err, 'Saving failed.');
       redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
-        t.ok( ! err, 'redis.keys failed.');
+        t.ok(!err, 'redis.keys failed.');
         t.same(keys.length, 0, 'An empty unique was set');
         t.done();
       });
@@ -607,7 +607,7 @@ exports["integer uniques"] = function (t) {
   var obj2 = nohm.factory('UniqueInteger');
   obj.p('unique', 123);
   obj2.p('unique', 123);
-  
+
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
     t.same(obj.allProperties(), {
@@ -694,7 +694,7 @@ exports.deleteNonExistant = function (t) {
   var user = new UserMockup();
   t.expect(1);
   user.id = 987654321;
-  
+
   user.remove(function (err) {
     t.same(err, 'not found', 'Trying to delete an instance that doesn\'t exist did not return "not found".');
     t.done();
@@ -704,8 +704,8 @@ exports.deleteNonExistant = function (t) {
 exports.methods = function (t) {
   var user = new UserMockup();
   t.expect(2);
-  
-  t.same(typeof(user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
+
+  t.same(typeof (user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
   t.same(user.test(), user.p('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
   t.done();
 };
@@ -713,9 +713,9 @@ exports.methods = function (t) {
 exports.methodsSuper = function (t) {
   var user = new UserMockup();
   t.expect(4);
-  
-  t.same(typeof(user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
-  t.same(typeof(user._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
+
+  t.same(typeof (user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
+  t.same(typeof (user._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
   t.same(user.prop('super'), user.p('name'), 'The super test method did not work properly.');
   user.prop('name', 'methodTest');
   t.same(user.p('name'), 'methodTest', 'The super test method did not properly handle arguments');
@@ -725,7 +725,7 @@ exports.methodsSuper = function (t) {
 exports["no super method if none needed"] = function (t) {
   var user = new UserMockup();
   t.expect(1);
-  
+
   t.ok(!user.hasOwnProperty('_super_test'), 'Defining a method that does not overwrite a nohm method created a _super_.');
   t.done();
 };
@@ -734,12 +734,12 @@ exports.uniqueDefaultOverwritten = function (t) {
   var user = new UserMockup();
   var user2 = new UserMockup();
   t.expect(3);
-  
+
   user.save(function (err) {
     t.ok(!err, 'Unexpected saving error.');
     user2.save(function (err) {
       t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
-      t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: '+user2.errors.name);
+      t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
       t.done();
     });
   });
@@ -747,13 +747,13 @@ exports.uniqueDefaultOverwritten = function (t) {
 
 exports.allPropertiesJson = function (t) {
   var user = new UserMockup();
-  user.p('json', {test: 1});
+  user.p('json', { test: 1 });
   user.p({
     name: 'allPropertiesJson',
     email: 'allPropertiesJson@test.de'
   });
   t.expect(2);
-  
+
   user.save(function (err) {
     t.ok(!err, 'Unexpected saving error.');
     var testProps = user.allProperties();
@@ -769,22 +769,22 @@ exports.thisInCallbacks = function (t) {
   var checkThis = function (name, cb) {
     return function () {
       checkCounter++;
-      t.ok(this instanceof UserMockup, '`this` is not set to the instance in '+name);
+      t.ok(this instanceof UserMockup, '`this` is not set to the instance in ' + name);
       if (checkCounter === checkSum) {
         done();
-      } else if (typeof(cb) === 'function') {
+      } else if (typeof (cb) === 'function') {
         cb();
       }
     };
   };
-  t.expect(checkSum+1);
-  
+  t.expect(checkSum + 1);
+
   var done = function () {
     user.remove(checkThis('remove', function () {
       t.done();
     }));
   };
-  
+
   user.save(checkThis('createError', function () {
     user.p({
       name: 'thisInCallbacks',
@@ -793,8 +793,8 @@ exports.thisInCallbacks = function (t) {
     user.link(user, checkThis('link'));
     user.save(checkThis('create', function () {
       user.load(user.id, checkThis('load'));
-      user.find({name: 'thisInCallbacks'}, checkThis('find'));
-      user.save(checkThis('update', function (){
+      user.find({ name: 'thisInCallbacks' }, checkThis('find'));
+      user.save(checkThis('update', function () {
         user.p('email', 'asd');
         user.save(checkThis('updateError'));
       }));
@@ -808,23 +808,23 @@ exports.thisInCallbacks = function (t) {
 
 exports.defaultAsFunction = function (t) {
   t.expect(3);
-  
+
   var TestMockup = nohm.model('TestMockup', {
-      properties: {
-        time: {
-          type: 'timestamp',
-          defaultValue: function () {
-            return (+ new Date());
-          }
+    properties: {
+      time: {
+        type: 'timestamp',
+        defaultValue: function () {
+          return (+ new Date());
         }
       }
-    });
+    }
+  });
   var test1 = new TestMockup();
   setTimeout(function () {
     var test2 = new TestMockup();
-    
-    t.ok(typeof(test1.p('time')) === 'number', 'time of test1 is not a number');
-    t.ok(typeof(test2.p('time')) === 'number', 'time of test2 is not a number');
+
+    t.ok(typeof (test1.p('time')) === 'number', 'time of test1 is not a number');
+    t.ok(typeof (test2.p('time')) === 'number', 'time of test2 is not a number');
     t.ok(test1.p('time') < test2.p('time'), 'time of test2 is not lower than test1');
     t.done();
   }, 10);
@@ -832,19 +832,19 @@ exports.defaultAsFunction = function (t) {
 
 exports.defaultIdGeneration = function (t) {
   t.expect(2);
-  
+
   var TestMockup = nohm.model('TestMockup', {
-      properties: {
-        name: {
-          type: 'string',
-          defaultValue: 'defaultIdGeneration'
-        }
+    properties: {
+      name: {
+        type: 'string',
+        defaultValue: 'defaultIdGeneration'
       }
-    });
+    }
+  });
   var test1 = new TestMockup();
   test1.save(function (err) {
     t.ok(!err, 'There was an error while saving.');
-    t.same(typeof(test1.id), 'string', 'The generated id was not a string');
+    t.same(typeof (test1.id), 'string', 'The generated id was not a string');
     t.done();
   });
 };
@@ -862,7 +862,7 @@ exports.factory = function (t) {
   var name = 'UserMockup';
   var user = nohm.factory(name);
   t.same(user.modelName, name, 'Using the factory to get an instance did not work.');
-  
+
   var user2 = nohm.factory(name, 1234124235, function (err) {
     t.same(err, 'not found', 'Instantiating a user via factory with an id and callback did not try to load it');
     t.same(user.modelName, name, 'Using the factory to get an instance (with id) did not work.');
@@ -889,17 +889,17 @@ exports["factory with non-integer id"] = function (t) {
 exports.purgeDB = function (t) {
   var expected = 1;
   var countKeys = function (prefix, callback) {
-    redis.keys(prefix+'*', function (err, orig_num) {
+    redis.keys(prefix + '*', function (err, orig_num) {
       callback(err, orig_num.length);
     });
   };
-  
+
   var tests = [];
   Object.keys(nohm.prefix).forEach(function (key) {
     expected += 2;
     tests.push(async.apply(countKeys, nohm.prefix[key]));
   });
-  
+
   async.series(tests, function (err, num_arr) {
     t.ok(!err, 'Unexpected redis error');
     var count = num_arr.reduce(function (num, add) { return num + add; }, 0);
@@ -920,15 +920,15 @@ exports["no key left behind"] = function (t) {
   var user = nohm.factory('UserMockup');
   var user2 = nohm.factory('UserMockup');
   t.expect(3);
-  
+
   user2.p({
     name: 'user2',
     email: 'user2@test.com'
   });
-  
+
   user.link(user2);
   user2.link(user, 'father');
-  
+
   async.series([
     async.apply(h.cleanUp, redis, args.prefix),
     function (cb) {
@@ -948,13 +948,13 @@ exports["no key left behind"] = function (t) {
       user.remove(cb);
     }
   ], function (err) {
+    t.ok(!err, 'Unexpected saving error');
+    redis.keys(prefix + ':*', function (err, keys) {
       t.ok(!err, 'Unexpected saving error');
-      redis.keys(prefix + ':*', function (err, keys) {
-        t.ok(!err, 'Unexpected saving error');
-        t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
-        t.done();
-      });
-    }
+      t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
+      t.done();
+    });
+  }
   );
 };
 
@@ -962,7 +962,7 @@ exports["temporary model definitions"] = function (t) {
   t.expect(2);
   var user = nohm.factory('UserMockup');
   var user2 = nohm.factory('UserMockup');
-  
+
   var TempUserMockup = nohm.model('UserMockup', {
     properties: {
       well_shit: {
@@ -971,12 +971,12 @@ exports["temporary model definitions"] = function (t) {
     }
   }, true);
   var new_user = new TempUserMockup();
-  
+
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
   t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');
   t.done();
 };
-  
+
 exports["changing unique frees old unique with uppercase values"] = function (t) {
   t.expect(3);
   var obj = nohm.factory('UserMockup');
@@ -985,7 +985,7 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
   var old = "Changing Unique Property Frees The Value";
   obj.p('name', old);
   obj.p('email', 'change_frees@unique.de');
-  
+
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
     obj2.load(obj.id, function () {
@@ -1003,7 +1003,7 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
     });
   });
 };
-  
+
 exports["removing unique frees unique with uppercase values"] = function (t) {
   t.expect(3);
   var obj = nohm.factory('UserMockup');
@@ -1011,11 +1011,11 @@ exports["removing unique frees unique with uppercase values"] = function (t) {
   var old = "Removing Unique Property Frees The Value";
   obj.p('name', old);
   obj.p('email', 'remove_frees@unique.de');
-  
+
   obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error: '+err);
+    t.ok(!err, 'Unexpected saving error: ' + err);
     obj.remove(obj.id, function (err) {
-      t.ok(!err, 'Unexpected removing error: '+err);
+      t.ok(!err, 'Unexpected removing error: ' + err);
       obj2.p('name', old);
       obj2.save(function (err) {
         t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
