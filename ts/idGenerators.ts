@@ -17,7 +17,7 @@ export const idGenerators: IGenerators = {
         if (err) {
           reject(err);
         } else {
-          resolve(newId[0]);
+          resolve(newId.toString(10));
         }
       });
     });

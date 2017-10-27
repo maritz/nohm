@@ -134,7 +134,6 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   private addMethods(methods?: { [name: string]: () => any }) {
     if (methods) {
       _.each(methods, (method, name) => {
-        console.log('DEPRECATED: Adding methods using the options.methods way is deprecated.');
         if (typeof ((this as any)[name]) !== 'undefined') {
           // tslint:disable-next-line:max-line-length
           console.warn(`WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
@@ -480,7 +479,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   }
 
   private async create() {
-    const id = this.generateId();
+    const id = await this.generateId();
     await this.storeId(id);
     await this.setUniqueIds(id);
     this.id = id;
@@ -500,7 +499,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return id;
   }
 
-  private storeId(id: any): Promise<void> {
+  private storeId(id: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client.SADD(this.prefix('idsets'), id, (err) => {
         if (err) {
@@ -516,7 +515,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
    * Sets the unique ids of all unique property values in this instance to the given id.
    * Warning: Only use this during create() when overwriting temporary ids!
    */
-  private setUniqueIds(id: any): Promise<void> {
+  private setUniqueIds(id: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const mSetArguments = [];
       for (const [key, prop] of this.properties) {
