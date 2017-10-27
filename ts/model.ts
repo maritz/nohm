@@ -294,7 +294,6 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     if (prop.value !== value) {
       prop.value = this.castProperty(key, prop, value);
       prop.__updated = prop.value !== prop.__oldValue;
-      // TODO: test if prop is a reference or a copy. if it's a reference, we don't need to set it.
       this.properties.set(key, prop);
     }
   }
@@ -411,6 +410,25 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         key,
       };
     }
+  }
+
+  /**
+   * Resets a property to its state as it was at last init/load/save.
+   *
+   * @param {keyof TProps} [key] If given only this key is reset
+   */
+  public propertyReset(key?: keyof TProps): void {
+    if (key && !this.properties.has(key)) {
+      throw new Error('Invalid key specified for propertyReset');
+    }
+
+    this.properties.forEach((prop: IProperty, innerKey: keyof TProps) => {
+      if (!key || innerKey === key) {
+        prop.__updated = false;
+        prop.value = prop.__oldValue;
+        this.properties.set(innerKey, prop);
+      }
+    });
   }
 
   /**

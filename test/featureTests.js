@@ -291,12 +291,12 @@ exports.propertyTests = {
     var user = new UserMockup(),
       beforeName = user.property('name'),
       beforeEmail = user.property('email');
-    t.expect(4);
+    t.expect(3);
 
     user.property('name', user.property('name') + 'hurgelwurz');
     user.property('email', user.property('email') + 'asdasd');
-    t.ok(user.propertyReset('name'), 'Property reset did not return true.'); // uhm... needed? i don't know
-    t.ok(user.property('name') === beforeName, 'Property reset did not properly reset `name`.');
+    user.propertyReset('name');
+    t.same(user.property('name'), beforeName, 'Property reset did not properly reset `name`.');
 
     t.ok(user.property('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
 
