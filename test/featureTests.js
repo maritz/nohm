@@ -255,34 +255,33 @@ exports.propertyTests = {
 
   propertyDiff: function (t) {
     var user = new UserMockup(),
-      should = [],
       beforeName = user.property('name'),
       beforeEmail = user.property('email');
     t.expect(5);
+    const shouldName = [{
+      key: 'name',
+      before: beforeName,
+      after: 'hurgelwurz'
+    }];
+    const shouldMail = [{
+      key: 'email',
+      before: 'email@email.de',
+      after: 'email.propertyDiff@test'
+    }];
+    const shouldNameAndMail = shouldName.concat(shouldMail);
 
     t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
 
     user.property('name', 'hurgelwurz');
-    should.push({
-      key: 'name',
-      before: beforeName,
-      after: 'hurgelwurz'
-    });
-    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
+    t.same(shouldName, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
 
-    user.property('email', 'asdasd');
-    t.same(should, user.propertyDiff('name'), 'Property diff did not correctly search for changes only in `name`.');
+    user.property('email', 'email.propertyDiff@test');
+    t.same(shouldName, user.propertyDiff('name'), 'Property diff did not correctly filter for changes only in `name`.');
 
-    should.push({
-      key: 'email',
-      before: beforeEmail,
-      after: 'asdasd'
-    });
-    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
+    t.same(shouldNameAndMail, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
 
-    should.shift();
     user.property('name', beforeName);
-    t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
+    t.same(shouldMail, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
 
     t.done();
   },
