@@ -375,12 +375,21 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
   }
 
-  public propertyDiff(): Array<IPropertyDiff<keyof TProps>>;
-  public propertyDiff(key: keyof TProps): void | IPropertyDiff;
-  public propertyDiff(key?: keyof TProps): void | IPropertyDiff | Array<IPropertyDiff> {
+  /**
+   * Returns an array of all the properties that have been changed since init/load/save.
+   *
+   * @example
+   *   user.properrtyDiff('country') ===
+   *    [{
+   *      key: 'country',
+   *      before: 'GB',
+   *      after: 'AB'
+   *    }]
+   */
+  public propertyDiff(key?: keyof TProps): Array<void | IPropertyDiff<keyof TProps>> {
     // TODO: determine if returning an array is really the best option
     if (key) {
-      return this.onePropertyDiff(key);
+      return [this.onePropertyDiff(key)];
     } else {
       const diffResult: Array<IPropertyDiff<keyof TProps>> = [];
       for (const [iterationKey] of this.properties) {
