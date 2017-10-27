@@ -1,9 +1,9 @@
 import * as redis from 'redis';
 
-import { INohmPrefixes, getPrefix } from './helpers';
-import { NohmModel, IModelOptions, IModelPropertyDefinition, IModelPropertyDefinitions } from './model';
+import { getPrefix, INohmPrefixes } from './helpers';
+import { IModelOptions, IModelPropertyDefinitions, NohmModel } from './model';
 
-export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
+export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinitions };
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
@@ -89,7 +89,7 @@ export class NohmClass {
   public setClient(client: redis.RedisClient) {
     this.client = client;
     if (!client.connected) {
-      NohmClass.logError(`Warning: setClient() received a redis client that is not connected yet.
+      NohmClass.logError(`WARNING: setClient() received a redis client that is not connected yet.
 Consider waiting for an established connection before setting it.`);
     }
   }
@@ -136,6 +136,8 @@ Consider waiting for an established connection before setting it.`);
 
       protected options = options;
 
+      public readonly modelName = name;
+
       constructor(...args: any[]) {
         super(...args);
         if (self.meta) {
@@ -148,8 +150,8 @@ Consider waiting for an established connection before setting it.`);
       }
 
       /* This (and .register()) is the only place where this method should exist.
-        An alternative would be to pass the options as a special argument to super, but that would have the downside
-        of making subclasses of subclasses impossible and restricting constructor argument freedom. */
+      An alternative would be to pass the options as a special argument to super, but that would have the downside
+      of making subclasses of subclasses impossible and restricting constructor argument freedom. */
       protected _initOptions() {
         this.options = options || { properties: {} };
         this.meta = {
@@ -233,8 +235,8 @@ Consider waiting for an established connection before setting it.`);
       }
 
       /* This (and .model()) is the only place where this method should exist.
-        An alternative would be to pass the options as a special argument to super, but that would have the downside
-        of making subclasses of subclasses impossible. */
+      An alternative would be to pass the options as a special argument to super, but that would have the downside
+      of making subclasses of subclasses impossible. */
       protected _initOptions() {
         if (!this.client) {
           this.client = self.client;

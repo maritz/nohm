@@ -81,8 +81,9 @@ class RoleLinkMockup extends NohmModel {
     }
   };
   protected idGenerator: 'increment';
-  public foobar() {
-    console.log('this', this);
+
+  public testMethodTypecheck(_arg1: string, _arg2: number): boolean {
+    return true;
   }
 }
 
@@ -108,8 +109,6 @@ exports.relation = {
       role2;
 
     t.expect(2);
-    const test = nohm.factory<RoleLinkMockup>('roleLinkMockup');
-    test.foobar();
 
     role.link(user);
 
@@ -121,6 +120,11 @@ exports.relation = {
     t.done();
   },
 
+  "method declaration is typechecked": (t: any) => {
+    const testInstance = nohm.factory<RoleLinkMockup>('roleLinkMockup');
+    const boolReturn: boolean = testInstance.testMethodTypecheck("asd", 123);
+    t.same(boolReturn, true, 'The typecheck method returned false.');
+  },
 
   link: function (t: any) {
     var user = new userLinkMockup(),

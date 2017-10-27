@@ -27,7 +27,7 @@ var helper = require(__dirname + '/../lib/helpers');
 var async = require('async');
 
 var UserMockup = nohm.model('UserMockup', {
-  properties: {
+  definitions: {
     name: {
       type: 'string',
       defaultValue: 'test',
@@ -151,25 +151,49 @@ exports.prepare = {
 
   setRedisClient: function (t) {
     t.expect(2);
-    console.log('Note: there should be an error message in the next line. (intended behaviour)');
     nohm.client = null;
-    var user = new UserMockup();
-    t.same(user, {}, 'Creating a model without having a nohm client set did not return false.');
-
-    console.log('Note: there should be an error message in the next line. (intended behaviour)');
-    nohm.setClient(require('redis').createClient(80, '123.123.123.123')); // this should not connect.
+    t.throws(
+      () => {
+        var user = new UserMockup();
+      },
+      /No redis client/,
+      'Creating a model without having a redis client set did not throw an error.'
+    );
 
     nohm.setClient(redis);
-    user = new UserMockup();
-    t.equals(typeof (user.modelName), 'string', 'Creating a model having a nohm client set did not work.');
+
+    t.doesNotThrow(
+      () => {
+        var user = new UserMockup();
+      },
+      'Creating a model with a redis client set threw an error.'
+    );
     t.done();
   },
 
   setPrefix: function (t) {
-    var oldPrefix = nohm.prefix;
+    const oldPrefix = nohm.prefix;
     t.expect(1);
+    const expectPrefix = {
+      channel: 'hurgel:channel:',
+      hash: 'hurgel:hash:',
+      idsets: 'hurgel:idsets:',
+      incrementalIds: 'hurgel:ids:',
+      index: 'hurgel:index:',
+      meta: {
+        idGenerator: 'hurgel:meta:idGenerator:',
+        properties: 'hurgel:meta:properties:',
+        version: 'hurgel:meta:version:',
+      },
+      relationKeys: 'hurgel:relationKeys:',
+      relations: 'hurgel:relations:',
+      scoredindex: 'hurgel:scoredindex:',
+      unique: 'hurgel:uniques:',
+    };
+
     nohm.setPrefix('hurgel');
-    t.same(nohm.prefix, helper.getPrefix('hurgel'), 'Setting a custom prefix did not work as expected');
+    t.same(nohm.prefix, expectPrefix, 'Setting a custom prefix did not work as expected');
+
     nohm.prefix = oldPrefix;
     t.done();
   }

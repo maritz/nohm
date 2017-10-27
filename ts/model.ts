@@ -1,24 +1,24 @@
-import { TValidationDefinition } from './model.d';
-import * as redis from 'redis';
+import * as async from 'async';
 import { createHash } from 'crypto';
 import * as _ from 'lodash';
+import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v1 as uuid } from 'uuid';
 
-import { NohmClass, INohmPrefixes } from './index';
+import { idGenerators } from './idGenerators';
+import { INohmPrefixes, NohmClass } from './index';
 import {
-  INohmModel,
+  IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
-  IModelOptions,
+  INohmModel,
   IProperty,
   IPropertyDiff,
-  IValidationResult,
   ISaveOptions,
   IValidationObject,
+  IValidationResult,
+  TValidationDefinition,
 } from './model.d';
-
-import { idGenerators } from './idGenerators';
 import { validators } from './validators';
 
 export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
@@ -66,8 +66,8 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
   constructor() {
     this._initOptions();
-    if (typeof (this.client) === 'undefined') {
-      NohmClass.logError('Did not find a viable redis client in Nohm or the model: ' + this.modelName);
+    if (!this.client) {
+      throw new Error('No redis client defined before initializing models.');
     }
 
     if (!this.meta.inDb) {
@@ -223,8 +223,9 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
     const idGenerator = this.options.idGenerator || 'default';
 
-    hash.update(JSON.stringify(this.definitions));
-    hash.update(JSON.stringify(this.modelName));
+    // '' + to make sure that when no definition is set, it doesn't cause an exception here.
+    hash.update('' + JSON.stringify(this.definitions));
+    hash.update('' + JSON.stringify(this.modelName));
     hash.update(idGenerator.toString());
 
     return hash.digest('hex');
