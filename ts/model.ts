@@ -431,7 +431,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   }
 
   /**
-   *  Get all properties with values either as an array or as json (param true)
+   *  Get all properties with values either as an array or as json (param true).
    */
   public allProperties(): TProps & { id: any } {
     return this.allPropertiesCache;

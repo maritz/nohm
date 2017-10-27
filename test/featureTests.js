@@ -288,9 +288,9 @@ exports.propertyTests = {
 
 
   propertyReset: function (t) {
-    var user = new UserMockup(),
-      beforeName = user.property('name'),
-      beforeEmail = user.property('email');
+    const user = new UserMockup();
+    const beforeName = user.property('name');
+    const beforeEmail = user.property('email');
     t.expect(3);
 
     user.property('name', user.property('name') + 'hurgelwurz');
@@ -309,13 +309,12 @@ exports.propertyTests = {
 
 
   allProperties: function (t) {
-    var user = new UserMockup(),
-      should;
-    t.expect(2);
+    const user = new UserMockup();
+    t.expect(1);
 
     user.property('name', 'hurgelwurz');
     user.property('email', 'hurgelwurz@test.de');
-    should = {
+    const should = {
       name: user.property('name'),
       visits: user.property('visits'),
       email: user.property('email'),
@@ -323,10 +322,8 @@ exports.propertyTests = {
       country: user.property('country'),
       json: {},
       id: user.id
-    }; // yes, this absolutely must be set correct for this test to work. sorry
+    };
     t.same(should, user.allProperties(), 'Getting all properties failed.');
-
-    t.ok(user.allProperties(true) === JSON.stringify(should), 'Getting all properties as JSON failed.');
 
     t.done();
   }
