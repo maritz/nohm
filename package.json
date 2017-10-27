@@ -24,20 +24,20 @@
     "async": "^1.2.1",
     "ioredis": "^3.1.2",
     "lodash": "^4.17.4",
-    "redis": "^2.4.2",
+    "redis": "^2.8.0",
     "traverse": "^0.6.6",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "@types/async": "^2.0.42",
+    "@types/async": "^2.0.44",
     "@types/ioredis": "0.0.23",
-    "@types/lodash": "^4.14.74",
-    "@types/redis": "^2.6.0",
+    "@types/lodash": "^4.14.80",
+    "@types/redis": "^2.8.0",
     "@types/traverse": "^0.6.29",
-    "@types/uuid": "^3.4.2",
+    "@types/uuid": "^3.4.3",
     "nodeunit": "^0.9.1",
-    "tslint": "^5.7.0",
-    "typescript": "^2.5.2"
+    "tslint": "^5.8.0",
+    "typescript": "^2.5.3"
   },
   "contributors": [
     {
