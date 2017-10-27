@@ -80,28 +80,25 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     } as any;
     this.errors = {} as any;
 
-    // initialize the properties
-    if (this.options.hasOwnProperty('properties')) {
-      Object.keys(this.definitions).forEach((key: keyof TProps) => {
-        const definition = this.definitions[key];
-        let defaultValue = definition.defaultValue || 0;
-        if (typeof (defaultValue) === 'function') {
-          defaultValue = defaultValue();
-        }
-        this.properties.set(key, {
-          __numericIndex: false,
-          __oldValue: null,
-          __updated: false,
-          value: defaultValue,
-        });
-        if (typeof (definition.type) !== 'function') {
-          // behaviours should not be called on initialization - thus leaving it at defaultValue
-          this.property(key, defaultValue); // this ensures typecasing
-        }
-        this.__resetProp(key);
-        this.errors[key] = [];
+    Object.keys(this.definitions).forEach((key: keyof TProps) => {
+      const definition = this.definitions[key];
+      let defaultValue = definition.defaultValue || 0;
+      if (typeof (defaultValue) === 'function') {
+        defaultValue = defaultValue();
+      }
+      this.properties.set(key, {
+        __numericIndex: false,
+        __oldValue: null,
+        __updated: false,
+        value: undefined,
       });
-    }
+      if (typeof (definition.type) !== 'function') {
+        // behaviours should not be called on initialization - thus leaving it at defaultValue
+        this.property(key, defaultValue); // this ensures typecasing
+      }
+      this.__resetProp(key);
+      this.errors[key] = [];
+    });
 
     if (this.options.methods) {
       this.addMethods(this.options.methods);
@@ -231,6 +228,29 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return hash.digest('hex');
   }
 
+
+  /**
+   * Alias for .property().
+   * This method is deprecated, use .property() instead.
+   *
+   * @deprecated
+   */
+  public p(keyOrValues: any, value?: any): any {
+    console.log('DEPRECATED: Usage of NohmModel.p() is deprecated, use NohmModel.property() instead.');
+    return this.property(keyOrValues, value);
+  }
+
+  /**
+   * Alias for .property().
+   * This method is deprecated, use .property() instead.
+   *
+   * @deprecated
+   */
+  public prop(keyOrValues: any, value?: any): any {
+    console.log('DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.');
+    return this.property(keyOrValues, value);
+  }
+
   /**
    * Read and write properties to the instance.
    *
@@ -249,12 +269,16 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
       return obj;
     }
-    if (value) {
+    if (typeof value !== 'undefined') {
       this.setProperty(keyOrValues, value);
       this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
     }
     const prop = this.getProperty(keyOrValues);
-    return prop.value;
+    let returnValue = prop.value;
+    if (this.definitions[keyOrValues].type === 'json') {
+      returnValue = JSON.parse(returnValue);
+    }
+    return returnValue;
   }
 
   private getProperty(key: keyof TProps) {
@@ -268,53 +292,53 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   public setProperty(key: keyof TProps, value: any): void {
     const prop = this.getProperty(key);
     if (prop.value !== value) {
-      prop.value = this.castProperty(key, prop);
+      prop.value = this.castProperty(key, prop, value);
       prop.__updated = prop.value !== prop.__oldValue;
       // TODO: test if prop is a reference or a copy. if it's a reference, we don't need to set it.
       this.properties.set(key, prop);
     }
   }
 
-  private castProperty(key: keyof TProps, prop: IProperty): any {
+  private castProperty(key: keyof TProps, prop: IProperty, newValue: any): any {
     const type = this.definitions[key].type;
 
     if (typeof (type) === 'undefined') {
-      return prop.value;
+      return newValue;
     }
 
     if (typeof (type) === 'function') {
-      return type.call(this, prop.value, key, prop.__oldValue);
+      return type.call(this, newValue, key, prop.__oldValue);
     }
 
     switch (type.toLowerCase()) {
       case 'boolean':
       case 'bool':
-        return prop.value === 'false' ? false : !!prop.value;
+        return newValue === 'false' ? false : !!newValue;
       case 'string':
       case 'string':
         // no .toString() here. TODO: or should there be?
         return (
-          (!(prop.value instanceof String) ||
-            prop.value.toString() === '') && typeof prop.value !== 'string'
+          (!(newValue instanceof String) ||
+            newValue.toString() === '') && typeof newValue !== 'string'
         ) ? ''
-          : prop.value;
+          : newValue;
       case 'integer':
       case 'int':
-        return isNaN(parseInt(prop.value, 10)) ? 0 : parseInt(prop.value, 10);
+        return isNaN(parseInt(newValue, 10)) ? 0 : parseInt(newValue, 10);
       case 'float':
-        return isNaN(parseFloat(prop.value)) ? 0 : parseFloat(prop.value);
+        return isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
       case 'date':
       case 'time':
       case 'timestamp':
         // make it a timestamp aka. miliseconds from 1970
-        if (isNaN(prop.value) && typeof prop.value === 'string') {
+        if (isNaN(newValue) && typeof newValue === 'string') {
           let timezoneOffset: number;
           // see if there is a timezone specified in the string
-          if (prop.value.match(/Z$/)) {
+          if (newValue.match(/Z$/)) {
             // UTC timezone in an ISO string (hopefully)
             timezoneOffset = 0;
           } else {
-            const matches = prop.value.match(/(\+|\-)([\d]{1,2})\:([\d]{2})$/);
+            const matches = newValue.match(/(\+|\-)([\d]{1,2})\:([\d]{2})$/);
             if (matches) {
               // +/- hours:minutes specified.
               // calculating offsets in minutes and removing the offset from the string since new Date()
@@ -326,28 +350,28 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
                 timezoneOffset *= -1;
               }
               // make sure it is set in UTC here
-              prop.value = prop.value.substring(0, prop.value.length - matches[0].length) + 'Z';
+              newValue = newValue.substring(0, newValue.length - matches[0].length) + 'Z';
             } else {
-              timezoneOffset = new Date(prop.value).getTimezoneOffset();
+              timezoneOffset = new Date(newValue).getTimezoneOffset();
             }
           }
-          return new Date(prop.value).getTime() - timezoneOffset * 60 * 1000;
+          return new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
         }
-        return parseInt(prop.value, 10);
+        return parseInt(newValue, 10);
       case 'json':
-        if (typeof (prop.value) === 'object') {
-          return JSON.stringify(prop.value);
+        if (typeof (newValue) === 'object') {
+          return JSON.stringify(newValue);
         } else {
           try {
             // already is json, do nothing
-            JSON.parse(prop.value);
-            return prop.value;
+            JSON.parse(newValue);
+            return newValue;
           } catch (e) {
-            return JSON.stringify(prop.value);
+            return JSON.stringify(newValue);
           }
         }
       default:
-        return prop.value;
+        return newValue;
     }
   }
 

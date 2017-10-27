@@ -27,7 +27,7 @@ var helper = require(__dirname + '/../lib/helpers');
 var async = require('async');
 
 var UserMockup = nohm.model('UserMockup', {
-  definitions: {
+  properties: {
     name: {
       type: 'string',
       defaultValue: 'test',
@@ -73,13 +73,7 @@ var UserMockup = nohm.model('UserMockup', {
   },
   methods: {
     test: function test() {
-      return this.p('name');
-    },
-    prop: function prop(name) {
-      if (name === 'super')
-        return this._super_prop('name');
-      else
-        return this._super_prop.apply(this, arguments, 0);
+      return this.property('name');
     }
   },
   idGenerator: 'increment'
@@ -210,15 +204,20 @@ exports.propertyTests = {
 
     t.equals(typeof (user.property), 'function', 'Property getter is not available.');
 
-    t.equals(user.p('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
+    t.equals(user.property('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
 
-    t.equals(user.p('name'), 'test', 'Property getter did not return the correct value for name.');
+    t.equals(user.property('name'), 'test', 'Property getter did not return the correct value for name.');
 
-    console.log('Note: there should be an error message in the next line. (intended behaviour)');
-    t.ok(!user.p('hurgelwurz'), 'Accessing an undefined property did not return false');
 
-    t.same(user.p('json'), {}, 'Property getter did not return the correct value for json.');
+    t.throws(
+      () => {
+        user.property('hurgelwurz');
+      },
+      /Invalid property key 'hurgelwurz'\./,
+      'Calling .property() with an undefined key did not throw an error.'
+    );
 
+    t.same(user.property('json'), {}, 'Property getter did not return the correct value for json.');
     t.done();
   },
 
@@ -228,27 +227,27 @@ exports.propertyTests = {
     var controlUser = new UserMockup();
     t.expect(6);
 
-    t.same(user.p('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
+    t.same(user.property('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
 
-    user.p('email', 'asdasd');
-    t.equals(user.p('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
+    user.property('email', 'asdasd');
+    t.equals(user.property('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
 
-    user.p('email', 'test@test.de');
-    t.ok(user.p('email') !== controlUser.p('email'), 'Creating a new instance of an Object does not create fresh properties.');
+    user.property('email', 'test@test.de');
+    t.ok(user.property('email') !== controlUser.property('email'), 'Creating a new instance of an Object does not create fresh properties.');
 
-    user.p({
+    user.property({
       name: 'objectTest',
       email: 'object@test.de'
     });
 
-    t.equals(user.p('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
-    t.equals(user.p('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
+    t.equals(user.property('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
+    t.equals(user.property('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
 
-    user.p('json', {
+    user.property('json', {
       test: 1
     });
 
-    t.equals(user.p('json').test, 1, 'Setting a json property did not work correctly.');
+    t.equals(user.property('json').test, 1, 'Setting a json property did not work correctly.');
 
     t.done();
   },
@@ -257,13 +256,13 @@ exports.propertyTests = {
   propertyDiff: function (t) {
     var user = new UserMockup(),
       should = [],
-      beforeName = user.p('name'),
-      beforeEmail = user.p('email');
+      beforeName = user.property('name'),
+      beforeEmail = user.property('email');
     t.expect(5);
 
     t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
 
-    user.p('name', 'hurgelwurz');
+    user.property('name', 'hurgelwurz');
     should.push({
       key: 'name',
       before: beforeName,
@@ -271,7 +270,7 @@ exports.propertyTests = {
     });
     t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
 
-    user.p('email', 'asdasd');
+    user.property('email', 'asdasd');
     t.same(should, user.propertyDiff('name'), 'Property diff did not correctly search for changes only in `name`.');
 
     should.push({
@@ -282,7 +281,7 @@ exports.propertyTests = {
     t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
 
     should.shift();
-    user.p('name', beforeName);
+    user.property('name', beforeName);
     t.same(should, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
 
     t.done();
@@ -291,20 +290,20 @@ exports.propertyTests = {
 
   propertyReset: function (t) {
     var user = new UserMockup(),
-      beforeName = user.p('name'),
-      beforeEmail = user.p('email');
+      beforeName = user.property('name'),
+      beforeEmail = user.property('email');
     t.expect(4);
 
-    user.p('name', user.p('name') + 'hurgelwurz');
-    user.p('email', user.p('email') + 'asdasd');
+    user.property('name', user.property('name') + 'hurgelwurz');
+    user.property('email', user.property('email') + 'asdasd');
     t.ok(user.propertyReset('name'), 'Property reset did not return true.'); // uhm... needed? i don't know
-    t.ok(user.p('name') === beforeName, 'Property reset did not properly reset `name`.');
+    t.ok(user.property('name') === beforeName, 'Property reset did not properly reset `name`.');
 
-    t.ok(user.p('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
+    t.ok(user.property('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
 
-    user.p('name', user.p('name') + 'hurgelwurz');
+    user.property('name', user.property('name') + 'hurgelwurz');
     user.propertyReset();
-    t.ok(user.p('name') === beforeName && user.p('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
+    t.ok(user.property('name') === beforeName && user.property('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
 
     t.done();
   },
@@ -315,14 +314,14 @@ exports.propertyTests = {
       should;
     t.expect(2);
 
-    user.p('name', 'hurgelwurz');
-    user.p('email', 'hurgelwurz@test.de');
+    user.property('name', 'hurgelwurz');
+    user.property('email', 'hurgelwurz@test.de');
     should = {
-      name: user.p('name'),
-      visits: user.p('visits'),
-      email: user.p('email'),
-      emailOptional: user.p('emailOptional'),
-      country: user.p('country'),
+      name: user.property('name'),
+      visits: user.property('visits'),
+      email: user.property('email'),
+      emailOptional: user.property('emailOptional'),
+      country: user.property('country'),
       json: {},
       id: user.id
     }; // yes, this absolutely must be set correct for this test to work. sorry
@@ -338,8 +337,8 @@ exports.create = function (t) {
   var user = new UserMockup();
   t.expect(5);
 
-  user.p('name', 'createTest');
-  user.p('email', 'createTest@asdasd.de');
+  user.property('name', 'createTest');
+  user.property('email', 'createTest@asdasd.de');
   user.save(function (err) {
     t.ok(!err, 'Saving a user did not work.');
     if (err) {
@@ -370,8 +369,8 @@ exports.remove = function (t) {
     });
   };
 
-  user.p('name', 'deleteTest');
-  user.p('email', 'deleteTest@asdasd.de');
+  user.property('name', 'deleteTest');
+  user.property('email', 'deleteTest@asdasd.de');
   user.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + err);
     if (err) {
@@ -390,7 +389,7 @@ exports.remove = function (t) {
           testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
         },
         function (callback) {
-          redis.sismember(prefix + ':index:UserMockup:name:' + user.p('name'), user.id, function (err, value) {
+          redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), user.id, function (err, value) {
             t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
           });
           callback();
@@ -402,7 +401,7 @@ exports.remove = function (t) {
           callback();
         },
         function (callback) {
-          testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.p('name'), callback);
+          testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.property('name'), callback);
         }
       ], t.done);
     });
@@ -413,7 +412,7 @@ exports.idSets = function (t) {
   var user = new UserMockup(),
     tmpid = 0;
   t.expect(6);
-  user.p('name', 'idSetTest');
+  user.property('name', 'idSetTest');
   user.save(function (err) {
     t.ok(!err, 'There was an unexpected redis error.');
     tmpid = user.id;
@@ -436,15 +435,15 @@ exports.update = function (t) {
   var user = new UserMockup();
   t.expect(5);
 
-  user.p('name', 'updateTest1');
-  user.p('email', 'updateTest1@email.de');
+  user.property('name', 'updateTest1');
+  user.property('email', 'updateTest1@email.de');
   user.save(function (err) {
     t.ok(!err, 'There was a redis error in the update test. (creation part)');
     if (err) {
       t.done();
     }
-    user.p('name', 'updateTest2');
-    user.p('email', 'updateTest2@email.de');
+    user.property('name', 'updateTest2');
+    user.property('email', 'updateTest2@email.de');
     user.save(function (err) {
       t.ok(!err, 'There was a redis error in the update test.');
       if (err) {
@@ -468,10 +467,10 @@ exports.unique = function (t) {
     user2 = new UserMockup();
   t.expect(8);
 
-  user1.p('name', 'dubplicateTest');
-  user1.p('email', 'dubplicateTest@test.de');
-  user2.p('name', 'dubplicateTest');
-  user2.p('email', 'dubbplicateTest@test.de'); // intentional typo dubb
+  user1.property('name', 'dubplicateTest');
+  user1.property('email', 'dubplicateTest@test.de');
+  user2.property('name', 'dubplicateTest');
+  user2.property('email', 'dubbplicateTest@test.de'); // intentional typo dubb
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
     redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
@@ -503,13 +502,13 @@ exports.uniqueLowerCase = function (t) {
     user2 = new UserMockup();
   t.expect(6);
 
-  user1.p('name', 'LowerCaseTest');
-  user1.p('email', 'LowerCaseTest@test.de');
-  user2.p('name', 'lowercasetest');
-  user2.p('email', 'lowercasetest@test.de');
+  user1.property('name', 'LowerCaseTest');
+  user1.property('email', 'LowerCaseTest@test.de');
+  user2.property('name', 'lowercasetest');
+  user2.property('email', 'lowercasetest@test.de');
   user1.save(function (err) {
     t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.get(prefix + ':uniques:UserMockup:name:' + user1.p('name').toLowerCase(), function (err, value) {
+    redis.get(prefix + ':uniques:UserMockup:name:' + user1.property('name').toLowerCase(), function (err, value) {
       t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
       user2.valid(false, false, function (valid) {
         t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
@@ -533,12 +532,12 @@ exports.uniqueDeleteWhenOtherFails = function (t) {
   var user = new UserMockup();
   t.expect(2);
 
-  user.p('name', 'uniqueDeleteTest');
-  user.p('email', 'uniqueDeleteTest@test.de');
-  user.p('country', '');
+  user.property('name', 'uniqueDeleteTest');
+  user.property('email', 'uniqueDeleteTest@test.de');
+  user.property('country', '');
   user.save(function (err) {
     t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.exists(prefix + ':uniques:UserMockup:name:' + user.p('name').toLowerCase(), function (err, value) {
+    redis.exists(prefix + ':uniques:UserMockup:name:' + user.property('name').toLowerCase(), function (err, value) {
       t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
       t.done();
     });
@@ -549,8 +548,8 @@ exports.uniqueOnlyCheckSpecified = function (t) {
   var user = new UserMockup();
   t.expect(2);
 
-  user.p('name', 'dubplicateTest');
-  user.p('email', 'dubplicateTest@test.de');
+  user.property('name', 'dubplicateTest');
+  user.property('email', 'dubplicateTest@test.de');
   user.valid('name', function (valid) {
     t.same(valid, false, 'Checking the duplication status failed in valid().');
     t.same(user.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
@@ -562,7 +561,7 @@ exports.uniqueDeletion = function (t) {
   var user = new UserMockup();
   t.expect(2);
 
-  user.p({
+  user.property({
     'name': 'dubplicateDeletionTest',
     'email': 'dubplicateDeletionTest@test.de',
     'country': ''
@@ -582,13 +581,13 @@ exports.uniqueCaseInSensitive = function (t) {
   var user2 = new UserMockup();
   t.expect(4);
 
-  user.p({
+  user.property({
     'name': 'uniqueCaseInSensitive',
     'email': 'uniqueCaseInSensitive@test.de'
   });
-  user2.p({
-    'name': user.p('name').toLowerCase(),
-    'email': user.p('email').toLowerCase()
+  user2.property({
+    'name': user.property('name').toLowerCase(),
+    'email': user.property('email').toLowerCase()
   });
 
   user.save(function (err) {
@@ -609,7 +608,7 @@ exports.uniqueEmpty = function (t) {
   redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
     t.ok(!err, 'redis.keys failed.');
     t.same(exists, 0, 'An empty unique was set before the test for it was run');
-    user.p({
+    user.property({
       'name': 'emailOptional',
       'email': 'emailOptionalTest@test.de',
       'emailOptional': ''
@@ -629,8 +628,8 @@ exports["integer uniques"] = function (t) {
   t.expect(5);
   var obj = nohm.factory('UniqueInteger');
   var obj2 = nohm.factory('UniqueInteger');
-  obj.p('unique', 123);
-  obj2.p('unique', 123);
+  obj.property('unique', 123);
+  obj2.property('unique', 123);
 
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
@@ -655,10 +654,10 @@ exports.indexes = function (t) {
   var user = new UserMockup();
   t.expect(7);
 
-  user.p('name', 'indexTest');
-  user.p('email', 'indexTest@test.de');
-  user.p('country', 'indexTestCountry');
-  user.p('visits', 20);
+  user.property('name', 'indexTest');
+  user.property('email', 'indexTest@test.de');
+  user.property('country', 'indexTestCountry');
+  user.property('visits', 20);
 
   function checkCountryIndex(callback) {
     redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
@@ -671,8 +670,8 @@ exports.indexes = function (t) {
   function checkVisitsIndex(callback) {
     redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-      t.ok(value == user.p('visits'), 'The visits index did not have the correct score.');
-      redis.sismember(prefix + ':index:UserMockup:visits:' + user.p('visits'), user.id, function (err, value) {
+      t.ok(value == user.property('visits'), 'The visits index did not have the correct score.');
+      redis.sismember(prefix + ':index:UserMockup:visits:' + user.property('visits'), user.id, function (err, value) {
         t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
         t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
         callback();
@@ -691,14 +690,14 @@ exports.indexes = function (t) {
 exports.__updated = function (t) {
   var user = new UserMockup();
   t.expect(2);
-  user.p('email', '__updatedTest@test.de');
+  user.property('email', '__updatedTest@test.de');
   user.save(function (err) {
     if (err) {
       console.log(err);
       t.ok(false, 'Error while saving user in test for __updated.');
     }
-    user.p('name', 'hurgelwurz');
-    user.p('name', 'test');
+    user.property('name', 'hurgelwurz');
+    user.property('name', 'test');
     t.ok(user.properties.name.__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
 
     user.remove(function (err) {
@@ -706,7 +705,7 @@ exports.__updated = function (t) {
         util.debug('Error while saving user in __updated.');
       }
       user = new UserMockup();
-      user.p('name', 'hurgelwurz');
+      user.property('name', 'hurgelwurz');
       user.propertyReset();
       t.ok(user.properties.name.__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
       t.done();
@@ -730,7 +729,7 @@ exports.methods = function (t) {
   t.expect(2);
 
   t.same(typeof (user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
-  t.same(user.test(), user.p('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
+  t.same(user.test(), user.property('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
   t.done();
 };
 
@@ -740,9 +739,9 @@ exports.methodsSuper = function (t) {
 
   t.same(typeof (user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
   t.same(typeof (user._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
-  t.same(user.prop('super'), user.p('name'), 'The super test method did not work properly.');
+  t.same(user.prop('super'), user.property('name'), 'The super test method did not work properly.');
   user.prop('name', 'methodTest');
-  t.same(user.p('name'), 'methodTest', 'The super test method did not properly handle arguments');
+  t.same(user.property('name'), 'methodTest', 'The super test method did not properly handle arguments');
   t.done();
 };
 
@@ -771,8 +770,8 @@ exports.uniqueDefaultOverwritten = function (t) {
 
 exports.allPropertiesJson = function (t) {
   var user = new UserMockup();
-  user.p('json', { test: 1 });
-  user.p({
+  user.property('json', { test: 1 });
+  user.property({
     name: 'allPropertiesJson',
     email: 'allPropertiesJson@test.de'
   });
@@ -781,7 +780,7 @@ exports.allPropertiesJson = function (t) {
   user.save(function (err) {
     t.ok(!err, 'Unexpected saving error.');
     var testProps = user.allProperties();
-    t.same(testProps.json, user.p('json'), 'allProperties did not properly parse json properties');
+    t.same(testProps.json, user.property('json'), 'allProperties did not properly parse json properties');
     t.done();
   });
 };
@@ -810,7 +809,7 @@ exports.thisInCallbacks = function (t) {
   };
 
   user.save(checkThis('createError', function () {
-    user.p({
+    user.property({
       name: 'thisInCallbacks',
       email: 'thisInCallbacks@test.de'
     });
@@ -819,7 +818,7 @@ exports.thisInCallbacks = function (t) {
       user.load(user.id, checkThis('load'));
       user.find({ name: 'thisInCallbacks' }, checkThis('find'));
       user.save(checkThis('update', function () {
-        user.p('email', 'asd');
+        user.property('email', 'asd');
         user.save(checkThis('updateError'));
       }));
       user.belongsTo(user, checkThis('belongsTo'));
@@ -847,9 +846,9 @@ exports.defaultAsFunction = function (t) {
   setTimeout(function () {
     var test2 = new TestMockup();
 
-    t.ok(typeof (test1.p('time')) === 'number', 'time of test1 is not a number');
-    t.ok(typeof (test2.p('time')) === 'number', 'time of test2 is not a number');
-    t.ok(test1.p('time') < test2.p('time'), 'time of test2 is not lower than test1');
+    t.ok(typeof (test1.property('time')) === 'number', 'time of test1 is not a number');
+    t.ok(typeof (test2.property('time')) === 'number', 'time of test2 is not a number');
+    t.ok(test1.property('time') < test2.property('time'), 'time of test2 is not lower than test1');
     t.done();
   }, 10);
 };
@@ -899,7 +898,7 @@ exports["factory with non-integer id"] = function (t) {
   t.expect(3);
   var name = 'NonIncrement';
   var obj = nohm.factory(name);
-  obj.p('name', 'factory_non_integer_load');
+  obj.property('name', 'factory_non_integer_load');
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
     var obj2 = nohm.factory(name, obj.id, function (err) {
@@ -945,7 +944,7 @@ exports["no key left behind"] = function (t) {
   var user2 = nohm.factory('UserMockup');
   t.expect(3);
 
-  user2.p({
+  user2.property({
     name: 'user2',
     email: 'user2@test.com'
   });
@@ -1007,17 +1006,17 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
   var obj2 = nohm.factory('UserMockup');
   var obj3 = nohm.factory('UserMockup');
   var old = "Changing Unique Property Frees The Value";
-  obj.p('name', old);
-  obj.p('email', 'change_frees@unique.de');
+  obj.property('name', old);
+  obj.property('email', 'change_frees@unique.de');
 
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
     obj2.load(obj.id, function () {
-      obj2.p('name', "changing unique property frees the value to something else");
+      obj2.property('name', "changing unique property frees the value to something else");
       obj2.save(function (err) {
         t.ok(!err, 'Unexpected saving error');
         obj3.load(obj.id, function () {
-          obj2.p('name', old);
+          obj2.property('name', old);
           obj2.save(function (err) {
             t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
             t.done();
@@ -1033,14 +1032,14 @@ exports["removing unique frees unique with uppercase values"] = function (t) {
   var obj = nohm.factory('UserMockup');
   var obj2 = nohm.factory('UserMockup');
   var old = "Removing Unique Property Frees The Value";
-  obj.p('name', old);
-  obj.p('email', 'remove_frees@unique.de');
+  obj.property('name', old);
+  obj.property('email', 'remove_frees@unique.de');
 
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error: ' + err);
     obj.remove(obj.id, function (err) {
       t.ok(!err, 'Unexpected removing error: ' + err);
-      obj2.p('name', old);
+      obj2.property('name', old);
       obj2.save(function (err) {
         t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
         t.done();

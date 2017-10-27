@@ -132,7 +132,7 @@ Consider waiting for an established connection before setting it.`);
 
       public client = self.client;
 
-      protected definitions = options.properties;
+      protected definitions: IModelPropertyDefinitions;
 
       protected options = options;
 
@@ -154,6 +154,7 @@ Consider waiting for an established connection before setting it.`);
       of making subclasses of subclasses impossible and restricting constructor argument freedom. */
       protected _initOptions() {
         this.options = options || { properties: {} };
+        this.definitions = this.options.properties;
         this.meta = {
           inDb: false,
           properties: {},
