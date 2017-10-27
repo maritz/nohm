@@ -313,7 +313,6 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       case 'bool':
         return newValue === 'false' ? false : !!newValue;
       case 'string':
-      case 'string':
         // no .toString() here. TODO: or should there be?
         return (
           (!(newValue instanceof String) ||
@@ -696,8 +695,11 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         optional: false,
         trim: true,
       };
-      const validationObjects = validations.map(this.getValidationObject);
+      const validationObjects = validations.map((validator) => this.getValidationObject(validator));
       const validationPromises: Array<Promise<void>> = validationObjects.map(async (validationObject) => {
+        if (validationObject.options.optional && !property.value) {
+          return;
+        }
         const valid = await validationObject.validator.call(
           this,
           property.value,

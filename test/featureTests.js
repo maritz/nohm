@@ -53,9 +53,12 @@ var UserMockup = nohm.model('UserMockup', {
       unique: true,
       defaultValue: '',
       validations: [
-        ['email', {
-          optional: true
-        }]
+        {
+          name: 'email',
+          options: {
+            optional: true
+          }
+        }
       ]
     },
     country: {
@@ -335,13 +338,12 @@ exports.create = function (t) {
 
   user.property('name', 'createTest');
   user.property('email', 'createTest@asdasd.de');
-  user.save(function (err) {
-    t.ok(!err, 'Saving a user did not work.');
-    if (err) {
-      console.dir(err);
-      console.dir(user.errors);
-      t.done();
-    }
+
+  t.doesNotThrow(async () => {
+    // TODO: when upgrading to a better test framework, async errors need to be handled
+    // right now the promise rejections from this lead to a unhandledPromiseRejection
+    await user.save();
+
     redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
       t.ok(value.name.toString() === 'createTest', 'The user name was not saved properly');
@@ -349,10 +351,10 @@ exports.create = function (t) {
       t.ok(value.email.toString() === 'createTest@asdasd.de', 'The user email was not saved properly');
       t.done();
     });
-  });
+  }, 'Creating a user did not work.:' + user.errors);
 };
 
-exports.remove = function (t) {
+exports.remove = async function (t) {
   var user = new UserMockup(),
     testExists;
   t.expect(9);
@@ -367,41 +369,33 @@ exports.remove = function (t) {
 
   user.property('name', 'deleteTest');
   user.property('email', 'deleteTest@asdasd.de');
-  user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + err);
-    if (err) {
-      t.done();
+  await user.save();
+
+  var id = user.id;
+  await user.remove();
+
+  t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
+  user.id = id; // the other tests need it back. :D
+  async.series([
+    function (callback) {
+      testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
+    },
+    function (callback) {
+      redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), user.id, function (err, value) {
+        t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
+      });
+      callback();
+    },
+    function (callback) {
+      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
+        t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
+      });
+      callback();
+    },
+    function (callback) {
+      testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.property('name'), callback);
     }
-    var id = user.id;
-    user.remove(function (err) {
-      t.ok(!err, 'There was a redis error in the remove test.');
-      if (err) {
-        t.done();
-      }
-      t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
-      user.id = id; // the other tests need it back. :D
-      async.series([
-        function (callback) {
-          testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
-        },
-        function (callback) {
-          redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), user.id, function (err, value) {
-            t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
-          });
-          callback();
-        },
-        function (callback) {
-          redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
-            t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
-          });
-          callback();
-        },
-        function (callback) {
-          testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.property('name'), callback);
-        }
-      ], t.done);
-    });
-  });
+  ], t.done);
 };
 
 exports.idSets = function (t) {

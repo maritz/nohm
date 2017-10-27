@@ -22,7 +22,7 @@ export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
 
 export interface IValidationObject {
   name: string;
-  options: {};
+  options: { [index: string]: any };
   validator: validatiorFunction;
 }
 
