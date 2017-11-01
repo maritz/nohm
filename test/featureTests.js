@@ -1,8 +1,8 @@
-var util = require('util');
-var args = require(__dirname + '/testArgs.js');
-var h = require('./helper.js');
+const util = require('util');
+const args = require(__dirname + '/testArgs.js');
+const h = require('./helper.js');
 
-exports.checkModules = function (t) {
+exports.checkModules = (t) => {
   var redis, nohm, async;
   t.expect(3);
 
@@ -18,13 +18,13 @@ exports.checkModules = function (t) {
   t.done();
 };
 
-var prefix = args.prefix;
+const prefix = args.prefix;
 
 // real tests start in 3.. 2.. 1.. NOW!
-var redis = args.redis;
-var nohm = require(__dirname + '/../tsOut').Nohm;
-var helper = require(__dirname + '/../lib/helpers');
-var async = require('async');
+const redis = args.redis;
+const nohm = require(__dirname + '/../tsOut').Nohm;
+const helper = require(__dirname + '/../lib/helpers');
+const async = require('async');
 
 var UserMockup = nohm.model('UserMockup', {
   properties: {
@@ -102,7 +102,7 @@ exports.prepare = {
   redisClean: function (t) {
     t.expect(1);
     redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
-      var check = (Array.isArray(value) && value.length === 0) || value === null;
+      const check = (Array.isArray(value) && value.length === 0) || value === null;
       t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS ' + prefix + ':*:*Mockup:*" to see what keys could be the cause.');
       t.done();
     });
@@ -151,7 +151,7 @@ exports.prepare = {
     nohm.client = null;
     t.throws(
       () => {
-        var user = new UserMockup();
+        new UserMockup();
       },
       /No redis client/,
       'Creating a model without having a redis client set did not throw an error.'
@@ -161,7 +161,7 @@ exports.prepare = {
 
     t.doesNotThrow(
       () => {
-        var user = new UserMockup();
+        new UserMockup();
       },
       'Creating a model with a redis client set threw an error.'
     );
@@ -198,7 +198,7 @@ exports.prepare = {
 
 exports.propertyTests = {
   propertyGetter: function (t) {
-    var user = new UserMockup();
+    const user = new UserMockup();
     t.expect(7);
 
     t.equals(typeof (user.p), 'function', 'Property getter short p is not available.');
@@ -226,8 +226,8 @@ exports.propertyTests = {
 
 
   propertySetter: function (t) {
-    var user = new UserMockup();
-    var controlUser = new UserMockup();
+    const user = new UserMockup();
+    const controlUser = new UserMockup();
     t.expect(6);
 
     t.same(user.property('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
@@ -257,28 +257,30 @@ exports.propertyTests = {
 
 
   propertyDiff: function (t) {
-    var user = new UserMockup(),
-      beforeName = user.property('name'),
-      beforeEmail = user.property('email');
+    const user = new UserMockup();
+    const beforeName = user.property('name');
+    const afterName = 'hurgelwurz';
+    const beforeEmail = user.property('email');
+    const afterEmail = 'email.propertyDiff@test';
     t.expect(5);
     const shouldName = [{
       key: 'name',
       before: beforeName,
-      after: 'hurgelwurz'
+      after: afterName
     }];
     const shouldMail = [{
       key: 'email',
-      before: 'email@email.de',
-      after: 'email.propertyDiff@test'
+      before: beforeEmail,
+      after: afterEmail
     }];
     const shouldNameAndMail = shouldName.concat(shouldMail);
 
     t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
 
-    user.property('name', 'hurgelwurz');
+    user.property('name', afterName);
     t.same(shouldName, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
 
-    user.property('email', 'email.propertyDiff@test');
+    user.property('email', afterEmail);
     t.same(shouldName, user.propertyDiff('name'), 'Property diff did not correctly filter for changes only in `name`.');
 
     t.same(shouldNameAndMail, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
@@ -332,8 +334,8 @@ exports.propertyTests = {
   }
 };
 
-exports.create = function (t) {
-  var user = new UserMockup();
+exports.create = async (t) => {
+  const user = new UserMockup();
   t.expect(5);
 
   user.property('name', 'createTest');
@@ -354,9 +356,9 @@ exports.create = function (t) {
   }, 'Creating a user did not work.:' + user.errors);
 };
 
-exports.remove = async function (t) {
-  var user = new UserMockup(),
-    testExists;
+exports.remove = async (t) => {
+  const user = new UserMockup();
+  let testExists;
   t.expect(7);
 
   testExists = function (what, key, callback) {
@@ -371,7 +373,7 @@ exports.remove = async function (t) {
   user.property('email', 'deleteTest@asdasd.de');
   await user.save();
 
-  var id = user.id;
+  const id = user.id;
   await user.remove();
 
   t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
@@ -397,7 +399,7 @@ exports.remove = async function (t) {
   ], t.done);
 };
 
-exports.idSets = async function (t) {
+exports.idSets = async (t) => {
   const user = new UserMockup();
   let tmpid = 0;
   t.expect(4);
@@ -417,7 +419,7 @@ exports.idSets = async function (t) {
   });
 };
 
-exports.update = async function (t) {
+exports.update = async (t) => {
   const user = new UserMockup();
   t.expect(3);
 
@@ -438,7 +440,7 @@ exports.update = async function (t) {
   });
 };
 
-exports.unique = async function (t) {
+exports.unique = async (t) => {
   const user1 = new UserMockup();
   const user2 = new UserMockup();
   t.expect(7);
@@ -471,7 +473,7 @@ exports.unique = async function (t) {
   });
 };
 
-exports.uniqueLowerCase = async function (t) {
+exports.uniqueLowerCase = async (t) => {
   const user1 = new UserMockup();
   const user2 = new UserMockup();
   t.expect(5);
@@ -499,8 +501,8 @@ exports.uniqueLowerCase = async function (t) {
   });
 };
 
-exports.uniqueDeleteWhenOtherFails = function (t) {
-  var user = new UserMockup();
+exports.uniqueDeleteWhenOtherFails = async (t) => {
+  const user = new UserMockup();
   t.expect(2);
 
   user.property('name', 'uniqueDeleteTest');
@@ -515,8 +517,8 @@ exports.uniqueDeleteWhenOtherFails = function (t) {
   });
 };
 
-exports.uniqueOnlyCheckSpecified = function (t) {
-  var user = new UserMockup();
+exports.uniqueOnlyCheckSpecified = async (t) => {
+  const user = new UserMockup();
   t.expect(2);
 
   user.property('name', 'dubplicateTest');
@@ -528,8 +530,8 @@ exports.uniqueOnlyCheckSpecified = function (t) {
   });
 };
 
-exports.uniqueDeletion = function (t) {
-  var user = new UserMockup();
+exports.uniqueDeletion = async (t) => {
+  const user = new UserMockup();
   t.expect(2);
 
   user.property({
@@ -547,9 +549,9 @@ exports.uniqueDeletion = function (t) {
   });
 };
 
-exports.uniqueCaseInSensitive = function (t) {
-  var user = new UserMockup();
-  var user2 = new UserMockup();
+exports.uniqueCaseInSensitive = async (t) => {
+  const user = new UserMockup();
+  const user2 = new UserMockup();
   t.expect(4);
 
   user.property({
@@ -572,8 +574,8 @@ exports.uniqueCaseInSensitive = function (t) {
   });
 };
 
-exports.uniqueEmpty = function (t) {
-  var user = new UserMockup();
+exports.uniqueEmpty = async (t) => {
+  const user = new UserMockup();
   t.expect(5);
 
   redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
@@ -595,10 +597,10 @@ exports.uniqueEmpty = function (t) {
   });
 };
 
-exports["integer uniques"] = function (t) {
+exports["integer uniques"] = async (t) => {
   t.expect(5);
-  var obj = nohm.factory('UniqueInteger');
-  var obj2 = nohm.factory('UniqueInteger');
+  const obj = nohm.factory('UniqueInteger');
+  const obj2 = nohm.factory('UniqueInteger');
   obj.property('unique', 123);
   obj2.property('unique', 123);
 
@@ -621,8 +623,8 @@ exports["integer uniques"] = function (t) {
   });
 };
 
-exports.indexes = function (t) {
-  var user = new UserMockup();
+exports.indexes = async (t) => {
+  const user = new UserMockup();
   t.expect(7);
 
   user.property('name', 'indexTest');
@@ -658,8 +660,8 @@ exports.indexes = function (t) {
   });
 };
 
-exports.__updated = function (t) {
-  var user = new UserMockup();
+exports.__updated = async (t) => {
+  const user = new UserMockup();
   t.expect(2);
   user.property('email', '__updatedTest@test.de');
   user.save(function (err) {
@@ -675,17 +677,17 @@ exports.__updated = function (t) {
       if (err) {
         util.debug('Error while saving user in __updated.');
       }
-      user = new UserMockup();
-      user.property('name', 'hurgelwurz');
-      user.propertyReset();
-      t.ok(user.properties.name.__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
+      const user2 = new UserMockup();
+      user2.property('name', 'hurgelwurz');
+      user2.propertyReset();
+      t.ok(user2.properties.name.__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
       t.done();
     });
   });
 };
 
-exports.deleteNonExistant = function (t) {
-  var user = new UserMockup();
+exports.deleteNonExistant = async (t) => {
+  const user = new UserMockup();
   t.expect(1);
   user.id = 987654321;
 
@@ -695,8 +697,8 @@ exports.deleteNonExistant = function (t) {
   });
 };
 
-exports.methods = function (t) {
-  var user = new UserMockup();
+exports.methods = async (t) => {
+  const user = new UserMockup();
   t.expect(2);
 
   t.same(typeof (user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
@@ -704,8 +706,8 @@ exports.methods = function (t) {
   t.done();
 };
 
-exports.methodsSuper = function (t) {
-  var user = new UserMockup();
+exports.methodsSuper = async (t) => {
+  const user = new UserMockup();
   t.expect(4);
 
   t.same(typeof (user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
@@ -716,17 +718,17 @@ exports.methodsSuper = function (t) {
   t.done();
 };
 
-exports["no super method if none needed"] = function (t) {
-  var user = new UserMockup();
+exports["no super method if none needed"] = async (t) => {
+  const user = new UserMockup();
   t.expect(1);
 
   t.ok(!user.hasOwnProperty('_super_test'), 'Defining a method that does not overwrite a nohm method created a _super_.');
   t.done();
 };
 
-exports.uniqueDefaultOverwritten = function (t) {
-  var user = new UserMockup();
-  var user2 = new UserMockup();
+exports.uniqueDefaultOverwritten = async (t) => {
+  const user = new UserMockup();
+  const user2 = new UserMockup();
   t.expect(3);
 
   user.save(function (err) {
@@ -739,8 +741,8 @@ exports.uniqueDefaultOverwritten = function (t) {
   });
 };
 
-exports.allPropertiesJson = function (t) {
-  var user = new UserMockup();
+exports.allPropertiesJson = async (t) => {
+  const user = new UserMockup();
   user.property('json', { test: 1 });
   user.property({
     name: 'allPropertiesJson',
@@ -750,16 +752,16 @@ exports.allPropertiesJson = function (t) {
 
   user.save(function (err) {
     t.ok(!err, 'Unexpected saving error.');
-    var testProps = user.allProperties();
+    const testProps = user.allProperties();
     t.same(testProps.json, user.property('json'), 'allProperties did not properly parse json properties');
     t.done();
   });
 };
 
-exports.thisInCallbacks = function (t) {
-  var user = new UserMockup();
-  var checkCounter = 0;
-  var checkSum = 11;
+exports.thisInCallbacks = async (t) => {
+  const user = new UserMockup();
+  let checkCounter = 0;
+  const checkSum = 11;
   var checkThis = function (name, cb) {
     return function () {
       checkCounter++;
@@ -800,7 +802,7 @@ exports.thisInCallbacks = function (t) {
   }));
 };
 
-exports.defaultAsFunction = function (t) {
+exports.defaultAsFunction = async (t) => {
   t.expect(3);
 
   var TestMockup = nohm.model('TestMockup', {
@@ -813,9 +815,9 @@ exports.defaultAsFunction = function (t) {
       }
     }
   });
-  var test1 = new TestMockup();
+  const test1 = new TestMockup();
   setTimeout(function () {
-    var test2 = new TestMockup();
+    const test2 = new TestMockup();
 
     t.ok(typeof (test1.property('time')) === 'number', 'time of test1 is not a number');
     t.ok(typeof (test2.property('time')) === 'number', 'time of test2 is not a number');
@@ -824,7 +826,7 @@ exports.defaultAsFunction = function (t) {
   }, 10);
 };
 
-exports.defaultIdGeneration = function (t) {
+exports.defaultIdGeneration = async (t) => {
   t.expect(2);
 
   var TestMockup = nohm.model('TestMockup', {
@@ -835,7 +837,7 @@ exports.defaultIdGeneration = function (t) {
       }
     }
   });
-  var test1 = new TestMockup();
+  const test1 = new TestMockup();
   test1.save(function (err) {
     t.ok(!err, 'There was an error while saving.');
     t.same(typeof (test1.id), 'string', 'The generated id was not a string');
@@ -843,7 +845,7 @@ exports.defaultIdGeneration = function (t) {
   });
 };
 
-exports.instanceLoad = function (t) {
+exports.instanceLoad = async (t) => {
   t.expect(1);
   new UserMockup(1123123, function (err) {
     t.same(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
@@ -851,10 +853,10 @@ exports.instanceLoad = function (t) {
   });
 };
 
-exports.factory = function (t) {
+exports.factory = async (t) => {
   t.expect(4);
-  var name = 'UserMockup';
-  var user = nohm.factory(name);
+  const name = 'UserMockup';
+  const user = nohm.factory(name);
   t.same(user.modelName, name, 'Using the factory to get an instance did not work.');
 
   var user2 = nohm.factory(name, 1234124235, function (err) {
@@ -865,10 +867,10 @@ exports.factory = function (t) {
   t.ok(user2, 'Using the factory with an id and callback returned false');
 };
 
-exports["factory with non-integer id"] = function (t) {
+exports["factory with non-integer id"] = async (t) => {
   t.expect(3);
-  var name = 'NonIncrement';
-  var obj = nohm.factory(name);
+  const name = 'NonIncrement';
+  const obj = nohm.factory(name);
   obj.property('name', 'factory_non_integer_load');
   obj.save(function (err) {
     t.ok(!err, 'Unexpected saving error');
@@ -880,29 +882,30 @@ exports["factory with non-integer id"] = function (t) {
   });
 };
 
-exports.purgeDB = function (t) {
-  var expected = 1;
+exports.purgeDB = async (t) => {
+  let expected = 1;
   var countKeys = function (prefix, callback) {
     redis.keys(prefix + '*', function (err, orig_num) {
       callback(err, orig_num.length);
     });
   };
 
-  var tests = [];
+  const tests = [];
   Object.keys(nohm.prefix).forEach(function (key) {
     expected += 2;
     tests.push(async.apply(countKeys, nohm.prefix[key]));
   });
+  t.expect(expected);
 
   async.series(tests, function (err, num_arr) {
     t.ok(!err, 'Unexpected redis error');
-    var count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+    const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
     t.ok(count > 0, 'Database did not have any keys');
     nohm.purgeDb(function (err) {
       t.ok(!err, 'Unexpected redis error');
       async.series(tests, function (err, num_arr) {
         t.ok(!err, 'Unexpected redis error');
-        var count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+        const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
         t.same(count, 0, 'Database did have keys left after purging.');
         t.done();
       });
@@ -910,9 +913,9 @@ exports.purgeDB = function (t) {
   });
 };
 
-exports["no key left behind"] = function (t) {
-  var user = nohm.factory('UserMockup');
-  var user2 = nohm.factory('UserMockup');
+exports["no key left behind"] = async (t) => {
+  const user = nohm.factory('UserMockup');
+  const user2 = nohm.factory('UserMockup');
   t.expect(3);
 
   user2.property({
@@ -952,10 +955,10 @@ exports["no key left behind"] = function (t) {
   );
 };
 
-exports["temporary model definitions"] = function (t) {
+exports["temporary model definitions"] = async (t) => {
   t.expect(2);
-  var user = nohm.factory('UserMockup');
-  var user2 = nohm.factory('UserMockup');
+  const user = nohm.factory('UserMockup');
+  const user2 = nohm.factory('UserMockup');
 
   var TempUserMockup = nohm.model('UserMockup', {
     properties: {
@@ -964,19 +967,19 @@ exports["temporary model definitions"] = function (t) {
       }
     }
   }, true);
-  var new_user = new TempUserMockup();
+  const new_user = new TempUserMockup();
 
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
   t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');
   t.done();
 };
 
-exports["changing unique frees old unique with uppercase values"] = function (t) {
+exports["changing unique frees old unique with uppercase values"] = async (t) => {
   t.expect(3);
-  var obj = nohm.factory('UserMockup');
-  var obj2 = nohm.factory('UserMockup');
-  var obj3 = nohm.factory('UserMockup');
-  var old = "Changing Unique Property Frees The Value";
+  const obj = nohm.factory('UserMockup');
+  const obj2 = nohm.factory('UserMockup');
+  const obj3 = nohm.factory('UserMockup');
+  const old = "Changing Unique Property Frees The Value";
   obj.property('name', old);
   obj.property('email', 'change_frees@unique.de');
 
@@ -998,11 +1001,11 @@ exports["changing unique frees old unique with uppercase values"] = function (t)
   });
 };
 
-exports["removing unique frees unique with uppercase values"] = function (t) {
+exports["removing unique frees unique with uppercase values"] = async (t) => {
   t.expect(3);
-  var obj = nohm.factory('UserMockup');
-  var obj2 = nohm.factory('UserMockup');
-  var old = "Removing Unique Property Frees The Value";
+  const obj = nohm.factory('UserMockup');
+  const obj2 = nohm.factory('UserMockup');
+  const old = "Removing Unique Property Frees The Value";
   obj.property('name', old);
   obj.property('email', 'remove_frees@unique.de');
 
