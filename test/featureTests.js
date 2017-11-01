@@ -508,13 +508,15 @@ exports.uniqueDeleteWhenOtherFails = async (t) => {
   user.property('name', 'uniqueDeleteTest');
   user.property('email', 'uniqueDeleteTest@test.de');
   user.property('country', '');
-  user.save(function (err) {
+  try {
+    await user.save();
+  } catch (err) {
     t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
     redis.exists(prefix + ':uniques:UserMockup:name:' + user.property('name').toLowerCase(), function (err, value) {
       t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
       t.done();
     });
-  });
+  }
 };
 
 exports.uniqueOnlyCheckSpecified = async (t) => {

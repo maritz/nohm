@@ -467,7 +467,11 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       }
       let isValid = true;
       if (options.skip_validation_and_unique_indexes === false) {
-        isValid = await this.validate(undefined, true);
+        try {
+          isValid = await this.validate(undefined, true);
+        } catch (e) {
+          return reject(e);
+        }
         if (!isValid) {
           if (action === 'create') {
             // remove temp id
@@ -727,6 +731,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         );
         if (!valid) {
           result.valid = false;
+          result.error = validationObject.name;
           this.errors[key].push(validationObject.name);
         }
       });
