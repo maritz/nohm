@@ -148,6 +148,9 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         if (typeof ((this as any)[name]) !== 'undefined') {
           // tslint:disable-next-line:max-line-length
           console.warn(`WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
+          // tslint:disable-next-line:max-line-length
+          console.warn(`DEPRECATED: Overwriting built-in methhods is deprecated. Please migrate them to a different name.`);
+          (this as any)['_super_' + name] = (this as any)[name].bind(this);
         }
         (this as any)[name] = method;
       });
@@ -273,8 +276,8 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   // tslint:disable-next-line:unified-signatures
   public property(key: keyof TProps, value: any): any;
   // tslint:disable-next-line:unified-signatures
-  public property(valuesObject: {[key in keyof TProps]: any}): any;
-  public property(keyOrValues: keyof TProps | {[key in keyof TProps]: any}, value?: any): any {
+  public property(valuesObject: Partial<{[key in keyof TProps]: any}>): any;
+  public property(keyOrValues: keyof TProps | Partial<{[key in keyof TProps]: any}>, value?: any): any {
     if (typeof (keyOrValues) !== 'string') {
       const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
       return obj;
@@ -897,10 +900,10 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     if (!this.id) {
       throw new Error('The instance you are trying to delete has no id.');
     }
-    /*if (!this.inDb) {
+    if (!this.inDb) {
       // TODO check if this is needed
       await this.load(this.id);
-    }*/
+    }
     return this.deleteDbCall(silent);
   }
 
@@ -942,6 +945,61 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         }
       });
     });
+  }
+
+  /**
+   * Returns a Promsie that resolves to true if the given id exists for this model.
+   *
+   * @param {*} id
+   * @returns {Promise<boolean>}
+   */
+  public exists(id: any): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.client.SISMEMBER(this.prefix('idsets'), id, (err, found) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(found === 1);
+        }
+      });
+    });
+  }
+
+  private getHashAll(id: any): Promise<Partial<TProps>> {
+    return new Promise((resolve, reject) => {
+      const props: Partial<TProps> = {};
+      this.client.HGETALL(this.prefix('hash') + id, (err, values) => {
+        if (err) {
+          return reject(err);
+        }
+        if (values === null) {
+          return reject(new Error('not found'));
+        }
+        Object.keys(values).forEach((key) => {
+          if (key === '__meta_version') {
+            return;
+          }
+          if (!this.definitions[key]) {
+            // tslint:disable-next-line:max-line-length
+            NohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
+            return;
+          }
+          props[key] = values[key];
+        });
+        return resolve(props);
+      });
+    });
+  }
+
+  public async load(id: any): Promise<TProps & { id: any }> {
+    if (!id) {
+      throw new Error('No id passed to .load().');
+    }
+    const dbProps = await this.getHashAll(id);
+    this.property(dbProps);
+    this.id = id;
+    this.inDb = true;
+    return this.allProperties();
   }
 }
 

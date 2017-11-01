@@ -74,11 +74,6 @@ var UserMockup = nohm.model('UserMockup', {
       defaultValue: '{}'
     }
   },
-  methods: {
-    test: function test() {
-      return this.property('name');
-    }
-  },
   idGenerator: 'increment'
 });
 
@@ -96,6 +91,30 @@ nohm.model('UniqueInteger', {
     }
   }
 });
+
+const MethodOverwrite = nohm.model('methodOverwrite', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'test',
+      unique: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+  },
+  methods: {
+    test: function test() {
+      return this.property('name');
+    },
+    prop: function prop(name) {
+      if (name === 'super')
+        return this._super_prop('name');
+      else
+        return this._super_prop.apply(this, arguments, 0);
+    }
+  }
+})
 
 
 exports.prepare = {
@@ -669,29 +688,29 @@ exports.deleteNonExistant = async (t) => {
   try {
     await user.remove();
   } catch (err) {
-    t.same(err, 'not found', 'Trying to delete an instance that doesn\'t exist did not return "not found".');
+    t.same(err, new Error('not found'), 'Trying to delete an instance that doesn\'t exist did not return "not found".');
     t.done();
   }
 };
 
 exports.methods = async (t) => {
-  const user = new UserMockup();
+  const methodOverwrite = new MethodOverwrite();
   t.expect(2);
 
-  t.same(typeof (user.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
-  t.same(user.test(), user.property('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
+  t.same(typeof (methodOverwrite.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
+  t.same(methodOverwrite.test(), methodOverwrite.property('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
   t.done();
 };
 
 exports.methodsSuper = async (t) => {
-  const user = new UserMockup();
+  const methodOverwrite = new MethodOverwrite();
   t.expect(4);
 
-  t.same(typeof (user.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
-  t.same(typeof (user._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
-  t.same(user.prop('super'), user.property('name'), 'The super test method did not work properly.');
-  user.prop('name', 'methodTest');
-  t.same(user.property('name'), 'methodTest', 'The super test method did not properly handle arguments');
+  t.same(typeof (methodOverwrite.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
+  t.same(typeof (methodOverwrite._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
+  t.same(methodOverwrite.prop('super'), methodOverwrite.property('name'), 'The super test method did not work properly.');
+  methodOverwrite.prop('name', 'methodTest');
+  t.same(methodOverwrite.property('name'), 'methodTest', 'The super test method did not properly handle arguments');
   t.done();
 };
 
@@ -708,14 +727,15 @@ exports.uniqueDefaultOverwritten = async (t) => {
   const user2 = new UserMockup();
   t.expect(3);
 
-  user.save(function (err) {
-    t.ok(!err, 'Unexpected saving error.');
-    user2.save(function (err) {
-      t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
-      t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
-      t.done();
-    });
-  });
+  try {
+    await user.save();
+    console.log('trying to save 2');
+    await user2.save();
+  } catch (err) {
+    console.log('failed to save 2', err, user.errors);
+    t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
+    t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
+  }
 };
 
 exports.allPropertiesJson = async (t) => {
