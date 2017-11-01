@@ -1,9 +1,9 @@
 import * as redis from 'redis';
 
 import { getPrefix, INohmPrefixes } from './helpers';
-import { IModelOptions, IModelPropertyDefinitions, NohmModel } from './model';
+import { IModelOptions, IModelPropertyDefinition, IModelPropertyDefinitions, NohmModel } from './model';
 
-export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinitions };
+export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition };
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
@@ -227,6 +227,7 @@ Consider waiting for an established connection before setting it.`);
       constructor(...args: any[]) {
         super(...args);
         if (self.meta) {
+          // TODO: fix meta info storing
           this.meta = {
             inDb: false,
             properties: this.options.properties,

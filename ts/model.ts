@@ -50,7 +50,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     version: string,
   };
 
-  protected properties: Map<string, IProperty>;
+  protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
   protected publish: boolean;
   protected abstract definitions: {
@@ -63,6 +63,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   private relationChanges: Array<any>;
   private inDb: boolean;
   private loaded: boolean;
+  private tmpUniqueKeys: Array<string>;
 
   constructor() {
     this._initOptions();
@@ -113,6 +114,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
 
     this.relationChanges = [];
+    this.tmpUniqueKeys = [];
 
     this.id = null;
     this.inDb = false;
@@ -425,6 +427,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         prop.__updated = false;
         prop.value = prop.__oldValue;
         this.properties.set(innerKey, prop);
+        // this.allPropertiesCache[innerKey] = prop.__oldValue; // TODO: enable & write test for this
       }
     });
   }
@@ -436,12 +439,22 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return this.allPropertiesCache;
   }
 
+  /**
+   * Save an instance to the database. Updating or Creating as needed depending on if the instance already has an id.
+   *
+   * @param {ISaveOptions} [options={
+   *     continue_on_link_error: false,
+   *     silent: false,
+   *     skip_validation_and_unique_indexes: false,
+   *   }]
+   * @returns {Promise<void>}
+   */
   public save(options: ISaveOptions = {
     continue_on_link_error: false,
     silent: false,
     skip_validation_and_unique_indexes: false,
-  }): Promise<any> {
-    return new Promise(async (resolve) => {
+  }): Promise<void> {
+    return new Promise(async (resolve, reject) => {
       let action: 'update' | 'create' = 'update';
       if (!this.id) {
         action = 'create';
@@ -455,6 +468,13 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       let isValid = true;
       if (options.skip_validation_and_unique_indexes === false) {
         isValid = await this.validate(undefined, true);
+        if (!isValid) {
+          if (action === 'create') {
+            // remove temp id
+            this.id = null;
+          }
+          return reject('invalid');
+        }
       }
       const idExists = await this.checkIdExists(this.id);
       if (action === 'create' && !idExists) {
@@ -544,7 +564,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     });
   }
 
-  private update(options: ISaveOptions): Promise<void> {
+  private update(_options: ISaveOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       const hmSetArguments = [];
       const multi = this.client.MULTI();
@@ -642,9 +662,9 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
-    const validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(nonUniqueValidations);
+    let validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(nonUniqueValidations);
 
-    let valid = validationResults.some((result) => !result.valid);
+    let valid = validationResults.some((result) => result.valid);
 
     if (!valid) {
       // if nonUniuqeValidations failed, we don't want to set uniques while checking them
@@ -657,10 +677,13 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         uniqueValidations.push(this.checkUniques(setDirectly, key, prop));
       }
     }
-    validationResults.concat(await Promise.all<IValidationResult>(uniqueValidations));
+    const uniqueValidationResults = await Promise.all<IValidationResult>(uniqueValidations);
+    validationResults = validationResults.concat(uniqueValidationResults);
 
     validationResults.forEach((result) => {
-      this.errors[result.key] = [];
+      if (!this.errors[result.key]) {
+        this.errors[result.key] = [];
+      }
       if (!result.valid) {
         valid = false;
         if (!result.error) {
@@ -671,13 +694,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     });
 
     if (setDirectly && valid === false) {
-      const clearPromises: Array<Promise<void>> = [];
-      for (const [key, prop] of this.properties) {
-        if (!property || property === key) {
-          clearPromises.push(this.clearTemporaryUniques(key, prop));
-        }
-      }
-      await Promise.all(clearPromises);
+      await this.clearTemporaryUniques();
     }
 
     return valid;
@@ -766,7 +783,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
   private isUniquqKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      function checkCallback(err: Error | null, dbValue: number) {
+      const checkCallback = (err: Error | null, dbValue: number) => {
         if (err) {
           return reject(err);
         } else {
@@ -774,13 +791,14 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
           if (setDirectly && dbValue === 1) {
             // setDirectly === true means using setnx which returns 1 if the value did *not* exist
             isFreeUnique = true;
+            this.tmpUniqueKeys.push(key);
           } else if (!setDirectly && dbValue === 0) {
             // setDirectly === false means using exists which returns 0 if the value did *not* exist
             isFreeUnique = true;
           }
           return resolve(isFreeUnique);
         }
-      }
+      };
       if (setDirectly) {
         /*
         * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
@@ -833,23 +851,79 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
    * @param {IProperty} property
    * @returns {Promise<void>}
    */
-  private async clearTemporaryUniques(
-    key: keyof TProps,
-    property: IProperty,
-  ): Promise<void> {
-    const isUpdatedUnique = this.isUpdatedUnique(key, property);
-    if (isUpdatedUnique) {
-      const uniqueKey = this.getUniqueKey(key, property);
-      return new Promise<void>((resolve, reject) => {
-        this.client.del(uniqueKey, (err: Error | null) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
+  private async clearTemporaryUniques(): Promise<void> {
+    if (this.tmpUniqueKeys.length > 0) {
+      const deletes: Array<Promise<void>> = this.tmpUniqueKeys.map((key) => {
+        return new Promise<void>((resolve, reject) => {
+          this.client.del(key, (err: Error | null) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
         });
       });
+      await Promise.all(deletes);
     }
+  }
+
+  /**
+   *  Remove an objet from the database.
+   *  Note: Does not destroy the js object or its properties itself!
+   *
+   * @param {boolean} [silent=false] Fire PubSub events or not
+   * @returns {Promise<void>}
+   */
+  public async remove(silent = false): Promise<void> {
+    if (!this.id) {
+      throw new Error('The instance you are trying to delete has no id.');
+    }
+    /*if (!this.inDb) {
+      // TODO check if this is needed
+      await this.load(this.id);
+    }*/
+    return this.deleteDbCall(silent);
+  }
+
+  private deleteDbCall(silent: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+
+      const multi = this.client.multi();
+
+      multi.del(`${this.prefix('hash')}:${this.id}`);
+      multi.srem(this.prefix('idsets'), this.id);
+
+      this.properties.forEach((prop, key) => {
+        if (this.definitions[key].unique) {
+          let value = prop.__oldValue;
+          if (this.definitions[key].type === 'string') {
+            value = String(value).toLowerCase();
+          }
+          multi.del(`${this.prefix('unique')}:${key}:${value}`);
+        }
+        if (this.definitions[key].index === true) {
+          multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.id);
+        }
+        if (prop.__numericIndex === true) {
+          multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.id);
+        }
+      });
+
+      // await this.unlinkAll(multi); // TODO: enable once implmemented
+      multi.exec((err) => {
+        this.id = 0;
+
+        if (!silent && !err) {
+          // this.fireEvent('remove', id); // TODO: enable once implemented
+        }
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }
 

@@ -357,7 +357,7 @@ exports.create = function (t) {
 exports.remove = async function (t) {
   var user = new UserMockup(),
     testExists;
-  t.expect(9);
+  t.expect(7);
 
   testExists = function (what, key, callback) {
     redis.exists(key, function (err, value) {
@@ -375,19 +375,18 @@ exports.remove = async function (t) {
   await user.remove();
 
   t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
-  user.id = id; // the other tests need it back. :D
   async.series([
     function (callback) {
-      testExists('hashes', prefix + ':hash:UserMockup:' + user.id, callback);
+      testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
     },
     function (callback) {
-      redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), user.id, function (err, value) {
+      redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), id, function (err, value) {
         t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
       });
       callback();
     },
     function (callback) {
-      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
+      redis.zscore(prefix + ':scoredindex:UserMockup:visits', id, function (err, value) {
         t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
       });
       callback();
@@ -398,91 +397,77 @@ exports.remove = async function (t) {
   ], t.done);
 };
 
-exports.idSets = function (t) {
-  var user = new UserMockup(),
-    tmpid = 0;
-  t.expect(6);
+exports.idSets = async function (t) {
+  const user = new UserMockup();
+  let tmpid = 0;
+  t.expect(4);
   user.property('name', 'idSetTest');
-  user.save(function (err) {
+
+  await user.save();
+  tmpid = user.id;
+  redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, async (err, value) => {
     t.ok(!err, 'There was an unexpected redis error.');
-    tmpid = user.id;
-    redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, function (err, value) {
+    t.equals(value, 1, 'The userid was not part of the idset after saving.');
+    await user.remove();
+    redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, (err, value) => {
       t.ok(!err, 'There was an unexpected redis error.');
-      t.equals(value, 1, 'The userid was not part of the idset after saving.');
-      user.remove(function (err) {
-        t.ok(!err, 'There was an unexpected redis error.');
-        redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, function (err, value) {
-          t.ok(!err, 'There was an unexpected redis error.');
-          t.equals(value, 0, 'The userid was still part of the idset after removing.');
-          t.done();
-        });
-      });
+      t.equals(value, 0, 'The userid was still part of the idset after removing.');
+      t.done();
     });
   });
 };
 
-exports.update = function (t) {
-  var user = new UserMockup();
-  t.expect(5);
+exports.update = async function (t) {
+  const user = new UserMockup();
+  t.expect(3);
 
   user.property('name', 'updateTest1');
   user.property('email', 'updateTest1@email.de');
-  user.save(function (err) {
-    t.ok(!err, 'There was a redis error in the update test. (creation part)');
+  await user.save();
+  user.property('name', 'updateTest2');
+  user.property('email', 'updateTest2@email.de');
+  await user.save();
+  redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
+    t.ok(!err, 'There was a redis error in the update test check.');
     if (err) {
       t.done();
     }
-    user.property('name', 'updateTest2');
-    user.property('email', 'updateTest2@email.de');
-    user.save(function (err) {
-      t.ok(!err, 'There was a redis error in the update test.');
-      if (err) {
-        t.done();
-      }
-      redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
-        t.ok(!err, 'There was a redis error in the update test check.');
-        if (err) {
-          t.done();
-        }
-        t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
-        t.ok(value.email.toString() === 'updateTest2@email.de', 'The user email was not updated properly');
-        t.done();
-      });
-    });
+    t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
+    t.ok(value.email.toString() === 'updateTest2@email.de', 'The user email was not updated properly');
+    t.done();
   });
 };
 
-exports.unique = function (t) {
-  var user1 = new UserMockup(),
-    user2 = new UserMockup();
-  t.expect(8);
+exports.unique = async function (t) {
+  const user1 = new UserMockup();
+  const user2 = new UserMockup();
+  t.expect(7);
 
-  user1.property('name', 'dubplicateTest');
-  user1.property('email', 'dubplicateTest@test.de');
-  user2.property('name', 'dubplicateTest');
-  user2.property('email', 'dubbplicateTest@test.de'); // intentional typo dubb
-  user1.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
-      t.ok(user1.id, 'Userid b0rked while checking uniques');
-      t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
-      user2.valid(false, false, function (valid) {
-        t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
-        user2.save(function (err) {
-          t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
-          redis.exists(prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de', function (err, value) {
-            t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
-            redis.get(prefix + ':uniques:UserMockup:name:dubplicatetest', function (err, value) {
-              t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-              t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
-              t.done();
-            });
-          });
+  user1.property('name', 'duplicateTest');
+  user1.property('email', 'duplicateTest@test.de');
+  user2.property('name', 'duplicateTest');
+  user2.property('email', 'dubplicateTest@test.de'); // intentional typo dub
+  await user1.save();
+  redis.get(prefix + ':uniques:UserMockup:name:duplicatetest', async (err, value) => {
+    t.ok(user1.id, 'Userid b0rked while checking uniques');
+    t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
+    const valid = await user2.validate(false, false);
+    t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
+    try {
+      console.log('saving user2');
+      await user2.save();
+      t.ok(true, 'Saving a model with an invalid non-unique property did not throw/reject.');
+    } catch (err) {
+      t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+
+      redis.exists(prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de', (err, value) => {
+        t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
+        redis.get(prefix + ':uniques:UserMockup:name:duplicatetest', (err, value) => {
+          t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
+          t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+          t.done();
         });
       });
-    });
-    if (err) {
-      t.done();
     }
   });
 };
