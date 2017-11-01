@@ -454,9 +454,8 @@ exports.unique = async function (t) {
     const valid = await user2.validate(false, false);
     t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
     try {
-      console.log('saving user2');
       await user2.save();
-      t.ok(true, 'Saving a model with an invalid non-unique property did not throw/reject.');
+      t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
     } catch (err) {
       t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
 
@@ -472,33 +471,30 @@ exports.unique = async function (t) {
   });
 };
 
-exports.uniqueLowerCase = function (t) {
-  var user1 = new UserMockup(),
-    user2 = new UserMockup();
-  t.expect(6);
+exports.uniqueLowerCase = async function (t) {
+  const user1 = new UserMockup();
+  const user2 = new UserMockup();
+  t.expect(5);
 
   user1.property('name', 'LowerCaseTest');
   user1.property('email', 'LowerCaseTest@test.de');
   user2.property('name', 'lowercasetest');
   user2.property('email', 'lowercasetest@test.de');
-  user1.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.get(prefix + ':uniques:UserMockup:name:' + user1.property('name').toLowerCase(), function (err, value) {
-      t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
-      user2.valid(false, false, function (valid) {
-        t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
-        user2.save(function (err) {
-          t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
-          redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
-            t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-            t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
-            t.done();
-          });
-        });
+  await user1.save();
+  redis.get(prefix + ':uniques:UserMockup:name:' + user1.property('name').toLowerCase(), async (err, value) => {
+    t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
+    const valid = await user2.validate(false, false);
+    t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
+    try {
+      await user2.save();
+      t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
+    } catch (err) {
+      t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+      redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
+        t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
+        t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
+        t.done();
       });
-    });
-    if (err) {
-      t.done();
     }
   });
 };
