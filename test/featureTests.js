@@ -523,13 +523,13 @@ exports.uniqueOnlyCheckSpecified = async (t) => {
   const user = new UserMockup();
   t.expect(2);
 
-  user.property('name', 'dubplicateTest');
-  user.property('email', 'dubplicateTest@test.de');
-  user.valid('name', function (valid) {
-    t.same(valid, false, 'Checking the duplication status failed in valid().');
-    t.same(user.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
-    t.done();
-  });
+  // TODO: make test work on own user, not on user of another test
+  user.property('name', 'duplicateTest');
+  user.property('email', 'duplicateTest@test.de');
+  const valid = await user.validate('name');
+  t.same(valid, false, 'Checking the duplication status failed in valid().');
+  t.same(user.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
+  t.done();
 };
 
 exports.uniqueDeletion = async (t) => {
@@ -542,19 +542,21 @@ exports.uniqueDeletion = async (t) => {
     'country': ''
   });
 
-  user.save(function (err) {
+  try {
+    await user.save();
+  } catch (err) {
     t.ok(err, 'The invalid property country did not trigger a failure.');
     redis.exists(prefix + ':uniques:UserMockup:name:dubplicateDeletionTest', function (err, value) {
       t.equals(value, 0, 'The tmp unique key was not deleted if a non-unique saving failure occured.');
       t.done();
     });
-  });
+  };
 };
 
 exports.uniqueCaseInSensitive = async (t) => {
   const user = new UserMockup();
   const user2 = new UserMockup();
-  t.expect(4);
+  t.expect(3);
 
   user.property({
     'name': 'uniqueCaseInSensitive',
@@ -565,22 +567,19 @@ exports.uniqueCaseInSensitive = async (t) => {
     'email': user.property('email').toLowerCase()
   });
 
-  user.save(function (err) {
-    t.ok(!err, 'Saving failed');
-    user2.valid(function (valid) {
-      t.ok(!valid, 'A duplicate (different case) unique property was validated.');
-      t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
-      t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
-      t.done();
-    });
-  });
+  await user.save();
+  const valid = await user2.validate();
+  t.ok(!valid, 'A duplicate (different case) unique property was validated.');
+  t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
+  t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
+  t.done();
 };
 
 exports.uniqueEmpty = async (t) => {
   const user = new UserMockup();
-  t.expect(5);
+  t.expect(4);
 
-  redis.exists(prefix + ':uniques:UserMockup:emailOptional:', function (err, exists) {
+  redis.exists(prefix + ':uniques:UserMockup:emailOptional:', async (err, exists) => {
     t.ok(!err, 'redis.keys failed.');
     t.same(exists, 0, 'An empty unique was set before the test for it was run');
     user.property({
@@ -588,104 +587,78 @@ exports.uniqueEmpty = async (t) => {
       'email': 'emailOptionalTest@test.de',
       'emailOptional': ''
     });
-    user.save(function (err) {
-      t.ok(!err, 'Saving failed.');
-      redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
-        t.ok(!err, 'redis.keys failed.');
-        t.same(keys.length, 0, 'An empty unique was set');
-        t.done();
-      });
+    await user.save();
+    redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
+      t.ok(!err, 'redis.keys failed.');
+      t.same(keys.length, 0, 'An empty unique was set');
+      t.done();
     });
   });
 };
 
 exports["integer uniques"] = async (t) => {
-  t.expect(5);
+  t.expect(3);
   const obj = nohm.factory('UniqueInteger');
   const obj2 = nohm.factory('UniqueInteger');
   obj.property('unique', 123);
   obj2.property('unique', 123);
 
-  obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error');
-    t.same(obj.allProperties(), {
-      unique: 123,
-      id: obj.id
-    }, 'Properties not correct');
-    obj2.save(function (err) {
-      t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
-      obj.remove(function (err) {
-        t.ok(!err, 'Unexpected removing error');
-        obj2.save(function () {
-          t.ok(!err, 'Unexpected saving error');
-          t.done();
-        });
-      });
+  await obj.save();
+  t.same(obj.allProperties(), {
+    unique: 123,
+    id: obj.id
+  }, 'Properties not correct');
+  try {
+    await obj2.save();
+  } catch (err) {
+    t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
+    await obj.remove();
+    t.doesNotThrow(async () => {
+      await obj2.save();
+      t.done();
     });
-  });
+  }
 };
 
 exports.indexes = async (t) => {
   const user = new UserMockup();
-  t.expect(7);
+  t.expect(6);
 
   user.property('name', 'indexTest');
   user.property('email', 'indexTest@test.de');
   user.property('country', 'indexTestCountry');
   user.property('visits', 20);
 
-  function checkCountryIndex(callback) {
-    redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
-      t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-      t.ok(value === 1, 'The country index did not have the user as one of its ids.');
-      callback();
-    });
-  }
-
-  function checkVisitsIndex(callback) {
+  await user.save();
+  redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
+    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
+    t.ok(value === 1, 'The country index did not have the user as one of its ids.');
     redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
       t.ok(value == user.property('visits'), 'The visits index did not have the correct score.');
       redis.sismember(prefix + ':index:UserMockup:visits:' + user.property('visits'), user.id, function (err, value) {
         t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
         t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
-        callback();
+        t.done();
       });
-    });
-  }
-
-  user.save(function (err) {
-    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    checkCountryIndex(function () {
-      checkVisitsIndex(t.done);
     });
   });
 };
 
 exports.__updated = async (t) => {
   const user = new UserMockup();
-  t.expect(2);
-  user.property('email', '__updatedTest@test.de');
-  user.save(function (err) {
-    if (err) {
-      console.log(err);
-      t.ok(false, 'Error while saving user in test for __updated.');
-    }
-    user.property('name', 'hurgelwurz');
-    user.property('name', 'test');
-    t.ok(user.properties.name.__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
+  t.expect(3);
+  await user.save();
+  user.property('name', 'hurgelwurz');
+  t.ok(user.properties.get('name').__updated === true, '__updated was not ser on property `name`.');
+  user.property('name', 'test');
+  t.ok(user.properties.get('name').__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
 
-    user.remove(function (err) {
-      if (err) {
-        util.debug('Error while saving user in __updated.');
-      }
-      const user2 = new UserMockup();
-      user2.property('name', 'hurgelwurz');
-      user2.propertyReset();
-      t.ok(user2.properties.name.__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
-      t.done();
-    });
-  });
+  const user2 = new UserMockup();
+  user2.property('name', 'hurgelwurz');
+  user2.propertyReset();
+  t.ok(user2.properties.get('name').__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
+  t.done();
 };
 
 exports.deleteNonExistant = async (t) => {
@@ -693,10 +666,12 @@ exports.deleteNonExistant = async (t) => {
   t.expect(1);
   user.id = 987654321;
 
-  user.remove(function (err) {
+  try {
+    await user.remove();
+  } catch (err) {
     t.same(err, 'not found', 'Trying to delete an instance that doesn\'t exist did not return "not found".');
     t.done();
-  });
+  }
 };
 
 exports.methods = async (t) => {

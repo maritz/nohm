@@ -24,6 +24,15 @@ import { validators } from './validators';
 export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
 export { NohmModel };
 
+function callbackError(...args: Array<any>) {
+  if (args.length > 0) {
+    const lastArgument = args[args.length - 1];
+    if (typeof lastArgument === 'function') {
+      throw new Error('Callback style has been removed. Use the returned promise.');
+    }
+  }
+}
+
 interface IDictionary {
   [index: string]: any;
 }
@@ -454,6 +463,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     silent: false,
     skip_validation_and_unique_indexes: false,
   }): Promise<void> {
+    callbackError(...arguments);
     return new Promise(async (resolve, reject) => {
       let action: 'update' | 'create' = 'update';
       if (!this.id) {
@@ -506,6 +516,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     await this.storeId(id);
     await this.setUniqueIds(id);
     this.id = id;
+    this.allPropertiesCache.id = id;
   }
 
   private async generateId(): Promise<string> {
@@ -643,7 +654,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
   }
 
-  public valid(property?: keyof TProps, setDirectly = false) {
+  public valid(property?: keyof TProps, setDirectly = false): Promise<boolean> {
     // TODO: decide whether actually deprecating this is worth it.
     console.log('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
     return this.validate(property, setDirectly);
@@ -660,6 +671,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
    * @returns {Promise<boolean>} Promise resolves to true if checked properties are valid.
    */
   public async validate(property?: keyof TProps, setDirectly = false): Promise<boolean> {
+    callbackError(...arguments);
     const nonUniqueValidations: Array<Promise<IValidationResult>> = [];
     for (const [key, prop] of this.properties) {
       if (!property || property === key) {
@@ -881,6 +893,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
    * @returns {Promise<void>}
    */
   public async remove(silent = false): Promise<void> {
+    callbackError(...arguments);
     if (!this.id) {
       throw new Error('The instance you are trying to delete has no id.');
     }
