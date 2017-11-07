@@ -518,6 +518,10 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     const id = await this.generateId();
     await this.storeId(id);
     await this.setUniqueIds(id);
+    this.setId(id);
+  }
+
+  private setId(id: any) {
     this.id = id;
     this.allPropertiesCache.id = id;
   }
@@ -933,7 +937,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
       // await this.unlinkAll(multi); // TODO: enable once implmemented
       multi.exec((err) => {
-        this.id = 0;
+        this.setId(null);
 
         if (!silent && !err) {
           // this.fireEvent('remove', id); // TODO: enable once implemented
@@ -968,7 +972,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   private getHashAll(id: any): Promise<Partial<TProps>> {
     return new Promise((resolve, reject) => {
       const props: Partial<TProps> = {};
-      this.client.HGETALL(this.prefix('hash') + id, (err, values) => {
+      this.client.HGETALL(`${this.prefix('hash')}:${id}`, (err, values) => {
         if (err) {
           return reject(err);
         }
@@ -997,7 +1001,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
     const dbProps = await this.getHashAll(id);
     this.property(dbProps);
-    this.id = id;
+    this.setId(id);
     this.inDb = true;
     return this.allProperties();
   }

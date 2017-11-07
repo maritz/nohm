@@ -867,18 +867,15 @@ exports.factory = async (t) => {
 };
 
 exports["factory with non-integer id"] = async (t) => {
-  t.expect(3);
+  t.expect(1);
   const name = 'NonIncrement';
-  const obj = nohm.factory(name);
+  const obj = await nohm.factory(name);
   obj.property('name', 'factory_non_integer_load');
-  obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error');
-    var obj2 = nohm.factory(name, obj.id, function (err) {
-      t.ok(!err, 'Unexpected factory loading error');
-      t.same(obj2.allProperties(), obj.allProperties(), 'The loaded object seems to have wrong properties');
-      t.done();
-    });
-  });
+  await obj.save();
+
+  var obj2 = await nohm.factory(name, obj.id);
+  t.same(obj2.allProperties(), obj.allProperties(), 'The loaded object seems to have wrong properties');
+  t.done();
 };
 
 exports.purgeDB = async (t) => {
@@ -913,8 +910,8 @@ exports.purgeDB = async (t) => {
 };
 
 exports["no key left behind"] = async (t) => {
-  const user = nohm.factory('UserMockup');
-  const user2 = nohm.factory('UserMockup');
+  const user = await nohm.factory('UserMockup');
+  const user2 = await nohm.factory('UserMockup');
   t.expect(3);
 
   user2.property({
@@ -956,8 +953,8 @@ exports["no key left behind"] = async (t) => {
 
 exports["temporary model definitions"] = async (t) => {
   t.expect(2);
-  const user = nohm.factory('UserMockup');
-  const user2 = nohm.factory('UserMockup');
+  const user = await nohm.factory('UserMockup');
+  const user2 = await nohm.factory('UserMockup');
 
   var TempUserMockup = nohm.model('UserMockup', {
     properties: {
@@ -975,9 +972,9 @@ exports["temporary model definitions"] = async (t) => {
 
 exports["changing unique frees old unique with uppercase values"] = async (t) => {
   t.expect(3);
-  const obj = nohm.factory('UserMockup');
-  const obj2 = nohm.factory('UserMockup');
-  const obj3 = nohm.factory('UserMockup');
+  const obj = await nohm.factory('UserMockup');
+  const obj2 = await nohm.factory('UserMockup');
+  const obj3 = await nohm.factory('UserMockup');
   const old = "Changing Unique Property Frees The Value";
   obj.property('name', old);
   obj.property('email', 'change_frees@unique.de');
@@ -1002,8 +999,8 @@ exports["changing unique frees old unique with uppercase values"] = async (t) =>
 
 exports["removing unique frees unique with uppercase values"] = async (t) => {
   t.expect(3);
-  const obj = nohm.factory('UserMockup');
-  const obj2 = nohm.factory('UserMockup');
+  const obj = await nohm.factory('UserMockup');
+  const obj2 = await nohm.factory('UserMockup');
   const old = "Removing Unique Property Frees The Value";
   obj.property('name', old);
   obj.property('email', 'remove_frees@unique.de');
