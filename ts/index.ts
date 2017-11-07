@@ -300,6 +300,52 @@ Consider waiting for an established connection before setting it.`);
       }
     }
   }
+
+  /**
+   * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
+   *
+   * Deletes any keys from the db that start with nohm prefixes.
+   *
+   * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
+   *
+   * @param {Object} [client] You can specify the redis client to use. Default: Nohm.client
+   */
+  public async purgeDb(client: redis.RedisClient = this.client): Promise<void> {
+    function delKeys(prefix: string) {
+      return new Promise<void>((resolve, reject) => {
+        client.KEYS(prefix + '*', (err, keys) => {
+          if (err) {
+            reject(err);
+          } else if (keys.length === 0) {
+            resolve();
+          } else {
+            client.DEL(keys, (innerErr) => {
+              if (innerErr) {
+                reject(innerErr);
+              } else {
+                resolve();
+              }
+            });
+          }
+        });
+      });
+    }
+    const deletes: Array<Promise<void>> = [];
+
+    Object.keys(this.prefix).forEach((key) => {
+      const prefix = (this.prefix as any)[key];
+      if (typeof prefix === 'object') {
+        Object.keys(prefix).forEach((innerKey) => {
+          const innerPrefix = prefix[innerKey];
+          deletes.push(delKeys(innerPrefix));
+        });
+      } else {
+        deletes.push(delKeys(prefix));
+      }
+    });
+
+    await Promise.all(deletes);
+  }
 }
 
 const nohm = new NohmClass({});

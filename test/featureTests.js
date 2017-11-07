@@ -395,7 +395,7 @@ exports.remove = async (t) => {
   const id = user.id;
   await user.remove();
 
-  t.equals(user.id, 0, 'Removing an object from the db did not set the id to null');
+  t.equals(user.id, null, 'Removing an object from the db did not set the id to null');
   async.series([
     function (callback) {
       testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
@@ -879,7 +879,7 @@ exports["factory with non-integer id"] = async (t) => {
 };
 
 exports.purgeDB = async (t) => {
-  let expected = 1;
+  t.expect(4);
   var countKeys = function (prefix, callback) {
     redis.keys(prefix + '*', function (err, orig_num) {
       callback(err, orig_num.length);
@@ -888,23 +888,25 @@ exports.purgeDB = async (t) => {
 
   const tests = [];
   Object.keys(nohm.prefix).forEach(function (key) {
-    expected += 2;
-    tests.push(async.apply(countKeys, nohm.prefix[key]));
+    if (typeof nohm.prefix[key] === 'object') {
+      Object.keys(nohm.prefix[key]).forEach((innerKey) => {
+        tests.push(async.apply(countKeys, nohm.prefix[key][innerKey]));
+      });
+    } else {
+      tests.push(async.apply(countKeys, nohm.prefix[key]));
+    }
   });
-  t.expect(expected);
 
-  async.series(tests, function (err, num_arr) {
+  async.series(tests, async (err, num_arr) => {
     t.ok(!err, 'Unexpected redis error');
     const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
     t.ok(count > 0, 'Database did not have any keys');
-    nohm.purgeDb(function (err) {
+    await nohm.purgeDb();
+    async.series(tests, function (err, num_arr) {
       t.ok(!err, 'Unexpected redis error');
-      async.series(tests, function (err, num_arr) {
-        t.ok(!err, 'Unexpected redis error');
-        const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
-        t.same(count, 0, 'Database did have keys left after purging.');
-        t.done();
-      });
+      const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+      t.same(count, 0, 'Database did have keys left after purging.');
+      t.done();
     });
   });
 };
