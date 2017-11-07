@@ -8,3 +8,5 @@ This file is not intended as documentation for users, instead it should make wri
 - .propertyRest() no longer returns true (it was the only return value possible and thus made no sense)
 - .allProperties() no longer has a json (stringify) option
 - validation definition format for properties changed from ['$name', {options}] to { name: '$name', options: {options}}
+- nohm.factory() now always returns a promise, even when not giving an id as second parameter
+

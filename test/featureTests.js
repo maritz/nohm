@@ -617,8 +617,8 @@ exports.uniqueEmpty = async (t) => {
 
 exports["integer uniques"] = async (t) => {
   t.expect(3);
-  const obj = nohm.factory('UniqueInteger');
-  const obj2 = nohm.factory('UniqueInteger');
+  const obj = await nohm.factory('UniqueInteger');
+  const obj2 = await nohm.factory('UniqueInteger');
   obj.property('unique', 123);
   obj2.property('unique', 123);
 
@@ -841,26 +841,29 @@ exports.defaultIdGeneration = async (t) => {
   t.done();
 };
 
-exports.instanceLoad = async (t) => {
-  t.expect(1);
-  new UserMockup(1123123, function (err) {
-    t.same(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
-    t.done();
-  });
-};
+/*
+ * TODO: Check if this is reasonably possible. Problem is awaiting the constructor is not supported.
+ exports.instanceLoad = async (t) => {
+   t.expect(1);
+   new UserMockup(1123123, function (err) {
+     t.same(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
+     t.done();
+    });
+  };
+  */
 
 exports.factory = async (t) => {
-  t.expect(4);
+  t.expect(2);
   const name = 'UserMockup';
-  const user = nohm.factory(name);
+  const user = await nohm.factory(name);
   t.same(user.modelName, name, 'Using the factory to get an instance did not work.');
 
-  var user2 = nohm.factory(name, 1234124235, function (err) {
-    t.same(err, 'not found', 'Instantiating a user via factory with an id and callback did not try to load it');
-    t.same(user.modelName, name, 'Using the factory to get an instance (with id) did not work.');
+  try {
+    await nohm.factory(name, 1234124235);
+  } catch (err) {
+    t.same(err.message, 'not found', 'Instantiating a user via factory with an id and callback did not try to load it');
     t.done();
-  });
-  t.ok(user2, 'Using the factory with an id and callback returned false');
+  }
 };
 
 exports["factory with non-integer id"] = async (t) => {

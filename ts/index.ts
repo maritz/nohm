@@ -279,18 +279,9 @@ Consider waiting for an established connection before setting it.`);
     return this.modelCache;
   }
 
-  public factory<T extends NohmModel<any>>(
-    name: string,
-  ): T;
-  public factory<T extends NohmModel<any>>(
-    name: string, id: number,
-  ): Promise<T>;
-  /*public factory<T extends NohmModel<any>>(
+  public async factory<T extends NohmModel<any>>(
     name: string, id?: number, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
-  ): Promise<T>*/
-  public factory<T extends NohmModel<any>>(
-    name: string, id?: number, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
-  ): T | Promise<T> {
+  ): Promise<T> {
     if (typeof callback === 'function') {
       // TODO: decide whether callback fallback should be implemented everywhere based on effort - otherwise cut it
       throw new Error('Not implmented: factory does not support callback method anymore.');
@@ -302,7 +293,8 @@ Consider waiting for an established connection before setting it.`);
       }
       const instance = new model() as T;
       if (id) {
-        return instance.load(id);
+        await instance.load(id);
+        return instance;
       } else {
         return instance;
       }
