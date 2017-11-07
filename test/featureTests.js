@@ -965,49 +965,46 @@ exports["temporary model definitions"] = async (t) => {
 };
 
 exports["changing unique frees old unique with uppercase values"] = async (t) => {
-  t.expect(3);
+  t.expect(1);
   const obj = await nohm.factory('UserMockup');
   const obj2 = await nohm.factory('UserMockup');
   const obj3 = await nohm.factory('UserMockup');
-  const old = "Changing Unique Property Frees The Value";
+  const old = 'Changing Unique Property Frees The Value';
   obj.property('name', old);
   obj.property('email', 'change_frees@unique.de');
 
-  obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error');
-    obj2.load(obj.id, function () {
-      obj2.property('name', "changing unique property frees the value to something else");
-      obj2.save(function (err) {
-        t.ok(!err, 'Unexpected saving error');
-        obj3.load(obj.id, function () {
-          obj2.property('name', old);
-          obj2.save(function (err) {
-            t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
-            t.done();
-          });
-        });
-      });
-    });
-  });
+  await obj.save();
+  await obj2.load(obj.id);
+  obj2.property('name', 'changing unique property frees the value to something else');
+  await obj2.save();
+  await obj3.load(obj.id);
+  obj2.property('name', old);
+  try {
+    obj2.save();
+    // test something, so we at least have the resemblence of normal testing here........
+    // the way it actually tests whether the uniques are freed is by not throwing errors during save
+    t.same(obj2.id, obj3.id, 'Something went wrong');
+  } catch (err) {
+    t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on change.');
+  } finally {
+    t.done();
+  }
 };
 
 exports["removing unique frees unique with uppercase values"] = async (t) => {
-  t.expect(3);
+  t.expect(1);
   const obj = await nohm.factory('UserMockup');
   const obj2 = await nohm.factory('UserMockup');
   const old = "Removing Unique Property Frees The Value";
   obj.property('name', old);
   obj.property('email', 'remove_frees@unique.de');
 
-  obj.save(function (err) {
-    t.ok(!err, 'Unexpected saving error: ' + err);
-    obj.remove(obj.id, function (err) {
-      t.ok(!err, 'Unexpected removing error: ' + err);
-      obj2.property('name', old);
-      obj2.save(function (err) {
-        t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on chnage.');
-        t.done();
-      });
-    });
-  });
+  await obj.save();
+  await obj.remove(obj.id);
+  obj2.property('name', old);
+  await obj2.save();
+  // test something, so we at least have the resemblence of normal testing here........
+  // the way it actually tests whether the uniques are freed is by not throwing errors during save
+  t.notEqual(obj.id, obj2.id);
+  t.done();
 };

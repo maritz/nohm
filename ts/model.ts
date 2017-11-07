@@ -813,7 +813,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return true;
   }
 
-  private isUniquqKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
+  private isUniqueKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const checkCallback = (err: Error | null, dbValue: number) => {
         if (err) {
@@ -865,7 +865,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
       return successReturn;
     }
     const uniqueKey = this.getUniqueKey(key, property);
-    const isFree = await this.isUniquqKeyFree(uniqueKey, setDirectly);
+    const isFree = await this.isUniqueKeyFree(uniqueKey, setDirectly);
     if (!isFree) {
       return {
         error: 'notUnique',
@@ -1009,6 +1009,9 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     }
     const dbProps = await this.getHashAll(id);
     this.property(dbProps);
+    Object.keys(dbProps).forEach((key) => {
+      this.__resetProp(key);
+    });
     this.setId(id);
     this.inDb = true;
     return this.allProperties();
