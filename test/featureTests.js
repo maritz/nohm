@@ -672,6 +672,7 @@ exports.__updated = async (t) => {
   t.ok(user.properties.get('name').__updated === true, '__updated was not ser on property `name`.');
   user.property('name', 'test');
   t.ok(user.properties.get('name').__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
+  await user.remove();
 
   const user2 = new UserMockup();
   user2.property('name', 'hurgelwurz');
@@ -725,16 +726,15 @@ exports["no super method if none needed"] = async (t) => {
 exports.uniqueDefaultOverwritten = async (t) => {
   const user = new UserMockup();
   const user2 = new UserMockup();
-  t.expect(3);
+  t.expect(2);
 
+  await user.save();
   try {
-    await user.save();
-    console.log('trying to save 2');
     await user2.save();
   } catch (err) {
-    console.log('failed to save 2', err, user.errors);
     t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
     t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
+    t.done();
   }
 };
 
@@ -745,16 +745,16 @@ exports.allPropertiesJson = async (t) => {
     name: 'allPropertiesJson',
     email: 'allPropertiesJson@test.de'
   });
-  t.expect(2);
+  t.expect(1);
 
-  user.save(function (err) {
-    t.ok(!err, 'Unexpected saving error.');
-    const testProps = user.allProperties();
-    t.same(testProps.json, user.property('json'), 'allProperties did not properly parse json properties');
-    t.done();
-  });
+  await user.save();
+  const testProps = user.allProperties();
+  t.same(testProps.json, user.property('json'), 'allProperties did not properly parse json properties');
+  t.done();
 };
 
+/*
+// TODO: Check which (if any) of these need to be re-enabled
 exports.thisInCallbacks = async (t) => {
   const user = new UserMockup();
   let checkCounter = 0;
@@ -798,6 +798,7 @@ exports.thisInCallbacks = async (t) => {
     }));
   }));
 };
+*/
 
 exports.defaultAsFunction = async (t) => {
   t.expect(3);
@@ -824,7 +825,7 @@ exports.defaultAsFunction = async (t) => {
 };
 
 exports.defaultIdGeneration = async (t) => {
-  t.expect(2);
+  t.expect(1);
 
   var TestMockup = nohm.model('TestMockup', {
     properties: {
@@ -835,11 +836,9 @@ exports.defaultIdGeneration = async (t) => {
     }
   });
   const test1 = new TestMockup();
-  test1.save(function (err) {
-    t.ok(!err, 'There was an error while saving.');
-    t.same(typeof (test1.id), 'string', 'The generated id was not a string');
-    t.done();
-  });
+  await test1.save();
+  t.same(typeof (test1.id), 'string', 'The generated id was not a string');
+  t.done();
 };
 
 exports.instanceLoad = async (t) => {
