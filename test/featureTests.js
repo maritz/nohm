@@ -924,40 +924,30 @@ exports["no key left behind"] = async (t) => {
   user.link(user2);
   user2.link(user, 'father');
 
-  async.series([
-    async.apply(h.cleanUp, redis, args.prefix),
-    function (cb) {
-      user.save(cb);
-    },
-    function (cb) {
-      user2.save(cb);
-    },
-    function (cb) {
+  h.cleanUp(redis, args.prefix, () => {
+    redis.keys(prefix + ':*', async (err, keys) => {
+      t.same(keys.length, 3, 'Not all keys were removed before tests'); // at this point only meta info should be stored
+      await user.save();
+      await user2.save();
       user.unlink(user2);
-      user2.save(cb);
-    },
-    function (cb) {
-      user2.remove(cb);
-    },
-    function (cb) {
-      user.remove(cb);
-    }
-  ], function (err) {
-    t.ok(!err, 'Unexpected saving error');
-    redis.keys(prefix + ':*', function (err, keys) {
-      t.ok(!err, 'Unexpected saving error');
-      t.same(keys.length, 1, 'Not all keys were removed from the database'); // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
-      t.done();
+      await user2.save();
+      await user2.remove();
+      await user.remove();
+      redis.keys(prefix + ':*', function (err, keys) {
+        t.ok(!err, 'Unexpected redis error');
+        // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
+        t.same(keys.length, 4, 'Not all keys were removed from the database');
+        t.done();
+      });
     });
-  }
-  );
+  });
 };
 
 exports["temporary model definitions"] = async (t) => {
   t.expect(2);
   const user = await nohm.factory('UserMockup');
-  const user2 = await nohm.factory('UserMockup');
 
+  // new temporary model definition with same name
   var TempUserMockup = nohm.model('UserMockup', {
     properties: {
       well_shit: {
@@ -966,6 +956,8 @@ exports["temporary model definitions"] = async (t) => {
     }
   }, true);
   const new_user = new TempUserMockup();
+
+  const user2 = await nohm.factory('UserMockup');
 
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
   t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');

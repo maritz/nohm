@@ -5,6 +5,7 @@ import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v1 as uuid } from 'uuid';
 
+import { checkEqual } from './helpers';
 import { idGenerators } from './idGenerators';
 import { INohmPrefixes, NohmClass } from './index';
 import {
@@ -18,10 +19,11 @@ import {
   IValidationObject,
   IValidationResult,
   TValidationDefinition,
+  ILinkOptions,
 } from './model.d';
 import { validators } from './validators';
 
-export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions };
+export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions, ILinkOptions };
 export { NohmModel };
 
 function callbackError(...args: Array<any>) {
@@ -69,10 +71,16 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   private allPropertiesCache: {
     [key in keyof TProps]: any;
   } & { id: any };
-  private relationChanges: Array<any>;
   private inDb: boolean;
   private loaded: boolean;
   private tmpUniqueKeys: Array<string>;
+
+  private relationChanges: Array<{
+    action: string;
+    callback?: () => any;
+    object: NohmModel<IDictionary>;
+    options: ILinkOptions;
+  }>;
 
   constructor() {
     this._initOptions();
@@ -1004,6 +1012,42 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     this.setId(id);
     this.inDb = true;
     return this.allProperties();
+  }
+
+  public link(other: NohmModel<IDictionary>, optionsOrName: string | ILinkOptions, callback?: () => any) {
+    const options: ILinkOptions = this.getLinkOptions(optionsOrName);
+    this.relationChanges.push({
+      action: 'link',
+      callback,
+      object: other,
+      options,
+    });
+  }
+
+  public unlink(other: NohmModel<IDictionary>, optionsOrName: string | ILinkOptions, callback?: () => any) {
+    const options: ILinkOptions = this.getLinkOptions(optionsOrName);
+    this.relationChanges = this.relationChanges.filter((change) => {
+      return change.options.name === options.name && checkEqual(change.object, other);
+    });
+    this.relationChanges.push({
+      action: 'unlink',
+      callback,
+      object: other,
+      options,
+    });
+  }
+
+  private getLinkOptions(optionsOrName: string | ILinkOptions): ILinkOptions {
+    if (typeof (optionsOrName) === 'string') {
+      return {
+        name: optionsOrName,
+      };
+    } else {
+      return {
+        name: 'default',
+        ...optionsOrName,
+      };
+    }
   }
 }
 

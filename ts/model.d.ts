@@ -83,3 +83,8 @@ export interface IValidationResult {
   valid: boolean,
   error?: string
 }
+
+export interface ILinkOptions {
+  name: string;
+  silent?: boolean;
+}
