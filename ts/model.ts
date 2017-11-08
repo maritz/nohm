@@ -110,8 +110,10 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         __updated: false,
         value: undefined,
       });
-      if (typeof (definition.type) !== 'function') {
+      if (typeof (definition.type) === 'function') {
         // behaviours should not be called on initialization - thus leaving it at defaultValue
+        this.setProperty(key, defaultValue);
+      } else {
         this.property(key, defaultValue); // this ensures typecasing
       }
       this.__resetProp(key);
