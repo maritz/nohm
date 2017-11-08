@@ -66,11 +66,15 @@ export class NohmClass {
 
   private modelCache: {
     [name: string]: Constructor<NohmModel<any>>,
-  } = {};
+  };
+
+  private extraValidators: Array<any>;
 
   constructor({ prefix, client }: INohmOptions) {
     this.setPrefix(prefix);
     this.setClient(client || redis.createClient());
+    this.modelCache = {};
+    this.extraValidators = [];
   }
 
   /**
@@ -345,6 +349,25 @@ Consider waiting for an established connection before setting it.`);
     });
 
     await Promise.all(deletes);
+  }
+
+  /**
+   * Set some extra validator files. These will also be exported to the browser via connect middleware if used.
+   */
+  public setExtraValidations(files: string | Array<string>) {
+    if (!Array.isArray(files)) {
+      files = [files];
+    }
+    files.forEach((path) => {
+      if (this.extraValidators.indexOf(path) === -1) {
+        this.extraValidators.push(path);
+        const validators = require(path);
+        Object.keys(validators).forEach((name) => {
+          // TODO: implement this
+          // this.__validators[name] = validators[name];
+        });
+      }
+    });
   }
 }
 

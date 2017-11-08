@@ -1,4 +1,4 @@
-var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
+var nohm = require(__dirname + '/../tsOut').Nohm;
 var async = require('async');
 var util = require('util');
 
@@ -36,24 +36,26 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'integer',
       defaultValue: 5,
       validations: [
-        ['minMax',
-          {
+        {
+          name: 'minMax',
+          options: {
             min: 2,
             max: 20
           }
-        ]
+        }
       ]
     },
     minOptional: {
       type: 'integer',
       defaultValue: 0,
       validations: [
-        ['minMax',
-          {
+        {
+          name: 'minMax',
+          options: {
             min: 10,
             optional: true // this is a bit stupid. because 0 will trigger it as optional
           }
-        ]
+        }
       ]
     },
     email: {
@@ -67,45 +69,49 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: '',
       validations: [
-        ['email',
-          {
+        {
+          name: 'email',
+          options: {
             optional: true
           }
-        ]
+        }
       ]
     },
     minLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        ['length',
-          {
+        {
+          name: 'length',
+          options: {
             min: 3
           }
-        ]
+        }
       ]
     },
     minLength2: {
       type: 'string',
       defaultValue: '',
       validations: [
-        ['length',
-          {
+        {
+          name: 'length',
+          options: {
             min: 3,
             optional: true
           }
-        ]
+        }
       ]
     },
     maxLength: {
       type: 'string',
       defaultValue: 'asd',
       validations: [
-        ['length',
-          {
+        {
+          name: 'length',
+          options: {
             max: 5
           }
-        ]
+        }
       ]
     },
     number: {
@@ -147,8 +153,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid',
       validations: [
-        function (value, opt, callback) {
-          callback(value === 'valid');
+        function (value, opt) {
+          return Promise.resolve(value === 'valid');
         }
       ]
     },
@@ -156,8 +162,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid2',
       validations: [
-        function (value, opt, callback) {
-          callback(value === 'valid2');
+        function (value, opt) {
+          return Promise.resolve(value === 'valid2');
         }
       ]
     },
@@ -165,8 +171,8 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'validNamed',
       validations: [
-        function customNamed(value, opt, callback) {
-          callback(value === 'validNamed');
+        function customNamed(value, opt) {
+          return Promise.resolve(value === 'validNamed');
         }
       ]
     },
@@ -188,14 +194,17 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'asd1',
       validations: [
-        ['regexp',
-          {
+        {
+          name: 'regexp',
+          options: {
             regex: /^asd[\d]+$/,
             optional: true
           }
-        ]
+        }
       ]
     },
+    /*
+    TODO: re-enable once custom validations are implemented
     customValidationFile: {
       type: 'string',
       defaultValue: 'customValidationFile',
@@ -207,22 +216,26 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'customValidationFile',
       validations: [
-        ['customValidationFile',
-          {
+        {
+          name: 'customValidationFile',
+          options: {
             optional: true
           }
-        ]
+        }
       ]
     },
     customDependentValidation: {
       type: 'string',
       defaultValue: 'test',
       validations: [
-        ['instanceValidation', {
-          property: 'name'
-        }]
+        {
+          name: 'instanceValidation',
+          options: {
+            property: 'name'
+          }
+        }
       ]
-    }
+    }*/
   }
 });
 
@@ -232,9 +245,9 @@ function testSimpleProps(t, props, dontExpect) {
   }
   props.tests.forEach(function (prop) {
     var user = new UserMockup();
-    user.p(props.name, prop.input);
+    user.property(props.name, prop.input);
 
-    t.same(user.p(props.name), prop.expected, 'Setting the property ' + props.name + ' to ' + util.inspect(prop.input) + ' did not cast it to ' + util.inspect(prop.expected));
+    t.same(user.property(props.name), prop.expected, 'Setting the property ' + props.name + ' to ' + util.inspect(prop.input) + ' did not cast it to ' + util.inspect(prop.expected));
   });
 }
 
@@ -245,9 +258,9 @@ function testValidateProp(t, objectName, propName) {
     parallel.push(function (callback) {
       var obj = nohm.factory(objectName);
       if (typeof (setValue) !== 'undefined') {
-        var setReturn = obj.p(propName, setValue);
+        var setReturn = obj.property(propName, setValue);
       }
-      obj.valid(propName, function (valid) {
+      obj.validate(propName, function (valid) {
         var errorStr = "Property '" + propName + "' was not validated properly. Details:" + "\nobject: " + objectName + "\nprop: " + propName + "\nvalue: " + util.inspect(setValue) + "\nafter casting: " + util.inspect(setReturn) + "\nerrors: " + util.inspect(obj.errors);
         t.same(expected, valid, errorStr);
         callback();
@@ -277,19 +290,18 @@ exports.validation = {
   tearDown: function (next) {
     h.cleanUp(redis, args.prefix, next);
   },
-  general: function (t) {
+  general: async (t) => {
     var user = new UserMockup();
     t.expect(1);
 
-    user.valid(function (valid) {
-      if (!valid) {
-        console.dir(user.errors);
-      }
+    const valid = await user.validate();
+    if (!valid) {
+      console.dir(user.errors);
+    }
 
-      t.ok(valid, 'The Model was not recognized as valid. Is it? Should be!');
+    t.ok(valid, 'The Model was not recognized as valid. Is it? Should be!');
 
-      t.done();
-    });
+    t.done();
   },
 
 
@@ -355,23 +367,23 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(6);
 
-    user.p('castFloat', '1.5');
-    t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "1.5" did not cast it to 1.5.');
+    user.property('castFloat', '1.5');
+    t.ok(user.property('castFloat') === 1.5, 'Setting a Float to a string "1.5" did not cast it to 1.5.');
 
-    user.p('castFloat', '1.5asd');
-    t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "1.5asd" did not cast it to 1.5.');
+    user.property('castFloat', '1.5asd');
+    t.ok(user.property('castFloat') === 1.5, 'Setting a Float to a string "1.5asd" did not cast it to 1.5.');
 
-    user.p('castFloat', '01.5');
-    t.ok(user.p('castFloat') === 1.5, 'Setting a Float to a string "01.5" did not cast it to 1.5.');
+    user.property('castFloat', '01.5');
+    t.ok(user.property('castFloat') === 1.5, 'Setting a Float to a string "01.5" did not cast it to 1.5.');
 
-    user.p('castFloat', '0x1.5');
-    t.ok(user.p('castFloat') === 0, 'Setting a Float to a string "0x1.5" did not cast it to 0.');
+    user.property('castFloat', '0x1.5');
+    t.ok(user.property('castFloat') === 0, 'Setting a Float to a string "0x1.5" did not cast it to 0.');
 
-    user.p('castFloat', '.5');
-    t.ok(user.p('castFloat') === 0.5, 'Setting a Float to a string ".5" did not cast it to 0.5.');
+    user.property('castFloat', '.5');
+    t.ok(user.property('castFloat') === 0.5, 'Setting a Float to a string ".5" did not cast it to 0.5.');
 
-    user.p('castFloat', '0.1e2');
-    t.ok(user.p('castFloat') === 10, 'Setting a Float to a string "0.1e2" did not cast it to 10.');
+    user.property('castFloat', '0.1e2');
+    t.ok(user.property('castFloat') === 10, 'Setting a Float to a string "0.1e2" did not cast it to 10.');
 
     t.done();
   },
@@ -381,29 +393,29 @@ exports.validation = {
       should = new Date('1988-03-12T00:00:00Z').getTime();
     t.expect(8);
 
-    user.p('castTimestamp', should);
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a number should did not cast it to ' + should);
+    user.property('castTimestamp', should);
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a number should did not cast it to ' + should);
 
-    user.p('castTimestamp', '' + should);
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "should" did not cast it to ' + should);
+    user.property('castTimestamp', '' + should);
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "should" did not cast it to ' + should);
 
-    user.p('castTimestamp', '1988-03-12T00:00:00Z');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00Z" did not cast it to ' + should);
+    user.property('castTimestamp', '1988-03-12T00:00:00Z');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12T00:00:00Z" did not cast it to ' + should);
 
-    user.p('castTimestamp', '1988-03-12 04:30:00 +04:30');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12 04:30:00 +04:30" did not cast it to ' + should);
+    user.property('castTimestamp', '1988-03-12 04:30:00 +04:30');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-12 04:30:00 +04:30" did not cast it to ' + should);
 
-    user.p('castTimestamp', '1988-03-11 19:30:00 -04:30');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-11 20:30:00 -04:30" did not cast it to ' + should);
+    user.property('castTimestamp', '1988-03-11 19:30:00 -04:30');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "1988-03-11 20:30:00 -04:30" did not cast it to ' + should);
 
-    user.p('castTimestamp', 'Sat, 12 Mar 1988 00:00:00');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "Sat, 12 Mar 1988 00:00:00" did not cast it to ' + should);
+    user.property('castTimestamp', 'Sat, 12 Mar 1988 00:00:00');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "Sat, 12 Mar 1988 00:00:00" did not cast it to ' + should);
 
-    user.p('castTimestamp', '03.12.1988');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "03.12.1988" did not cast it to ' + should);
+    user.property('castTimestamp', '03.12.1988');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "03.12.1988" did not cast it to ' + should);
 
-    user.p('castTimestamp', '03/12/1988');
-    t.ok(user.p('castTimestamp') === should, 'Setting a Timestamp to a string "03/12/1988" did not cast it to ' + should);
+    user.property('castTimestamp', '03/12/1988');
+    t.ok(user.property('castTimestamp') === should, 'Setting a Timestamp to a string "03/12/1988" did not cast it to ' + should);
 
     t.done();
   },
@@ -412,8 +424,8 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(1);
 
-    user.p('behaviour', 5);
-    t.equals(user.p('behaviour'), 6, 'Using the behaviour did not work correctly');
+    user.property('behaviour', 5);
+    t.equals(user.property('behaviour'), 6, 'Using the behaviour did not work correctly');
 
     t.done();
   },
@@ -560,7 +572,7 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(1);
 
-    user.p('minMax', 'a');
+    user.property('minMax', 'a');
     user.valid('minMax', function () {
       t.same(user.errors.minMax, ['minMax'], 'Error was incorrect');
       t.done();
@@ -590,7 +602,7 @@ exports.validation = {
     user.valid(function (valid) {
       t.same(valid, true, 'Validating with a function as the first arg did not call the callback with true as its first arg');
 
-      user.p({
+      user.property({
         name: '',
         email: 'asd'
       });
@@ -607,7 +619,7 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(2);
 
-    user.p({
+    user.property({
       name: '',
       email: 'asd'
     });
@@ -620,7 +632,7 @@ exports.validation = {
           user: ['notEmpty'],
           email: ['email']
         }, 'Validating a user did not set the user.errors properly.');
-      user.p({
+      user.property({
         name: 'test'
       });
       user.valid(function () {
@@ -641,7 +653,7 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(1);
 
-    user.p({
+    user.property({
       custom: 'INVALID',
       custom2: 'INVALID',
       customNamed: 'INVALID'
@@ -665,7 +677,7 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(1);
 
-    user.p('name', '');
+    user.property('name', '');
 
     user.save(function () {
       t.same(user.id, null, 'The id of an invalid user was not reset properly.');
@@ -677,7 +689,7 @@ exports.validation = {
     var user = new UserMockup();
     t.expect(2);
 
-    user.p('name', '');
+    user.property('name', '');
 
     user.save({ skip_validation_and_unique_indexes: true }, function (err) {
       t.notEqual(user.id, null, 'The id of an invalid user with skip_validation was reset.');
