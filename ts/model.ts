@@ -692,6 +692,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     const nonUniqueValidations: Array<Promise<IValidationResult>> = [];
     for (const [key, prop] of this.properties) {
       if (!property || property === key) {
+        this.errors[key] = [];
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
@@ -745,7 +746,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         optional: false,
         trim: true,
       };
-      const validationObjects = validations.map((validator) => this.getValidationObject(validator));
+      const validationObjects = validations.map((validator) => this.getValidationObject(validator, key));
       const validationPromises: Array<Promise<void>> = validationObjects.map(async (validationObject) => {
         if (validationObject.options.optional && !property.value) {
           return;
@@ -761,7 +762,6 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
         if (!valid) {
           result.valid = false;
           result.error = validationObject.name;
-          this.errors[key].push(validationObject.name);
         }
       });
       await Promise.all(validationPromises);
@@ -769,11 +769,11 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return result;
   }
 
-  private getValidationObject(validator: TValidationDefinition): IValidationObject {
+  private getValidationObject(validator: TValidationDefinition, key: keyof TProps): IValidationObject {
     if (typeof (validator) === 'function') {
       const funcName = validator.toString().match(/^function ([\w]*)[\s]?\(/);
       return {
-        name: `custom_${(funcName && funcName[1] ? funcName[1] : 'unknown')}`,
+        name: `custom_${(funcName && funcName[1] ? funcName[1] : key)}`,
         options: {},
         validator,
       };
