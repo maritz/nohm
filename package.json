@@ -18,12 +18,16 @@
   "description": "redis ORM (Object relational mapper)",
   "main": "./lib/nohm",
   "scripts": {
-    "test": "node test/tests.js"
+    "test": "node test/tests.js",
+    "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
+    "build": "tsc",
+    "build:watch": "tsc --watch"
   },
   "dependencies": {
     "async": "^1.2.1",
     "ioredis": "^3.1.2",
     "lodash": "^4.17.4",
+    "nodemon": "^1.12.1",
     "redis": "^2.8.0",
     "traverse": "^0.6.6",
     "uuid": "^3.1.0"
