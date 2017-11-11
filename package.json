@@ -21,10 +21,12 @@
     "test": "node test/tests.js",
     "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
     "build": "tsc",
-    "build:watch": "tsc --watch"
+    "build:watch": "tsc --watch",
+    "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue"
   },
   "dependencies": {
     "async": "^1.2.1",
+    "concurrently": "^3.5.0",
     "ioredis": "^3.1.2",
     "lodash": "^4.17.4",
     "nodemon": "^1.12.1",
