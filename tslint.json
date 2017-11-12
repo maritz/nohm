@@ -4,22 +4,33 @@
     /*
      * Any rules specified here will override those from the base config we are extending
      */
-    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-leading-underscore"
+    ],
     "quotemark": [
+      true,
       "avoid-escape",
       "single"
     ],
-    "ordered-imports": [false],
+    "ordered-imports": [
+      false
+    ],
     "member-ordering": [
       false
     ],
     "no-trailing-whitespace": true,
-    "no-consecutive-blank-lines": [false],
+    "no-consecutive-blank-lines": [
+      false
+    ],
     "no-console": [
       false
     ],
     "array-type": [
-      "array"
+      true,
+      "generic"
     ]
   }
 }

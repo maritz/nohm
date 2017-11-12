@@ -1,17 +1,15 @@
+import { NohmModel } from './model';
+
 type propertyTypeNames = 'string' | 'bool' | 'boolean' | 'integer' | 'int' | 'float' | 'date' | 'time' |
   'timestamp' | 'json';
 
-
 export type PropertyObject = { [index: string]: any };
 
-export interface INohmModel {
-  property(name: string): any;
-  property(name: string, value: any): void;
-  property(values: PropertyObject): void;
+interface IDictionary {
+  [index: string]: any;
 }
 
-
-export type PropertyBehaviour = <TModel extends INohmModel>(
+export type PropertyBehaviour = <TModel>(
   this: TModel,
   newValue: any,
   key: string,
@@ -84,7 +82,26 @@ export interface IValidationResult {
   error?: string
 }
 
+export interface IRelationChange {
+  action: 'link' | 'unlink';
+  callback?: (...args: Array<any>) => any;
+  object: NohmModel<IDictionary>;
+  options: ILinkOptions;
+}
+
 export interface ILinkOptions {
+  continue_on_link_error?: boolean;
+  error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
   name: string;
   silent?: boolean;
+}
+
+export interface ILinkSaveResult {
+  success: boolean;
+  child: NohmModel<IDictionary>;
+  error: null | Error;
+}
+
+export interface ILinkError extends Error {
+  errors: Array<ILinkSaveResult>;
 }

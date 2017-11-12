@@ -1,9 +1,23 @@
 import * as redis from 'redis';
 
 import { getPrefix, INohmPrefixes } from './helpers';
-import { IModelOptions, IModelPropertyDefinition, IModelPropertyDefinitions, NohmModel, ILinkOptions } from './model';
+import {
+  ILinkOptions,
+  IModelOptions,
+  IModelPropertyDefinition,
+  IModelPropertyDefinitions,
+  LinkError,
+  NohmModel,
+} from './model';
 
-export { INohmPrefixes, NohmModelExtendable as NohmModel, IModelOptions, IModelPropertyDefinition, ILinkOptions };
+export {
+  ILinkOptions,
+  IModelOptions,
+  IModelPropertyDefinition,
+  INohmPrefixes,
+  LinkError,
+  NohmModelExtendable as NohmModel,
+};
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
@@ -42,7 +56,7 @@ export interface INohmOptions {
   client?: redis.RedisClient;
 }
 
-type Constructor<T> = new (...args: any[]) => T;
+type Constructor<T> = new (...args: Array<any>) => T;
 
 export class NohmClass {
 
@@ -142,7 +156,7 @@ Consider waiting for an established connection before setting it.`);
 
       public readonly modelName = name;
 
-      constructor(...args: any[]) {
+      constructor(...args: Array<any>) {
         super(...args);
         if (self.meta) {
           this.meta = {
@@ -228,7 +242,7 @@ Consider waiting for an established connection before setting it.`);
     class CreatedClass extends subClass {
       protected definitions: IModelPropertyDefinitions;
 
-      constructor(...args: any[]) {
+      constructor(...args: Array<any>) {
         super(...args);
         if (self.meta) {
           // TODO: fix meta info storing
@@ -362,7 +376,7 @@ Consider waiting for an established connection before setting it.`);
       if (this.extraValidators.indexOf(path) === -1) {
         this.extraValidators.push(path);
         const validators = require(path);
-        Object.keys(validators).forEach((name) => {
+        Object.keys(validators).forEach((_name) => {
           // TODO: implement this
           // this.__validators[name] = validators[name];
         });

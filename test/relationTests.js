@@ -1,4 +1,4 @@
-var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
+var nohm = require(__dirname + '/../tsOut/').Nohm;
 var args = require(__dirname + '/testArgs.js');
 var async = require('async');
 var redis = args.redis;
@@ -51,7 +51,7 @@ exports.relation = {
   },
 
 
-  instances: function (t) {
+  instances: (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2;
@@ -69,7 +69,7 @@ exports.relation = {
   },
 
 
-  link: function (t) {
+  link: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup(),
@@ -85,37 +85,31 @@ exports.relation = {
       t.same(obj, role, 'The argument "obj" given to the link callback are not correct');
     });
 
-    role2.p('name', 'test');
+    role2.property('name', 'test');
 
     user.link(role2, function () {
       linkCallbackCalled2 = true;
     });
 
-    user.save(function (err) {
-      if (!err) {
-        t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
-        t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
-        redis.keys(relationsprefix + '*', function (err, values) {
-          var args = [],
-            key,
-            firstDone = false,
-            keyCheck = function (err, members) {
-              t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
-              if (firstDone === true) {
-                t.done();
-              } else {
-                firstDone = true;
-              }
-            };
-          if (!err) {
-            t.ok(values.length === 3, 'Linking an object did not create the correct number of keys.');
-            redis.smembers(values[0].toString(), keyCheck);
-            redis.smembers(values[1].toString(), keyCheck);
-          } else {
-            console.dir(err);
+    await user.save();
+    t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
+    t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
+    redis.keys(relationsprefix + '*', function (err, values) {
+      var args = [],
+        key,
+        firstDone = false,
+        keyCheck = function (err, members) {
+          t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
+          if (firstDone === true) {
             t.done();
+          } else {
+            firstDone = true;
           }
-        });
+        };
+      if (!err) {
+        t.same(values.length, 3, 'Linking an object did not create the correct number of keys.');
+        redis.smembers(values[0].toString(), keyCheck);
+        redis.smembers(values[1].toString(), keyCheck);
       } else {
         console.dir(err);
         t.done();
@@ -123,7 +117,7 @@ exports.relation = {
     });
   },
 
-  unlink: function (t) {
+  unlink: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup(),
@@ -147,26 +141,19 @@ exports.relation = {
       unlinkCallbackCalled2 = true;
     });
 
-    user.save(function (err) {
+    await user.save();
+    t.ok(unlinkCallbackCalled, 'The provided callback for unlinking was not called.');
+    t.ok(unlinkCallbackCalled2, 'The provided callback for the second(!) unlinking was not called.');
+    redis.keys(relationsprefix + '*', function (err, value) {
       if (!err) {
-        t.ok(unlinkCallbackCalled, 'The provided callback for unlinking was not called.');
-        t.ok(unlinkCallbackCalled2, 'The provided callback for the second(!) unlinking was not called.');
-        redis.keys(relationsprefix + '*', function (err, value) {
-          if (!err) {
-            var check = (Array.isArray(value) && value.length === 0) || value === null;
-            t.ok(check, 'Unlinking an object did not delete keys.');
-          }
-          t.done();
-        });
-      } else {
-        console.dir(err);
-        console.dir(user.errors);
-        t.done();
+        var check = (Array.isArray(value) && value.length === 0) || value === null;
+        t.ok(check, 'Unlinking an object did not delete keys.');
       }
+      t.done();
     });
   },
 
-  deeplink: function (t) {
+  deeplink: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup(),
@@ -181,96 +168,87 @@ exports.relation = {
       commentLinkCallbackCalled = true;
     });
 
-    role.save(function (err) {
-      if (err) {
-        console.dir(err);
+    await role.save();
+    t.ok(userLinkCallbackCalled, 'The user link callback was not called.');
+    t.ok(commentLinkCallbackCalled, 'The comment link callback was not called.');
+    t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
+    t.ok(comment.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
+    redis.smembers(relationsprefix + comment.modelName + ':defaultForeign:' +
+      user.modelName + ':' + comment.id,
+      function (err, value) {
+        if (!err) {
+          t.equals(value, user.id, 'The user does not have the neccessary relations saved. There are probably more problems, if this occurs.');
+        } else {
+          console.dir(err);
+        }
         t.done();
-      }
-      t.ok(userLinkCallbackCalled, 'The user link callback was not called.');
-      t.ok(commentLinkCallbackCalled, 'The comment link callback was not called.');
-      t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
-      t.ok(comment.id !== null, 'The deeplinked comment does not have an id and thus is probably not saved correctly.');
-      redis.smembers(relationsprefix + comment.modelName + ':defaultForeign:' +
-        user.modelName + ':' + comment.id,
-        function (err, value) {
-          if (!err) {
-            t.equals(value, user.id, 'The user does not have the neccessary relations saved. There are probably more problems, if this occurs.');
-          } else {
-            console.dir(err);
-          }
-          t.done();
-        });
-    });
+      });
   },
 
-  removeUnlinks: function (t) {
+  removeUnlinks: async (t) => {
     // uses unlinkAll in remove
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup(),
       comment = new CommentLinkMockup(),
       linkName = 'creator';
-    t.expect(8);
+    t.expect(6);
 
-    user.p('name', 'removeUnlinks');
+    user.property('name', 'removeUnlinks');
 
     role.link(user, linkName);
     user.link(role, 'isA');
     user.link(comment);
     role2.link(user);
 
-    role2.save(function (err) {
-      t.ok(!err, 'there was an unexpected error while saving.');
-      var tmpid = user.id;
-      user.remove(function (err) {
-        t.ok(!err, 'An unexpected redis error occured.');
-        async.parallel([
-          function (next) {
-            redis.exists(relationsprefix + user.modelName + ':' + linkName + 'Foreign:' + role.modelName + ':' + tmpid,
-              function (err, value) {
-                t.equals(value, 0, 'The foreign link to the custom-link-name role was not deleted');
-                next(err);
-              });
-          },
-          function (next) {
-            redis.exists(relationsprefix + role.modelName + ':' + linkName + ':' + user.modelName + ':' + role.id,
-              function (err, value) {
-                t.equals(value, 0, 'The link to the custom-link-name role was not deleted');
-                next(err);
-              });
-          },
-          function (next) {
-            redis.exists(relationsprefix + user.modelName + ':default:' + comment.modelName + ':' + tmpid,
-              function (err, value) {
-                t.equals(value, 0, 'The link to the child comment was not deleted');
-                next(err);
-              });
-          },
-          function (next) {
-            redis.sismember(relationsprefix + comment.modelName + ':defaultForeign:' + user.modelName + ':' + comment.id, tmpid,
-              function (err, value) {
-                t.equals(value, 0, 'The link to the comment parent was not deleted');
-                next(err);
-              });
-          },
-          function (next) {
-            redis.sismember(relationsprefix + role2.modelName + ':default:' + user.modelName + ':' + role2.id, tmpid,
-              function (err, value) {
-                t.equals(value, 0, 'The removal did not delete the link from a parent to the object itself.');
-                next(err);
-              }
-            );
-          }],
-          function (err) {
-            t.ok(!err, 'An unexpected redis error occured.');
-            t.done();
+    await role2.save();
+    var tmpid = user.id;
+    await user.remove();
+    async.parallel([
+      function (next) {
+        redis.exists(relationsprefix + user.modelName + ':' + linkName + 'Foreign:' + role.modelName + ':' + tmpid,
+          function (err, value) {
+            t.equals(value, 0, 'The foreign link to the custom-link-name role was not deleted');
+            next(err);
+          });
+      },
+      function (next) {
+        redis.exists(relationsprefix + role.modelName + ':' + linkName + ':' + user.modelName + ':' + role.id,
+          function (err, value) {
+            t.equals(value, 0, 'The link to the custom-link-name role was not deleted');
+            next(err);
+          });
+      },
+      function (next) {
+        redis.exists(relationsprefix + user.modelName + ':default:' + comment.modelName + ':' + tmpid,
+          function (err, value) {
+            t.equals(value, 0, 'The link to the child comment was not deleted');
+            next(err);
+          });
+      },
+      function (next) {
+        redis.sismember(relationsprefix + comment.modelName + ':defaultForeign:' + user.modelName + ':' + comment.id, tmpid,
+          function (err, value) {
+            t.equals(value, 0, 'The link to the comment parent was not deleted');
+            next(err);
+          });
+      },
+      function (next) {
+        redis.sismember(relationsprefix + role2.modelName + ':default:' + user.modelName + ':' + role2.id, tmpid,
+          function (err, value) {
+            t.equals(value, 0, 'The removal did not delete the link from a parent to the object itself.');
+            next(err);
           }
         );
-      });
-    });
+      }],
+      function (err) {
+        t.ok(!err, 'An unexpected redis error occured.');
+        t.done();
+      }
+    );
   },
 
-  belongsTo: function (t) {
+  belongsTo: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup();
     t.expect(1);
@@ -293,7 +271,7 @@ exports.relation = {
     });
   },
 
-  getAll: function (t) {
+  getAll: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup();
@@ -326,7 +304,7 @@ exports.relation = {
     });
   },
 
-  'getAll with different id generators': function (t) {
+  'getAll with different id generators': async (t) => {
     var user = new UserLinkMockup(),
       comment = new CommentLinkMockup();
     t.expect(1);
@@ -350,7 +328,7 @@ exports.relation = {
     });
   },
 
-  numLinks: function (t) {
+  numLinks: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup();
@@ -376,7 +354,7 @@ exports.relation = {
   },
 
 
-  deeplinkError: function (t) {
+  deeplinkError: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup();
@@ -384,7 +362,7 @@ exports.relation = {
 
     role.link(user);
     user.link(comment);
-    comment.p('text', ''); // makes the comment fail
+    comment.property('text', ''); // makes the comment fail
 
     role.save(function (err, childFail, childName) {
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
@@ -396,7 +374,7 @@ exports.relation = {
     });
   },
 
-  linkToSelf: function (t) {
+  linkToSelf: async (t) => {
     var user = new UserLinkMockup();
     t.expect(1);
 
@@ -408,7 +386,7 @@ exports.relation = {
     });
   },
 
-  deppLinkErrorCallback: function (t) {
+  deppLinkErrorCallback: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup();
@@ -427,7 +405,7 @@ exports.relation = {
         t.same(comment, obj, 'obj in Error callback was not the right object.');
       }
     });
-    comment.p('text', ''); // makes the comment fail
+    comment.property('text', ''); // makes the comment fail
 
     role.save(function (err, childFail, childName) {
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
@@ -439,7 +417,7 @@ exports.relation = {
     });
   },
 
-  contineOnError: function (t) {
+  contineOnError: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup(),
@@ -472,7 +450,7 @@ exports.relation = {
         t.ok(false, 'Error callback for comment3.link(user) called even though user is valid.');
       }
     });
-    comment.p('text', ''); // makes the first comment fail
+    comment.property('text', ''); // makes the first comment fail
 
     role.save({ continue_on_link_error: true }, function () {
       redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' + user.modelName + ':' + comment3.id, user.id,

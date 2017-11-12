@@ -9,17 +9,20 @@ import { checkEqual } from './helpers';
 import { idGenerators } from './idGenerators';
 import { INohmPrefixes, NohmClass } from './index';
 import {
+  IDictionary,
+  ILinkOptions,
+  ILinkSaveResult,
+  ILinkError,
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
-  INohmModel,
   IProperty,
   IPropertyDiff,
+  IRelationChange,
   ISaveOptions,
   IValidationObject,
   IValidationResult,
   TValidationDefinition,
-  ILinkOptions,
 } from './model.d';
 import { validators } from './validators';
 
@@ -35,8 +38,11 @@ function callbackError(...args: Array<any>) {
   }
 }
 
-interface IDictionary {
-  [index: string]: any;
+// tslint:disable:max-classes-per-file
+export class LinkError extends Error implements ILinkError {
+  constructor(errorMessage: string, public errors: Array<ILinkSaveResult>) {
+    super(errorMessage);
+  }
 }
 
 /**
@@ -46,7 +52,7 @@ interface IDictionary {
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
 
-abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
+abstract class NohmModel<TProps extends IDictionary> {
 
   public id: any;
 
@@ -72,15 +78,9 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     [key in keyof TProps]: any;
   } & { id: any };
   private inDb: boolean;
-  private loaded: boolean;
   private tmpUniqueKeys: Array<string>;
 
-  private relationChanges: Array<{
-    action: string;
-    callback?: () => any;
-    object: NohmModel<IDictionary>;
-    options: ILinkOptions;
-  }>;
+  private relationChanges: Array<IRelationChange>;
 
   constructor() {
     this._initOptions();
@@ -137,7 +137,6 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
     this.id = null;
     this.inDb = false;
-    this.loaded = false;
   }
 
   private __resetProp(property: keyof TProps) {
@@ -274,6 +273,10 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return this.property(keyOrValues, value);
   }
 
+  private isPropertyKey(key: any): key is keyof TProps {
+    return typeof (key) === 'string';
+  }
+
   /**
    * Read and write properties to the instance.
    *
@@ -288,7 +291,7 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
   // tslint:disable-next-line:unified-signatures
   public property(valuesObject: Partial<{[key in keyof TProps]: any}>): any;
   public property(keyOrValues: keyof TProps | Partial<{[key in keyof TProps]: any}>, value?: any): any {
-    if (typeof (keyOrValues) !== 'string') {
+    if (!this.isPropertyKey(keyOrValues)) {
       const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
       return obj;
     }
@@ -471,11 +474,13 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
    *   }]
    * @returns {Promise<void>}
    */
-  public save(options: ISaveOptions = {
-    continue_on_link_error: false,
-    silent: false,
-    skip_validation_and_unique_indexes: false,
-  }): Promise<void> {
+  public save(
+    options: ISaveOptions = {
+      continue_on_link_error: false,
+      silent: false,
+      skip_validation_and_unique_indexes: false,
+    },
+  ): Promise<void> {
     callbackError(...arguments);
     return new Promise(async (resolve, reject) => {
       let action: 'update' | 'create' = 'update';
@@ -596,10 +601,13 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     });
   }
 
-  private update(_options: ISaveOptions): Promise<void> {
+  private update(options: ISaveOptions): Promise<Array<ILinkSaveResult> | LinkError> {
     return new Promise((resolve, reject) => {
+      if (!this.id) {
+        return reject(new Error('Update was called without having an id set.'));
+      }
       const hmSetArguments = [];
-      const multi = this.client.MULTI();
+      const client = this.client.MULTI();
       const isCreate = !this.inDb;
 
       hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
@@ -612,17 +620,27 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
       if (hmSetArguments.length > 1) {
         hmSetArguments.push('__meta_version', this.meta.version);
-        multi.HMSET.apply(multi, hmSetArguments);
+        client.HMSET.apply(client, hmSetArguments);
       }
 
-      this.setIndices(multi);
+      this.setIndices(client);
 
-      multi.exec((err) => {
+      client.exec(async (err) => {
         if (err) {
           return reject(err);
         }
 
-        // TODO: Relation changes go here
+        const linkResults = await this.storeLinks(options);
+
+        const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
+
+        if (linkFailures.length > 0) {
+          const linkError = new LinkError(
+            'Linking failed. See .child or .orig for the causes on the `errors` array in Error object.',
+            linkResults,
+          );
+          return reject(linkError);
+        }
 
         this.inDb = true;
         for (const [key] of this.properties) {
@@ -631,11 +649,112 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
 
         // TODO: pubsub stuff goes here
 
-        resolve();
+        resolve(linkResults);
 
       });
     });
   }
+
+  private async storeLinks(options: ISaveOptions): Promise<Array<ILinkSaveResult>> {
+    const changeFns = this.relationChanges.map((change) => {
+      return async () => {
+        // TODO: decide whether siulent should actually be overwritten for all cases
+        change.options.silent = options.silent;
+        const saveResult: ILinkSaveResult = {
+          child: change.object,
+          error: null,
+          success: true,
+        };
+        try {
+          if (!change.object.id) {
+            await change.object.save(options);
+          }
+          await this.saveLinkRedis(change);
+          try {
+            if (typeof (change.callback) === 'function') {
+              change.callback.call(this,
+                change.action,
+                this.modelName,
+                change.options.name,
+                change.object,
+              );
+            }
+          } catch (e) {
+            // ignore errors thrown by link callback
+          }
+        } catch (err) {
+          const isSubLinkError = err instanceof LinkError;
+          if (!isSubLinkError && typeof (change.callback) === 'function') {
+            try {
+              change.callback(err);
+            } catch (e) {
+              // ignore errors thrown by link callback
+            }
+          }
+          saveResult.success = false;
+          saveResult.error = err;
+        }
+        return saveResult;
+      };
+    });
+    const saveResults: Array<ILinkSaveResult> = [];
+    // Sequentially go through all the changes and store them instead of parallel.
+    // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
+    // easier and cannot cause race-conditions as easily.
+    for (const [_key, fn] of changeFns.entries()) {
+      saveResults.push(await fn());
+    }
+    return saveResults;
+  }
+
+  private getRelationKey(otherName: string, relationName: string) {
+    return `${this.prefix('relations')}:${relationName}:${otherName}:${this.id}`;
+  }
+
+  private saveLinkRedis(change: IRelationChange): Promise<void> {
+    return new Promise((resolve, reject) => {
+
+      const foreignName = `${change.options.name}Foreign`;
+      const command = change.action === 'link' ? 'sadd' : 'srem';
+      const relationKeyPrefix = this.rawPrefix().relationKeys;
+
+
+      const multi = this.client.MULTI();
+      // relation to other
+      const toKey = this.getRelationKey(change.object.modelName, change.options.name);
+      // first store the information to which other model names the instance has a relation to
+      multi[command](
+        `${relationKeyPrefix}${this.modelName}:${this.id}`,
+        toKey,
+      );
+      // second store the information which specific other model id that relation is referring to
+      multi[command](toKey, change.object.id);
+
+      // relation from other - same thing in reverse
+      const fromKey = change.object.getRelationKey(this.modelName, foreignName);
+      multi[command](
+        `${relationKeyPrefix}${change.object.modelName}:${change.object.id}`,
+        fromKey,
+      );
+      multi[command](fromKey, this.id);
+
+      multi.exec((err) => {
+        if (err) {
+          if (change.options.error) {
+            change.options.error(err, 'Linking failed.', change.object);
+          }
+          return reject(err);
+        } else {
+          if (!change.options.silent) {
+            // TODO: enable this once fireEvent is implemented
+            // this.fireEvent( change.action, change.object, change.options.name);
+          }
+          return resolve();
+        }
+      });
+    });
+  }
+
 
   private setIndices(multi: redis.Multi | redis.RedisClient) {
     for (const [key, prop] of this.properties) {
@@ -1019,8 +1138,22 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     return this.allProperties();
   }
 
-  public link(other: NohmModel<IDictionary>, optionsOrName: string | ILinkOptions, callback?: () => any) {
-    const options: ILinkOptions = this.getLinkOptions(optionsOrName);
+  public link(other: NohmModel<IDictionary>, callback: () => any): void;
+  public link(
+    other: NohmModel<IDictionary>,
+    optionsOrNameOrCallback: string | ILinkOptions,
+    callback?: () => any,
+  ): void;
+  public link(
+    other: NohmModel<IDictionary>,
+    optionsOrNameOrCallback: string | ILinkOptions | (() => any),
+    callback?: () => any,
+  ): void {
+    if (typeof (optionsOrNameOrCallback) === 'function') {
+      callback = optionsOrNameOrCallback;
+      optionsOrNameOrCallback = 'default';
+    }
+    const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
     this.relationChanges.push({
       action: 'link',
       callback,
@@ -1029,10 +1162,27 @@ abstract class NohmModel<TProps extends IDictionary> implements INohmModel {
     });
   }
 
-  public unlink(other: NohmModel<IDictionary>, optionsOrName: string | ILinkOptions, callback?: () => any) {
-    const options: ILinkOptions = this.getLinkOptions(optionsOrName);
-    this.relationChanges = this.relationChanges.filter((change) => {
-      return change.options.name === options.name && checkEqual(change.object, other);
+  public unlink(other: NohmModel<IDictionary>, callback: () => any): void;
+  public unlink(
+    other: NohmModel<IDictionary>,
+    optionsOrNameOrCallback: string | ILinkOptions,
+    callback?: () => any,
+  ): void;
+  public unlink(
+    other: NohmModel<IDictionary>,
+    optionsOrNameOrCallback: string | ILinkOptions | (() => any),
+    callback?: () => any,
+  ): void {
+    if (typeof (optionsOrNameOrCallback) === 'function') {
+      callback = optionsOrNameOrCallback;
+      optionsOrNameOrCallback = 'default';
+    }
+    const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
+    this.relationChanges.forEach((change, key) => {
+      const sameRelationChange = change.options.name === options.name && checkEqual(change.object, other);
+      if (sameRelationChange) {
+        delete this.relationChanges[key];
+      }
     });
     this.relationChanges.push({
       action: 'unlink',
