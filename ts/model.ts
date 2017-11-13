@@ -1346,6 +1346,27 @@ abstract class NohmModel<TProps extends IDictionary> {
     });
   }
 
+  public belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      if (!this.id || !obj.id) {
+        return reject(
+          new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.'),
+        );
+      }
+      this.client.SISMEMBER(
+        this.getRelationKey(obj.modelName, relationName),
+        obj.id,
+        (err, value) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(!!value);
+          }
+        },
+      );
+    });
+  }
+
 }
 
 export default NohmModel;

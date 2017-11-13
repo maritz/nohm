@@ -255,20 +255,10 @@ exports.relation = {
 
     user.link(role);
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user.belongsTo(role, function (err, value) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.equals(value, true, 'The link was not detected correctly by belongsTo()');
-        t.done();
-      });
-    });
+    await user.save();
+    const belongs = await user.belongsTo(role);
+    t.equals(belongs, true, 'The link was not detected correctly by belongsTo()');
+    t.done();
   },
 
   getAll: async (t) => {
