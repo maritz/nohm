@@ -20,6 +20,7 @@ import {
   IPropertyDiff,
   IRelationChange,
   ISaveOptions,
+  IUnlinkKeyMapItem,
   IValidationObject,
   IValidationResult,
   TValidationDefinition,
@@ -224,6 +225,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   protected abstract _initOptions(): any;
 
   /**
+   * Returns the a redis key prefix string (including the modelName but without trailing ':'!)
    * DO NOT OVERWRITE THIS; USED INTERNALLY
    *
    * @protected
@@ -231,6 +233,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   protected abstract prefix(prefix: keyof INohmPrefixes): string;
 
   /**
+   * Returns an object with the redis key prefix strings (including the trailing ':')
    * DO NOT OVERWRITE THIS; USED INTERNALLY
    *
    * @protected
@@ -702,6 +705,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
     for (const [_key, fn] of changeFns.entries()) {
+      // TODO: implement continue_on_link_error
       saveResults.push(await fn());
     }
     return saveResults;
@@ -1041,7 +1045,8 @@ abstract class NohmModel<TProps extends IDictionary> {
   }
 
   private deleteDbCall(silent: boolean): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      // TODO: write test for removal of relationKeys and then implement deleting those as well
 
       const multi = this.client.multi();
 
@@ -1064,7 +1069,7 @@ abstract class NohmModel<TProps extends IDictionary> {
         }
       });
 
-      // await this.unlinkAll(multi); // TODO: enable once implmemented
+      await this.unlinkAll(multi); // TODO: enable once implmemented
       multi.exec((err) => {
         this.setId(null);
 
@@ -1138,6 +1143,36 @@ abstract class NohmModel<TProps extends IDictionary> {
     return this.allProperties();
   }
 
+
+  /**
+   * Links one object to another.
+   * Does not save the link directly but marks it for the next .save() call.
+   * When linking an instance that has not been saved that instance will then be saved during the .save() call
+   * on this instance.
+   *
+   * Note: link names should not end with 'Foreign' as that is an internally used identifier.
+   *
+   * @example
+   *  const user = new UserModel();
+   *  const comment = new CommentModel();
+   *  await user.load(123);
+   *  user.linK(comment, 'author');
+   *  await user.save(); // this will save the link to the database and also call .save() on comment
+   *
+   * @example
+   *  // options object typing:
+   *  {
+   *    continue_on_link_error?: boolean; // default false
+   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
+   *    name: string;
+   *    silent?: boolean;
+   *  }
+   *
+   * @param {NohmModel<IDictionary>} other The other instance that is being linked
+   * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
+   *  relation name (default: 'default') or an options object (see example above) or the callback
+   * @param {() => any} [callback] Function that is called when the link is saved.
+   */
   public link(other: NohmModel<IDictionary>, callback: () => any): void;
   public link(
     other: NohmModel<IDictionary>,
@@ -1162,6 +1197,24 @@ abstract class NohmModel<TProps extends IDictionary> {
     });
   }
 
+  /**
+   * Unlinks one object to another.
+   * Does not remove the link directly but marks it for the next .save() call.
+   *
+   * @example
+   *  // options object typing:
+   *  {
+   *    continue_on_link_error?: boolean; // default false
+   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
+   *    name: string;
+   *    silent?: boolean;
+   *  }
+   *
+   * @param {NohmModel<IDictionary>} other The other instance that is being unlinked (needs to have an id)
+   * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
+   *  relation name (default: 'default') or an options object (see example above) or the callback
+   * @param {() => any} [callback]
+   */
   public unlink(other: NohmModel<IDictionary>, callback: () => any): void;
   public unlink(
     other: NohmModel<IDictionary>,
@@ -1204,6 +1257,95 @@ abstract class NohmModel<TProps extends IDictionary> {
       };
     }
   }
+
+  private isMultiClient(client: any): client is redis.Multi {
+    return client && typeof (client.exec) === 'function';
+  }
+
+  public async unlinkAll(givenClient?: redis.RedisClient | redis.Multi): Promise<void> {
+    let multi: redis.Multi;
+    if (this.isMultiClient(givenClient)) {
+      multi = givenClient;
+    } else if (givenClient) {
+      multi = givenClient.MULTI();
+    } else {
+      multi = this.client.MULTI();
+    }
+
+    // remove outstanding relation changes
+    this.relationChanges = [];
+
+    const keys = await this.getAllRelationKeys();
+
+    const others: Array<IUnlinkKeyMapItem> = keys.map((key) => {
+      const matches = key.match(/:([\w]*):([\w]*):[\w]+$/i);
+      if (!matches) {
+        throw new Error('Malformed relation key found in the database! ' + key);
+      }
+      // selfName is the name of the relation as it is on this instance
+      const selfRelationName = matches[1];
+      const otherModelName = matches[2];
+      const namedMatches = matches[1].match(/^([\w]*)Foreign$/);
+      const otherRelationName = namedMatches ? namedMatches[1] : matches[1] + 'Foreign';
+      return {
+        otherIdsKey: `${this.rawPrefix().relations}${otherModelName}:${otherRelationName}:${this.modelName}:`,
+        ownIdsKey: `${this.prefix('relations')}:${selfRelationName}:${otherModelName}:${this.id}`,
+      };
+    });
+    const otherRelationIdsPromises = others.map((item) => this.removeIdFromOtherRelations(multi, item));
+    others.forEach((item) => multi.DEL(item.ownIdsKey));
+
+    await Promise.all(otherRelationIdsPromises);
+
+    // if we didn't get a multi client from the callee we have to exec() ourselves
+    if (!this.isMultiClient(givenClient)) {
+      return new Promise<void>((resolve, reject) => {
+        multi.exec((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+  }
+
+  private getAllRelationKeys(): Promise<Array<string>> {
+    return new Promise((resolve, reject) => {
+      const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
+      this.client.SMEMBERS(relationKeysKey, (err, keys) => {
+        if (err) {
+          return reject(err);
+        } else {
+          resolve(keys);
+        }
+      });
+    });
+  }
+
+  /*
+  This method is doubly asynchronous:
+  First it returns a promise that gets resolved when the ids have been fetched that need to be used as keys for
+  removing this.id from relations to others.
+  Secondly it adds an SREM to the multi redis client.
+  */
+  private removeIdFromOtherRelations(multi: redis.Multi, item: IUnlinkKeyMapItem): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // we usenormalClient for fetching data and client (which could be a provided client in multi mode)
+      // for manipulating data
+      this.client.SMEMBERS(item.ownIdsKey, async (err, ids) => {
+        if (err) {
+          return reject(err);
+        }
+        ids.forEach((id) => {
+          multi.SREM(`${item.otherIdsKey}${id}`, this.id);
+        });
+        resolve();
+      });
+    });
+  }
+
 }
 
 export default NohmModel;

@@ -105,3 +105,8 @@ export interface ILinkSaveResult {
 export interface ILinkError extends Error {
   errors: Array<ILinkSaveResult>;
 }
+
+export interface IUnlinkKeyMapItem {
+  ownIdsKey: string;
+  otherIdsKey: string;
+}
