@@ -351,14 +351,14 @@ exports.relation = {
     t.expect(7);
 
     role.link(user, {
-      error: function (err, errors, obj) {
-        console.log(err, errors, obj.allProperties())
+      error: function (err, obj) {
+        console.log(err, obj.errors, obj.allProperties())
         t.ok(false, 'Error callback for role.link(user) called even though user is valid.');
       }
     });
     user.link(comment, {
       error: function (err, obj) {
-        t.ok(err instanceof nohm.ValidationError, 'err in error callback was not "invalid"');
+        t.ok(err instanceof nohm.ValidationError, 'err in error callback was not a ValidationError');
         t.same(comment, obj, 'obj in Error callback was not the right object.');
       }
     });
@@ -382,36 +382,38 @@ exports.relation = {
       comment = new CommentLinkMockup(),
       comment2 = new CommentLinkMockup(),
       comment3 = new CommentLinkMockup();
-    t.expect(5);
+    t.expect(4);
 
     role.link(user, {
-      error: function (err, errors, obj) {
-        console.log(err, errors, obj.allProperties())
+      error: function (err, obj) {
+        console.log(err, obj.errors, obj.allProperties())
         t.ok(false, 'Error callback for role.link(user) called even though user is valid.');
       }
     });
     user.link(comment, {
-      error: function (err, errors, obj) {
-        t.same(err, 'invalid', 'err in error callback was not "invalid"');
-        t.same(errors, comment.errors, 'errors in error callback was not comment.errors');
+      error: function (err, obj) {
+        t.ok(err instanceof nohm.ValidationError, 'err in error callback was not a ValidationError');
         t.same(comment, obj, 'obj in Error callback was not the right object.');
       }
     });
     user.link(comment2, {
-      error: function (err, errors, obj) {
-        console.log(err, errors, obj.allProperties())
+      error: function (err, obj) {
+        console.log(err, obj.errors, obj.allProperties())
         t.ok(false, 'Error callback for comment2.link(user) called even though user is valid.');
       }
     });
     user.link(comment3, {
-      error: function (err, errors, obj) {
-        console.log(err, errors, obj.allProperties())
+      error: function (err, obj) {
+        console.log(err, obj.errors, obj.allProperties())
         t.ok(false, 'Error callback for comment3.link(user) called even though user is valid.');
       }
     });
     comment.property('text', ''); // makes the first comment fail
 
-    role.save({ continue_on_link_error: true }, function () {
+    try {
+      const test = await role.save({ continue_on_link_error: true });
+      t.done();
+    } catch (e) {
       redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' + user.modelName + ':' + comment3.id, user.id,
         function (err, value) {
           t.ok(!err, 'There was a redis error');
@@ -419,7 +421,7 @@ exports.relation = {
           t.done();
         }
       );
-    });
+    }
   }
 };
 

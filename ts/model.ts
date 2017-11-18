@@ -472,13 +472,18 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @returns {Promise<void>}
    */
   public async save(
-    options: ISaveOptions = {
+    options: ISaveOptions,
+  ): Promise<void> {
+    // TODO: right now continue_on_link_error is always "true" since it's the current 
+    // behavior without options and the option isn't passed.
+    // Need to check if the option should work again.
+    callbackError(...arguments);
+    options = {
       continue_on_link_error: false,
       silent: false,
       skip_validation_and_unique_indexes: false,
-    },
-  ): Promise<void> {
-    callbackError(...arguments);
+      ...options,
+    };
     let action: 'update' | 'create' = 'update';
     if (!this.id) {
       action = 'create';
@@ -647,7 +652,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   private async storeLinks(options: ISaveOptions): Promise<Array<ILinkSaveResult>> {
     const changeFns = this.relationChanges.map((change) => {
       return async () => {
-        // TODO: decide whether siulent should actually be overwritten for all cases
+        // TODO: decide whether silent should actually be overwritten for all cases
         change.options.silent = options.silent;
         let returnArray: Array<ILinkSaveResult> = [];
         const saveResult: ILinkSaveResult = {
