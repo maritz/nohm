@@ -11,3 +11,4 @@ This file is not intended as documentation for users, instead it should make wri
 - nohm.factory() now always returns a promise, even when not giving an id as second parameter
 - remove() now sets the id on the instance object to null instead of 0
 - validation failures no longer return the string 'invalid' but instead throw a ValidationError
+- deeplink errors now produce a different error format (.errors with list if ILinkResults)

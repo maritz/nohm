@@ -312,7 +312,7 @@ exports.relation = {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup();
-    t.expect(5);
+    t.expect(8);
 
     role.link(user);
     user.link(comment);
@@ -321,13 +321,14 @@ exports.relation = {
     try {
       await role.save();
     } catch (err) {
-      console.log('failed', err.errors);
-      // TODO: fix this
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
       t.same(comment.id, null, 'The deeplinked erroneous comment does not have an id and thus is probably saved.');
+      t.ok(err instanceof nohm.LinkError, 'The deeplinked comment did not produce a top-level LinkError.');
       t.same(err.errors.length, 1, 'The deeplinked role did not fail in a child or reported it wrong.');
-      t.same(err.errors[0].child.errors, 'invalid', 'The deeplinked role did not fail.');
+      t.ok(err.errors[0].error instanceof nohm.ValidationError, 'The deeplinked comment did not produce a ValidationError.');
+      t.same(err.errors[0].child.errors, { text: ['notEmpty'] }, 'The deeplinked role did not fail.');
       t.same(err.errors[0].child.modelName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
+      t.same(err.errors[0].parent.modelName, 'UserLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
       t.done();
     }
   },

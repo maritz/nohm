@@ -312,7 +312,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     return prop;
   }
 
-  public setProperty(key: keyof TProps, value: any): void {
+  private setProperty(key: keyof TProps, value: any): void {
     const prop = this.getProperty(key);
     if (prop.value !== value) {
       prop.value = this.castProperty(key, prop, value);
@@ -626,8 +626,7 @@ abstract class NohmModel<TProps extends IDictionary> {
 
         if (linkFailures.length > 0) {
           const linkError = new LinkError(
-            'Linking failed. See .child or .orig for the causes on the `errors` array in Error object.',
-            linkResults,
+            linkFailures,
           );
           return reject(linkError);
         }
@@ -650,9 +649,11 @@ abstract class NohmModel<TProps extends IDictionary> {
       return async () => {
         // TODO: decide whether siulent should actually be overwritten for all cases
         change.options.silent = options.silent;
+        let returnArray: Array<ILinkSaveResult> = [];
         const saveResult: ILinkSaveResult = {
           child: change.object,
           error: null,
+          parent: this,
           success: true,
         };
         try {
@@ -681,19 +682,24 @@ abstract class NohmModel<TProps extends IDictionary> {
               // ignore errors thrown by link callback
             }
           }
-          saveResult.success = false;
-          saveResult.error = err;
+          if (isSubLinkError) {
+            returnArray = returnArray.concat(err.errors);
+          } else {
+            saveResult.success = false;
+            saveResult.error = err;
+          }
         }
-        return saveResult;
+        returnArray.push(saveResult);
+        return returnArray;
       };
     });
-    const saveResults: Array<ILinkSaveResult> = [];
+    let saveResults: Array<ILinkSaveResult> = [];
     // Sequentially go through all the changes and store them instead of parallel.
     // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
     for (const [_key, fn] of changeFns.entries()) {
       // TODO: implement continue_on_link_error
-      saveResults.push(await fn());
+      saveResults = saveResults.concat(await fn());
     }
     return saveResults;
   }

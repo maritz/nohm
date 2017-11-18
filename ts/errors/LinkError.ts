@@ -5,7 +5,10 @@ export interface ILinkError extends Error {
 }
 
 export class LinkError extends Error implements ILinkError {
-  constructor(errorMessage: string, public errors: Array<ILinkSaveResult>) {
+  constructor(
+    public errors: Array<ILinkSaveResult>,
+    errorMessage = 'Linking failed. See .errors on this Error object for an Array of failures.',
+  ) {
     super(errorMessage);
   }
 }
