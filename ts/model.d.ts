@@ -99,6 +99,7 @@ export interface ILinkOptions {
 export interface ILinkSaveResult {
   success: boolean;
   child: NohmModel<IDictionary>;
+  parent: NohmModel<IDictionary>;
   error: null | Error;
 }
 
