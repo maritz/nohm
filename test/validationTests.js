@@ -673,11 +673,13 @@ exports.validation = {
 
   invalidSaveResetsId: async (t) => {
     var user = new UserMockup();
-    t.expect(1);
+    t.expect(2);
 
     user.property('name', '');
     try {
       await user.save();
+    } catch (e) {
+      t.ok(e instanceof nohm.ValidationError, 'Unexpected error.');
     } finally {
       t.same(user.id, null, 'The id of an invalid user was not reset properly.');
       t.done();
