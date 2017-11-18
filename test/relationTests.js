@@ -265,33 +265,17 @@ exports.relation = {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       role2 = new RoleLinkMockup();
-    t.expect(4);
+    t.expect(2);
 
     user.link(role);
     user.link(role2);
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      var should = [role.id, role2.id];
-      user.getAll(role.modelName, function (err, values) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.ok(Array.isArray(values), 'getAll() did not return an array.');
-        for (var index, i = 0, len = values.length; i < len; i = i + 1) {
-          index = should.indexOf(values[i]);
-          t.ok(index !== -1, 'getAll() returned an array with wrong values');
-          delete should[index];
-          delete values[i];
-        }
-        t.same(values, should, 'getAll() did not return the correct array');
-        t.done();
-      });
-    });
+    await user.save();
+    var should = [role.id, role2.id];
+    const relationIds = await user.getAll(role.modelName);
+    t.ok(Array.isArray(relationIds), 'getAll() did not return an array.');
+    t.same(relationIds, should, 'getAll() did not return the correct array');
+    t.done();
   },
 
   'getAll with different id generators': async (t) => {
@@ -301,21 +285,11 @@ exports.relation = {
 
     user.link(comment);
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      var should = [comment.id];
-      user.getAll(comment.modelName, function (err, values) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.same(values, should, 'getAll() did not return the correct array');
-        t.done();
-      });
-    });
+    await user.save();
+    var should = [comment.id];
+    const relationIds = await user.getAll(comment.modelName);
+    t.same(relationIds, should, 'getAll() did not return the correct array');
+    t.done();
   },
 
   numLinks: async (t) => {
@@ -327,20 +301,10 @@ exports.relation = {
     user.link(role);
     user.link(role2);
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      user.numLinks(role.modelName, function (err, value) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.same(value, 2, 'The number of links was not returned correctly');
-        t.done();
-      });
-    });
+    await user.save();
+    const numLinks = await user.numLinks(role.modelName);
+    t.same(numLinks, 2, 'The number of links was not returned correctly');
+    t.done();
   },
 
 
@@ -354,14 +318,18 @@ exports.relation = {
     user.link(comment);
     comment.property('text', ''); // makes the comment fail
 
-    role.save(function (err, childFail, childName) {
+    try {
+      await role.save();
+    } catch (err) {
+      console.log('failed', err.errors);
+      // TODO: fix this
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
       t.same(comment.id, null, 'The deeplinked erroneous comment does not have an id and thus is probably saved.');
-      t.same(err, 'invalid', 'The deeplinked role did not fail.');
-      t.same(childFail, true, 'The deeplinked role did not fail in a child or reported it wrong.');
-      t.same(childName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
+      t.same(err.errors.length, 1, 'The deeplinked role did not fail in a child or reported it wrong.');
+      t.same(err.errors[0].child.errors, 'invalid', 'The deeplinked role did not fail.');
+      t.same(err.errors[0].child.modelName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
       t.done();
-    });
+    }
   },
 
   linkToSelf: async (t) => {

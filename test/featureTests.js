@@ -462,7 +462,7 @@ exports.update = async (t) => {
 exports.unique = async (t) => {
   const user1 = new UserMockup();
   const user2 = new UserMockup();
-  t.expect(7);
+  t.expect(8);
 
   user1.property('name', 'duplicateTest');
   user1.property('email', 'duplicateTest@test.de');
@@ -478,7 +478,8 @@ exports.unique = async (t) => {
       await user2.save();
       t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
     } catch (err) {
-      t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+      t.ok(err instanceof nohm.ValidationError, 'A saved unique property was not recognized as a duplicate');
+      t.same(err.errors.name, ['notUnique'], 'A saved unique property was not recognized as a duplicate');
 
       redis.exists(prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de', (err, value) => {
         t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
@@ -510,7 +511,7 @@ exports.uniqueLowerCase = async (t) => {
       await user2.save();
       t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
     } catch (err) {
-      t.equals(err, 'invalid', 'A saved unique property was not recognized as a duplicate');
+      t.ok(err instanceof nohm.ValidationError, 'A saved unique property was not recognized as a duplicate');
       redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
         t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
         t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
@@ -530,7 +531,7 @@ exports.uniqueDeleteWhenOtherFails = async (t) => {
   try {
     await user.save();
   } catch (err) {
-    t.same('invalid', err, 'There was an unexpected problem: ' + util.inspect(err));
+    t.ok(err instanceof nohm.ValidationError, 'There was an unexpected problem: ' + util.inspect(err));
     redis.exists(prefix + ':uniques:UserMockup:name:' + user.property('name').toLowerCase(), function (err, value) {
       t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
       t.done();
@@ -630,7 +631,7 @@ exports["integer uniques"] = async (t) => {
   try {
     await obj2.save();
   } catch (err) {
-    t.same(err, 'invalid', 'Unique integer conflict did not result in error.');
+    t.ok(err instanceof nohm.ValidationError, 'Unique integer conflict did not result in error.');
     await obj.remove();
     t.doesNotThrow(async () => {
       await obj2.save();
@@ -732,7 +733,7 @@ exports.uniqueDefaultOverwritten = async (t) => {
   try {
     await user2.save();
   } catch (err) {
-    t.same(err, 'invalid', 'Saving a default unique value did not return with the error "invalid"');
+    t.ok(err instanceof nohm.ValidationError, 'Saving a default unique value did not return with the error "invalid"');
     t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
     t.done();
   }

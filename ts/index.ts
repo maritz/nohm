@@ -6,9 +6,11 @@ import {
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
-  LinkError,
   NohmModel,
 } from './model';
+
+import { ValidationError } from './errors/ValidationError';
+import { LinkError } from './errors/LinkError';
 
 export {
   ILinkOptions,
@@ -17,6 +19,7 @@ export {
   INohmPrefixes,
   LinkError,
   NohmModelExtendable as NohmModel,
+  ValidationError,
 };
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
@@ -70,6 +73,9 @@ export class NohmClass {
    * The current global nohm redis client
    */
   public client: redis.RedisClient;
+
+  public readonly LinkError = LinkError;
+  public readonly ValidationError = ValidationError;
 
   /**
    * Whether to store the meta values about models.

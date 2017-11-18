@@ -1,4 +1,4 @@
-import { Nohm, NohmModel, IModelPropertyDefinition } from '../ts/index';
+import { Nohm, NohmModel, IModelPropertyDefinition, ValidationError } from '../ts/index';
 
 const nohm = Nohm;
 
@@ -20,23 +20,25 @@ class UserLinkMockup extends NohmModel<UserLinkProps> {
   protected definitions: {
     [key in keyof UserLinkProps]: IModelPropertyDefinition;
   } = {
-    name: {
-      defaultValue: 'testName',
-      type: 'string',
-      validations: [
-        'notEmpty',
-      ],
-    },
-  };
+      name: {
+        defaultValue: 'testName',
+        type: 'string',
+        validations: [
+          'notEmpty',
+        ],
+      },
+    };
 }
 
-const userLinkMockup = nohm.register(UserLinkMockup);
-const userLinkMockup2 = nohm.factory<UserLinkMockup>('UserLinkMockup');
+// test the instantiation methods in TS
 
+const userLinkMockup = nohm.register(UserLinkMockup);
 const test = new userLinkMockup();
-const test3 = userLinkMockup2.allProperties().name;
+
 
 async function foobar() {
+  const userLinkMockup2 = await nohm.factory<UserLinkMockup>('UserLinkMockup');
+  const test3 = userLinkMockup2.allProperties().name;
   const test2 = await test.valid();
   console.log('test2', test2, test.errors)
   console.log('test3', test3)
@@ -53,14 +55,14 @@ const commentLinkMockup = nohm.register(class extends NohmModel<RoleLinkProps> {
   protected definitions: {
     [key in keyof RoleLinkProps]: IModelPropertyDefinition;
   } = {
-    text: {
-      type: 'string',
-      defaultValue: 'this is a comment! REALLY!',
-      validations: [
-        'notEmpty'
-      ]
-    }
-  };
+      text: {
+        type: 'string',
+        defaultValue: 'this is a comment! REALLY!',
+        validations: [
+          'notEmpty'
+        ]
+      }
+    };
 
   get pName(): string {
     return this.allProperties().text;

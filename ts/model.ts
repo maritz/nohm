@@ -5,6 +5,8 @@ import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v1 as uuid } from 'uuid';
 
+import { LinkError } from './errors/LinkError';
+import { ValidationError } from './errors/ValidationError';
 import { checkEqual } from './helpers';
 import { idGenerators } from './idGenerators';
 import { INohmPrefixes, NohmClass } from './index';
@@ -12,7 +14,6 @@ import {
   IDictionary,
   ILinkOptions,
   ILinkSaveResult,
-  ILinkError,
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
@@ -36,13 +37,6 @@ function callbackError(...args: Array<any>) {
     if (typeof lastArgument === 'function') {
       throw new Error('Callback style has been removed. Use the returned promise.');
     }
-  }
-}
-
-// tslint:disable:max-classes-per-file
-export class LinkError extends Error implements ILinkError {
-  constructor(errorMessage: string, public errors: Array<ILinkSaveResult>) {
-    super(errorMessage);
   }
 }
 
@@ -477,7 +471,7 @@ abstract class NohmModel<TProps extends IDictionary> {
    *   }]
    * @returns {Promise<void>}
    */
-  public save(
+  public async save(
     options: ISaveOptions = {
       continue_on_link_error: false,
       silent: false,
@@ -485,39 +479,32 @@ abstract class NohmModel<TProps extends IDictionary> {
     },
   ): Promise<void> {
     callbackError(...arguments);
-    return new Promise(async (resolve, reject) => {
-      let action: 'update' | 'create' = 'update';
-      if (!this.id) {
-        action = 'create';
-        // create and set a unique temporary id
-        // TODO: determine if this is still needed or can be solved more elegantly.
-        // for example just ditching manual id creation and use uuid everywhere.
-        // that would also make clustered/shareded storage much more straight forward
-        // and remove quite a bit of code here.
-        this.id = uuid();
-      }
-      let isValid = true;
-      if (options.skip_validation_and_unique_indexes === false) {
-        try {
-          isValid = await this.validate(undefined, true);
-        } catch (e) {
-          return reject(e);
+    let action: 'update' | 'create' = 'update';
+    if (!this.id) {
+      action = 'create';
+      // create and set a unique temporary id
+      // TODO: determine if this is still needed or can be solved more elegantly.
+      // for example just ditching manual id creation and use uuid everywhere.
+      // that would also make clustered/shareded storage much more straight forward
+      // and remove quite a bit of code here.
+      this.id = uuid();
+    }
+    let isValid = true;
+    if (options.skip_validation_and_unique_indexes === false) {
+      isValid = await this.validate(undefined, true);
+      if (!isValid) {
+        if (action === 'create') {
+          // remove temp id
+          this.id = null;
         }
-        if (!isValid) {
-          if (action === 'create') {
-            // remove temp id
-            this.id = null;
-          }
-          return reject('invalid');
-        }
+        throw new ValidationError(this.errors);
       }
-      const idExists = await this.checkIdExists(this.id);
-      if (action === 'create' && !idExists) {
-        await this.create();
-      }
-      await this.update(options);
-      resolve();
-    });
+    }
+    const idExists = await this.checkIdExists(this.id);
+    if (action === 'create' && !idExists) {
+      await this.create();
+    }
+    await this.update(options);
   }
 
   private checkIdExists(id: any): Promise<boolean> {
@@ -1046,7 +1033,7 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   private deleteDbCall(silent: boolean): Promise<void> {
     return new Promise(async (resolve, reject) => {
-      // TODO: write test for removal of relationKeys and then implement deleting those as well
+      // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
       const multi = this.client.multi();
 
@@ -1069,7 +1056,11 @@ abstract class NohmModel<TProps extends IDictionary> {
         }
       });
 
-      await this.unlinkAll(multi); // TODO: enable once implmemented
+      try {
+        await this.unlinkAll(multi);
+      } catch (e) {
+        return reject(e);
+      }
       multi.exec((err) => {
         this.setId(null);
 
@@ -1293,9 +1284,13 @@ abstract class NohmModel<TProps extends IDictionary> {
       };
     });
     const otherRelationIdsPromises = others.map((item) => this.removeIdFromOtherRelations(multi, item));
-    others.forEach((item) => multi.DEL(item.ownIdsKey));
+
 
     await Promise.all(otherRelationIdsPromises);
+
+    // add multi'ed delete commands for other keys
+    others.forEach((item) => multi.DEL(item.ownIdsKey));
+    multi.del(`${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`);
 
     // if we didn't get a multi client from the callee we have to exec() ourselves
     if (!this.isMultiClient(givenClient)) {
@@ -1346,6 +1341,13 @@ abstract class NohmModel<TProps extends IDictionary> {
     });
   }
 
+  /**
+   * Resolves with true if the given object has a relation (optionally with the given relation name) to this.
+   *
+   * @param {NohmModel<IDictionary>} obj
+   * @param {string} [relationName='default']
+   * @returns {Promise<boolean>}
+   */
   public belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (!this.id || !obj.id) {
@@ -1364,6 +1366,59 @@ abstract class NohmModel<TProps extends IDictionary> {
           }
         },
       );
+    });
+  }
+
+  /**
+   * Returns an array of the ids of all objects that are linked with the given relation.
+   *
+   * @param {string} otherModelName
+   * @param {string} [relationName='default']
+   * @returns {Promise<Array<any>>}
+   */
+  public getAll(otherModelName: string, relationName = 'default'): Promise<Array<any>> {
+    return new Promise((resolve, reject) => {
+      if (!this.id) {
+        return reject(
+          new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`),
+        );
+      }
+      const relationKey = this.getRelationKey(otherModelName, relationName);
+      this.client.SMEMBERS(relationKey, (err, ids) => {
+        if (err) {
+          return reject(err);
+        } else if (!Array.isArray(ids)) {
+          resolve([]);
+        } else {
+          resolve(ids);
+        }
+      });
+    });
+  }
+
+  /**
+   * Returns the number of links of a specified relation (or the default) an instance has to
+   * models of a given modelName.
+   *
+   * @param {string} otherModelName Name of the model on the other end of the relation.
+   * @param {string} [relationName='default'] Name of the relation
+   * @returns {Promise<number>}
+   */
+  public numLinks(otherModelName: string, relationName = 'default'): Promise<number> {
+    return new Promise((resolve, reject) => {
+      if (!this.id) {
+        return reject(
+          new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`),
+        );
+      }
+      const relationKey = this.getRelationKey(otherModelName, relationName);
+      this.client.SCARD(relationKey, (err, numRelations) => {
+        if (err) {
+          return reject(err);
+        } else {
+          resolve(numRelations);
+        }
+      });
     });
   }
 
