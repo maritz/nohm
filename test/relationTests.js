@@ -339,17 +339,16 @@ exports.relation = {
 
     user.link(user);
 
-    user.save(function (err) {
-      t.ok(!err, 'Linking an object to itself failed.');
-      t.done();
-    });
+    await user.save();
+    t.ok(true, 'Linking an object to itself failed.');
+    t.done();
   },
 
   deppLinkErrorCallback: async (t) => {
     var user = new UserLinkMockup(),
       role = new RoleLinkMockup(),
       comment = new CommentLinkMockup();
-    t.expect(8);
+    t.expect(7);
 
     role.link(user, {
       error: function (err, errors, obj) {
@@ -358,22 +357,23 @@ exports.relation = {
       }
     });
     user.link(comment, {
-      error: function (err, errors, obj) {
-        t.same(err, 'invalid', 'err in error callback was not "invalid"');
-        t.same(errors, comment.errors, 'errors in error callback was not comment.errors');
+      error: function (err, obj) {
+        t.ok(err instanceof nohm.ValidationError, 'err in error callback was not "invalid"');
         t.same(comment, obj, 'obj in Error callback was not the right object.');
       }
     });
     comment.property('text', ''); // makes the comment fail
 
-    role.save(function (err, childFail, childName) {
+    try {
+      await role.save();
+    } catch (err) {
       t.ok(user.id !== null, 'The deeplinked user does not have an id and thus is probably not saved correctly.');
       t.same(comment.id, null, 'The deeplinked erroneous comment does not have an id and thus is probably saved.');
-      t.same(err, 'invalid', 'The deeplinked role did not fail.');
-      t.same(childFail, true, 'The deeplinked role did not fail in a child or reported it wrong.');
-      t.same(childName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
+      t.ok(err, 'The deeplinked role did not fail.');
+      t.ok(err instanceof nohm.LinkError, true, 'The deeplinked role did not fail in a child or reported it wrong.');
+      t.same(err.errors[0].child.modelName, 'CommentLinkMockup', 'The deeplinked role failed in the wrong model or reported it wrong.');
       t.done();
-    });
+    }
   },
 
   contineOnError: async (t) => {

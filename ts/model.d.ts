@@ -91,7 +91,7 @@ export interface IRelationChange {
 
 export interface ILinkOptions {
   continue_on_link_error?: boolean;
-  error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
+  error?: (err: Error | string, otherObject: NohmModel<IDictionary>) => any;
   name: string;
   silent?: boolean;
 }

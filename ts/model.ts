@@ -675,9 +675,9 @@ abstract class NohmModel<TProps extends IDictionary> {
           }
         } catch (err) {
           const isSubLinkError = err instanceof LinkError;
-          if (!isSubLinkError && typeof (change.callback) === 'function') {
+          if (!isSubLinkError && typeof (change.options.error) === 'function') {
             try {
-              change.callback(err);
+              change.options.error(err, change.object);
             } catch (e) {
               // ignore errors thrown by link callback
             }
@@ -738,7 +738,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       multi.exec((err) => {
         if (err) {
           if (change.options.error) {
-            change.options.error(err, 'Linking failed.', change.object);
+            change.options.error(err, change.object);
           }
           return reject(err);
         } else {
