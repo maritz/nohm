@@ -2,10 +2,12 @@ import * as redis from 'redis';
 
 import { getPrefix, INohmPrefixes } from './helpers';
 import {
+  IDictionary,
   ILinkOptions,
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
+  ISearchOptions,
   NohmModel,
 } from './model';
 
@@ -139,8 +141,6 @@ Consider waiting for an established connection before setting it.`);
    *                        meaning methods like factory() and getModels() cannot access them.
    *                        This is mostly useful for meta things like migrations.
    * @returns ModelClass
-   *
-   * TODO: maybe deprecate this at some point
    */
   public model(
     name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
@@ -196,6 +196,25 @@ Consider waiting for an established connection before setting it.`);
       protected rawPrefix(): INohmPrefixes {
         return self.prefix;
       }
+
+      /**
+       * Finds ids of objects and loads them into full NohmModels.
+       *
+       * @param {ISearchOptions} searches
+       * @returns {Promise<Array<NohmModel<IDictionary>>>}
+       */
+      public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
+        const dummy = await nohm.factory(name);
+        const ids = await dummy.find(searches);
+        if (ids.length === 0) {
+          // TODO: determine whether this should just return an empty array insteead
+          throw new Error('No models found.');
+        }
+        const loadPromises = ids.map((id) => {
+          return nohm.factory(name, id);
+        });
+        return Promise.all(loadPromises);
+      }
     }
 
     if (!temp) {
@@ -207,7 +226,7 @@ Consider waiting for an established connection before setting it.`);
 
   /**
    * Creates, registers and returns a new model class from a given class.
-   * This is the preferred method of creating new models over using Nohm.model(), especially when using Typescript.
+   * When using Typescript this is the preferred method of creating new models over using Nohm.model().
    *
    * @param {NohmModel} subClass Complete model class, needs to extend NohmModel.
    * @param {boolean} temp When true, this model is not added to the internal model cache,
@@ -243,6 +262,8 @@ Consider waiting for an established connection before setting it.`);
   ): Constructor<NohmModel<any>> & T {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
+    const uninstantiatedName = '__nohm__uninstantiated';
+    let modelName = uninstantiatedName;
 
     // tslint:disable-next-line:max-classes-per-file
     class CreatedClass extends subClass {
@@ -264,6 +285,8 @@ Consider waiting for an established connection before setting it.`);
       An alternative would be to pass the options as a special argument to super, but that would have the downside
       of making subclasses of subclasses impossible. */
       protected _initOptions() {
+        this.options = { properties: {} };
+        this.definitions = {};
         if (!this.client) {
           this.client = self.client;
         }
@@ -288,7 +311,9 @@ Consider waiting for an established connection before setting it.`);
 
     if (!temp) {
       const tempInstance = new CreatedClass();
-      this.modelCache[tempInstance.modelName] = CreatedClass;
+      modelName = tempInstance.modelName;
+      CreatedClass.prototype.modelName2 = modelName;
+      this.modelCache[modelName] = CreatedClass;
     }
 
     return CreatedClass;
@@ -304,7 +329,7 @@ Consider waiting for an established connection before setting it.`);
   }
 
   public async factory<T extends NohmModel<any>>(
-    name: string, id?: number, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
+    name: string, id?: any, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
   ): Promise<T> {
     if (typeof callback === 'function') {
       // TODO: decide whether callback fallback should be implemented everywhere based on effort - otherwise cut it

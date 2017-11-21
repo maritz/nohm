@@ -21,14 +21,24 @@ import {
   IPropertyDiff,
   IRelationChange,
   ISaveOptions,
+  ISearchOptions,
   IUnlinkKeyMapItem,
   IValidationObject,
   IValidationResult,
   TValidationDefinition,
+  IStructuredSearch,
+  ISearchOption,
 } from './model.d';
 import { validators } from './validators';
 
-export { IModelPropertyDefinition, IModelPropertyDefinitions, IModelOptions, ILinkOptions };
+export {
+  IDictionary,
+  ILinkOptions,
+  IModelPropertyDefinition,
+  IModelPropertyDefinitions,
+  IModelOptions,
+  ISearchOptions,
+};
 export { NohmModel };
 
 function callbackError(...args: Array<any>) {
@@ -270,6 +280,13 @@ abstract class NohmModel<TProps extends IDictionary> {
     return this.property(keyOrValues, value);
   }
 
+  /**
+   * Checks if key is a string, nothing else. Used as a typeguard
+   *
+   * @private
+   * @param {*} key
+   * @returns {key is keyof TProps}
+   */
   private isPropertyKey(key: any): key is keyof TProps {
     return typeof (key) === 'string';
   }
@@ -458,7 +475,8 @@ abstract class NohmModel<TProps extends IDictionary> {
    *  Get all properties with values either as an array or as json (param true).
    */
   public allProperties(): TProps & { id: any } {
-    return this.allPropertiesCache;
+    // tslint:disable-next-line:prefer-object-spread // ts complains when using spread method here
+    return Object.assign({}, this.allPropertiesCache);
   }
 
   /**
@@ -474,7 +492,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   public async save(
     options: ISaveOptions,
   ): Promise<void> {
-    // TODO: right now continue_on_link_error is always "true" since it's the current 
+    // TODO: right now continue_on_link_error is always "true" since it's the current
     // behavior without options and the option isn't passed.
     // Need to check if the option should work again.
     callbackError(...arguments);
@@ -1430,6 +1448,187 @@ abstract class NohmModel<TProps extends IDictionary> {
           resolve(numRelations);
         }
       });
+    });
+  }
+
+
+
+  /**
+   * Finds ids of objects by search arguments
+   *
+   * @param {ISearchOptions} searches
+   * @returns {Promise<Array<any>>}
+   */
+  public async find(searches: ISearchOptions = {}): Promise<Array<string>> {
+    // TODO: figure out a way to make ISearchOptions take the TProps generic to use as index
+
+    const structuredSearches = this.createStructuredSearchOptions(searches);
+
+    const uniqueSearch = structuredSearches.find((search) => search.type === 'unique');
+    if (uniqueSearch) {
+      return this.uniqueSearch(uniqueSearch);
+    }
+
+    const onlySets = structuredSearches.filter((search) => search.type === 'set');
+    const onlyZSets = structuredSearches.filter((search) => search.type === 'zset');
+
+    if (onlySets.length === 0 && onlyZSets.length === 0) {
+      // no valid searches - return all ids
+      return this.getAllIds();
+    }
+
+    const setPromises = this.setSearch(onlySets);
+    const zSetPromises = this.zSetSearch(onlyZSets);
+    const searchResults = await Promise.all([setPromises, zSetPromises]);
+    if (onlySets.length !== 0 && onlyZSets.length !== 0) {
+      // both searches - form intersection of them
+      const intersection = _.intersection(searchResults[0], searchResults[1]);
+      return intersection;
+    } else {
+      // only one form of search
+      if (onlySets.length !== 0) {
+        return searchResults[0];
+      } else {
+        return searchResults[1];
+      }
+    }
+  }
+
+  private createStructuredSearchOptions(searches: ISearchOptions): Array<IStructuredSearch<TProps>> {
+    return Object.keys(searches).map((key) => {
+      const search = searches[key];
+      const prop = this.getProperty(key);
+      const definition = this.definitions[key];
+      const structuredSearch: IStructuredSearch<TProps> = {
+        key,
+        options: {},
+        type: 'undefined',
+        value: search,
+      };
+      if (definition.unique) {
+        if (definition.type === 'string') {
+          if (typeof (search.toLowerCase) !== 'function') {
+            // tslint:disable-next-line:max-line-length
+            throw new Error('Invalid search parameters: Searching for a unique (type "string") with a non-string value is not supported.');
+          }
+          structuredSearch.value = search.toLowerCase();
+        }
+        structuredSearch.type = 'unique';
+      } else {
+        if (!prop.__numericIndex && !definition.index) {
+          throw new Error(`Trying to search for non-indexed and non-unique property '${key}' is not supported.`);
+        }
+        const isDirectNumericSearch = !isNaN(parseInt(search, 10));
+        const isSimpleIndexSearch = !prop.__numericIndex || isDirectNumericSearch;
+        if (!isSimpleIndexSearch && prop.__numericIndex) {
+          structuredSearch.type = 'zset';
+          structuredSearch.options = search;
+        } else if (definition.index === true) {
+          structuredSearch.type = 'set';
+        }
+      }
+      return structuredSearch;
+    });
+  }
+
+  private uniqueSearch(options: IStructuredSearch<TProps>): Promise<Array<string>> {
+    return new Promise((resolve, reject) => {
+      const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
+      this.client.GET(key, (err, id) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (id) {
+            resolve([id]);
+          } else {
+            resolve([]);
+          }
+        }
+      });
+    });
+  }
+
+  private getAllIds(): Promise<Array<string>> {
+    return new Promise((resolve, reject) => {
+      const key = `${this.prefix('idsets')}`;
+      this.client.SMEMBERS(key, (err, ids) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(ids);
+        }
+      });
+    });
+  }
+
+  private setSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
+    return new Promise((resolve, reject) => {
+      const keys = searches.map((search) => {
+        return `${this.prefix('index')}:${search.key}:${search.value}`;
+      });
+      this.client.SINTER(keys.join(' '), (err, ids) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(ids);
+        }
+      });
+    });
+  }
+
+  private async zSetSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
+    const singleSearches = await Promise.all(searches.map((search) => this.singleZSetSearch(search)));
+    return _.intersection(...singleSearches);
+  }
+
+  private singleZSetSearch(search: IStructuredSearch<TProps>): Promise<Array<string>> {
+    return new Promise((resolve, reject) => {
+      const key = `${this.prefix('scoredindex')}:${search.key}`;
+      let command: 'ZRANGEBYSCORE' | 'ZREVRANGEBYSCORE' = 'ZRANGEBYSCORE';
+      const options: ISearchOption = {
+        endpoints: '[]',
+        limit: -1,
+        max: '+inf',
+        min: '-inf',
+        offset: 0,
+        ...search.options,
+      };
+      if ((options.min === '+inf' && options.max !== '+inf') ||
+        (options.max === '-inf' && options.min !== '-inf') ||
+        (parseFloat('' + options.min) > parseFloat('' + options.max))) {
+        command = 'ZREVRANGEBYSCORE';
+      }
+
+      if (options.endpoints === ')') {
+        options.endpoints = '[)';
+      }
+
+      const endpoints = [
+        (options.endpoints[0] === '(' ? '(' : ''),
+        (options.endpoints[1] === ')' ? '(' : ''),
+      ];
+
+      const callback = (err: Error | null, ids: Array<string>) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(ids);
+        }
+      };
+      if (options.limit > 0) {
+        this.client[command](key,
+          endpoints[0] + options.min,
+          endpoints[1] + options.max,
+          'LIMIT', options.offset, options.limit,
+          callback,
+        );
+      } else {
+        this.client[command](key,
+          endpoints[0] + options.min,
+          endpoints[1] + options.max,
+          callback,
+        );
+      }
     });
   }
 

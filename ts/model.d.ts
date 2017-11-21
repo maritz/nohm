@@ -107,3 +107,22 @@ export interface IUnlinkKeyMapItem {
   ownIdsKey: string;
   otherIdsKey: string;
 }
+
+export interface ISearchOption {
+  endpoints: '()' | '[]' | '[)' | '(]' | '(' | ')';
+  limit: number;
+  min: number | '-inf' | '+inf';
+  max: number | '-inf' | '+inf';
+  offset: number;
+}
+
+export interface ISearchOptions {
+  [key: string]: any | Partial<ISearchOption>;
+}
+
+export interface IStructuredSearch<TProps extends IDictionary> {
+  type: 'undefined' | 'unique' | 'set' | 'zset';
+  options: Partial<ISearchOption>;
+  key: keyof TProps;
+  value: any;
+}

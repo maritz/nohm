@@ -13,3 +13,6 @@ This file is not intended as documentation for users, instead it should make wri
 - validation failures no longer return the string 'invalid' but instead throw a ValidationError
 - deeplink errors now produce a different error format (.errors with list if ILinkResults)
 - deeplink error callbacks now have a different set of arguments
+- load() now returns the same as allProperties() (meaning with id)
+- removed most shortform functions
+- removed loading via passing an id to the constructor. Use factory instead. (constructor cannot return promise)

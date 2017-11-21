@@ -1,8 +1,10 @@
 var async = require('async');
-var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
+var Nohm = require(__dirname + '/../tsOut/');
 var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
+
+const nohm = Nohm.nohm;
 
 var UserFindMockup = nohm.model('UserFindMockup', {
   properties: {
@@ -82,21 +84,15 @@ var createUsers = function (props, modelName, callback) {
     callback = modelName;
     modelName = 'UserFindMockup';
   }
-  var makeSeries = function (prop) {
-    return function (next) {
-      var user = nohm.factory(modelName);
-      user.p(prop);
-      user.save(function (err) {
-        next(err, user);
-      });
-    };
-  };
 
-  var series = props.map(function (prop) {
-    return makeSeries(prop);
+  var promises = props.map(async (prop) => {
+    var user = await nohm.factory(modelName);
+    user.property(prop);
+    await user.save();
+    return user;
   });
 
-  async.series(series, function (err, users) {
+  Promise.all(promises).then((users) => {
     var ids = users.map(function (user) {
       return user.id;
     });
@@ -158,25 +154,27 @@ exports.find = {
   },
 
 
-  loadInvalid: function (t) {
+  loadInvalid: async (t) => {
     var user = new UserFindMockup();
     t.expect(1);
 
-    h.cleanUp(redis, args.prefix, function () {
-      user.load(1, function (err) {
-        t.equals(err, 'not found', 'Load() did not return "not found" for id 1 even though there should not be a user yet.');
+    h.cleanUp(redis, args.prefix, async () => {
+      try {
+        await user.load(1);
+      } catch (err) {
+        t.equals(err.message, 'not found', 'Load() did not return "not found" for id 1 even though there should not be a user yet.');
         t.done();
-      });
+      }
     });
   },
 
 
-  load: function (t) {
+  load: async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup();
     t.expect(5);
 
-    user.p({
+    user.property({
       name: 'hurgelwurz',
       email: 'hurgelwurz@hurgel.de',
       json: {
@@ -185,64 +183,38 @@ exports.find = {
       bool: 'true'
     });
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      findUser.load(user.id, function (err) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
-        t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
-        t.equals(findUser.p('json').test, 1, 'The loaded version of the json was not the same as the set one.');
-        t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
-        t.equals(findUser.p('bool'), true, 'The loaded version of the boolean was not the same as a set one.');
-        t.done();
-      });
-    });
+    await user.save();
+    await findUser.load(user.id);
+    t.equals(user.property('name'), findUser.property('name'), 'The loaded version of the name was not the same as a set one.');
+    t.equals(user.property('email'), findUser.property('email'), 'The loaded version of the email was not the same as a set one.');
+    t.equals(findUser.property('json').test, 1, 'The loaded version of the json was not the same as the set one.');
+    t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
+    t.equals(findUser.property('bool'), true, 'The loaded version of the boolean was not the same as a set one.');
+    t.done();
   },
 
 
-  findAndLoad: function (t) {
+  findAndLoad: async (t) => {
     var user = new UserFindMockup();
     var user2 = new UserFindMockup();
 
-    user.p({
+    user.property({
       name: 'hurgelwurz',
       email: 'hurgelwurz@hurgel.de',
     });
-    user2.p({
+    user2.property({
       name: 'hurgelwurz',
       email: 'hurgelwurz2@hurgel.de',
     });
 
-    async.parallel([
-      function (done) {
-        user.save(done);
-      },
-      function (done) {
-        user2.save(done);
-      }
-    ], function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      UserFindMockup.findAndLoad({ name: "hurgelwurz" }, function (err, users) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        t.equals(users.length, 2, 'The loaded number of users was not 2.');
-        t.equals(user.p('name'), users[0].p('name'), 'The loaded version of the name was not the same as a set one.');
-        t.equals(user.p('email'), users[0].p('email'), 'The loaded version of the email was not the same as a set one.');
-        t.equals(user.id, users[0].id, 'The loaded version of the email was not the same as a set one.');
-        t.done();
-      });
-    });
+    await user.save();
+    await user2.save();
+    const users = await UserFindMockup.findAndLoad({ name: "hurgelwurz" });
+    t.equals(users.length, 2, 'The loaded number of users was not 2.');
+    t.equals(user.property('name'), users[0].property('name'), 'The loaded version of the name was not the same as a set one.');
+    t.equals(user.property('email'), users[0].property('email'), 'The loaded version of the email was not the same as a set one.');
+    t.equals(user.id, users[0].id, 'The loaded version of the email was not the same as a set one.');
+    t.done();
   },
 
 
@@ -251,162 +223,150 @@ exports.find = {
     var findUser = new UserFindMockup();
     t.expect(1);
 
-    findUser.find(function (err, ids) {
-      ids.sort(); // usually redis returns them first-in-first-out, but not always
+    (async () => {
+      const ids = await findUser.find();
+      ids.sort(); // usually redis returns them first-in-first-out, but not guaranteed
       t.same(self.userIds, ids, 'find() did not return all users when not given any search parameters.');
       t.done();
-    });
+    })();
   },
 
-  exists: function (t) {
+  exists: async (t) => {
     var existsUser = new UserFindMockup();
     t.expect(2);
 
 
-    existsUser.exists(1, function (exists) {
-      t.equals(exists, true, 'Exists() did not return true for id 1.');
+    let exists = await existsUser.exists(1);
+    t.equals(exists, true, 'Exists() did not return true for id 1.');
 
-      existsUser.exists(9999999, function (exists) {
-        t.equals(exists, false, 'Exists() did not return false for id 9999999.');
-        t.done();
-      });
-    });
+    exists = await existsUser.exists(9999999);
+    t.equals(exists, false, 'Exists() did not return false for id 9999999.');
+    t.done();
   },
 
-  /* I don't know how to do this right now.
-  loadArray: function (t) {
-    var findUser = new UserFindMockup();
-    t.expect(2);
-  
-    findUser.load(all, function (err, users) {
-      errLogger(err);
-      t.ok(Array.isArray(users), 'load()ing an array of ids did not return an array');
-      t.same(all.length, users.length, 'load()ing an array of ids did not return an array with the coorect length');
-    });
-  },*/
-
-  findByInvalidSearch: function (t) {
+  findByInvalidSearch: async (t) => {
     var findUser = new UserFindMockup();
     t.expect(1);
 
-    console.log('There should be an error in the next line');
-    findUser.find({
-      gender: 'male'
-    }, function (err, ids) {
-      t.same(0, ids.length, 'Searching for a nonexistant index did not return an empty array.');
+    try {
+      await findUser.find({
+        gender: 'male'
+      });
+      t.same(true, false, 'Searching for a nonexistant index did not throw an error');
+    } catch (err) {
+      t.ok(
+        err.message.match('Trying to search for non-indexed'),
+        'Searching for a nonexistant index did not return an empty array.',
+      );
       t.done();
-    });
+    }
   },
 
   findByUnique: function (t) {
-    var findUser = new UserFindMockup();
-    var userUnique = this.users.filter(function (user) {
-      return user.p('name') === 'uniquefind';
-    })[0];
-    t.expect(1);
+    var self = this;
+    (async () => {
+      var findUser = new UserFindMockup();
+      var userUnique = self.users.filter(function (user) {
+        return user.property('name') === 'uniquefind';
+      })[0];
+      t.expect(1);
 
-    findUser.find({
-      email: userUnique.p('email')
-    }, function (err, ids) {
-      if (err) {
-        console.dir(err);
-      }
+      const ids = await findUser.find({
+        email: userUnique.property('email')
+      });
       t.same(ids, [userUnique.id], 'The found id did not match the id of the saved object.');
       t.done();
-    });
+    })();
   },
 
   findByUniqueOtherCase: function (t) {
-    var findUser = new UserFindMockup();
-    var userUnique = this.users.filter(function (user) {
-      return user.p('name') === 'uniquefind';
-    })[0];
-    t.expect(1);
+    var self = this;
+    (async () => {
+      var findUser = new UserFindMockup();
+      var userUnique = this.users.filter(function (user) {
+        return user.property('name') === 'uniquefind';
+      })[0];
+      t.expect(1);
 
-    findUser.find({
-      email: userUnique.p('email').toUpperCase()
-    }, function (err, ids) {
-      if (err) {
-        console.dir(err);
-      }
+      const ids = await findUser.find({
+        email: userUnique.property('email').toUpperCase()
+      });
       t.same(ids, [userUnique.id], 'The found id did not match the id of the saved object.');
       t.done();
-    });
+    })();
   },
 
-  findByUniqueInvalidSearch: function (t) {
+  findByUniqueInvalidSearch: async (t) => {
     var findUser = new UserFindMockup();
     t.expect(1);
 
-    console.log('There should be an error in the next line');
-    findUser.find({
-      email: {}
-    }, function (err) {
-      t.same(0, err.indexOf('Invalid search parameters'), 'The found id did not match the id of the saved object.');
+    try {
+      await findUser.find({
+        email: {}
+      });
+    } catch (err) {
+      t.same(0, err.message.indexOf('Invalid search parameters'), 'The found id did not match the id of the saved object.');
       t.done();
-    });
+    }
   },
 
-  findByIntegerUnique: function (t) {
-    var saveObj = nohm.factory('UniqueIntegerFind');
-    var findObj = nohm.factory('UniqueIntegerFind');
-    t.expect(3);
+  findByIntegerUnique: async (t) => {
+    var saveObj = await nohm.factory('UniqueIntegerFind');
+    var findObj = await nohm.factory('UniqueIntegerFind');
+    t.expect(1);
 
-    saveObj.p('unique', 123);
-    saveObj.save(function (err) {
-      t.ok(!err, 'Unexpected saving error');
+    saveObj.property('unique', 123);
+    await saveObj.save();
 
-      findObj.find({
-        unique: saveObj.p('unique')
-      }, function (err, ids) {
-        t.ok(!err, 'Unexpected finding error');
-        t.same(ids, [saveObj.id], 'The found id did not match the id of the saved object.');
-        t.done();
-      });
+    const ids = await findObj.find({
+      unique: saveObj.property('unique')
     });
+    t.same(ids, [saveObj.id], 'The found id did not match the id of the saved object.');
+    t.done();
   },
 
   findByStringIndex: function (t) {
-    var findUser = new UserFindMockup();
-    var users = this.users.filter(function (user) {
-      return user.p('name') === 'indextest';
-    });
-    t.expect(1);
+    var self = this;
+    (async () => {
+      var findUser = new UserFindMockup();
+      var users = self.users.filter(function (user) {
+        return user.property('name') === 'indextest';
+      });
+      t.expect(1);
 
-    findUser.find({
-      name: 'indextest'
-    }, function (err, ids) {
-      if (err) {
-        console.dir(err);
-      }
+      const ids = await findUser.find({
+        name: 'indextest'
+      });
       t.same(ids, [users[0].id, users[1].id], 'The found id did not match the id of the saved object.');
       t.done();
-    });
+    })();
   },
 
   findByNumericIndex: function (t) {
-    var findUser = new UserFindMockup();
-    var users = this.users.filter(function (user) {
-      return user.p('number') > 2 && user.p('number2') < 100;
-    });
-    t.expect(1);
+    var self = this;
+    (async () => {
+      var findUser = new UserFindMockup();
+      var users = this.users.filter(function (user) {
+        return user.property('number') > 2 && user.property('number2') < 100;
+      });
+      t.expect(1);
 
-    findUser.find({
-      number: {
-        min: 2
-      },
-      number2: {
-        max: 100,
-        limit: 2
-      }
-    }, function (err, ids) {
-      errLogger(err);
+      const ids = await findUser.find({
+        number: {
+          min: 2
+        },
+        number2: {
+          max: 100,
+          limit: 2
+        }
+      });
       t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
       t.done();
-    });
+    })();
   },
 
-  findByMixedIndex: function (t) {
+
+  findByMixedIndex: (t) => {
     var findUser = new UserFindMockup();
     t.expect(1);
 
@@ -430,9 +390,8 @@ exports.find = {
       email: 'mixedindextest4@hurgel.de',
       number: 1,
       number2: 33
-    }], function (users) {
-
-      findUser.find({
+    }], async (users) => {
+      const ids = await findUser.find({
         number: {
           min: 2
         },
@@ -440,13 +399,9 @@ exports.find = {
           max: 100
         },
         name: 'mixedindextest'
-      }, function (err, ids) {
-        if (err) {
-          console.dir(err);
-        }
-        t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
-        t.done();
       });
+      t.same(ids.sort(), [users[0].id, users[1].id].sort(), 'The found id did not match the id of the saved object.');
+      t.done();
     });
   },
 
@@ -464,24 +419,21 @@ exports.find = {
       name: 'SameNumericTwice2',
       email: 'SameNumericTwice2@hurgel.de',
       number: 3000
-    }], function (users, userIds) {
-      findUser.find({
+    }], async (users, userIds) => {
+      userIds.push(self.userIds[self.userIds.length - 1]);
+      t.same(userIds.length, 3, 'Didn\'t create 2 users, instead: ' + userIds.length);
+
+      const ids = await findUser.find({
         number: {
           min: 3000
         }
-      }, function (err, ids) {
-        if (err) {
-          console.dir(err);
-        }
-        userIds.push(self.userIds[self.userIds.length - 1]);
-        t.same(userIds.length, 3, 'Didn\'t create 2 users, instead: ' + userIds.length);
-        t.same(ids.sort(), userIds.sort(), 'The found id did not match the id of the saved objects.');
-        t.done();
       });
+      t.same(ids.sort(), userIds.sort(), 'The found id did not match the id of the saved objects.');
+      t.done();
     });
   },
 
-  findByMixedIndexMissing: function (t) {
+  findByMixedIndexMissing: async (t) => {
     var findUser = new UserFindMockup();
     t.expect(1);
 
@@ -493,93 +445,73 @@ exports.find = {
       name: 'mixedindextestMissing2',
       email: 'mixedindextestMissing2@hurgel.de',
       number: 4
-    }], function () {
-      findUser.find({
+    }], async () => {
+      const ids = await findUser.find({
         number: {
           min: 2
         },
         name: 'mixedindextASDASDestMISSING'
-      }, function (err, ids) {
-        if (err) {
-          console.dir(err);
-        }
-        t.same(ids, [], 'Ids were found even though the name should not be findable.');
-        t.done();
       });
+      t.same(ids, [], 'Ids were found even though the name should not be findable.');
+      t.done();
     });
   },
 
 
-  findNumericWithoutLimit: function (t) {
+  findNumericWithoutLimit: async (t) => {
     var findUser = new UserFindMockup(),
-      usersLooped = 0,
-      loopUserCreation = function (err) {
-        if (err) {
-          t.ok(false, 'Error while creating findUsers');
-        }
-        usersLooped++;
-        if (usersLooped === 55) {
-          findUser.find({
-            number: {
-              min: 1,
-              limit: 0
-            }
-          }, function (err, ids) {
-            errLogger(err);
-            t.ok(ids.length > 54, 'The limit: 0 option did not return more than 50 ids.');
-            t.done();
-          });
-        }
-      };
+      usersLooped = 0;
     t.expect(1);
 
     for (var i = 0, len = 55; i < len; i++) {
       var user = new UserFindMockup();
-      user.p({
+      user.property({
         name: 'findNumericWithoutLimit' + i,
         email: 'findNumericWithoutLimit' + i + '@hurgel.de',
         number: i
       });
 
-      user.save(loopUserCreation);
+      await user.save();
     }
+    const ids = await findUser.find({
+      number: {
+        min: 1,
+        limit: 0
+      }
+    });
+    t.ok(ids.length > 54, 'The limit: 0 option did not return more than 50 ids.');
+    t.done();
   },
 
-  findExactNumeric: function (t) {
+  findExactNumeric: async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup(),
       num = 999876543;
     t.expect(2);
 
-    user.p({
+    user.property({
       name: 'findExactNumeric',
       email: 'findExactNumeric@hurgel.de',
       number: num
     });
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-      }
-      findUser.find({
-        number: num
-      }, function (err, ids) {
-        t.same(ids, [user.id], 'Did not find an exact number match');
-        findUser.find({
-          number: (num - 1)
-        }, function (err, ids) {
-          t.same(ids, [], 'Searching for a nonexistant number did not return an empty array.');
-          t.done();
-        });
-      });
+    await user.save();
+    const ids = await findUser.find({
+      number: num
     });
+    t.same(ids, [user.id], 'Did not find an exact number match');
+    const ids2 = await findUser.find({
+      number: (num - 1)
+    });
+    t.same(ids2, [], 'Searching for a nonexistant number did not return an empty array.');
+    t.done();
   },
 
-  loadReturnsProps: function (t) {
+  loadReturnsProps: async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup();
     t.expect(1);
 
-    user.p({
+    user.property({
       name: 'loadReturnsProps',
       email: 'loadReturnsProps@hurgel.de',
       json: {
@@ -587,26 +519,18 @@ exports.find = {
       }
     });
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      findUser.load(user.id, function (err, props) {
-        if (err) {
-          console.dir(err);
-          t.done();
-        }
-        var testProps = user.allProperties();
-        delete testProps.id;
-        t.same(props, testProps, 'The loaded properties are not the same as allProperties() (without id).');
-        t.done();
-      });
-    });
+    await user.save();
+    const props = await findUser.load(user.id);
+    var testProps = user.allProperties();
+    t.same(props, testProps, 'The loaded properties are not the same as allProperties() (without id).');
+    t.done();
   },
 
-  shortForms: function (t) {
-    t.expect(12);
+  /*
+  Removed!
+  TODO: decide if we reimplement them later on
+  shortForms: async (t) => {
+    t.expect(8);
     var shortFormMockup = nohm.model('shortFormMockup', {
       properties: {
         name: {
@@ -620,43 +544,33 @@ exports.find = {
       },
       idGenerator: 'increment'
     });
-
-    var saved = shortFormMockup.save(function (err) {
-      t.same(saved, this, '`this` is not equal to the return value of save().');
-      var id = saved.id;
-      t.ok(!err, 'There was an error while saving');
-      t.ok(saved instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
-      t.ok(id > 0, 'The id was not set properly');
-      saved.p('name', 'shortForm');
-      saved.save(function () {
-        saved.p('name', 'asdasd'); // make sure our comparisons in load aren't bogus
-        shortFormMockup.load(id, function (err, props) {
-          t.ok(!err, 'There was an error while loading.');
-          t.ok(props.hasOwnProperty('name') && props.name === 'shortForm', 'The props argument was not properly passed in load.');
-          t.same(this.p('name'), 'shortForm', 'The `this` instance has some property issues.');
-          shortFormMockup.find({
-            name: 'shortForm'
-          }, function (err, ids) {
-            t.ok(!err, 'There was an error while finding');
-            t.same(ids, [id], 'The found ids do not match [id]');
-            shortFormMockup.remove(id, function (err) {
-              t.ok(!err, 'There was an error while removing');
-              shortFormMockup.find({
-                name: 'shortForm'
-              }, function (err, ids) {
-                t.ok(!err, 'There was en error while finding the second time');
-                t.same(ids, [], 'Remove did not remove the correct instance. Uh-Oh.... :D ');
-                t.done();
-              });
-            });
-          });
-        });
-      });
+    
+    var saved = await shortFormMockup.save();
+    t.same(saved, this, '`this` is not equal to the return value of save().');
+    var id = saved.id;
+    t.ok(saved instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
+    t.ok(id > 0, 'The id was not set properly');
+    saved.property('name', 'shortForm');
+    await saved.save();
+    saved.property('name', 'asdasd'); // make sure our comparisons in load aren't bogus
+    await shortFormMockup.load(id);
+    t.ok(props.hasOwnProperty('name') && props.name === 'shortForm', 'The props argument was not properly passed in load.');
+    t.same(this.property('name'), 'shortForm', 'The `this` instance has some property issues.');
+    const ids = await shortFormMockup.find({
+      name: 'shortForm'
     });
+    t.same(ids, [id], 'The found ids do not match [id]');
+    await shortFormMockup.remove(id);
+    await shortFormMockup.find({
+      name: 'shortForm'
+    });
+    t.same(ids, [], 'Remove did not remove the correct instance. Uh-Oh.... :D ');
+    t.done();
   },
+  */
 
-  uuidLoadFind: function (t) {
-    t.expect(6);
+  uuidLoadFind: async (t) => {
+    t.expect(4);
     var uuidMockup = nohm.model('uuidMockup', {
       properties: {
         name: {
@@ -671,29 +585,23 @@ exports.find = {
     });
 
     var test = new uuidMockup();
-    test.p('name', 'uuid');
+    test.property('name', 'uuid');
 
     var test2 = new uuidMockup();
-    test2.p('name', 'uuid2');
+    test2.property('name', 'uuid2');
 
-    test.save(function () {
-      t.ok(test.id.length > 0, 'There was no proper id generated');
-      test2.save(function () {
-        t.ok(test.id !== test2.id, 'The uuids were the same.... ');
-        var loader = new uuidMockup();
-        loader.load(test.id, function (err, props) {
-          t.ok(!err, 'There was an error while loading');
-          t.same(props.name, test.p('name'), 'The loaded properties were not correct.');
-          uuidMockup.find({
-            name: test.p('name')
-          }, function (err, ids) {
-            t.ok(!err, 'There was an error while finding.');
-            t.same([test.id], ids, 'Did not find the correct ids');
-            t.done();
-          });
-        });
-      });
+    await test.save();
+    t.ok(test.id.length > 0, 'There was no proper id generated');
+    await test2.save();
+    t.ok(test.id !== test2.id, 'The uuids were the same.... ');
+    var loader = new uuidMockup();
+    const props = await loader.load(test.id);
+    t.same(props.name, test.property('name'), 'The loaded properties were not correct.');
+    const ids = await new uuidMockup().find({
+      name: test.property('name')
     });
+    t.same([test.id], ids, 'Did not find the correct ids');
+    t.done();
   },
 
   "normal string IDs": {
@@ -713,64 +621,38 @@ exports.find = {
     },
 
     find: function (t) {
-      t.expect(2);
       var self = this;
-
-      UserFindNoIncrementMockup.find({
-        name: 'blablub'
-      }, function (err, ids) {
+      (async () => {
+        t.expect(2);
+        const ids = await new UserFindNoIncrementMockup().find({
+          name: 'blablub'
+        });
         t.same(ids.length, 1, 'Did not find the correct number of ids for non-incremental id model.');
         t.same(ids[0], self.userIds[1], 'Did not find the correct id for non-incremental id model.');
         t.done();
-      });
+      })();
     },
 
-    "load via constructor": function (t) {
-      t.expect(2);
-      var self = this;
-
-      var test = new UserFindNoIncrementMockup(this.userIds[0], function (err) {
-        t.ok(!err, 'There was an error while loading a model via constructor.');
-        t.same(test.allProperties(), self.users[0].allProperties(), 'A loaded user did not match what should\'ve been saved.');
-        t.done();
-      });
-    }
   },
 
-  "search unique that doesn't exists": function (t) {
-    t.expect(2);
-    var test = nohm.factory('UserFindMockup');
-    test.find({
+  "search unique that doesn't exists": async (t) => {
+    t.expect(1);
+    var test = await nohm.factory('UserFindMockup');
+    const ids = await test.find({
       email: 'this_user_email_should_absolutely_not_exist. it\'s not even a valid email...'
-    }, function (err, ids) {
-      t.ok(!err, 'There was an error while searching an inexistant unique value.');
-      t.same([], ids, 'The return of a search that didn\'t find anything was wrong.');
-      t.done();
     });
-  },
-
-  "load via constructor": function (t) {
-    t.expect(3);
-    var test = nohm.factory('UserFindMockup');
-    test.save(function (err) {
-      t.ok(!err, 'There was an error while saving.');
-
-      var test2 = new UserFindMockup(test.id, function (err) {
-        t.ok(!err, 'There was an error while loading a model via constructor.');
-        t.same(test2.allProperties(), test.allProperties(), 'The return of a search that didn\'t find anything was wrong.');
-        t.done();
-      });
-    });
+    t.same([], ids, 'The return of a search that didn\'t find anything was wrong.');
+    t.done();
   },
 
   sort: {
 
-    "all by name": function (t) {
+    "all by name": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -785,12 +667,12 @@ exports.find = {
       });
     },
 
-    "all by name DESC": function (t) {
+    "all by name DESC": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a < b ? 1 : (a > b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -806,12 +688,12 @@ exports.find = {
       });
     },
 
-    "all by name LIMIT 2, 3": function (t) {
+    "all by name LIMIT 2, 3": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).slice(2, 5)
         .map(function (user) {
@@ -828,12 +710,12 @@ exports.find = {
       });
     },
 
-    "all by number": function (t) {
+    "all by number": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -850,13 +732,13 @@ exports.find = {
       });
     },
 
-    "all by number DESC": function (t) {
+    "all by number DESC": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a < b ? 1 : (a > b ? -1 : id_sort);
       }).map(function (user) {
         return '' + user.id;
@@ -872,12 +754,12 @@ exports.find = {
       });
     },
 
-    "all by number LIMIT 3, 3": function (t) {
+    "all by number LIMIT 3, 3": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).slice(3, 6)
         .map(function (user) {
@@ -893,12 +775,12 @@ exports.find = {
         t.done();
       });
     },
-    "provided by name": function (t) {
+    "provided by name": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -913,12 +795,12 @@ exports.find = {
       });
     },
 
-    "provided by name DESC": function (t) {
+    "provided by name DESC": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a < b ? 1 : (a > b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -934,12 +816,12 @@ exports.find = {
       });
     },
 
-    "provided by name LIMIT 2, 3": function (t) {
+    "provided by name LIMIT 2, 3": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('name');
-        b = b.p('name');
+        a = a.property('name');
+        b = b.property('name');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).slice(2, 5)
         .map(function (user) {
@@ -956,12 +838,12 @@ exports.find = {
       });
     },
 
-    "provided by number": function (t) {
+    "provided by number": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).map(function (user) {
         return '' + user.id;
@@ -976,13 +858,13 @@ exports.find = {
       });
     },
 
-    "provided by number DESC": function (t) {
+    "provided by number DESC": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a < b ? 1 : (a > b ? -1 : id_sort);
       }).map(function (user) {
         return '' + user.id;
@@ -998,12 +880,12 @@ exports.find = {
       });
     },
 
-    "provided by number LIMIT 3, 3": function (t) {
+    "provided by number LIMIT 3, 3": async (t) => {
       t.expect(2);
 
       var sorted_ids = this.users.sort(function (a, b) {
-        a = a.p('number');
-        b = b.p('number');
+        a = a.property('number');
+        b = b.property('number');
         return a > b ? 1 : (a < b ? -1 : 0);
       }).slice(3, 6)
         .map(function (user) {
@@ -1020,7 +902,7 @@ exports.find = {
       });
     },
 
-    "provided empty list": function (t) {
+    "provided empty list": async (t) => {
       t.expect(2);
 
       UserFindMockup.sort({
@@ -1034,12 +916,12 @@ exports.find = {
     }
   },
 
-  "load hash with extra properties": function (t) {
+  "load hash with extra properties": async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup();
     t.expect(7);
 
-    user.p({
+    user.property({
       name: 'hurgelwurz',
       email: 'hurgelwurz@hurgel.de',
       json: {
@@ -1057,18 +939,18 @@ exports.find = {
         console.log('There should be an error in the next line');
         findUser.load(user.id, function (err) {
           t.ok(!err, 'Unexpected load error');
-          t.equals(user.p('name'), findUser.p('name'), 'The loaded version of the name was not the same as a set one.');
-          t.equals(user.p('email'), findUser.p('email'), 'The loaded version of the email was not the same as a set one.');
-          t.equals(findUser.p('json').test, 1, 'The loaded version of the json was not the same as the set one.');
+          t.equals(user.property('name'), findUser.property('name'), 'The loaded version of the name was not the same as a set one.');
+          t.equals(user.property('email'), findUser.property('email'), 'The loaded version of the email was not the same as a set one.');
+          t.equals(findUser.property('json').test, 1, 'The loaded version of the json was not the same as the set one.');
           t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
-          t.equals(user.p('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
+          t.equals(user.property('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
           t.done();
         });
       });
     });
   },
 
-  "descending order through higher min than max": function (t) {
+  "descending order through higher min than max": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1083,7 +965,7 @@ exports.find = {
     });
   },
 
-  "descending order through higher min than max with limit 2": function (t) { // should produce lexical ordering for the second which should be 7 (due)
+  "descending order through higher min than max with limit 2": async (t) => { // should produce lexical ordering for the second which should be 7 (due)
     t.expect(2);
 
     UserFindMockup.find({
@@ -1099,7 +981,7 @@ exports.find = {
     });
   },
 
-  "endpoints exclude left": function (t) {
+  "endpoints exclude left": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1115,7 +997,7 @@ exports.find = {
     });
   },
 
-  "endpoints exclude right": function (t) {
+  "endpoints exclude right": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1131,7 +1013,7 @@ exports.find = {
     });
   },
 
-  "endpoints exclude both": function (t) {
+  "endpoints exclude both": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1147,7 +1029,7 @@ exports.find = {
     });
   },
 
-  "endpoints only specify one": function (t) {
+  "endpoints only specify one": async (t) => {
     t.expect(4);
 
     UserFindMockup.find({
@@ -1173,7 +1055,7 @@ exports.find = {
     });
   },
 
-  "find numeric options parsing and defaulting": function (t) {
+  "find numeric options parsing and defaulting": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1191,7 +1073,7 @@ exports.find = {
     });
   },
 
-  "find numeric with offset and limit": function (t) {
+  "find numeric with offset and limit": async (t) => {
     t.expect(2);
 
     UserFindMockup.find({
@@ -1207,7 +1089,7 @@ exports.find = {
     });
   },
 
-  "find numeric with offset and limit were the offset reduces the set below the limit": function (t) {
+  "find numeric with offset and limit were the offset reduces the set below the limit": async (t) => {
     var findUser = new UserFindMockup();
     t.expect(2);
 
@@ -1224,7 +1106,7 @@ exports.find = {
     });
   },
 
-  "find numeric with offset without limit": function (t) {
+  "find numeric with offset without limit": async (t) => {
     var findUser = new UserFindMockup();
     t.expect(2);
 
