@@ -647,10 +647,10 @@ exports.find = {
 
   sort: {
 
-    "all by name": async (t) => {
-      t.expect(2);
+    "all by name": function (t) {
+      t.expect(1);
 
-      var sorted_ids = this.users.sort(function (a, b) {
+      const sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
         b = b.property('name');
         return a > b ? 1 : (a < b ? -1 : 0);
@@ -658,17 +658,17 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'name'
-      }, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name'
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "all by name DESC": async (t) => {
-      t.expect(2);
+    "all by name DESC": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
@@ -678,18 +678,18 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'name',
-        direction: 'DESC'
-      }, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name',
+          direction: 'DESC'
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "all by name LIMIT 2, 3": async (t) => {
-      t.expect(2);
+    "all by name LIMIT 2, 3": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
@@ -700,18 +700,18 @@ exports.find = {
           return '' + user.id;
         });
 
-      UserFindMockup.sort({
-        field: 'name',
-        limit: [2, 3]
-      }, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name',
+          limit: [2, 3]
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "all by number": async (t) => {
-      t.expect(2);
+    "all by number": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('number');
@@ -721,19 +721,17 @@ exports.find = {
         return '' + user.id;
       });
 
-      console.error('ALL?', sorted_ids);
-      UserFindMockup.sort({
-        field: 'number'
-      }, function (err, ids) {
-        console.error('ALL?', ids, err);
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number'
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "all by number DESC": async (t) => {
-      t.expect(2);
+    "all by number DESC": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
@@ -744,18 +742,18 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'number',
-        direction: 'DESC'
-      }, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number',
+          direction: 'DESC'
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "all by number LIMIT 3, 3": async (t) => {
-      t.expect(2);
+    "all by number LIMIT 3, 3": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('number');
@@ -766,17 +764,18 @@ exports.find = {
           return '' + user.id;
         });
 
-      UserFindMockup.sort({
-        field: 'number',
-        limit: [3, 3]
-      }, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number',
+          limit: [3, 3]
+        });
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
-    "provided by name": async (t) => {
-      t.expect(2);
+
+    "provided by name": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
@@ -786,17 +785,17 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'name'
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name'
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "provided by name DESC": async (t) => {
-      t.expect(2);
+    "provided by name DESC": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
@@ -806,18 +805,18 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'name',
-        direction: 'DESC'
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name',
+          direction: 'DESC'
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "provided by name LIMIT 2, 3": async (t) => {
-      t.expect(2);
+    "provided by name LIMIT 2, 3": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('name');
@@ -828,18 +827,18 @@ exports.find = {
           return '' + user.id;
         });
 
-      UserFindMockup.sort({
-        field: 'name',
-        limit: [2, 3]
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'name',
+          limit: [2, 3]
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "provided by number": async (t) => {
-      t.expect(2);
+    "provided by number": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('number');
@@ -849,17 +848,17 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'number'
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number'
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "provided by number DESC": async (t) => {
-      t.expect(2);
+    "provided by number DESC": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         var id_sort = a.id < b.id ? 1 : -1;
@@ -870,18 +869,18 @@ exports.find = {
         return '' + user.id;
       });
 
-      UserFindMockup.sort({
-        field: 'number',
-        direction: 'DESC'
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number',
+          direction: 'DESC'
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
-    "provided by number LIMIT 3, 3": async (t) => {
-      t.expect(2);
+    "provided by number LIMIT 3, 3": function (t) {
+      t.expect(1);
 
       var sorted_ids = this.users.sort(function (a, b) {
         a = a.property('number');
@@ -892,34 +891,34 @@ exports.find = {
           return '' + user.id;
         });
 
-      UserFindMockup.sort({
-        field: 'number',
-        limit: [3, 3]
-      }, this.userIds, function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number',
+          limit: [3, 3]
+        }, this.userIds);
         t.same(sorted_ids, ids, 'Sorting went wrong.');
         t.done();
-      });
+      })();
     },
 
     "provided empty list": async (t) => {
-      t.expect(2);
+      t.expect(1);
 
-      UserFindMockup.sort({
-        field: 'number',
-        limit: [0, 10]
-      }, [], function (err, ids) {
-        t.same(null, err, 'Sorting caused an error: ' + err);
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'number',
+          limit: [0, 10]
+        }, []);
         t.same(0, ids.length, 'Sorting went wrong when ids.length is 0.');
         t.done();
-      });
+      })();
     }
   },
 
   "load hash with extra properties": async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup();
-    t.expect(7);
+    t.expect(6);
 
     user.property({
       name: 'hurgelwurz',
@@ -929,197 +928,173 @@ exports.find = {
       }
     });
 
-    user.save(function (err) {
-      if (err) {
-        console.dir(err);
-        t.done();
-      }
-      redis.hset(nohm.prefix.hash + findUser.modelName + ':' + user.id, 'not_a_real_property', 'something... :-)', function (err) {
+    await user.save();
+    redis.hset(
+      nohm.prefix.hash + findUser.modelName + ':' + user.id, 'not_a_real_property', 'something... :-)',
+      async (err) => {
         t.ok(!err, 'Unexpected redis error in custom query');
         console.log('There should be an error in the next line');
-        findUser.load(user.id, function (err) {
-          t.ok(!err, 'Unexpected load error');
-          t.equals(user.property('name'), findUser.property('name'), 'The loaded version of the name was not the same as a set one.');
-          t.equals(user.property('email'), findUser.property('email'), 'The loaded version of the email was not the same as a set one.');
-          t.equals(findUser.property('json').test, 1, 'The loaded version of the json was not the same as the set one.');
-          t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
-          t.equals(user.property('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
-          t.done();
-        });
+        await findUser.load(user.id);
+        t.equals(user.property('name'), findUser.property('name'), 'The loaded version of the name was not the same as a set one.');
+        t.equals(user.property('email'), findUser.property('email'), 'The loaded version of the email was not the same as a set one.');
+        t.equals(findUser.property('json').test, 1, 'The loaded version of the json was not the same as the set one.');
+        t.equals(user.id, findUser.id, 'The loaded version of the email was not the same as a set one.');
+        t.equals(user.property('bool'), false, 'The loaded version of the boolean was not the same as a set one.');
+        t.done();
       });
-    });
   },
 
   "descending order through higher min than max": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: '-inf'
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([1, 7, 6, 5, 4], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) is invalid.');
-      t.done();
     });
+    t.same([1, 7, 6, 5, 4], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) is invalid.');
+    t.done();
   },
 
   "descending order through higher min than max with limit 2": async (t) => { // should produce lexical ordering for the second which should be 7 (due)
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: '-inf',
         limit: 2
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([1, 7], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) with limit is invalid.');
-      t.done();
     });
+    t.same([1, 7], ids, 'Searching when min>max condition(ZREVRANGEBYSCORE) with limit is invalid.');
+    t.done();
   },
 
   "endpoints exclude left": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: 1,
         endpoints: '(]'
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
-      t.done();
     });
+    t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
+    t.done();
   },
 
   "endpoints exclude right": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: 1,
         endpoints: '[)'
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([1], ids, 'Defining an endpoint failed.');
-      t.done();
     });
+    t.same([1], ids, 'Defining an endpoint failed.');
+    t.done();
   },
 
   "endpoints exclude both": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: 1,
         endpoints: '()'
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([], ids, 'Defining an endpoint failed.');
-      t.done();
     });
+    t.same([], ids, 'Defining an endpoint failed.');
+    t.done();
   },
 
   "endpoints only specify one": async (t) => {
-    t.expect(4);
+    t.expect(2);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 3,
         max: 1,
         endpoints: '('
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
-      UserFindMockup.find({
-        number: {
-          min: 3,
-          max: 1,
-          endpoints: ')'
-        }
-      }, function (err, ids) {
-        t.ok(!err, 'Unexpected redis error in custom query');
-        t.same([1], ids, 'Defining an endpoint failed.');
-        t.done();
-      });
     });
+    t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
+    const ids2 = await UserFindMockup.find({
+      number: {
+        min: 3,
+        max: 1,
+        endpoints: ')'
+      }
+    });
+    t.same([1], ids2, 'Defining an endpoint failed.');
+    t.done();
   },
 
   "find numeric options parsing and defaulting": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
-      number: {
-        min: "1",
-        max: "not a number",
-        offset: [1],
-        limit: function () { return "Nope, not a number either." },
-        endpoints: '('
-      }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [2, 3, 8], 'Invalid or parseAble find options caused wrong search results.');
+    try {
+      const ids = await UserFindMockup.find({
+        number: {
+          min: "1",
+          max: "not a number",
+          offset: [1],
+          limit: function () { return "Nope, not a number either." },
+          endpoints: '('
+        }
+      });
+    } catch (err) {
+      t.same(err.message, 'ERR min or max is not a float', 'Invalid or parseAble find options didn\'t throw an error.');
       t.done();
-    });
+    }
   },
 
   "find numeric with offset and limit": async (t) => {
-    t.expect(2);
+    t.expect(1);
 
-    UserFindMockup.find({
+    const ids = await UserFindMockup.find({
       number: {
         min: 1,
         limit: 3,
         offset: 2
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [6, 7, 1], 'The found ids were incorrect.');
-      t.done();
     });
+    t.same(ids, [6, 7, 1], 'The found ids were incorrect.');
+    t.done();
   },
 
   "find numeric with offset and limit were the offset reduces the set below the limit": async (t) => {
     var findUser = new UserFindMockup();
-    t.expect(2);
+    t.expect(1);
 
-    findUser.find({
+    const ids = await findUser.find({
       number: {
         min: 1,
         limit: 3,
         offset: 6
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [3, 8], 'The found ids were incorrect.');
-      t.done();
     });
+    t.same(ids, [3, 8], 'The found ids were incorrect.');
+    t.done();
   },
 
   "find numeric with offset without limit": async (t) => {
     var findUser = new UserFindMockup();
-    t.expect(2);
+    t.expect(1);
 
-    findUser.find({
+    const ids = await findUser.find({
       number: {
         min: 1,
         offset: 5
       }
-    }, function (err, ids) {
-      t.ok(!err, 'Unexpected redis error in custom query');
-      t.same(ids, [2, 3, 8], 'The found ids were incorrect.');
-      t.done();
     });
+    t.same(ids, [2, 3, 8], 'The found ids were incorrect.');
+    t.done();
   }
 
 

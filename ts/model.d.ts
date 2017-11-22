@@ -126,3 +126,10 @@ export interface IStructuredSearch<TProps extends IDictionary> {
   key: keyof TProps;
   value: any;
 }
+
+export interface ISortOptions<TProps extends IDictionary> {
+  alpha?: 'ALPHA' | '';
+  direction?: 'ASC' | 'DESC';
+  field?: keyof TProps;
+  limit?: Array<number>;
+}

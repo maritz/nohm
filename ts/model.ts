@@ -28,6 +28,7 @@ import {
   TValidationDefinition,
   IStructuredSearch,
   ISearchOption,
+  ISortOptions,
 } from './model.d';
 import { validators } from './validators';
 
@@ -1623,12 +1624,106 @@ abstract class NohmModel<TProps extends IDictionary> {
           callback,
         );
       } else {
+        console.log(command, key,
+          endpoints[0] + options.min,
+          endpoints[1] + options.max);
         this.client[command](key,
           endpoints[0] + options.min,
           endpoints[1] + options.max,
           callback,
         );
       }
+    });
+  }
+
+  public async sort(
+    options: ISortOptions<TProps> = {},
+    ids: Array<string | number> | false = false,
+  ): Promise<Array<string>> {
+    if (!Array.isArray(ids)) {
+      ids = false;
+    }
+    if (ids && ids.length === 0) {
+      return [];
+    }
+
+    if (Array.isArray(ids) && options === {}) {
+      return ids.map((id) => String(id)).sort();
+    }
+
+    if (!options.field || !this.properties.has(options.field)) {
+      throw new Error(`Invalid field in ${this.modelName}.sort() options: '${options.field}'`);
+    }
+
+    const fieldType = this.definitions[options.field].type;
+
+    const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : '');
+    const direction = options.direction ? options.direction : 'ASC';
+    const scored = typeof (fieldType) === 'string' ? indexNumberTypes.includes(fieldType) : false;
+    let start = 0;
+    let stop = 100;
+    if (Array.isArray(options.limit) && options.limit.length > 0) {
+      start = options.limit[0];
+      if (scored) { // the limit arguments for sets and sorted sets work differently
+        // stop is a 0-based index from the start of all zset members
+        stop = options.limit[1] ? start + options.limit[1] : start + stop;
+        stop--;
+      } else {
+        // stop is a 1-based index from the defined start limit (the wanted behaviour)
+        stop = options.limit[1] || stop;
+      }
+    }
+    let idsetKey = this.prefix('idsets');
+    let zsetKey = `${this.prefix('scoredindex')}:${options.field}`;
+    const client: redis.Multi = this.client.multi();
+    let tmpKey: string = '';
+
+    if (ids) {
+      // to get the intersection of the given ids and all ids on the server we first
+      // temporarily store the given ids either in a set or sorted set and then return the intersection
+      if (scored) {
+        tmpKey = zsetKey + ':tmp_sort:' + (+ new Date()) + Math.ceil(Math.random() * 1000);
+        const tempZaddArgs = [tmpKey];
+        ids.forEach((id) => {
+          tempZaddArgs.push('0', id as string);
+        }); // typecast because rediss doesn't care about numbers/string
+        client.zadd.apply(client, tempZaddArgs);
+        client.zinterstore([tmpKey, 2, tmpKey, zsetKey]);
+        zsetKey = tmpKey;
+      } else {
+        tmpKey = idsetKey + ':tmp_sort:' + (+ new Date()) + Math.ceil(Math.random() * 1000);
+        ids.unshift(tmpKey);
+        client.SADD.apply(client, ids as Array<string>); // typecast because rediss doesn't care about numbers/string
+        client.SINTERSTORE([tmpKey, tmpKey, idsetKey]);
+        idsetKey = tmpKey;
+      }
+    }
+    if (scored) {
+      const method = direction && direction === 'DESC' ? 'ZREVRANGE' : 'ZRANGE';
+      client[method](zsetKey, start, stop);
+    } else {
+      client.sort(idsetKey,
+        'BY', `${this.prefix('hash')}:*->${options.field}`,
+        'LIMIT', String(start), String(stop),
+        direction,
+        alpha);
+    }
+    if (ids) {
+      client.del(tmpKey);
+    }
+    return new Promise<Array<string>>((resolve, reject) => {
+      client.exec((err, replies) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (ids) {
+            // 2 redis commands to create the temp keys, then the query
+            resolve(replies[2]);
+          } else {
+            resolve(replies[0]);
+          }
+        }
+      });
     });
   }
 

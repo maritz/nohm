@@ -16,3 +16,4 @@ This file is not intended as documentation for users, instead it should make wri
 - load() now returns the same as allProperties() (meaning with id)
 - removed most shortform functions
 - removed loading via passing an id to the constructor. Use factory instead. (constructor cannot return promise)
+- invalid find options now throw an error

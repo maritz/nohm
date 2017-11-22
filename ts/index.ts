@@ -13,6 +13,7 @@ import {
 
 import { ValidationError } from './errors/ValidationError';
 import { LinkError } from './errors/LinkError';
+import { ISortOptions } from './model';
 
 export {
   ILinkOptions,
@@ -215,6 +216,19 @@ Consider waiting for an established connection before setting it.`);
         });
         return Promise.all(loadPromises);
       }
+
+      public static async sort(
+        sortOptions: ISortOptions<IDictionary> = {},
+        ids: Array<string | number> | false = false,
+      ): Promise<Array<string>> {
+        const dummy = await nohm.factory(name);
+        return dummy.sort(sortOptions, ids);
+      }
+
+      public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
+        const dummy = await nohm.factory(name);
+        return dummy.find(searches);
+      }
     }
 
     if (!temp) {
@@ -307,12 +321,43 @@ Consider waiting for an established connection before setting it.`);
       protected rawPrefix(): INohmPrefixes {
         return self.prefix;
       }
+
+      /**
+       * Finds ids of objects and loads them into full NohmModels.
+       *
+       * @param {ISearchOptions} searches
+       * @returns {Promise<Array<NohmModel<IDictionary>>>}
+       */
+      public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
+        const dummy = await nohm.factory(modelName);
+        const ids = await dummy.find(searches);
+        if (ids.length === 0) {
+          // TODO: determine whether this should just return an empty array insteead
+          throw new Error('No models found.');
+        }
+        const loadPromises = ids.map((id) => {
+          return nohm.factory(dummy.modelName, id);
+        });
+        return Promise.all(loadPromises);
+      }
+
+      public static async sort(
+        options: ISortOptions<IDictionary> = {},
+        ids: Array<string | number> | false = false,
+      ): Promise<Array<string>> {
+        const dummy = await nohm.factory(modelName);
+        return dummy.sort(options, ids);
+      }
+
+      public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
+        const dummy = await nohm.factory(modelName);
+        return dummy.find(searches);
+      }
     }
 
     if (!temp) {
       const tempInstance = new CreatedClass();
       modelName = tempInstance.modelName;
-      CreatedClass.prototype.modelName2 = modelName;
       this.modelCache[modelName] = CreatedClass;
     }
 
