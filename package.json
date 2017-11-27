@@ -25,6 +25,7 @@
     "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue"
   },
   "dependencies": {
+    "@types/express": "^4.0.39",
     "async": "^1.2.1",
     "concurrently": "^3.5.0",
     "ioredis": "^3.1.2",

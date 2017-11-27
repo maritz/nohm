@@ -203,6 +203,7 @@ var UserMockup = nohm.model('UserMockup', {
         }
       ]
     },
+    // TODO: write test for multi-validation properties
     /*
     TODO: re-enable once custom validations are implemented
     customValidationFile: {

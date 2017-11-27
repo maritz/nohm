@@ -17,3 +17,6 @@ This file is not intended as documentation for users, instead it should make wri
 - removed most shortform functions
 - removed loading via passing an id to the constructor. Use factory instead. (constructor cannot return promise)
 - invalid find options now throw an error
+- nohm.connect() renamed to nohm.middleware()
+- nohm.middleware() now returns a typed express.RequestHandler (should be no functional change)
+- validate() function in the browser provided by nohm.middleware() now returns promises as well, with resolve value of { valid: boolean, errors: TBD }

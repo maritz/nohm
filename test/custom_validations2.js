@@ -1,3 +1,3 @@
-exports.customValidationFileTimesTwo = function (value, opt, callback) {
-  callback(value === 'customValidationFileTimesTwo');
+exports.customValidationFileTimesTwo = function (value, opt) {
+  return Promise.resolve(value === 'customValidationFileTimesTwo');
 };

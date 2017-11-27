@@ -57,3 +57,12 @@ export function checkEqual(obj1: any, obj2: any): boolean {
   }
   return false;
 }
+
+export function callbackError(...args: Array<any>) {
+  if (args.length > 0) {
+    const lastArgument = args[args.length - 1];
+    if (typeof lastArgument === 'function') {
+      throw new Error('Callback style has been removed. Use the returned promise.');
+    }
+  }
+}

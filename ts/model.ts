@@ -7,7 +7,7 @@ import { v1 as uuid } from 'uuid';
 
 import { LinkError } from './errors/LinkError';
 import { ValidationError } from './errors/ValidationError';
-import { checkEqual } from './helpers';
+import { checkEqual, callbackError } from './helpers';
 import { idGenerators } from './idGenerators';
 import { INohmPrefixes, NohmClass } from './index';
 import {
@@ -39,17 +39,10 @@ export {
   IModelPropertyDefinitions,
   IModelOptions,
   ISearchOptions,
+  ISortOptions,
 };
 export { NohmModel };
 
-function callbackError(...args: Array<any>) {
-  if (args.length > 0) {
-    const lastArgument = args[args.length - 1];
-    if (typeof lastArgument === 'function') {
-      throw new Error('Callback style has been removed. Use the returned promise.');
-    }
-  }
-}
 
 /**
  * The property types that get indexed in a sorted set.
@@ -1113,6 +1106,7 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @returns {Promise<boolean>}
    */
   public exists(id: any): Promise<boolean> {
+    callbackError(...arguments);
     return new Promise((resolve, reject) => {
       this.client.SISMEMBER(this.prefix('idsets'), id, (err, found) => {
         if (err) {
@@ -1151,6 +1145,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   }
 
   public async load(id: any): Promise<TProps & { id: any }> {
+    callbackError(...arguments);
     if (!id) {
       throw new Error('No id passed to .load().');
     }
@@ -1284,6 +1279,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   }
 
   public async unlinkAll(givenClient?: redis.RedisClient | redis.Multi): Promise<void> {
+    callbackError(...arguments);
     let multi: redis.Multi;
     if (this.isMultiClient(givenClient)) {
       multi = givenClient;
@@ -1379,6 +1375,7 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @returns {Promise<boolean>}
    */
   public belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
+    callbackError(...arguments);
     return new Promise((resolve, reject) => {
       if (!this.id || !obj.id) {
         return reject(
@@ -1435,6 +1432,7 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @returns {Promise<number>}
    */
   public numLinks(otherModelName: string, relationName = 'default'): Promise<number> {
+    callbackError(...arguments);
     return new Promise((resolve, reject) => {
       if (!this.id) {
         return reject(
@@ -1637,6 +1635,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     options: ISortOptions<TProps> = {},
     ids: Array<string | number> | false = false,
   ): Promise<Array<string>> {
+    callbackError(...arguments);
     if (!Array.isArray(ids)) {
       ids = false;
     }
@@ -1722,6 +1721,10 @@ abstract class NohmModel<TProps extends IDictionary> {
         }
       });
     });
+  }
+
+  public getDefinitions() {
+    return this.definitions;
   }
 
 }

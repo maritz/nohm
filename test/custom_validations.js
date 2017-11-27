@@ -1,7 +1,7 @@
-exports.customValidationFile = function (value, opt, callback) {
-  callback(value === 'customValidationFile');
+exports.customValidationFile = function (value, opt) {
+  return Promise.resolve(value === 'customValidationFile');
 };
 
-exports.instanceValidation = function (value, opt, callback) {
-  callback(this.p(opt.property) === value);
+exports.instanceValidation = function (value, opt) {
+  return Promise.resolve(this.p(opt.property) === value);
 };

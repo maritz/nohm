@@ -1,3 +1,4 @@
+import { IMiddlewareOptions, middleware } from './middleware';
 import * as redis from 'redis';
 
 import { getPrefix, INohmPrefixes } from './helpers';
@@ -8,12 +9,12 @@ import {
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
   ISearchOptions,
+  ISortOptions,
   NohmModel,
 } from './model';
 
 import { ValidationError } from './errors/ValidationError';
 import { LinkError } from './errors/LinkError';
-import { ISortOptions } from './model';
 
 export {
   ILinkOptions,
@@ -91,7 +92,7 @@ export class NohmClass {
     [name: string]: Constructor<NohmModel<any>>,
   };
 
-  private extraValidators: Array<any>;
+  private extraValidators: Array<string>;
 
   constructor({ prefix, client }: INohmOptions) {
     this.setPrefix(prefix);
@@ -458,6 +459,14 @@ Consider waiting for an established connection before setting it.`);
         });
       }
     });
+  }
+
+  public getExtraValidatorFileNames(): Array<string> {
+    return this.extraValidators;
+  }
+
+  public middleware(options: IMiddlewareOptions) {
+    return middleware(options, this);
   }
 }
 

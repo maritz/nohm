@@ -18,6 +18,9 @@
   "files": [
     "./ts/index.ts"
   ],
+  "include": [
+    "./ts/newValidators.js"
+  ],
   "exclude": [
     "./lib/*.js"
   ]
