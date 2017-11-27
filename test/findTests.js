@@ -1039,6 +1039,7 @@ exports.find = {
     t.expect(1);
 
     try {
+      console.log('There should be a redis deprecation warning in the next line.');
       const ids = await UserFindMockup.find({
         number: {
           min: "1",

@@ -170,48 +170,54 @@ abstract class NohmModel<TProps extends IDictionary> {
       error: string | Error | null, version?: string,
     ) => any = (..._args: Array<any>) => { /* noop */ },
   ) {
-    const versionKey = this.rawPrefix().meta.version + this.modelName;
-    const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
-    const propertiesKey = this.rawPrefix().meta.properties + this.modelName;
-    const properties = traverse(this.meta.properties).map((x) => {
-      if (typeof x === 'function') {
-        return String(x);
-      } else {
-        return x;
-      }
-    });
 
-    this.client.get(versionKey, (err, dbVersion) => {
-      if (err) {
-        NohmClass.logError(err);
-        callback(err);
-      } else if (this.meta.version !== dbVersion) {
-        // TODO: refactor promise based and without async.parallel
-        async.parallel({
-          idGenerator: (next) => {
-            const generator = this.options.idGenerator || 'default';
-            this.client.set(idGeneratorKey, generator.toString(), next);
-          },
-          properties: (next) => {
-            this.client.set(propertiesKey, JSON.stringify(properties), next);
-          },
-          version: (next) => {
-            this.client.set(versionKey, this.meta.version, next);
-          },
-        }, (asyncErr: Error | string | null) => {
-          if (asyncErr) {
-            NohmClass.logError(asyncErr);
-            callback(asyncErr, this.meta.version);
-          } else {
-            this.meta.inDb = true;
-            callback(null, this.meta.version);
-          }
-        });
-      } else {
-        this.meta.inDb = true;
-        callback(null, this.meta.version);
-      }
-    });
+    setTimeout(() => {
+      // setTimeout to defer execution to the next process/browser tick
+      // this means we will have modelName set and meta doesnt take precedence over other operations
+
+      const versionKey = this.rawPrefix().meta.version + this.modelName;
+      const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
+      const propertiesKey = this.rawPrefix().meta.properties + this.modelName;
+      const properties = traverse(this.meta.properties).map((x) => {
+        if (typeof x === 'function') {
+          return String(x);
+        } else {
+          return x;
+        }
+      });
+
+      this.client.get(versionKey, (err, dbVersion) => {
+        if (err) {
+          NohmClass.logError(err);
+          callback(err);
+        } else if (this.meta.version !== dbVersion) {
+          // TODO: refactor promise based and without async.parallel
+          async.parallel({
+            idGenerator: (next) => {
+              const generator = this.options.idGenerator || 'default';
+              this.client.set(idGeneratorKey, generator.toString(), next);
+            },
+            properties: (next) => {
+              this.client.set(propertiesKey, JSON.stringify(properties), next);
+            },
+            version: (next) => {
+              this.client.set(versionKey, this.meta.version, next);
+            },
+          }, (asyncErr: Error | string | null) => {
+            if (asyncErr) {
+              NohmClass.logError(asyncErr);
+              callback(asyncErr, this.meta.version);
+            } else {
+              this.meta.inDb = true;
+              callback(null, this.meta.version);
+            }
+          });
+        } else {
+          this.meta.inDb = true;
+          callback(null, this.meta.version);
+        }
+      });
+    }, 1);
   }
 
 

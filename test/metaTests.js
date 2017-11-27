@@ -1,5 +1,5 @@
 var async = require('async');
-var nohm = require(__dirname + '/../tsOut/nohm').Nohm;
+var nohm = require(__dirname + '/../tsOut/').Nohm;
 var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
@@ -24,8 +24,8 @@ nohm.model('UserMetaMockup', {
       unique: true,
       validations: [
         'email',
-        function (vals, old, cb) {
-          cb(vals !== 'thisisnoemail');
+        function (vals, old) {
+          return Promise.resolve(vals !== 'thisisnoemail');
         }
       ]
     },
@@ -60,8 +60,8 @@ nohm.model('CommentMetaMockup', {
       ]
     }
   },
-  idGenerator: function (cb) {
-    return cb(+new Date());
+  idGenerator: function () {
+    return Promise.resolve(+new Date());
   }
 });
 
@@ -76,25 +76,21 @@ var createUsers = function (props, modelName, callback) {
     callback = modelName;
     modelName = 'UserMetaMockup';
   }
-  var makeSeries = function (prop) {
-    return function (next) {
-      var user = nohm.factory(modelName);
-      user.p(prop);
-      user.save(function (err) {
-        next(err, user);
-      });
-    };
-  };
-
-  var series = props.map(function (prop) {
-    return makeSeries(prop);
+  var series = props.map(async (prop) => {
+    const user = await nohm.factory(modelName);
+    user.property(prop);
+    await user.save();
+    return user;
   });
 
-  async.series(series, function (err, users) {
+  Promise.all(series).then((users) => {
     var ids = users.map(function (user) {
       return user.id;
     });
     callback(users, ids);
+  }).catch((reason) => {
+    console.error(new Error('Creating test users failed: ' + reason));
+    process.exit(1);
   });
 };
 
@@ -129,30 +125,29 @@ exports.meta = {
         email: 'numericindextest2@hurgel.de',
         gender: 'male',
         number: 4
-      }], function (users, ids) {
-        var comment = nohm.factory('CommentMetaMockup');
+      }], async (users, ids) => {
+        var comment = await nohm.factory('CommentMetaMockup');
         users_created = true;
         users[0].link(comment);
-        users[0].save(function () {
-          t.users = users;
-          t.userIds = ids;
-          next();
-        });
+        await users[0].save();
+        t.users = users;
+        t.userIds = ids;
+        next();
       });
     } else {
       next();
     }
   },
 
-  version: function (t) {
-    var user = nohm.factory('UserMetaMockup');
+  version: async (t) => {
+    var user = await nohm.factory('UserMetaMockup');
     t.expect(1);
 
     var hash = crypto.createHash('sha1');
 
     hash.update(JSON.stringify(user.meta.properties));
     hash.update(JSON.stringify(user.modelName));
-    hash.update(user.idGenerator.toString());
+    hash.update(user.options.idGenerator.toString());
 
     redis.get(prefix + ':meta:version:UserMetaMockup', function (err, version) {
       errLogger(err);
@@ -161,8 +156,8 @@ exports.meta = {
     });
   },
 
-  "version in instance": function (t) {
-    var user = nohm.factory('UserMetaMockup');
+  "version in instance": async (t) => {
+    var user = await nohm.factory('UserMetaMockup');
     t.expect(1);
 
     redis.hget(prefix + ':hash:UserMetaMockup:1', '__meta_version', function (err, version) {
@@ -172,7 +167,7 @@ exports.meta = {
     });
   },
 
-  "meta callback and setting meta.inDb": function (t) {
+  "meta callback and setting meta.inDb": async (t) => {
     t.expect(4);
     var test, testInstance;
 
@@ -186,17 +181,17 @@ exports.meta = {
       },
       metaCallback: function (err, version) {
         t.same(err, null, "Meta version callback had an error.");
-        t.same(test.prototype.meta.inDb, true, "Meta version inDb was not false.");
+        t.same(testInstance.meta.inDb, true, "Meta version inDb was not false.");
         t.ok(version, "No version in meta.inDb callback");
         t.done();
       }
     });
 
     testInstance = new test();
-    t.same(test.prototype.meta.inDb, false, "Meta version inDb was not false.");
+    t.same(testInstance.meta.inDb, false, "Meta version inDb was not false.");
   },
 
-  "meta set inDb when version is correct": function (t) {
+  "meta set inDb when version is correct": async (t) => {
     t.expect(4);
     var test, testInstance;
 
@@ -210,42 +205,42 @@ exports.meta = {
       },
       metaCallback: function (err, version) {
         t.same(err, null, "Meta version callback had an error.");
-        t.same(test.prototype.meta.inDb, true, "Meta version inDb was not false.");
+        t.same(testInstance.meta.inDb, true, "Meta version inDb was not false.");
         t.ok(version, "No version in meta.inDb callback");
         t.done();
       }
     });
 
     testInstance = new test();
-    t.same(test.prototype.meta.inDb, false, "Meta version inDb was not false.");
+    t.same(testInstance.meta.inDb, false, "Meta version inDb was not false.");
   },
 
-  idGenerator: function (t) {
-    var user = nohm.factory('UserMetaMockup');
-    var comment = nohm.factory('CommentMetaMockup');
+  idGenerator: async (t) => {
+    var user = await nohm.factory('UserMetaMockup');
+    var comment = await nohm.factory('CommentMetaMockup');
     t.expect(2);
 
     async.parallel([
       function (next) {
         redis.get(prefix + ':meta:idGenerator:UserMetaMockup', function (err, generator) {
           errLogger(err);
-          t.same(user.idGenerator.toString(), generator, 'idGenerator of the user did not match.');
+          t.same(user.options.idGenerator.toString(), generator, 'idGenerator of the user did not match.');
           next();
         });
       },
       function (next) {
         redis.get(prefix + ':meta:idGenerator:CommentMetaMockup', function (err, generator) {
           errLogger(err);
-          t.same(comment.idGenerator.toString(), generator, 'idGenerator of the comment did not match.');
+          t.same(comment.options.idGenerator.toString(), generator, 'idGenerator of the comment did not match.');
           next();
         });
       }
     ], t.done);
   },
 
-  properties: function (t) {
-    var user = nohm.factory('UserMetaMockup');
-    var comment = nohm.factory('CommentMetaMockup');
+  properties: async (t) => {
+    var user = await nohm.factory('UserMetaMockup');
+    var comment = await nohm.factory('CommentMetaMockup');
     t.expect(2);
 
     async.parallel([
