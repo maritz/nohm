@@ -1616,7 +1616,7 @@ abstract class NohmModel<TProps extends IDictionary> {
           resolve(ids);
         }
       };
-      if (options.limit > 0) {
+      if (options.limit) {
         this.client[command](key,
           endpoints[0] + options.min,
           endpoints[1] + options.max,
@@ -1624,9 +1624,6 @@ abstract class NohmModel<TProps extends IDictionary> {
           callback,
         );
       } else {
-        console.log(command, key,
-          endpoints[0] + options.min,
-          endpoints[1] + options.max);
         this.client[command](key,
           endpoints[0] + options.min,
           endpoints[1] + options.max,
