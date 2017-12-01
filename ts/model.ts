@@ -1,10 +1,24 @@
-import * as async from 'async';
 import { createHash } from 'crypto';
 import * as _ from 'lodash';
 import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v1 as uuid } from 'uuid';
 
+import {
+  DEL,
+  EXEC,
+  EXISTS,
+  GET,
+  HGETALL,
+  MSET,
+  SADD,
+  SCARD,
+  SET,
+  SETNX,
+  SINTER,
+  SISMEMBER,
+  SMEMBERS,
+} from './typed-redis-helper';
 import { LinkError } from './errors/LinkError';
 import { ValidationError } from './errors/ValidationError';
 import { checkEqual, callbackError } from './helpers';
@@ -171,7 +185,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     ) => any = (..._args: Array<any>) => { /* noop */ },
   ) {
 
-    setTimeout(() => {
+    setTimeout(async () => {
       // setTimeout to defer execution to the next process/browser tick
       // this means we will have modelName set and meta doesnt take precedence over other operations
 
@@ -186,37 +200,22 @@ abstract class NohmModel<TProps extends IDictionary> {
         }
       });
 
-      this.client.get(versionKey, (err, dbVersion) => {
-        if (err) {
-          NohmClass.logError(err);
-          callback(err);
-        } else if (this.meta.version !== dbVersion) {
-          // TODO: refactor promise based and without async.parallel
-          async.parallel({
-            idGenerator: (next) => {
-              const generator = this.options.idGenerator || 'default';
-              this.client.set(idGeneratorKey, generator.toString(), next);
-            },
-            properties: (next) => {
-              this.client.set(propertiesKey, JSON.stringify(properties), next);
-            },
-            version: (next) => {
-              this.client.set(versionKey, this.meta.version, next);
-            },
-          }, (asyncErr: Error | string | null) => {
-            if (asyncErr) {
-              NohmClass.logError(asyncErr);
-              callback(asyncErr, this.meta.version);
-            } else {
-              this.meta.inDb = true;
-              callback(null, this.meta.version);
-            }
-          });
-        } else {
-          this.meta.inDb = true;
-          callback(null, this.meta.version);
+      try {
+        const dbVersion = await GET(this.client, versionKey);
+        if (this.meta.version !== dbVersion) {
+          const generator = this.options.idGenerator || 'default';
+          await Promise.all([
+            SET(this.client, idGeneratorKey, generator.toString()),
+            SET(this.client, propertiesKey, JSON.stringify(properties)),
+            SET(this.client, versionKey, this.meta.version),
+          ]);
         }
-      });
+        this.meta.inDb = true;
+        callback(null, this.meta.version);
+      } catch (err) {
+        NohmClass.logError(err);
+        callback(err, this.meta.version);
+      }
     }, 1);
   }
 
@@ -523,28 +522,16 @@ abstract class NohmModel<TProps extends IDictionary> {
         throw new ValidationError(this.errors);
       }
     }
-    const idExists = await this.checkIdExists(this.id);
-    if (action === 'create' && !idExists) {
+    const numIdExisting = await SISMEMBER(this.client, this.prefix('idsets'), this.id);
+    if (action === 'create' && numIdExisting === 0) {
       await this.create();
     }
     await this.update(options);
   }
 
-  private checkIdExists(id: any): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.client.sismember(this.prefix('idsets'), id, (err, found) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(!!found);
-        }
-      });
-    });
-  }
-
   private async create() {
     const id = await this.generateId();
-    await this.storeId(id);
+    await SADD(this.client, this.prefix('idsets'), id);
     await this.setUniqueIds(id);
     this.setId(id);
   }
@@ -568,103 +555,74 @@ abstract class NohmModel<TProps extends IDictionary> {
     return id;
   }
 
-  private storeId(id: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.client.SADD(this.prefix('idsets'), id, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-
   /**
    * Sets the unique ids of all unique property values in this instance to the given id.
    * Warning: Only use this during create() when overwriting temporary ids!
    */
-  private setUniqueIds(id: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const mSetArguments = [];
-      for (const [key, prop] of this.properties) {
-        const isUnique = !!this.definitions[key].unique;
-        const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
-        const isDirty = prop.__updated || !this.inDb;
-        if (isUnique && !isEmptyString && isDirty) {
-          let value = this.property(key);
-          if (this.definitions[key].type === 'string') {
-            value = (value as string).toLowerCase();
-          }
-          const prefix = this.prefix('unique');
-          mSetArguments.push(`${prefix}:${key}:${value}`, id);
+  private async setUniqueIds(id: string): Promise<void> {
+    const mSetArguments = [];
+    for (const [key, prop] of this.properties) {
+      const isUnique = !!this.definitions[key].unique;
+      const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
+      const isDirty = prop.__updated || !this.inDb;
+      if (isUnique && !isEmptyString && isDirty) {
+        let value = this.property(key);
+        if (this.definitions[key].type === 'string') {
+          value = (value as string).toLowerCase();
         }
+        const prefix = this.prefix('unique');
+        mSetArguments.push(`${prefix}:${key}:${value}`, id);
       }
-      if (mSetArguments.length === 0) {
-        resolve();
-      } else {
-        this.client.MSET(mSetArguments, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      }
-    });
+    }
+    if (mSetArguments.length !== 0) {
+      return MSET(this.client, mSetArguments);
+    }
   }
 
-  private update(options: ISaveOptions): Promise<Array<ILinkSaveResult> | LinkError> {
-    return new Promise((resolve, reject) => {
-      if (!this.id) {
-        return reject(new Error('Update was called without having an id set.'));
+  private async update(options: ISaveOptions): Promise<Array<ILinkSaveResult> | LinkError> {
+    if (!this.id) {
+      throw new Error('Update was called without having an id set.');
+    }
+    const hmSetArguments = [];
+    const client = this.client.MULTI();
+    const isCreate = !this.inDb;
+
+    hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
+
+    for (const [key, prop] of this.properties) {
+      if (isCreate || prop.__updated) {
+        hmSetArguments.push(key, prop.value);
       }
-      const hmSetArguments = [];
-      const client = this.client.MULTI();
-      const isCreate = !this.inDb;
+    }
 
-      hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
+    if (hmSetArguments.length > 1) {
+      hmSetArguments.push('__meta_version', this.meta.version);
+      client.HMSET.apply(client, hmSetArguments);
+    }
 
-      for (const [key, prop] of this.properties) {
-        if (isCreate || prop.__updated) {
-          hmSetArguments.push(key, prop.value);
-        }
-      }
+    this.setIndices(client);
 
-      if (hmSetArguments.length > 1) {
-        hmSetArguments.push('__meta_version', this.meta.version);
-        client.HMSET.apply(client, hmSetArguments);
-      }
+    await EXEC(client);
 
-      this.setIndices(client);
+    const linkResults = await this.storeLinks(options);
 
-      client.exec(async (err) => {
-        if (err) {
-          return reject(err);
-        }
+    const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
 
-        const linkResults = await this.storeLinks(options);
+    if (linkFailures.length > 0) {
+      throw new LinkError(
+        linkFailures,
+      );
+    }
 
-        const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
+    this.inDb = true;
+    for (const [key] of this.properties) {
+      this.__resetProp(key);
+    }
 
-        if (linkFailures.length > 0) {
-          const linkError = new LinkError(
-            linkFailures,
-          );
-          return reject(linkError);
-        }
+    // TODO: pubsub stuff goes here
 
-        this.inDb = true;
-        for (const [key] of this.properties) {
-          this.__resetProp(key);
-        }
+    return linkResults;
 
-        // TODO: pubsub stuff goes here
-
-        resolve(linkResults);
-
-      });
-    });
   }
 
   private async storeLinks(options: ISaveOptions): Promise<Array<ILinkSaveResult>> {
@@ -731,48 +689,42 @@ abstract class NohmModel<TProps extends IDictionary> {
     return `${this.prefix('relations')}:${relationName}:${otherName}:${this.id}`;
   }
 
-  private saveLinkRedis(change: IRelationChange): Promise<void> {
-    return new Promise((resolve, reject) => {
+  private async saveLinkRedis(change: IRelationChange): Promise<void> {
+    const foreignName = `${change.options.name}Foreign`;
+    const command = change.action === 'link' ? 'sadd' : 'srem';
+    const relationKeyPrefix = this.rawPrefix().relationKeys;
 
-      const foreignName = `${change.options.name}Foreign`;
-      const command = change.action === 'link' ? 'sadd' : 'srem';
-      const relationKeyPrefix = this.rawPrefix().relationKeys;
+    const multi = this.client.MULTI();
+    // relation to other
+    const toKey = this.getRelationKey(change.object.modelName, change.options.name);
+    // first store the information to which other model names the instance has a relation to
+    multi[command](
+      `${relationKeyPrefix}${this.modelName}:${this.id}`,
+      toKey,
+    );
+    // second store the information which specific other model id that relation is referring to
+    multi[command](toKey, change.object.id);
 
+    // relation from other - same thing in reverse
+    const fromKey = change.object.getRelationKey(this.modelName, foreignName);
+    multi[command](
+      `${relationKeyPrefix}${change.object.modelName}:${change.object.id}`,
+      fromKey,
+    );
+    multi[command](fromKey, this.id);
 
-      const multi = this.client.MULTI();
-      // relation to other
-      const toKey = this.getRelationKey(change.object.modelName, change.options.name);
-      // first store the information to which other model names the instance has a relation to
-      multi[command](
-        `${relationKeyPrefix}${this.modelName}:${this.id}`,
-        toKey,
-      );
-      // second store the information which specific other model id that relation is referring to
-      multi[command](toKey, change.object.id);
-
-      // relation from other - same thing in reverse
-      const fromKey = change.object.getRelationKey(this.modelName, foreignName);
-      multi[command](
-        `${relationKeyPrefix}${change.object.modelName}:${change.object.id}`,
-        fromKey,
-      );
-      multi[command](fromKey, this.id);
-
-      multi.exec((err) => {
-        if (err) {
-          if (change.options.error) {
-            change.options.error(err, change.object);
-          }
-          return reject(err);
-        } else {
-          if (!change.options.silent) {
-            // TODO: enable this once fireEvent is implemented
-            // this.fireEvent( change.action, change.object, change.options.name);
-          }
-          return resolve();
-        }
-      });
-    });
+    try {
+      await EXEC(multi);
+      if (!change.options.silent) {
+        // TODO: enable this once fireEvent is implemented
+        // this.fireEvent( change.action, change.object, change.options.name);
+      }
+    } catch (err) {
+      if (change.options.error) {
+        change.options.error(err, change.object);
+      }
+      throw err;
+    }
   }
 
 
@@ -954,34 +906,28 @@ abstract class NohmModel<TProps extends IDictionary> {
     return true;
   }
 
-  private isUniqueKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const checkCallback = (err: Error | null, dbValue: number) => {
-        if (err) {
-          return reject(err);
-        } else {
-          let isFreeUnique = false;
-          if (setDirectly && dbValue === 1) {
-            // setDirectly === true means using setnx which returns 1 if the value did *not* exist
-            isFreeUnique = true;
-            this.tmpUniqueKeys.push(key);
-          } else if (!setDirectly && dbValue === 0) {
-            // setDirectly === false means using exists which returns 0 if the value did *not* exist
-            isFreeUnique = true;
-          }
-          return resolve(isFreeUnique);
-        }
-      };
-      if (setDirectly) {
-        /*
-        * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
-        * when really saving it. (or we free the unique slot if we're not saving)
-        */
-        this.client.setnx(key, this.id, checkCallback);
-      } else {
-        this.client.exists(key, checkCallback);
-      }
-    });
+  private async isUniqueKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
+    let dbValue: number;
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (setDirectly) {
+      /*
+      * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
+      * when really saving it. (or we free the unique slot if we're not saving)
+      */
+      dbValue = await SETNX(this.client, key, this.id);
+    } else {
+      dbValue = await EXISTS(this.client, key);
+    }
+    let isFreeUnique = false;
+    if (setDirectly && dbValue === 1) {
+      // setDirectly === true means using setnx which returns 1 if the value did *not* exist
+      isFreeUnique = true;
+      this.tmpUniqueKeys.push(key);
+    } else if (!setDirectly && dbValue === 0) {
+      // setDirectly === false means using exists which returns 0 if the value did *not* exist
+      isFreeUnique = true;
+    }
+    return isFreeUnique;
   }
 
   private getUniqueKey(key: keyof TProps, property: IProperty): string {
@@ -1027,15 +973,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   private async clearTemporaryUniques(): Promise<void> {
     if (this.tmpUniqueKeys.length > 0) {
       const deletes: Array<Promise<void>> = this.tmpUniqueKeys.map((key) => {
-        return new Promise<void>((resolve, reject) => {
-          this.client.del(key, (err: Error | null) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
+        return DEL(this.client, key);
       });
       await Promise.all(deletes);
     }
@@ -1060,49 +998,38 @@ abstract class NohmModel<TProps extends IDictionary> {
     return this.deleteDbCall(silent);
   }
 
-  private deleteDbCall(silent: boolean): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
+  private async deleteDbCall(silent: boolean): Promise<void> {
+    // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
-      const multi = this.client.multi();
+    const multi = this.client.MULTI();
 
-      multi.del(`${this.prefix('hash')}:${this.id}`);
-      multi.srem(this.prefix('idsets'), this.id);
+    multi.del(`${this.prefix('hash')}:${this.id}`);
+    multi.srem(this.prefix('idsets'), this.id);
 
-      this.properties.forEach((prop, key) => {
-        if (this.definitions[key].unique) {
-          let value = prop.__oldValue;
-          if (this.definitions[key].type === 'string') {
-            value = String(value).toLowerCase();
-          }
-          multi.del(`${this.prefix('unique')}:${key}:${value}`);
+    this.properties.forEach((prop, key) => {
+      if (this.definitions[key].unique) {
+        let value = prop.__oldValue;
+        if (this.definitions[key].type === 'string') {
+          value = String(value).toLowerCase();
         }
-        if (this.definitions[key].index === true) {
-          multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.id);
-        }
-        if (prop.__numericIndex === true) {
-          multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.id);
-        }
-      });
-
-      try {
-        await this.unlinkAll(multi);
-      } catch (e) {
-        return reject(e);
+        multi.del(`${this.prefix('unique')}:${key}:${value}`);
       }
-      multi.exec((err) => {
-        this.setId(null);
-
-        if (!silent && !err) {
-          // this.fireEvent('remove', id); // TODO: enable once implemented
-        }
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
+      if (this.definitions[key].index === true) {
+        multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.id);
+      }
+      if (prop.__numericIndex === true) {
+        multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.id);
+      }
     });
+
+    await this.unlinkAll(multi);
+
+    await EXEC(multi);
+    this.setId(null);
+
+    if (!silent) {
+      // this.fireEvent('remove', id); // TODO: enable once implemented
+    }
   }
 
   /**
@@ -1111,43 +1038,29 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @param {*} id
    * @returns {Promise<boolean>}
    */
-  public exists(id: any): Promise<boolean> {
+  public async exists(id: any): Promise<boolean> {
     callbackError(...arguments);
-    return new Promise((resolve, reject) => {
-      this.client.SISMEMBER(this.prefix('idsets'), id, (err, found) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(found === 1);
-        }
-      });
-    });
+    return !!await SISMEMBER(this.client, this.prefix('idsets'), id);
   }
 
-  private getHashAll(id: any): Promise<Partial<TProps>> {
-    return new Promise((resolve, reject) => {
-      const props: Partial<TProps> = {};
-      this.client.HGETALL(`${this.prefix('hash')}:${id}`, (err, values) => {
-        if (err) {
-          return reject(err);
-        }
-        if (values === null) {
-          return reject(new Error('not found'));
-        }
-        Object.keys(values).forEach((key) => {
-          if (key === '__meta_version') {
-            return;
-          }
-          if (!this.definitions[key]) {
-            // tslint:disable-next-line:max-line-length
-            NohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
-            return;
-          }
-          props[key] = values[key];
-        });
-        return resolve(props);
-      });
+  private async getHashAll(id: any): Promise<Partial<TProps>> {
+    const props: Partial<TProps> = {};
+    const values = await HGETALL(this.client, `${this.prefix('hash')}:${id}`);
+    if (values === null) {
+      throw new Error('not found');
+    }
+    Object.keys(values).forEach((key) => {
+      if (key === '__meta_version') {
+        return;
+      }
+      if (!this.definitions[key]) {
+        // tslint:disable-next-line:max-line-length
+        NohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
+        return;
+      }
+      props[key] = values[key];
     });
+    return props;
   }
 
   public async load(id: any): Promise<TProps & { id: any }> {
@@ -1297,8 +1210,9 @@ abstract class NohmModel<TProps extends IDictionary> {
 
     // remove outstanding relation changes
     this.relationChanges = [];
+    const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
 
-    const keys = await this.getAllRelationKeys();
+    const keys = await SMEMBERS(this.client, relationKeysKey);
 
     const others: Array<IUnlinkKeyMapItem> = keys.map((key) => {
       const matches = key.match(/:([\w]*):([\w]*):[\w]+$/i);
@@ -1322,33 +1236,12 @@ abstract class NohmModel<TProps extends IDictionary> {
 
     // add multi'ed delete commands for other keys
     others.forEach((item) => multi.DEL(item.ownIdsKey));
-    multi.del(`${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`);
+    multi.del(relationKeysKey);
 
     // if we didn't get a multi client from the callee we have to exec() ourselves
     if (!this.isMultiClient(givenClient)) {
-      return new Promise<void>((resolve, reject) => {
-        multi.exec((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
+      await EXEC(multi);
     }
-  }
-
-  private getAllRelationKeys(): Promise<Array<string>> {
-    return new Promise((resolve, reject) => {
-      const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
-      this.client.SMEMBERS(relationKeysKey, (err, keys) => {
-        if (err) {
-          return reject(err);
-        } else {
-          resolve(keys);
-        }
-      });
-    });
   }
 
   /*
@@ -1357,19 +1250,10 @@ abstract class NohmModel<TProps extends IDictionary> {
   removing this.id from relations to others.
   Secondly it adds an SREM to the multi redis client.
   */
-  private removeIdFromOtherRelations(multi: redis.Multi, item: IUnlinkKeyMapItem): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // we usenormalClient for fetching data and client (which could be a provided client in multi mode)
-      // for manipulating data
-      this.client.SMEMBERS(item.ownIdsKey, async (err, ids) => {
-        if (err) {
-          return reject(err);
-        }
-        ids.forEach((id) => {
-          multi.SREM(`${item.otherIdsKey}${id}`, this.id);
-        });
-        resolve();
-      });
+  private async removeIdFromOtherRelations(multi: redis.Multi, item: IUnlinkKeyMapItem): Promise<void> {
+    const ids = await SMEMBERS(this.client, item.ownIdsKey);
+    ids.forEach((id) => {
+      multi.SREM(`${item.otherIdsKey}${id}`, this.id);
     });
   }
 
@@ -1380,26 +1264,12 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @param {string} [relationName='default']
    * @returns {Promise<boolean>}
    */
-  public belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
+  public async belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
     callbackError(...arguments);
-    return new Promise((resolve, reject) => {
-      if (!this.id || !obj.id) {
-        return reject(
-          new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.'),
-        );
-      }
-      this.client.SISMEMBER(
-        this.getRelationKey(obj.modelName, relationName),
-        obj.id,
-        (err, value) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(!!value);
-          }
-        },
-      );
-    });
+    if (!this.id || !obj.id) {
+      throw new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.');
+    }
+    return !!await SISMEMBER(this.client, this.getRelationKey(obj.modelName, relationName), obj.id);
   }
 
   /**
@@ -1409,24 +1279,17 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @param {string} [relationName='default']
    * @returns {Promise<Array<any>>}
    */
-  public getAll(otherModelName: string, relationName = 'default'): Promise<Array<any>> {
-    return new Promise((resolve, reject) => {
-      if (!this.id) {
-        return reject(
-          new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`),
-        );
-      }
-      const relationKey = this.getRelationKey(otherModelName, relationName);
-      this.client.SMEMBERS(relationKey, (err, ids) => {
-        if (err) {
-          return reject(err);
-        } else if (!Array.isArray(ids)) {
-          resolve([]);
-        } else {
-          resolve(ids);
-        }
-      });
-    });
+  public async getAll(otherModelName: string, relationName = 'default'): Promise<Array<any>> {
+    if (!this.id) {
+      throw new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`);
+    }
+    const relationKey = this.getRelationKey(otherModelName, relationName);
+    const ids = await SMEMBERS(this.client, relationKey);
+    if (!Array.isArray(ids)) {
+      return [];
+    } else {
+      return ids;
+    }
   }
 
   /**
@@ -1437,26 +1300,14 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @param {string} [relationName='default'] Name of the relation
    * @returns {Promise<number>}
    */
-  public numLinks(otherModelName: string, relationName = 'default'): Promise<number> {
+  public async numLinks(otherModelName: string, relationName = 'default'): Promise<number> {
     callbackError(...arguments);
-    return new Promise((resolve, reject) => {
-      if (!this.id) {
-        return reject(
-          new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`),
-        );
-      }
-      const relationKey = this.getRelationKey(otherModelName, relationName);
-      this.client.SCARD(relationKey, (err, numRelations) => {
-        if (err) {
-          return reject(err);
-        } else {
-          resolve(numRelations);
-        }
-      });
-    });
+    if (!this.id) {
+      throw new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`);
+    }
+    const relationKey = this.getRelationKey(otherModelName, relationName);
+    return SCARD(this.client, relationKey);
   }
-
-
 
   /**
    * Finds ids of objects by search arguments
@@ -1479,12 +1330,13 @@ abstract class NohmModel<TProps extends IDictionary> {
 
     if (onlySets.length === 0 && onlyZSets.length === 0) {
       // no valid searches - return all ids
-      return this.getAllIds();
+      return SMEMBERS(this.client, `${this.prefix('idsets')}`);
     }
 
     const setPromises = this.setSearch(onlySets);
     const zSetPromises = this.zSetSearch(onlyZSets);
     const searchResults = await Promise.all([setPromises, zSetPromises]);
+
     if (onlySets.length !== 0 && onlyZSets.length !== 0) {
       // both searches - form intersection of them
       const intersection = _.intersection(searchResults[0], searchResults[1]);
@@ -1536,49 +1388,25 @@ abstract class NohmModel<TProps extends IDictionary> {
     });
   }
 
-  private uniqueSearch(options: IStructuredSearch<TProps>): Promise<Array<string>> {
-    return new Promise((resolve, reject) => {
-      const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
-      this.client.GET(key, (err, id) => {
-        if (err) {
-          reject(err);
-        } else {
-          if (id) {
-            resolve([id]);
-          } else {
-            resolve([]);
-          }
-        }
-      });
-    });
+  private async uniqueSearch(options: IStructuredSearch<TProps>): Promise<Array<string>> {
+    const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
+    const id = await GET(this.client, key);
+    if (id) {
+      return [id];
+    } else {
+      return [];
+    }
   }
 
-  private getAllIds(): Promise<Array<string>> {
-    return new Promise((resolve, reject) => {
-      const key = `${this.prefix('idsets')}`;
-      this.client.SMEMBERS(key, (err, ids) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(ids);
-        }
-      });
+  private async setSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
+    const keys = searches.map((search) => {
+      return `${this.prefix('index')}:${search.key}:${search.value}`;
     });
-  }
-
-  private setSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
-    return new Promise((resolve, reject) => {
-      const keys = searches.map((search) => {
-        return `${this.prefix('index')}:${search.key}:${search.value}`;
-      });
-      this.client.SINTER(keys.join(' '), (err, ids) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(ids);
-        }
-      });
-    });
+    if (keys.length === 0) {
+      // shortcut
+      return [];
+    }
+    return SINTER(this.client, keys);
   }
 
   private async zSetSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
@@ -1677,7 +1505,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     }
     let idsetKey = this.prefix('idsets');
     let zsetKey = `${this.prefix('scoredindex')}:${options.field}`;
-    const client: redis.Multi = this.client.multi();
+    const client: redis.Multi = this.client.MULTI();
     let tmpKey: string = '';
 
     if (ids) {
@@ -1713,20 +1541,13 @@ abstract class NohmModel<TProps extends IDictionary> {
     if (ids) {
       client.del(tmpKey);
     }
-    return new Promise<Array<string>>((resolve, reject) => {
-      client.exec((err, replies) => {
-        if (err) {
-          reject(err);
-        } else {
-          if (ids) {
-            // 2 redis commands to create the temp keys, then the query
-            resolve(replies[2]);
-          } else {
-            resolve(replies[0]);
-          }
-        }
-      });
-    });
+    const replies = await EXEC<any>(client);
+    if (ids) {
+      // 2 redis commands to create the temp keys, then the query
+      return replies[2];
+    } else {
+      return replies[0];
+    }
   }
 
   public getDefinitions() {
