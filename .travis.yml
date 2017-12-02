@@ -1,7 +1,8 @@
 language: node_js
 node_js:
-  - "iojs"
-  - "stable"
-  - "0.10"
+  - "node"
+  - "lts/*"
 services:
   - redis-server
+before_script: 
+  - npm run build
