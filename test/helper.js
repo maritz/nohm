@@ -1,5 +1,5 @@
 exports.cleanUp = function (redis, prefix, cb) {
-  redis.keys('*', function (err, keys) {
+  redis.keys(prefix + '*', function (err, keys) {
     if (!keys || keys.length === 0) {
       return cb();
     }

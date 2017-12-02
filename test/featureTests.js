@@ -901,7 +901,7 @@ exports.purgeDB = async (t) => {
   async.series(tests, async (err, num_arr) => {
     t.ok(!err, 'Unexpected redis error');
     const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
-    t.ok(count > 0, 'Database did not have any keys');
+    t.ok(count > 0, 'Database did not have any keys bevore purgeDb call');
     await nohm.purgeDb();
     async.series(tests, function (err, num_arr) {
       t.ok(!err, 'Unexpected redis error');
@@ -927,7 +927,7 @@ exports["no key left behind"] = async (t) => {
 
   h.cleanUp(redis, args.prefix, () => {
     redis.keys(prefix + ':*', async (err, keys) => {
-      t.same(keys.length, 3, 'Not all keys were removed before tests'); // at this point only meta info should be stored
+      t.same(keys.length, 0, 'Not all keys were removed before tests'); // at this point only meta info should be stored
       await user.save();
       await user2.save();
       user.unlink(user2);
