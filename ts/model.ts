@@ -307,14 +307,22 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
    * @returns {(any)} Returns the property as set after type casting
    */
-  public property(key: keyof TProps): any;
+  public property<TProp extends keyof TProps>(key: TProp): TProps[TProp];
   // tslint:disable-next-line:unified-signatures
-  public property(key: keyof TProps, value: any): any;
+  public property<TProp extends keyof TProps>(key: TProp, value: any): TProps[TProp];
   // tslint:disable-next-line:unified-signatures
-  public property(valuesObject: Partial<{[key in keyof TProps]: any}>): any;
-  public property(keyOrValues: keyof TProps | Partial<{[key in keyof TProps]: any}>, value?: any): any {
+  public property(
+    valuesObject: Partial<{[key in keyof TProps]: any}>,
+  ): Partial<{[key in keyof TProps]: TProps[key]}>;
+  public property<TProp extends keyof TProps>(
+    keyOrValues: keyof TProps | Partial<{[key in keyof TProps]: any}>,
+    value?: any,
+  ): TProps[TProp] | Partial<{[key in keyof TProps]: any}> {
     if (!this.isPropertyKey(keyOrValues)) {
-      const obj = _.map(keyOrValues, (innerValue, key) => this.property(key, innerValue));
+      const obj: Partial<{[key in keyof TProps]: any}> = {};
+      Object.keys(keyOrValues).forEach((key) => {
+        obj[key] = this.property(key, keyOrValues[key]);
+      });
       return obj;
     }
     if (typeof value !== 'undefined') {

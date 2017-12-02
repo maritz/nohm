@@ -1046,3 +1046,24 @@ exports["register nohm model via ES6 class definition"] = async (t) => {
     t.done();
   }
 }
+
+exports["return value of .property() with object"] = async (t) => {
+  const user = new UserMockup();
+  t.expect(1);
+
+  const object = {
+    name: 'propertyWithObjectReturn',
+    email: 'propertyWithObjectReturn@test.de',
+    visits: '1',
+  };
+
+  const properties = user.property(object);
+
+  const compareObject = {
+    name: object.name,
+    email: object.email,
+    visits: 1,
+  };
+  t.same(compareObject, properties, 'The returned properties were not correct.');
+  t.done();
+};
