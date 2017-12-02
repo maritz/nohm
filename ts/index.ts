@@ -1,3 +1,4 @@
+import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
 import { IMiddlewareOptions, middleware } from './middleware';
 import * as redis from 'redis';
 
@@ -15,6 +16,7 @@ import {
 
 import { ValidationError } from './errors/ValidationError';
 import { LinkError } from './errors/LinkError';
+import { EventEmitter } from 'events';
 
 export {
   ILinkOptions,
@@ -25,6 +27,8 @@ export {
   NohmModelExtendable as NohmModel,
   ValidationError,
 };
+
+const PUBSUB_ALL_PATTERN = '*:*';
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
@@ -61,6 +65,8 @@ abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
 export interface INohmOptions {
   prefix?: string;
   client?: redis.RedisClient;
+  meta?: boolean;
+  publish?: boolean | redis.RedisClient;
 }
 
 type Constructor<T> = new (...args: Array<any>) => T;
@@ -86,7 +92,12 @@ export class NohmClass {
    * This is used for example by the admin app.
    * Defaults to true.
    */
-  private meta = true;
+  private meta: boolean;
+
+  private publish: boolean = false;
+  private publishClient: redis.RedisClient;
+  private isPublishSubscribed: boolean;
+  private publishEventEmitter: EventEmitter;
 
   private modelCache: {
     [name: string]: Constructor<NohmModel<any>>,
@@ -94,11 +105,21 @@ export class NohmClass {
 
   private extraValidators: Array<string>;
 
-  constructor({ prefix, client }: INohmOptions) {
+  constructor({ prefix, client, meta, publish }: INohmOptions) {
     this.setPrefix(prefix);
-    this.setClient(client || redis.createClient());
+    this.setClient(client);
     this.modelCache = {};
     this.extraValidators = [];
+    this.meta = meta || true;
+    this.isPublishSubscribed = false;
+    if (typeof (publish) !== 'undefined') {
+      if (typeof (publish) !== 'boolean') {
+        this.setPublish(true);
+        this.setPubSubClient(publish);
+      } else {
+        this.setPublish(publish);
+      }
+    }
   }
 
   /**
@@ -112,17 +133,18 @@ export class NohmClass {
   /**
    * Set the Nohm global redis client.
    * Note: this will not affect models that have a client set on their own.
-   * @static
    */
-  public setClient(client: redis.RedisClient) {
-    this.client = client;
-    if (!client.connected) {
-      NohmClass.logError(`WARNING: setClient() received a redis client that is not connected yet.
-Consider waiting for an established connection before setting it.`);
+  public setClient(client?: redis.RedisClient) {
+    if (client && !client.connected) {
+      this.logError(`WARNING: setClient() received a redis client that is not connected yet.
+      Consider waiting for an established connection before setting it.`);
+    } else if (!client) {
+      client = redis.createClient();
     }
+    this.client = client;
   }
 
-  public static logError(err: string | Error | null) {
+  public logError(err: string | Error | null) {
     if (err) {
       console.dir({
         message: err,
@@ -148,7 +170,7 @@ Consider waiting for an established connection before setting it.`);
     name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
   ): Constructor<NohmModel<any>> {
     if (!name) {
-      NohmClass.logError('When creating a new model you have to provide a name!');
+      this.logError('When creating a new model you have to provide a name!');
     }
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
@@ -159,7 +181,7 @@ Consider waiting for an established connection before setting it.`);
       public client = self.client;
 
       protected definitions: IModelPropertyDefinitions;
-
+      protected nohmClass = self;
       protected options = options;
 
       public readonly modelName = name;
@@ -283,6 +305,7 @@ Consider waiting for an established connection before setting it.`);
     // tslint:disable-next-line:max-classes-per-file
     class CreatedClass extends subClass {
       protected definitions: IModelPropertyDefinitions;
+      protected nohmClass = self;
 
       constructor(...args: Array<any>) {
         super(...args);
@@ -467,6 +490,98 @@ Consider waiting for an established connection before setting it.`);
 
   public middleware(options: IMiddlewareOptions) {
     return middleware(options, this);
+  }
+
+  public getPublish(): boolean {
+    return this.publish;
+  }
+
+  public setPublish(publish: boolean) {
+    this.publish = publish;
+  }
+
+  public getPubSubClient(): redis.RedisClient {
+    return this.publishClient;
+  }
+  public setPubSubClient(client: redis.RedisClient): Promise<void> {
+    this.publishClient = client;
+    return this.initPubSub();
+  }
+
+  private async initPubSub(): Promise<void> {
+    if (!this.getPubSubClient) {
+      throw new Error('A second redis client must set via nohm.setPubSubClient before using pub/sub methods.');
+    } else if (this.isPublishSubscribed === true) {
+      // already in pubsub mode, don't need to initialize it again.
+      return;
+    }
+
+    this.publishEventEmitter = new EventEmitter();
+    this.publishEventEmitter.setMaxListeners(0); // TODO: check if this is sensible
+    this.isPublishSubscribed = true;
+
+    await PSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+
+    this.publishClient.on('pmessage', (_pattern, channel, message) => {
+      const suffix = channel.slice(this.prefix.channel.length);
+      const parts = suffix.match(/([^:]+)/g); // Pattern = _prefix_:channel:_modelname_:_action_
+
+      if (!parts) {
+        this.logError(`An erroneous channel has been captured: ${channel}.`);
+        return;
+      }
+
+      const modelName = parts[0];
+      const action = parts[1];
+
+      let payload = {};
+
+      try {
+        payload = message ? JSON.parse(message) : {};
+      } catch (e) {
+        this.logError(`A published message is not valid JSON. Was : "${message}"`);
+        return;
+      }
+
+      this.publishEventEmitter.emit(`${modelName}:${action}`, payload);
+    });
+  }
+
+  public async subscribeEvent(
+    eventName: string,
+    callback: (payload: any) => void,
+  ): Promise<void> {
+    await this.initPubSub();
+    this.publishEventEmitter.on(eventName, callback);
+  }
+
+  public async subscribeEventOnce(
+    eventName: string,
+    callback: (payload: any) => void,
+  ): Promise<void> {
+    await this.initPubSub();
+    this.publishEventEmitter.once(eventName, callback);
+  }
+
+  public unsubscribeEvent(
+    eventName: string,
+    fn?: any,
+  ): void {
+    if (this.publishEventEmitter) {
+      if (!fn) {
+        this.publishEventEmitter.removeAllListeners(eventName);
+      } else {
+        this.publishEventEmitter.removeListener(eventName, fn);
+      }
+    }
+  }
+
+  public async closePubSub(): Promise<redis.RedisClient> {
+    if (this.isPublishSubscribed === true) {
+      this.isPublishSubscribed = false;
+      await PUNSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+    }
+    return this.publishClient;
   }
 }
 

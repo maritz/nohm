@@ -191,13 +191,54 @@ export function HGETALL(client: RedisClient | Multi, key: string): Promise<{ [ke
 }
 
 export function EXEC<T>(client: Multi): Promise<Array<T>> {
-  return new Promise<any>((resolve, reject) => {
-    client.exec((err, results) => {
+  return new Promise<Array<T>>((resolve, reject) => {
+    if (!client.EXEC) {
+      return reject(new Error(errorMessage));
+    }
+    client.EXEC((err, results) => {
       if (err) {
         return reject(err);
       } else {
         resolve(results);
       }
     });
+  });
+}
+
+export function PSUBSCRIBE(
+  client: RedisClient,
+  patternOrPatternArray: string | Array<string>,
+  ...patterns: Array<string>,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (!client.PSUBSCRIBE) {
+      return reject(new Error(errorMessage));
+    }
+    client.PSUBSCRIBE.apply(client, [patternOrPatternArray, ...patterns, (err: Error | null) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    }]);
+  });
+}
+
+export function PUNSUBSCRIBE(
+  client: RedisClient,
+  patternOrPatternArray: string | Array<string>,
+  ...patterns: Array<string>,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (!client.PUNSUBSCRIBE) {
+      return reject(new Error(errorMessage));
+    }
+    client.PUNSUBSCRIBE.apply(client, [patternOrPatternArray, ...patterns, (err: Error | null) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    }]);
   });
 }

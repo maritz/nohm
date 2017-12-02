@@ -45,6 +45,7 @@ import {
   ISortOptions,
 } from './model.d';
 import { validators } from './validators';
+import * as messageComposers from './eventComposers';
 
 export {
   IDictionary,
@@ -64,6 +65,9 @@ export { NohmModel };
  */
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
+export type TAllowedEventNames = 'create' | 'save' | 'update' | 'remove' | 'link' | 'unlink';
+const eventActions: Array<TAllowedEventNames> = ['create', 'update', 'save', 'remove', 'unlink', 'link'];
+
 
 abstract class NohmModel<TProps extends IDictionary> {
 
@@ -82,10 +86,11 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
-  protected publish: boolean;
+  protected publish: null | boolean = null;
   protected abstract definitions: {
     [key in keyof TProps]: IModelPropertyDefinition;
   };
+  protected abstract nohmClass: NohmClass;
 
   private allPropertiesCache: {
     [key in keyof TProps]: any;
@@ -213,7 +218,7 @@ abstract class NohmModel<TProps extends IDictionary> {
         this.meta.inDb = true;
         callback(null, this.meta.version);
       } catch (err) {
-        NohmClass.logError(err);
+        this.nohmClass.logError(err);
         callback(err, this.meta.version);
       }
     }, 1);
@@ -605,6 +610,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     await EXEC(client);
 
     const linkResults = await this.storeLinks(options);
+    this.relationChanges = [];
 
     const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
 
@@ -615,11 +621,24 @@ abstract class NohmModel<TProps extends IDictionary> {
     }
 
     this.inDb = true;
+
+    let diff;
+    if (this.getPublish()) { // don't need the diff otherwise
+      diff = this.propertyDiff();
+    }
+
     for (const [key] of this.properties) {
       this.__resetProp(key);
     }
 
-    // TODO: pubsub stuff goes here
+    if (!options.silent) {
+      if (isCreate) {
+        this.fireEvent('create');
+      } else {
+        this.fireEvent('update', diff);
+      }
+      this.fireEvent('save', diff);
+    }
 
     return linkResults;
 
@@ -717,7 +736,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       await EXEC(multi);
       if (!change.options.silent) {
         // TODO: enable this once fireEvent is implemented
-        // this.fireEvent( change.action, change.object, change.options.name);
+        this.fireEvent(change.action, change.object, change.options.name);
       }
     } catch (err) {
       if (change.options.error) {
@@ -740,7 +759,7 @@ abstract class NohmModel<TProps extends IDictionary> {
         if (this.definitions[key].type === 'string') {
           oldUniqueValue = (oldUniqueValue as string).toLowerCase();
         }
-        multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, NohmClass.logError);
+        multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
       }
 
       // set new normal index
@@ -749,15 +768,15 @@ abstract class NohmModel<TProps extends IDictionary> {
           // we use scored sets for things like "get all users older than 5"
           const scoredPrefix = this.prefix('scoredindex');
           if (this.inDb) {
-            multi.ZREM(`${scoredPrefix}:${key}`, this.id, NohmClass.logError);
+            multi.ZREM(`${scoredPrefix}:${key}`, this.id, this.nohmClass.logError);
           }
-          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.id, NohmClass.logError);
+          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.id, this.nohmClass.logError);
         }
         const prefix = this.prefix('index');
         if (this.inDb) {
-          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.id, NohmClass.logError);
+          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.id, this.nohmClass.logError);
         }
-        multi.SADD(`${prefix}:${key}:${prop.value}`, this.id, NohmClass.logError);
+        multi.SADD(`${prefix}:${key}:${prop.value}`, this.id, this.nohmClass.logError);
       }
     }
   }
@@ -908,7 +927,6 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   private async isUniqueKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
     let dbValue: number;
-    // tslint:disable-next-line:prefer-conditional-expression
     if (setDirectly) {
       /*
       * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
@@ -1025,10 +1043,11 @@ abstract class NohmModel<TProps extends IDictionary> {
     await this.unlinkAll(multi);
 
     await EXEC(multi);
+    const oldId = this.id;
     this.setId(null);
 
     if (!silent) {
-      // this.fireEvent('remove', id); // TODO: enable once implemented
+      this.fireEvent('remove', oldId);
     }
   }
 
@@ -1055,7 +1074,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       }
       if (!this.definitions[key]) {
         // tslint:disable-next-line:max-line-length
-        NohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
+        this.nohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
         return;
       }
       props[key] = values[key];
@@ -1169,7 +1188,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     this.relationChanges.forEach((change, key) => {
       const sameRelationChange = change.options.name === options.name && checkEqual(change.object, other);
       if (sameRelationChange) {
-        delete this.relationChanges[key];
+        this.relationChanges.splice(key, 1);
       }
     });
     this.relationChanges.push({
@@ -1552,6 +1571,57 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   public getDefinitions() {
     return this.definitions;
+  }
+
+  private fireEvent(event: TAllowedEventNames, ...args: Array<any>) {
+    if (!this.getPublish()) {
+      // global or model specific setting for publishing events is false.
+      return;
+    }
+
+    if (eventActions.indexOf(event) < 0) {
+      const supported = eventActions.join(', ');
+      this.nohmClass.logError(
+        'Cannot fire an unsupported action. Was "' + event + '" ' +
+        'and must be one of ' + supported,
+      );
+      return;
+    }
+
+    const composer = messageComposers[event] || messageComposers.defaultComposer;
+    const payload = composer.apply(this, args);
+    const message = JSON.stringify(payload);
+
+    this.client.publish(`${this.prefix('channel')}:${event}`, message);
+  }
+
+  private getPublish(): boolean {
+    if (this.publish !== null) {
+      return this.publish;
+    } else {
+      return this.nohmClass.getPublish();
+    }
+  }
+
+  public async subscribe(
+    eventName: TAllowedEventNames,
+    callback: (payload: any) => void,
+  ): Promise<void> {
+    await this.nohmClass.subscribeEvent(`${this.modelName}:${eventName}`, callback);
+  }
+
+  public async subscribeOnce(
+    eventName: TAllowedEventNames,
+    callback: (payload: any) => void,
+  ): Promise<void> {
+    await this.nohmClass.subscribeEventOnce(`${this.modelName}:${eventName}`, callback);
+  }
+
+  public unsubscribeEvent(
+    eventName: string,
+    fn?: any,
+  ): void {
+    this.nohmClass.unsubscribeEvent(eventName, fn);
   }
 
 }

@@ -53,7 +53,7 @@ export interface IModelOptions {
     [name: string]: () => any;
   };
   properties: IModelPropertyDefinitions;
-  publish?: any;
+  publish?: boolean;
   idGenerator?: idGenerators | (() => any);
 }
 

@@ -31,6 +31,7 @@
     "array-type": [
       true,
       "generic"
-    ]
+    ],
+    "prefer-conditional-expression": false
   }
 }
