@@ -18,6 +18,7 @@ const h = require(__dirname + '/../test/helper.js');
 interface IUserLinkProps {
   name: string;
   test: string;
+  number: number;
 }
 class UserMockup extends NohmModel<IUserLinkProps> {
   public static modelName = 'UserMockup';
@@ -26,6 +27,13 @@ class UserMockup extends NohmModel<IUserLinkProps> {
     name: {
       defaultValue: 'defaultName',
       type: 'string',
+      validations: [
+        'notEmpty',
+      ],
+    },
+    number: {
+      defaultValue: 123,
+      type: 'integer',
       validations: [
         'notEmpty',
       ],
@@ -133,6 +141,28 @@ exports.Typescript = {
     const testInstance = await nohm.factory<UserMockup>('UserMockup');
     const idGenerator: undefined | string | (() => any) = testInstance.testMethodTypecheck('asd', 123);
     t.same(idGenerator, 'increment', 'The typecheck method returned false.');
+    t.done();
+  },
+
+  'typing in property()': async (t: any) => {
+    // see above for their different ways of setup/definition
+    const user = await nohm.factory<UserMockup>('UserMockup');
+
+    t.expect(5);
+
+    const name: string = user.property('name');
+    const num: number = user.property('number', 456);
+    const multiple = user.property({
+      name: 'changedName',
+      number: 789,
+    });
+
+    t.ok(name === 'defaultName', 'Getting assigned and typed name of user failed.');
+    t.ok(num === 456, 'Getting assigned and typed number of user failed.');
+    t.ok(multiple.name === 'changedName', 'Getting assigned and typed multi.name of user failed.');
+    t.ok(multiple.number === 789, 'Getting assigned and typed multi.number of user failed.');
+    t.ok(multiple.test === undefined, 'Getting assigned and typed multi.test of user failed.');
+
     t.done();
   },
 };

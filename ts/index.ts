@@ -36,7 +36,7 @@ export {
 const PUBSUB_ALL_PATTERN = '*:*';
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
-abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
+abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
   public client: redis.RedisClient;
   protected nohmClass: NohmClass;
   /**
@@ -277,26 +277,44 @@ export class NohmClass {
    *
    * @example
    *   // Typescript
-   *   import { Nohm, NohmModel, IModelDefinitions } from 'nohm';
-   *   class UserModelClass extends NohmModel {
-   *     modelName = 'user'; // used in redis to store the keys
-   *     definitions: IModelProperties = {
+   *   import { Nohm, NohmModel, TTypedDefinitions } from 'nohm';
+   *
+   *   // this interface is useful for having typings in .property() and .allProperties() etc. but is optional
+   *   interface IUserModelProps {
+   *    name: string;
+   *   }
+   *
+   *   class UserModelClass extends NohmModel<IUserModelProps> {
+   *     protected static modelName = 'user'; // used in redis to store the keys
+   *
+   *     // the TTypedDefinitions generic makes sure that our definitions have the same keys as
+   *     // defined in our property interface
+   *     protected static definitions: TTypedDefinitions<IUserModelProps> = {
    *       name: {
-   *         type: 'string',
    *         defaultValue: 'testName',
+   *         type: 'string', // you have to manually make sure this matches the IUserModelProps type!
    *         validations: [
-   *           'notEmpty'
-   *         ]
+   *           'notEmpty',
+   *         ],
    *       },
-   *     },
-   *     foo: () => {
-   *       // some custom method
+   *     };
+   *     public async foo() {
+   *       const test = bar.property('name'); // no error and test typed to string
+   *
+   *       await bar.validate();
+   *       bar.errors.name; // no error and typed
+   *
+   *       // accessing unknown props does not work,
+   *       // because we specified that UserModel only has properties of IUserModelProps
+   *       bar.property('foo'); // typescript errors
+   *       bar.errors.foo; // typescript error
    *     };
    *   }
-   *   const User = Nohm.register(UserModelClass);
-   *   // typescript now knows about bar.foo() and all the standard nohm methods like bar.prop();
-   *   const bar = new User();
+   *   const userModel = Nohm.register(UserModelClass);
+   *   // typescript now knows about bar.foo() and all the standard nohm methods like bar.property();
+   *   const bar = new userModel();
    *   bar.foo(); // no error
+   *   bar.allProperties().name === 'testName'; // no error
    */
   public register<T extends Constructor<NohmModel<IDictionary>>>(
     subClass: T, temp = false,
