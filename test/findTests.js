@@ -195,6 +195,7 @@ exports.find = {
 
 
   findAndLoad: async (t) => {
+    t.expect(4);
     var user = new UserFindMockup();
     var user2 = new UserFindMockup();
 
@@ -217,6 +218,13 @@ exports.find = {
     t.done();
   },
 
+
+  findAndLoadNonExisting: async (t) => {
+    t.expect(1);
+    const users = await UserFindMockup.findAndLoad({ name: "hurgelwurz" });
+    t.equals(users.length, 0, 'The loaded number of users was not 2.');
+    t.done();
+  },
 
   findAll: function (t) {
     var self = this;

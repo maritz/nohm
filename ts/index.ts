@@ -231,8 +231,7 @@ export class NohmClass {
         const dummy = await nohm.factory(name);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
-          // TODO: determine whether this should just return an empty array insteead
-          throw new Error('No models found.');
+          return [];
         }
         const loadPromises = ids.map((id) => {
           return nohm.factory(name, id);
@@ -310,7 +309,6 @@ export class NohmClass {
       constructor(...args: Array<any>) {
         super(...args);
         if (self.meta) {
-          // TODO: fix meta info storing
           this.meta = {
             inDb: false,
             properties: this.options.properties,
@@ -356,8 +354,7 @@ export class NohmClass {
         const dummy = await nohm.factory(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
-          // TODO: determine whether this should just return an empty array insteead
-          throw new Error('No models found.');
+          return [];
         }
         const loadPromises = ids.map((id) => {
           return nohm.factory(dummy.modelName, id);
