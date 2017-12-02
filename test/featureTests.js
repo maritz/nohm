@@ -22,9 +22,11 @@ const prefix = args.prefix;
 
 // real tests start in 3.. 2.. 1.. NOW!
 const redis = args.redis;
-const nohm = require(__dirname + '/../tsOut').Nohm;
+const Nohm = require(__dirname + '/../tsOut');
 const helper = require(__dirname + '/../lib/helpers');
 const async = require('async');
+
+const nohm = Nohm.Nohm;
 
 var UserMockup = nohm.model('UserMockup', {
   properties: {
@@ -114,7 +116,7 @@ const MethodOverwrite = nohm.model('methodOverwrite', {
         return this._super_prop.apply(this, arguments, 0);
     }
   }
-})
+});
 
 
 exports.prepare = {
@@ -1009,3 +1011,38 @@ exports["removing unique frees unique with uppercase values"] = async (t) => {
   t.notEqual(obj.id, obj2.id);
   t.done();
 };
+
+exports["register nohm model via ES6 class definition"] = async (t) => {
+  try {
+    class ClassModel extends Nohm.NohmModel {
+    }
+    ClassModel.modelName = 'ClassModel';
+    ClassModel.definitions = {
+      name: {
+        type: 'string',
+        unique: true
+      }
+    };
+
+    const ModelCtor = nohm.register(ClassModel);
+    const instance = new ModelCtor();
+    const factoryInstance = await nohm.factory('ClassModel');
+
+    t.same(instance.id, null, 'Created model does not have null as id before saving');
+
+    t.same(typeof ModelCtor.findAndLoad, 'function', 'Created model class does not have static findAndLoad().');
+    t.same(factoryInstance.modelName, 'ClassModel', 'Created factory model does not have the correct modelName.');
+    t.same(instance.modelName, 'ClassModel', 'Created model does not have the correct modelName.');
+
+    instance.property('name', 'registerES6Test');
+    await instance.save();
+    t.notEqual(instance.id, null, 'Created model does not have an id after saving.');
+
+    t.done();
+  } catch (err) {
+    console.error(err);
+    []();
+    t.same(false, true);
+    t.done();
+  }
+}

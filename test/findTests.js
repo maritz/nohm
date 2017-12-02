@@ -218,7 +218,6 @@ exports.find = {
     t.done();
   },
 
-
   findAndLoadNonExisting: async (t) => {
     t.expect(1);
     const users = await UserFindMockup.findAndLoad({ name: "hurgelwurz" });

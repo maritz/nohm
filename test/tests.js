@@ -20,7 +20,16 @@ var args = require(__dirname + '/testArgs.js');
 
 var runner = function () {
   process.chdir(__dirname);
-  run(['featureTests.js', 'validationTests.js', 'relationTests.js', 'findTests.js', 'connectTests.js', 'metaTests.js', 'pubsubTests.js']);
+  run([
+    'featureTests.js',
+    'validationTests.js',
+    'relationTests.js',
+    'findTests.js',
+    'connectTests.js',
+    'metaTests.js',
+    'pubsubTests.js',
+    '../tsOut/tests.js'
+  ]);
 };
 
 

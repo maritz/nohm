@@ -41,6 +41,10 @@ export interface IModelPropertyDefinition {
   index?: boolean;
 }
 
+export type TTypedDefinitions<TProps extends IDictionary> = {
+  [props in keyof TProps]: IModelPropertyDefinition;
+}
+
 export interface IModelPropertyDefinitions {
   [propName: string]: IModelPropertyDefinition;
 }
@@ -133,3 +137,5 @@ export interface ISortOptions<TProps extends IDictionary> {
   field?: keyof TProps;
   limit?: Array<number>;
 }
+
+export type TLinkCallback<T> = (action: string, ownModelName: string, relationName: string, other: T) => void;

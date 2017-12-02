@@ -12,6 +12,8 @@ import {
   ISearchOptions,
   ISortOptions,
   NohmModel,
+  TLinkCallback,
+  TTypedDefinitions,
 } from './model';
 
 import { ValidationError } from './errors/ValidationError';
@@ -25,14 +27,18 @@ export {
   INohmPrefixes,
   LinkError,
   NohmModelExtendable as NohmModel,
+  TLinkCallback,
+  TTypedDefinitions,
   ValidationError,
 };
+
 
 const PUBSUB_ALL_PATTERN = '*:*';
 
 // this is the exported extendable version - still needs to be registered to receive proper methods
 abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
   public client: redis.RedisClient;
+  protected nohmClass: NohmClass;
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
    *
@@ -40,7 +46,7 @@ abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
    */
   protected _initOptions() {
     // overwritten in NohmClass.model/register
-    throw new Error('Abstract method _initOptions was not properly set in NohmClass.model or NohmClass.register.');
+    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
   }
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -49,7 +55,7 @@ abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
    */
   protected prefix(_prefix: keyof INohmPrefixes): string {
     // overwritten in NohmClass.model/register
-    throw new Error('Abstract method prefix was not properly set in NohmClass.model or NohmClass.register.');
+    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
   }
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -58,7 +64,7 @@ abstract class NohmModelExtendable<TProps = {}> extends NohmModel<TProps> {
    */
   protected rawPrefix(): INohmPrefixes {
     // overwritten in NohmClass.model/register
-    throw new Error('Abstract method rawPrefix was not properly set in NohmClass.model or NohmClass.register.');
+    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
   }
 }
 
@@ -168,7 +174,7 @@ export class NohmClass {
    */
   public model(
     name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
-  ): Constructor<NohmModel<any>> {
+  ): Constructor<NohmModel<IDictionary>> {
     if (!name) {
       this.logError('When creating a new model you have to provide a name!');
     }
@@ -180,7 +186,6 @@ export class NohmClass {
 
       public client = self.client;
 
-      protected definitions: IModelPropertyDefinitions;
       protected nohmClass = self;
       protected options = options;
 
@@ -202,7 +207,7 @@ export class NohmClass {
       of making subclasses of subclasses impossible and restricting constructor argument freedom. */
       protected _initOptions() {
         this.options = options || { properties: {} };
-        this.definitions = this.options.properties;
+        Object.getPrototypeOf(this).definitions = this.options.properties;
         this.meta = {
           inDb: false,
           properties: {},
@@ -293,18 +298,25 @@ export class NohmClass {
    *   const bar = new User();
    *   bar.foo(); // no error
    */
-  public register<T extends Constructor<NohmModel<any>>>(
+  public register<T extends Constructor<NohmModel<IDictionary>>>(
     subClass: T, temp = false,
-  ): Constructor<NohmModel<any>> & T {
+  ): T {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
-    const uninstantiatedName = '__nohm__uninstantiated';
-    let modelName = uninstantiatedName;
+    const modelName = (subClass as any).modelName;
+    if (!modelName) {
+      throw new Error('A class passed to nohm.register() did not have static a modelName property.');
+    }
+
+    if (!(subClass as any).definitions) {
+      throw new Error('A class passed to nohm.register() did not have static property definitions.');
+    }
 
     // tslint:disable-next-line:max-classes-per-file
     class CreatedClass extends subClass {
-      protected definitions: IModelPropertyDefinitions;
       protected nohmClass = self;
+
+      public readonly modelName = modelName;
 
       constructor(...args: Array<any>) {
         super(...args);
@@ -321,8 +333,10 @@ export class NohmClass {
       An alternative would be to pass the options as a special argument to super, but that would have the downside
       of making subclasses of subclasses impossible. */
       protected _initOptions() {
-        this.options = { properties: {} };
-        this.definitions = {};
+        this.options = {
+          idGenerator: (subClass as any).idGenerator,
+          properties: {},
+        };
         if (!this.client) {
           this.client = self.client;
         }
@@ -342,6 +356,16 @@ export class NohmClass {
 
       protected rawPrefix(): INohmPrefixes {
         return self.prefix;
+      }
+
+      public getDefinitions(): {
+        [key: string]: IModelPropertyDefinition;
+      } {
+        const definitions = (CreatedClass as any).definitions;
+        if (!definitions) {
+          throw new Error(`Model was not defined with proper static definitions: '${modelName}'`);
+        }
+        return definitions;
       }
 
       /**
@@ -377,8 +401,6 @@ export class NohmClass {
     }
 
     if (!temp) {
-      const tempInstance = new CreatedClass();
-      modelName = tempInstance.modelName;
       this.modelCache[modelName] = CreatedClass;
     }
 
@@ -404,7 +426,7 @@ export class NohmClass {
       const model = this.modelCache[name];
       if (!model) {
         // TODO: debug(`Model ${model} not found. Available models: ${Object.keys(this.modelCache)}`);
-        // return Promise.reject(`Model '${name}' not found.`);
+        return Promise.reject(`Model '${name}' not found.`);
       }
       const instance = new model() as T;
       if (id) {

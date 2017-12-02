@@ -43,6 +43,8 @@ import {
   IStructuredSearch,
   ISearchOption,
   ISortOptions,
+  TLinkCallback,
+  TTypedDefinitions,
 } from './model.d';
 import { validators } from './validators';
 import * as messageComposers from './eventComposers';
@@ -55,6 +57,8 @@ export {
   IModelOptions,
   ISearchOptions,
   ISortOptions,
+  TLinkCallback,
+  TTypedDefinitions,
 };
 export { NohmModel };
 
@@ -87,9 +91,9 @@ abstract class NohmModel<TProps extends IDictionary> {
   protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
   protected publish: null | boolean = null;
-  protected abstract definitions: {
-    [key in keyof TProps]: IModelPropertyDefinition;
-  };
+  protected static readonly definitions: {
+    [key: string]: IModelPropertyDefinition;
+  } = {};
   protected abstract nohmClass: NohmClass;
 
   private allPropertiesCache: {
@@ -116,8 +120,8 @@ abstract class NohmModel<TProps extends IDictionary> {
     } as any;
     this.errors = {} as any;
 
-    Object.keys(this.definitions).forEach((key: keyof TProps) => {
-      const definition = this.definitions[key];
+    Object.keys(this.getDefinitions()).forEach((key: keyof TProps) => {
+      const definition = this.getDefinitions()[key];
       let defaultValue = definition.defaultValue || 0;
       if (typeof (defaultValue) === 'function') {
         defaultValue = defaultValue();
@@ -162,7 +166,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     tmp.__updated = false;
     tmp.__oldValue = tmp.value;
     type genericFunction = (...args: Array<any>) => any;
-    let type: string | genericFunction = this.definitions[property].type;
+    let type: string | genericFunction = this.getDefinitions()[property].type;
     if (typeof (type) !== 'string') {
       type = '__notIndexed__';
     }
@@ -254,7 +258,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     const idGenerator = this.options.idGenerator || 'default';
 
     // '' + to make sure that when no definition is set, it doesn't cause an exception here.
-    hash.update('' + JSON.stringify(this.definitions));
+    hash.update('' + JSON.stringify(this.getDefinitions()));
     hash.update('' + JSON.stringify(this.modelName));
     hash.update(idGenerator.toString());
 
@@ -319,7 +323,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     }
     const prop = this.getProperty(keyOrValues);
     let returnValue = prop.value;
-    if (this.definitions[keyOrValues].type === 'json') {
+    if (this.getDefinitions()[keyOrValues].type === 'json') {
       returnValue = JSON.parse(returnValue);
     }
     return returnValue;
@@ -343,7 +347,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   }
 
   private castProperty(key: keyof TProps, prop: IProperty, newValue: any): any {
-    const type = this.definitions[key].type;
+    const type = this.getDefinitions()[key].type;
 
     if (typeof (type) === 'undefined') {
       return newValue;
@@ -567,12 +571,12 @@ abstract class NohmModel<TProps extends IDictionary> {
   private async setUniqueIds(id: string): Promise<void> {
     const mSetArguments = [];
     for (const [key, prop] of this.properties) {
-      const isUnique = !!this.definitions[key].unique;
+      const isUnique = !!this.getDefinitions()[key].unique;
       const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
       const isDirty = prop.__updated || !this.inDb;
       if (isUnique && !isEmptyString && isDirty) {
         let value = this.property(key);
-        if (this.definitions[key].type === 'string') {
+        if (this.getDefinitions()[key].type === 'string') {
           value = (value as string).toLowerCase();
         }
         const prefix = this.prefix('unique');
@@ -749,14 +753,14 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   private setIndices(multi: redis.Multi | redis.RedisClient) {
     for (const [key, prop] of this.properties) {
-      const isUnique = !!this.definitions[key].unique;
-      const isIndex = !!this.definitions[key].index;
+      const isUnique = !!this.getDefinitions()[key].unique;
+      const isIndex = !!this.getDefinitions()[key].index;
       const isDirty = prop.__updated || !this.inDb;
 
       // free old uniques
       if (isUnique && prop.__updated && this.inDb) {
         let oldUniqueValue = prop.__oldValue;
-        if (this.definitions[key].type === 'string') {
+        if (this.getDefinitions()[key].type === 'string') {
           oldUniqueValue = (oldUniqueValue as string).toLowerCase();
         }
         multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
@@ -849,7 +853,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       key,
       valid: true,
     };
-    const validations = this.definitions[key].validations;
+    const validations = this.getDefinitions()[key].validations;
     if (validations) {
       const validatorOptions = {
         old: property.__oldValue,
@@ -911,7 +915,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   }
 
   private isUpdatedUnique(key: keyof TProps, property: IProperty): boolean {
-    const definition = this.definitions[key];
+    const definition = this.getDefinitions()[key];
     if (!definition || !definition.unique) {
       return false;
     }
@@ -950,7 +954,7 @@ abstract class NohmModel<TProps extends IDictionary> {
 
   private getUniqueKey(key: keyof TProps, property: IProperty): string {
     let uniqueValue = property.value;
-    if (this.definitions[key].type === 'string') {
+    if (this.getDefinitions()[key].type === 'string') {
       uniqueValue = String.prototype.toLowerCase.call(property.value);
     }
     return `${this.prefix('unique')}:${key}:${uniqueValue}`;
@@ -1025,14 +1029,14 @@ abstract class NohmModel<TProps extends IDictionary> {
     multi.srem(this.prefix('idsets'), this.id);
 
     this.properties.forEach((prop, key) => {
-      if (this.definitions[key].unique) {
+      if (this.getDefinitions()[key].unique) {
         let value = prop.__oldValue;
-        if (this.definitions[key].type === 'string') {
+        if (this.getDefinitions()[key].type === 'string') {
           value = String(value).toLowerCase();
         }
         multi.del(`${this.prefix('unique')}:${key}:${value}`);
       }
-      if (this.definitions[key].index === true) {
+      if (this.getDefinitions()[key].index === true) {
         multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.id);
       }
       if (prop.__numericIndex === true) {
@@ -1072,7 +1076,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       if (key === '__meta_version') {
         return;
       }
-      if (!this.definitions[key]) {
+      if (!this.getDefinitions()[key]) {
         // tslint:disable-next-line:max-line-length
         this.nohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
         return;
@@ -1127,19 +1131,21 @@ abstract class NohmModel<TProps extends IDictionary> {
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback] Function that is called when the link is saved.
    */
-  public link(other: NohmModel<IDictionary>, callback: () => any): void;
-  public link(
+  public link<T extends NohmModel<IDictionary>>(other: T, callback?: TLinkCallback<T>): void;
+  public link<T extends NohmModel<IDictionary>>(
     other: NohmModel<IDictionary>,
     optionsOrNameOrCallback: string | ILinkOptions,
-    callback?: () => any,
+    callback?: TLinkCallback<T>,
   ): void;
-  public link(
+  public link<T extends NohmModel<IDictionary>>(
     other: NohmModel<IDictionary>,
-    optionsOrNameOrCallback: string | ILinkOptions | (() => any),
-    callback?: () => any,
+    optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
+    callback?: TLinkCallback<T>,
   ): void {
     if (typeof (optionsOrNameOrCallback) === 'function') {
       callback = optionsOrNameOrCallback;
+      optionsOrNameOrCallback = 'default';
+    } else if (typeof (optionsOrNameOrCallback) === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
     const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
@@ -1374,7 +1380,7 @@ abstract class NohmModel<TProps extends IDictionary> {
     return Object.keys(searches).map((key) => {
       const search = searches[key];
       const prop = this.getProperty(key);
-      const definition = this.definitions[key];
+      const definition = this.getDefinitions()[key];
       const structuredSearch: IStructuredSearch<TProps> = {
         key,
         options: {},
@@ -1504,7 +1510,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       throw new Error(`Invalid field in ${this.modelName}.sort() options: '${options.field}'`);
     }
 
-    const fieldType = this.definitions[options.field].type;
+    const fieldType = this.getDefinitions()[options.field].type;
 
     const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : '');
     const direction = options.direction ? options.direction : 'ASC';
@@ -1569,8 +1575,14 @@ abstract class NohmModel<TProps extends IDictionary> {
     }
   }
 
-  public getDefinitions() {
-    return this.definitions;
+  public getDefinitions(): {
+    [key: string]: IModelPropertyDefinition;
+  } {
+    const definitions = Object.getPrototypeOf(this).definitions;
+    if (!definitions) {
+      throw new Error(`Model was not defined with proper static definitions: '${this.modelName}'`);
+    }
+    return definitions;
   }
 
   private fireEvent(event: TAllowedEventNames, ...args: Array<any>) {
