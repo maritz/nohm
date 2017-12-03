@@ -21,3 +21,4 @@ This file is not intended as documentation for users, instead it should make wri
 - nohm.middleware() now returns a typed express.RequestHandler (should be no functional change)
 - validate() function in the browser provided by nohm.middleware() now returns promises as well, with resolve value of { valid: boolean, errors: TBD }
 - findAndLoad() now returns an empty array if none are found instead of producing an error
+- .id property is now a getter/setter and always either null or string

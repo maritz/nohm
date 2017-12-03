@@ -1067,3 +1067,72 @@ exports["return value of .property() with object"] = async (t) => {
   t.same(compareObject, properties, 'The returned properties were not correct.');
   t.done();
 };
+
+exports["id always stringified"] = async (t) => {
+  t.expect(3);
+
+  const user = new UserMockup();
+
+  t.same(user.id, null, 'Base state of id is not null');
+  user.id = 'asd';
+  t.same(user.id, 'asd', 'Basic string setter failed');
+  user.id = 213;
+  t.same(user.id, '213', 'Casting string setter failed');
+  t.done();
+};
+
+exports["isLoaded"] = async (t) => {
+  t.expect(6);
+
+  let user = await nohm.factory('NonIncrement');
+  user.property('name', 'isLoadedUser');
+
+  t.same(user.isLoaded, false, 'isLoaded true in base state.');
+  user.id = 'asd';
+  t.same(user.isLoaded, false, 'isLaoded true after setting manual id');
+  await user.save();
+  t.same(user.isLoaded, true, 'isLaoded true after setting manual id');
+  const id = user.id;
+  user = null;
+
+  const loadUser = await nohm.factory('NonIncrement');
+  t.same(loadUser.isLoaded, false, 'isLoaded true in base state on loadUser.');
+  await loadUser.load(id);
+  t.same(loadUser.isLoaded, true, 'isLaoded false after load()');
+  loadUser.id = 'asdasd';
+  t.same(loadUser.isLoaded, false, 'isLaoded true after setting manual id on loaded user');
+  t.done();
+};
+
+exports["isDirty"] = async (t) => {
+  t.expect(12);
+
+  let user = await nohm.factory('UserMockup');
+  let other = await nohm.factory('NonIncrement');
+
+  t.same(user.isDirty, false, 'user.isDirty true in base state.');
+  t.same(other.isDirty, false, 'other.isDirty true in base state.');
+
+  other.link(user);
+  t.same(user.isDirty, false, 'user.isDirty true after other.link(user).');
+  t.same(other.isDirty, true, 'other.isDirty false after other.link(user).');
+
+  user.property('name', 'isDirtyUser');
+  t.same(user.isDirty, true, 'user.isDirty false after first edit.');
+  user.property('email', 'isDirtyUser@test.de');
+  t.same(user.isDirty, true, 'user.isDirty false after second.');
+
+  await other.save();
+  t.same(user.isDirty, false, 'user.isDirty true after saving.');
+  t.same(other.isDirty, false, 'other.isDirty true after saving.');
+
+  user.id = parseInt(user.id, 10);
+  t.same(user.isDirty, false, 'user.isDirty true after same id change.');
+
+  t.notEqual(other.id, 'new_id', 'other.id was already test value Oo');
+  other.id = 'new_id';
+  t.same(other.id, 'new_id', 'other.id change failed.');
+  t.same(other.isDirty, true, 'other.isDirty false after id change.');
+
+  t.done();
+};

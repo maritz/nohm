@@ -279,7 +279,7 @@ export class NohmClass {
        * @returns {Promise<Array<NohmModel>>}
        */
       public static async findAndLoad<P extends NohmModel>(
-        searches: ISearchOptions = {}
+        searches: ISearchOptions = {},
       ): Promise<Array<P>> {
         const dummy = await self.factory(modelName);
         const ids = await dummy.find(searches);

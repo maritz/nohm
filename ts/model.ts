@@ -73,18 +73,17 @@ const eventActions: Array<TAllowedEventNames> = ['create', 'update', 'save', 're
 
 abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
-  public id: any;
 
   public client: redis.RedisClient;
   public errors: {
     [key in keyof TProps]: Array<string>;
   };
-  public readonly modelName: string;
   public meta: {
     inDb: boolean,
     properties: IModelPropertyDefinitions,
     version: string,
   };
+  public readonly modelName: string;
 
   protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
@@ -92,6 +91,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   protected static readonly definitions: IModelPropertyDefinitions = {};
   protected abstract nohmClass: NohmClass;
 
+  private _id: null | string;
+  private _isLoaded: boolean;
+  private _isDirty: boolean;
   private allPropertiesCache: {
     [key in keyof TProps]: any;
   } & { id: any };
@@ -153,7 +155,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     this.relationChanges = [];
     this.tmpUniqueKeys = [];
 
-    this.id = null;
+    this._id = null;
+    this._isLoaded = false;
+    this._isDirty = false;
     this.inDb = false;
   }
 
@@ -541,18 +545,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       await this.create();
     }
     await this.update(options);
+    // TODO: Implement some kind of locking mechanism so that an object is not being changed during save.
+    this._isDirty = false;
+    this._isLoaded = true;
   }
 
   private async create() {
     const id = await this.generateId();
     await SADD(this.client, this.prefix('idsets'), id);
     await this.setUniqueIds(id);
-    this.setId(id);
-  }
-
-  private setId(id: any) {
     this.id = id;
-    this.allPropertiesCache.id = id;
   }
 
   private async generateId(): Promise<string> {
@@ -731,7 +733,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       toKey,
     );
     // second store the information which specific other model id that relation is referring to
-    multi[command](toKey, change.object.id);
+    multi[command](toKey, change.object.stringId());
 
     // relation from other - same thing in reverse
     const fromKey = change.object.getRelationKey(this.modelName, foreignName);
@@ -739,7 +741,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       `${relationKeyPrefix}${change.object.modelName}:${change.object.id}`,
       fromKey,
     );
-    multi[command](fromKey, this.id);
+    multi[command](fromKey, this.stringId());
 
     try {
       await EXEC(multi);
@@ -777,15 +779,15 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           // we use scored sets for things like "get all users older than 5"
           const scoredPrefix = this.prefix('scoredindex');
           if (this.inDb) {
-            multi.ZREM(`${scoredPrefix}:${key}`, this.id, this.nohmClass.logError);
+            multi.ZREM(`${scoredPrefix}:${key}`, this.stringId(), this.nohmClass.logError);
           }
-          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.id, this.nohmClass.logError);
+          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.stringId(), this.nohmClass.logError);
         }
         const prefix = this.prefix('index');
         if (this.inDb) {
-          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.id, this.nohmClass.logError);
+          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.stringId(), this.nohmClass.logError);
         }
-        multi.SADD(`${prefix}:${key}:${prop.value}`, this.id, this.nohmClass.logError);
+        multi.SADD(`${prefix}:${key}:${prop.value}`, this.stringId(), this.nohmClass.logError);
       }
     }
   }
@@ -941,7 +943,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
       * when really saving it. (or we free the unique slot if we're not saving)
       */
-      dbValue = await SETNX(this.client, key, this.id);
+      dbValue = await SETNX(this.client, key, this.stringId());
     } else {
       dbValue = await EXISTS(this.client, key);
     }
@@ -1022,16 +1024,22 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       // TODO check if this is needed
       await this.load(this.id);
     }
-    return this.deleteDbCall(silent);
+    await this.deleteDbCall();
+    const oldId = this.id;
+    this.id = null;
+
+    if (!silent) {
+      this.fireEvent('remove', oldId);
+    }
   }
 
-  private async deleteDbCall(silent: boolean): Promise<void> {
+  private async deleteDbCall(): Promise<void> {
     // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
     const multi = this.client.MULTI();
 
-    multi.del(`${this.prefix('hash')}:${this.id}`);
-    multi.srem(this.prefix('idsets'), this.id);
+    multi.del(`${this.prefix('hash')}:${this.stringId()}`);
+    multi.srem(this.prefix('idsets'), this.stringId());
 
     this.properties.forEach((prop, key) => {
       if (this.getDefinitions()[key].unique) {
@@ -1042,22 +1050,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         multi.del(`${this.prefix('unique')}:${key}:${value}`);
       }
       if (this.getDefinitions()[key].index === true) {
-        multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.id);
+        multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.stringId());
       }
       if (prop.__numericIndex === true) {
-        multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.id);
+        multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.stringId());
       }
     });
 
     await this.unlinkAll(multi);
 
     await EXEC(multi);
-    const oldId = this.id;
-    this.setId(null);
-
-    if (!silent) {
-      this.fireEvent('remove', oldId);
-    }
   }
 
   /**
@@ -1101,8 +1103,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     Object.keys(dbProps).forEach((key) => {
       this.__resetProp(key);
     });
-    this.setId(id);
+    this.id = id;
     this.inDb = true;
+    this._isLoaded = true;
     return this.allProperties();
   }
 
@@ -1283,7 +1286,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private async removeIdFromOtherRelations(multi: redis.Multi, item: IUnlinkKeyMapItem): Promise<void> {
     const ids = await SMEMBERS(this.client, item.ownIdsKey);
     ids.forEach((id) => {
-      multi.SREM(`${item.otherIdsKey}${id}`, this.id);
+      multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
     });
   }
 
@@ -1641,6 +1644,59 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     this.nohmClass.unsubscribeEvent(eventName, fn);
   }
 
+  get id(): null | string {
+    return this._id;
+  }
+
+  set id(id: null | string) {
+    if (id === null) {
+      this._id = null;
+      this._isLoaded = false;
+      this._isDirty = false;
+      this.allPropertiesCache.id = null;
+      return;
+    }
+    const stringifiedId = String(id);
+    if (this._id !== stringifiedId) {
+      this._id = stringifiedId;
+      this._isLoaded = false;
+      this._isDirty = true;
+      this.allPropertiesCache.id = this._id;
+    }
+  }
+
+  /**
+   * Always returns string, even if id is null ('').
+   * Used internally for redis command type safety.
+   *
+   * @returns {string} Id of the model
+   * @memberof NohmModel
+   */
+  public stringId(): string {
+    return typeof (this._id) === 'string' ? this._id : '';
+  }
+
+  get isLoaded(): boolean {
+    return this._isLoaded;
+  }
+
+  /**
+   * True if there are any unsaved changes. This is triggered by changing the id manually,
+   * using .link()/.unlink() and changing properties from their stored state.
+   */
+  get isDirty(): boolean {
+    if (this._isDirty) {
+      return true;
+    }
+    if (this.relationChanges.length > 0) {
+      return true;
+    }
+    const propDiffs = this.propertyDiff();
+    if (propDiffs.length > 0) {
+      return true;
+    }
+    return false;
+  }
 }
 
 export default NohmModel;
