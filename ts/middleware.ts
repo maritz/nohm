@@ -142,7 +142,7 @@ function wrapExtraFiles(files: Array<string>, namespace: string) {
  *                        via Nohm.setExtraValidations as this automatically includes those.
  *    - `maxAge`      - Cache control (in seconds)
  *    - `uglify`      - Boolean. True to enable minification. Requires uglify-js (not in dependencies of nohm!).
- *                       Default: false // TODO
+ *                       Default: false
  *
  * Example:
  *

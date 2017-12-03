@@ -1188,15 +1188,15 @@ exports["loadPure"] = async (t) => {
   nohm.model('loadPureModel', {
     properties: {
       incrementOnChange: {
-        load_pure: true,
         defaultValue: 0,
+        load_pure: true,
         type: function (_a, _b, oldValue) {
           return 1 + this.property('incrementOnChange')
         },
       },
       createdAt: {
-        load_pure: true,
         defaultValue: () => Date.now() + ':' + Math.random(),
+        load_pure: true,
         type: (_a, _b, oldValue) => oldValue, // never change the value after creation
       }
     }
@@ -1219,5 +1219,26 @@ exports["loadPure"] = async (t) => {
   t.same(controlLoadPure.property('incrementOnChange'), incrementedTwice, 'incrementedTwice was changed during load');
   t.same(controlLoadPure.property('createdAt'), initialCreatedAt, 'create-only loading produced typecast value');
 
+  t.done();
+};
+
+exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
+  t.expect(3);
+
+  let user = await nohm.factory('UserMockup');
+  const name = 'allPropertyCacheEmpty';
+  const email = 'allPropertyCacheEmpty@test.de';
+  user.property({
+    name,
+    email,
+  })
+  const test = user.allProperties();
+  user.propertyReset();
+
+  t.notEqual(user.property('name'), name, 'Name was not reset.');
+  t.same(test.name, name, 'Name was reset in  test object.');
+
+  const control = user.allProperties();
+  t.notDeepEqual(test, control, 'allProperties cache was not reset properly');
   t.done();
 };

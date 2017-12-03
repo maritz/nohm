@@ -560,12 +560,10 @@ export class NohmClass {
     name: string, id?: any, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
   ): Promise<T> {
     if (typeof callback === 'function') {
-      // TODO: decide whether callback fallback should be implemented everywhere based on effort - otherwise cut it
       throw new Error('Not implmented: factory does not support callback method anymore.');
     } else {
       const model = this.modelCache[name];
       if (!model) {
-        // TODO: debug(`Model ${model} not found. Available models: ${Object.keys(this.modelCache)}`);
         return Promise.reject(`Model '${name}' not found.`);
       }
       const instance = new model() as T;
@@ -636,7 +634,7 @@ export class NohmClass {
         this.extraValidators.push(path);
         const validators = require(path);
         Object.keys(validators).forEach((_name) => {
-          // TODO: implement this
+          // TODO for v1: check if this needs to be implemented
           // this.__validators[name] = validators[name];
         });
       }

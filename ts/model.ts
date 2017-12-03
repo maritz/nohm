@@ -385,7 +385,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       case 'bool':
         return newValue === 'false' ? false : !!newValue;
       case 'string':
-        // no .toString() here. TODO: or should there be?
         return (
           (!(newValue instanceof String) ||
             newValue.toString() === '') && typeof newValue !== 'string'
@@ -498,7 +497,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         prop.__updated = false;
         prop.value = prop.__oldValue;
         this.properties.set(innerKey, prop);
-        // this.allPropertiesCache[innerKey] = prop.__oldValue; // TODO: enable & write test for this
+        this.allPropertiesCache[innerKey] = prop.__oldValue;
       }
     });
   }
@@ -524,7 +523,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   public async save(
     options?: ISaveOptions,
   ): Promise<void> {
-    // TODO: right now continue_on_link_error is always "true" since it's the current
+    // TODO for v1: right now continue_on_link_error is always "true" since it's the current
     // behavior without options and the option isn't passed.
     // Need to check if the option should work again.
     callbackError(...arguments);
@@ -541,7 +540,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       // TODO: determine if this is still needed or can be solved more elegantly.
       // for example just ditching manual id creation and use uuid everywhere.
       // that would also make clustered/shareded storage much more straight forward
-      // and remove quite a bit of code here.
+      // and remove a bit of code here.
       this.id = uuid();
     }
     let isValid = true;
@@ -560,7 +559,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       await this.create();
     }
     await this.update(options);
-    // TODO: Implement some kind of locking mechanism so that an object is not being changed during save.
+    // TODO: maybe implement some kind of locking mechanism so that an object is not being changed during save.
     this._isDirty = false;
     this._isLoaded = true;
   }
@@ -724,7 +723,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
     for (const [_key, fn] of changeFns.entries()) {
-      // TODO: implement continue_on_link_error
+      // TODO for v1: implement continue_on_link_error
       saveResults = saveResults.concat(await fn());
     }
     return saveResults;
@@ -761,7 +760,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     try {
       await EXEC(multi);
       if (!change.options.silent) {
-        // TODO: enable this once fireEvent is implemented
         this.fireEvent(change.action, change.object, change.options.name);
       }
     } catch (err) {
@@ -1049,7 +1047,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private async deleteDbCall(): Promise<void> {
-    // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
+    // TODO for v1: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
     const multi = this.client.MULTI();
 
