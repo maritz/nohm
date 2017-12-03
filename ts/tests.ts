@@ -1,3 +1,4 @@
+import { integerProperty, stringProperty } from './model.header';
 import { Nohm, NohmModel, TTypedDefinitions } from './index';
 
 const nohm = Nohm;
@@ -23,24 +24,24 @@ interface IUserLinkProps {
 class UserMockup extends NohmModel<IUserLinkProps> {
   public static modelName = 'UserMockup';
   protected static idGenerator = 'increment';
-  protected static definitions: TTypedDefinitions<IUserLinkProps> = {
+  protected static definitions = {
     name: {
       defaultValue: 'defaultName',
-      type: 'string',
+      type: stringProperty,
       validations: [
         'notEmpty',
       ],
     },
     number: {
       defaultValue: 123,
-      type: 'integer',
+      type: integerProperty,
       validations: [
         'notEmpty',
       ],
     },
     test: {
       defaultValue: 'defaultTest',
-      type: 'string',
+      type: stringProperty,
       validations: [
         'notEmpty',
       ],
@@ -107,6 +108,47 @@ exports.Typescript = {
   },
   'tearDown': (next: () => any) => {
     h.cleanUp(redis, args.prefix, next);
+  },
+
+  'static methods': async (t: any) => {
+    // see above for their different ways of setup/definition
+    t.expect(6);
+
+    interface IAdditionalMethods {
+      test1(): Promise<boolean>;
+      test2(player: any): Promise<void>;
+    }
+
+    const simpleModel = nohm.model<IAdditionalMethods>('SimpleModelRegistration', {
+      properties: {
+        name: {
+          defaultValue: 'simple',
+          type: 'string',
+        },
+      },
+      // tslint:disable-next-line:object-literal-sort-keys
+      methods: {
+        test1(): Promise<boolean> {
+          return this.validate();
+        },
+        async test2(player: any) {
+          await this.save();
+          this.link(player, 'leader');
+          this.link(player);
+        },
+      },
+    });
+
+    t.same(typeof commentMockup.findAndLoad, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(typeof commentMockup.sort, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(typeof commentMockup.find, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(typeof simpleModel.findAndLoad, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(typeof simpleModel.sort, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(typeof simpleModel.find, 'function', 'findAndLoad was not set on commentMockup');
+    const test = new simpleModel();
+    test.test1();
+
+    t.done();
   },
 
 

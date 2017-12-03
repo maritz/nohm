@@ -2,12 +2,14 @@ import * as fs from 'fs';
 
 import { NohmClass, nohm as instantiatedNohm } from './index';
 import { NohmModel } from './model';
-import { IDictionary } from './model.d';
+import { IDictionary } from './model.header';
 
 // tslint:disable-next-line:no-implicit-dependencies # we don't actually use express, just the typing
-import { RequestHandler } from 'express';
+import { RequestHandler as TRequestHandler } from 'express';
 
-interface IExclusionsOption {
+export { TRequestHandler };
+
+export interface IExclusionsOption {
   [key: string]: Array<number | boolean> | boolean;
 }
 
@@ -175,7 +177,7 @@ function wrapExtraFiles(files: Array<string>, namespace: string) {
 export function middleware(
   options: IMiddlewareOptions,
   nohm: NohmClass = instantiatedNohm,
-): RequestHandler {
+): TRequestHandler {
   options = options || {};
   const url = options.url || '/nohmValidations.js';
   const namespace = options.namespace || 'nohmValidations';

@@ -1,11 +1,20 @@
 import { NohmModel } from './model';
 
-type propertyTypeNames = 'string' | 'bool' | 'boolean' | 'integer' | 'int' | 'float' | 'date' | 'time' |
-  'timestamp' | 'json';
+export type TPropertyTypeNames = 'string' | 'bool' | 'boolean' | 'integer' | 'int' | 'float' |
+  'number' | 'date' | 'time' | 'timestamp' | 'json';
+export const stringProperty: TPropertyTypeNames = 'string';
+export const boolProperty: TPropertyTypeNames = 'bool';
+export const integerProperty: TPropertyTypeNames = 'integer';
+export const floatProperty: TPropertyTypeNames = 'float';
+export const numberProperty: TPropertyTypeNames = 'number';
+export const dateProperty: TPropertyTypeNames = 'date';
+export const timeProperty: TPropertyTypeNames = 'time';
+export const timestampProperty: TPropertyTypeNames = 'timestamp';
+export const jsonProperty: TPropertyTypeNames = 'json';
 
-export type PropertyObject = { [index: string]: any };
+export interface IPropertyObject { [index: string]: any; }
 
-interface IDictionary {
+export interface IDictionary {
   [index: string]: any;
 }
 
@@ -13,8 +22,19 @@ export type PropertyBehaviour = <TModel>(
   this: TModel,
   newValue: any,
   key: string,
-  oldValue: any
+  oldValue: any,
 ) => any;
+
+export interface IStaticMethods {
+  new(): NohmModel<IDictionary>;
+  findAndLoad(searches: ISearchOptions): Promise<Array<NohmModel<IDictionary>>>;
+  sort(
+    sortOptions: ISortOptions<IDictionary>,
+    ids: Array<string | number> | false,
+  ): Promise<Array<string>>;
+  find(searches: ISearchOptions): Promise<Array<string>>;
+}
+
 
 export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
 
@@ -27,14 +47,14 @@ export interface IValidationObject {
 export type TValidationDefinition = string | { name: string, options: any } | validatiorFunction;
 
 export interface IModelPropertyDefinition {
-  type: propertyTypeNames | PropertyBehaviour;
+  type: TPropertyTypeNames | PropertyBehaviour;
   defaultValue?: any;
   validations?: Array<TValidationDefinition>;
   unique?: boolean;
   /**
    * Whether the property should be indexed. Depending on type this creates different keys/collections.
    * Does not work for all types. TODO: specify here which types.
-   * 
+   *
    * @type {boolean}
    * @memberof IModelPropertyDefinition
    */
@@ -43,22 +63,22 @@ export interface IModelPropertyDefinition {
 
 export type TTypedDefinitions<TProps extends IDictionary> = {
   [props in keyof TProps]: IModelPropertyDefinition;
-}
+};
 
 export interface IModelPropertyDefinitions {
   [propName: string]: IModelPropertyDefinition;
 }
 
-type idGenerators = 'default' | 'increment';
+export type TIdGenerators = 'default' | 'increment';
 
 export interface IModelOptions {
   metaCallback?: () => any;
   methods?: {
-    [name: string]: () => any;
+    [name: string]: (this: NohmModel<IDictionary>, ...args: Array<any>) => any;
   };
   properties: IModelPropertyDefinitions;
   publish?: boolean;
-  idGenerator?: idGenerators | (() => any);
+  idGenerator?: TIdGenerators | (() => any);
 }
 
 export interface ISaveOptions {
@@ -82,8 +102,8 @@ export interface IPropertyDiff<TKeys = string> {
 
 export interface IValidationResult {
   key: string;
-  valid: boolean,
-  error?: string
+  valid: boolean;
+  error?: string;
 }
 
 export interface IRelationChange {

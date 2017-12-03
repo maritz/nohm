@@ -44,8 +44,7 @@ import {
   ISearchOption,
   ISortOptions,
   TLinkCallback,
-  TTypedDefinitions,
-} from './model.d';
+} from './model.header';
 import { validators } from './validators';
 import * as messageComposers from './eventComposers';
 
@@ -58,7 +57,6 @@ export {
   ISearchOptions,
   ISortOptions,
   TLinkCallback,
-  TTypedDefinitions,
 };
 export { NohmModel };
 
@@ -73,7 +71,7 @@ export type TAllowedEventNames = 'create' | 'save' | 'update' | 'remove' | 'link
 const eventActions: Array<TAllowedEventNames> = ['create', 'update', 'save', 'remove', 'unlink', 'link'];
 
 
-abstract class NohmModel<TProps extends IDictionary> {
+abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   public id: any;
 
@@ -91,9 +89,7 @@ abstract class NohmModel<TProps extends IDictionary> {
   protected properties: Map<keyof TProps, IProperty>;
   protected options: IModelOptions;
   protected publish: null | boolean = null;
-  protected static readonly definitions: {
-    [key: string]: IModelPropertyDefinition;
-  } = {};
+  protected static readonly definitions: IModelPropertyDefinitions = {};
   protected abstract nohmClass: NohmClass;
 
   private allPropertiesCache: {
@@ -380,6 +376,7 @@ abstract class NohmModel<TProps extends IDictionary> {
       case 'int':
         return isNaN(parseInt(newValue, 10)) ? 0 : parseInt(newValue, 10);
       case 'float':
+      case 'number':
         return isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
       case 'date':
       case 'time':
@@ -506,7 +503,7 @@ abstract class NohmModel<TProps extends IDictionary> {
    * @returns {Promise<void>}
    */
   public async save(
-    options: ISaveOptions,
+    options?: ISaveOptions,
   ): Promise<void> {
     // TODO: right now continue_on_link_error is always "true" since it's the current
     // behavior without options and the option isn't passed.

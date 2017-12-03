@@ -1,5 +1,5 @@
 import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
-import { IMiddlewareOptions, middleware } from './middleware';
+import { IMiddlewareOptions, middleware, TRequestHandler } from './middleware';
 import * as redis from 'redis';
 
 import { getPrefix, INohmPrefixes } from './helpers';
@@ -13,23 +13,50 @@ import {
   ISortOptions,
   NohmModel,
   TLinkCallback,
-  TTypedDefinitions,
 } from './model';
+
+import {
+  IStaticMethods,
+  TTypedDefinitions,
+  stringProperty,
+  boolProperty,
+  integerProperty,
+  floatProperty,
+  numberProperty,
+  dateProperty,
+  timeProperty,
+  timestampProperty,
+  jsonProperty,
+} from './model.header';
 
 import { ValidationError } from './errors/ValidationError';
 import { LinkError } from './errors/LinkError';
 import { EventEmitter } from 'events';
 
 export {
+  IDictionary,
   ILinkOptions,
   IModelOptions,
   IModelPropertyDefinition,
+  IModelPropertyDefinitions,
   INohmPrefixes,
+  ISearchOptions,
+  ISortOptions,
+  IStaticMethods,
   LinkError,
   NohmModelExtendable as NohmModel,
   TLinkCallback,
   TTypedDefinitions,
   ValidationError,
+  boolProperty,
+  dateProperty,
+  floatProperty,
+  integerProperty,
+  jsonProperty,
+  numberProperty,
+  stringProperty,
+  timeProperty,
+  timestampProperty,
 };
 
 
@@ -75,7 +102,13 @@ export interface INohmOptions {
   publish?: boolean | redis.RedisClient;
 }
 
-type Constructor<T> = new (...args: Array<any>) => T;
+export type Constructor<T> = new (...args: Array<any>) => T;
+
+function staticImplements<T>() {
+  return (_constructor: T) => {
+    // no op decorator
+  };
+}
 
 export class NohmClass {
 
@@ -172,9 +205,9 @@ export class NohmClass {
    *                        This is mostly useful for meta things like migrations.
    * @returns ModelClass
    */
-  public model(
+  public model<TAdditionalMethods>(
     name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
-  ): Constructor<NohmModel<IDictionary>> {
+  ): Constructor<NohmModelExtendable<IDictionary> & TAdditionalMethods> & IStaticMethods {
     if (!name) {
       this.logError('When creating a new model you have to provide a name!');
     }
@@ -182,6 +215,7 @@ export class NohmClass {
     const self = this; // well then...
 
     // tslint:disable-next-line:max-classes-per-file
+    @staticImplements<IStaticMethods>()
     class CreatedClass extends NohmModelExtendable {
 
       public client = self.client;
@@ -233,13 +267,13 @@ export class NohmClass {
        * @returns {Promise<Array<NohmModel<IDictionary>>>}
        */
       public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
-        const dummy = await nohm.factory(name);
+        const dummy = await self.factory(name);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
         }
         const loadPromises = ids.map((id) => {
-          return nohm.factory(name, id);
+          return self.factory(name, id);
         });
         return Promise.all(loadPromises);
       }
@@ -248,12 +282,12 @@ export class NohmClass {
         sortOptions: ISortOptions<IDictionary> = {},
         ids: Array<string | number> | false = false,
       ): Promise<Array<string>> {
-        const dummy = await nohm.factory(name);
+        const dummy = await self.factory(name);
         return dummy.sort(sortOptions, ids);
       }
 
       public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
-        const dummy = await nohm.factory(name);
+        const dummy = await self.factory(name);
         return dummy.find(searches);
       }
     }
@@ -262,7 +296,7 @@ export class NohmClass {
       this.modelCache[name] = CreatedClass;
     }
 
-    return CreatedClass;
+    return CreatedClass as any;
   }
 
   /**
@@ -288,7 +322,10 @@ export class NohmClass {
    *     protected static modelName = 'user'; // used in redis to store the keys
    *
    *     // the TTypedDefinitions generic makes sure that our definitions have the same keys as
-   *     // defined in our property interface
+   *     // defined in our property interface.
+   *     // If you don't want to use the generic, you have to use the exported {type}Property types
+   *     // to get around the tsc throwing an error.
+   *     // TODO: look into the error thrown by tsc when leaving out TTYpedDefinitions and using 'sometype' as type
    *     protected static definitions: TTypedDefinitions<IUserModelProps> = {
    *       name: {
    *         defaultValue: 'testName',
@@ -316,9 +353,9 @@ export class NohmClass {
    *   bar.foo(); // no error
    *   bar.allProperties().name === 'testName'; // no error
    */
-  public register<T extends Constructor<NohmModel<IDictionary>>>(
+  public register<T extends Constructor<NohmModelExtendable<IDictionary>>>(
     subClass: T, temp = false,
-  ): T {
+  ): T & IStaticMethods {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
     const modelName = (subClass as any).modelName;
@@ -331,6 +368,7 @@ export class NohmClass {
     }
 
     // tslint:disable-next-line:max-classes-per-file
+    @staticImplements<IStaticMethods>()
     class CreatedClass extends subClass {
       protected nohmClass = self;
 
@@ -393,13 +431,13 @@ export class NohmClass {
        * @returns {Promise<Array<NohmModel<IDictionary>>>}
        */
       public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
-        const dummy = await nohm.factory(modelName);
+        const dummy = await self.factory(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
         }
         const loadPromises = ids.map((id) => {
-          return nohm.factory(dummy.modelName, id);
+          return self.factory(dummy.modelName, id);
         });
         return Promise.all(loadPromises);
       }
@@ -408,12 +446,12 @@ export class NohmClass {
         options: ISortOptions<IDictionary> = {},
         ids: Array<string | number> | false = false,
       ): Promise<Array<string>> {
-        const dummy = await nohm.factory(modelName);
+        const dummy = await self.factory(modelName);
         return dummy.sort(options, ids);
       }
 
       public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
-        const dummy = await nohm.factory(modelName);
+        const dummy = await self.factory(modelName);
         return dummy.find(searches);
       }
     }
@@ -525,7 +563,7 @@ export class NohmClass {
     return this.extraValidators;
   }
 
-  public middleware(options: IMiddlewareOptions) {
+  public middleware(options: IMiddlewareOptions): TRequestHandler {
     return middleware(options, this);
   }
 

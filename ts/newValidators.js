@@ -1,3 +1,4 @@
+// tslint:disable
 ((exports, undefined) => {
 
   const regexps = exports.regexps = {

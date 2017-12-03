@@ -1,8 +1,46 @@
 {
   "name": "nohm",
-  "version": "0.9.8",
+  "version": "1.0.0-aplha.1",
+  "description": "redis ORM (Object relational mapper)",
   "engines": {
-    "node": ">=0.10"
+    "node": ">=8"
+  },
+  "main": "./tsOut/index.js",
+  "directories": {
+    "lib": "./ts"
+  },
+  "types": "./tsOut/index.d.ts",
+  "scripts": {
+    "test": "node test/tests.js",
+    "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
+    "lint": "tslint --project ./",
+    "lint:auto-fix": "tslint --project ./ --fix",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
+    "prepublishOnly": "npm run lint && npm run build && npm run test && pkg-ok"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "redis": "^2.8.0",
+    "traverse": "^0.6.6",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/async": "^2.0.45",
+    "@types/express": "^4.0.39",
+    "@types/lodash": "^4.14.86",
+    "@types/node": "^8.0.53",
+    "@types/redis": "^2.8.1",
+    "@types/traverse": "^0.6.29",
+    "@types/uuid": "^3.4.3",
+    "async": "^1.2.1",
+    "concurrently": "^3.5.1",
+    "nodemon": "^1.12.1",
+    "nodeunit": "^0.9.1",
+    "pkg-ok": "^1.1.0",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   },
   "author": "Moritz Peters",
   "repository": {
@@ -11,38 +49,6 @@
   },
   "bugs": {
     "url": "https://github.com/maritz/nohm/issues"
-  },
-  "directories": {
-    "lib": "./lib"
-  },
-  "description": "redis ORM (Object relational mapper)",
-  "main": "./lib/nohm",
-  "scripts": {
-    "test": "node test/tests.js",
-    "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue"
-  },
-  "dependencies": {
-    "@types/express": "^4.0.39",
-    "lodash": "^4.17.4",
-    "redis": "^2.8.0",
-    "traverse": "^0.6.6",
-    "uuid": "^3.1.0"
-  },
-  "devDependencies": {
-    "@types/async": "^2.0.45",
-    "@types/lodash": "^4.14.85",
-    "@types/redis": "^2.8.1",
-    "@types/traverse": "^0.6.29",
-    "@types/uuid": "^3.4.3",
-    "async": "^1.2.1",
-    "concurrently": "^3.5.0",
-    "nodemon": "^1.12.1",
-    "nodeunit": "^0.9.1",
-    "tslint": "^5.8.0",
-    "typescript": "^2.6.1"
   },
   "contributors": [
     {

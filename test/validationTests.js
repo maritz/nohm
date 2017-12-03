@@ -22,6 +22,10 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'float',
       defaultValue: 2.5
     },
+    castNumber: {
+      type: 'number',
+      defaultValue: 2.5
+    },
     castTimestamp: {
       type: 'timestamp',
       defaultValue: 100000
@@ -390,6 +394,31 @@ exports.validation = {
 
     user.property('castFloat', '0.1e2');
     t.ok(user.property('castFloat') === 10, 'Setting a Float to a string "0.1e2" did not cast it to 10.');
+
+    t.done();
+  },
+  
+  castNumber: function (t) {
+    var user = new UserMockup();
+    t.expect(6);
+
+    user.property('castNumber', '1.5');
+    t.same(user.property('castNumber'), 1.5, 'Setting a Float to a string "1.5" did not cast it to 1.5.');
+
+    user.property('castNumber', '1.5asd');
+    t.same(user.property('castNumber'), 1.5, 'Setting a Float to a string "1.5asd" did not cast it to 1.5.');
+
+    user.property('castNumber', '01.5');
+    t.same(user.property('castNumber'), 1.5, 'Setting a Float to a string "01.5" did not cast it to 1.5.');
+
+    user.property('castNumber', '0x1.5');
+    t.same(user.property('castNumber'), 0, 'Setting a Float to a string "0x1.5" did not cast it to 0.');
+
+    user.property('castNumber', '.5');
+    t.same(user.property('castNumber'), 0.5, 'Setting a Float to a string ".5" did not cast it to 0.5.');
+
+    user.property('castNumber', '0.1e2');
+    t.same(user.property('castNumber'), 10, 'Setting a Float to a string "0.1e2" did not cast it to 10.');
 
     t.done();
   },
