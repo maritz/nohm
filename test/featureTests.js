@@ -94,30 +94,6 @@ nohm.model('UniqueInteger', {
   }
 });
 
-const MethodOverwrite = nohm.model('methodOverwrite', {
-  properties: {
-    name: {
-      type: 'string',
-      defaultValue: 'test',
-      unique: true,
-      validations: [
-        'notEmpty'
-      ]
-    },
-  },
-  methods: {
-    test: function test() {
-      return this.property('name');
-    },
-    prop: function prop(name) {
-      if (name === 'super')
-        return this._super_prop('name');
-      else
-        return this._super_prop.apply(this, arguments, 0);
-    }
-  }
-});
-
 
 exports.prepare = {
   redisClean: function (t) {
@@ -697,6 +673,25 @@ exports.deleteNonExistant = async (t) => {
   }
 };
 
+
+const MethodOverwrite = nohm.model('methodOverwrite', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'test',
+      unique: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+  },
+  methods: {
+    test: function test() {
+      return this.property('name');
+    }
+  }
+});
+
 exports.methods = async (t) => {
   const methodOverwrite = new MethodOverwrite();
   t.expect(2);
@@ -704,10 +699,31 @@ exports.methods = async (t) => {
   t.same(typeof (methodOverwrite.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
   t.same(methodOverwrite.test(), methodOverwrite.property('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
   t.done();
+  console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be 2 warnings in the next few lines somewhere.');
 };
 
+const MethodOverwriteSuperMethod = nohm.model('methodOverwriteSuperMethod', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'test',
+      unique: true,
+      validations: [
+        'notEmpty'
+      ]
+    },
+  },
+  methods: {
+    prop: function prop(name) {
+      if (name === 'super')
+        return this._super_prop('name');
+      else
+        return this._super_prop.apply(this, arguments, 0);
+    }
+  }
+}, true); // temporary to prevent connectMiddleware later from throwing a bunch of deprecation warnings
 exports.methodsSuper = async (t) => {
-  const methodOverwrite = new MethodOverwrite();
+  const methodOverwrite = new MethodOverwriteSuperMethod();
   t.expect(4);
 
   t.same(typeof (methodOverwrite.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
@@ -716,6 +732,7 @@ exports.methodsSuper = async (t) => {
   methodOverwrite.prop('name', 'methodTest');
   t.same(methodOverwrite.property('name'), 'methodTest', 'The super test method did not properly handle arguments');
   t.done();
+  console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be a warning with a stack trace in the next few lines somewhere.');
 };
 
 exports["no super method if none needed"] = async (t) => {
@@ -1133,6 +1150,74 @@ exports["isDirty"] = async (t) => {
   other.id = 'new_id';
   t.same(other.id, 'new_id', 'other.id change failed.');
   t.same(other.isDirty, true, 'other.isDirty false after id change.');
+
+  t.done();
+};
+
+exports["create-only failure attempt without load_pure"] = async (t) => {
+  t.expect(2);
+
+  nohm.model('withoutLoadPureCreateOnlyModel', {
+    properties: {
+      createdAt: {
+        defaultValue: () => Date.now() + ':' + Math.random(),
+        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
+      }
+    }
+  });
+
+  let loadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
+  const initialValue = loadPure.property('createdAt');
+  loadPure.property('createdAt', 'asdasd');
+
+  t.same(loadPure.property('createdAt'), initialValue, 'Behaviour failed to prevent property change');
+
+  await loadPure.save();
+  let controlLoadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
+  await controlLoadPure.load(loadPure.id);
+
+  t.notEqual(controlLoadPure.property('createdAt'), initialValue, 'create-only loading produced non-cast value (should only happen with load_pure)');
+
+  t.done();
+};
+
+
+exports["loadPure"] = async (t) => {
+  t.expect(4);
+
+  nohm.model('loadPureModel', {
+    properties: {
+      incrementOnChange: {
+        load_pure: true,
+        defaultValue: 0,
+        type: function (_a, _b, oldValue) {
+          return 1 + this.property('incrementOnChange')
+        },
+      },
+      createdAt: {
+        load_pure: true,
+        defaultValue: () => Date.now() + ':' + Math.random(),
+        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
+      }
+    }
+  });
+
+  let loadPure = await nohm.factory('loadPureModel');
+  const initialCreatedAt = loadPure.property('createdAt');
+  loadPure.property('createdAt', 'asdasd');
+  const initialIncrement = loadPure.property('incrementOnChange');
+  loadPure.property('incrementOnChange', 'asdasd');
+  loadPure.property('incrementOnChange', 'asdasd');
+  const incrementedTwice = initialIncrement + 2;
+
+  t.same(loadPure.property('incrementOnChange'), incrementedTwice, 'incrementedTwice change did not work');
+  t.same(loadPure.property('createdAt'), initialCreatedAt, 'Behaviour failed to prevent property change');
+
+  await loadPure.save();
+  let controlLoadPure = await nohm.factory('loadPureModel');
+  await controlLoadPure.load(loadPure.id);
+  t.same(controlLoadPure.property('incrementOnChange'), incrementedTwice, 'incrementedTwice was changed during load');
+  t.same(controlLoadPure.property('createdAt'), initialCreatedAt, 'create-only loading produced typecast value');
 
   t.done();
 };

@@ -49,10 +49,6 @@ export interface IValidationObject {
 export type TValidationDefinition = string | { name: string, options: any } | validatiorFunction;
 
 export interface IModelPropertyDefinition {
-  type: TPropertyTypeNames | PropertyBehaviour;
-  defaultValue?: any;
-  validations?: Array<TValidationDefinition>;
-  unique?: boolean;
   /**
    * Whether the property should be indexed. Depending on type this creates different keys/collections.
    * Does not work for all types. TODO: specify here which types.
@@ -61,6 +57,11 @@ export interface IModelPropertyDefinition {
    * @memberof IModelPropertyDefinition
    */
   index?: boolean;
+  defaultValue?: any;
+  load_pure?: boolean;
+  type: TPropertyTypeNames | PropertyBehaviour;
+  unique?: boolean;
+  validations?: Array<TValidationDefinition>;
 }
 
 export type TTypedDefinitions<TProps extends IDictionary> = {

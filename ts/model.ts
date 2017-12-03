@@ -132,7 +132,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       });
       if (typeof (definition.type) === 'function') {
         // behaviours should not be called on initialization - thus leaving it at defaultValue
-        this.setProperty(key, defaultValue);
+        this.setProperty(key, defaultValue, true);
       } else {
         this.property(key, defaultValue); // this ensures typecasing
       }
@@ -177,10 +177,15 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (methods) {
       _.each(methods, (method, name) => {
         if (typeof ((this as any)[name]) !== 'undefined') {
-          // tslint:disable-next-line:max-line-length
-          console.warn(`WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
-          // tslint:disable-next-line:max-line-length
-          console.warn(`DEPRECATED: Overwriting built-in methhods is deprecated. Please migrate them to a different name.`);
+          const errorForStack = new Error('Deprecation warning');
+          setTimeout(() => {
+            // Timeout to make sure we have this.modelName. this function is called in constructor and thus
+            //  doesn't always have modelName yet
+            // tslint:disable-next-line:max-line-length
+            console.warn('\x1b[31m%s\x1b[0m', `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
+            // tslint:disable-next-line:max-line-length
+            console.warn('\x1b[31m%s\x1b[0m', `DEPRECATED: Overwriting built-in methhods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`, errorForStack.stack);
+          }, 1);
           (this as any)['_super_' + name] = (this as any)[name].bind(this);
         }
         (this as any)[name] = method;
@@ -273,7 +278,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @deprecated
    */
   public p(keyOrValues: any, value?: any): any {
-    console.log('DEPRECATED: Usage of NohmModel.p() is deprecated, use NohmModel.property() instead.');
+    console.warn(
+      '\x1b[31m%s\x1b[0m',
+      'DEPRECATED: Usage of NohmModel.p() is deprecated, use NohmModel.property() instead.',
+    );
     return this.property(keyOrValues, value);
   }
 
@@ -284,7 +292,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @deprecated
    */
   public prop(keyOrValues: any, value?: any): any {
-    console.log('DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.');
+    console.warn(
+      '\x1b[31m%s\x1b[0m',
+      'DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.',
+    );
     return this.property(keyOrValues, value);
   }
 
@@ -345,10 +356,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return prop;
   }
 
-  private setProperty(key: keyof TProps, value: any): void {
+  private setProperty(key: keyof TProps, value: any, skipCast = false): void {
     const prop = this.getProperty(key);
     if (prop.value !== value) {
-      prop.value = this.castProperty(key, prop, value);
+      if (skipCast) {
+        prop.value = value;
+      } else {
+        prop.value = this.castProperty(key, prop, value);
+      }
       prop.__updated = prop.value !== prop.__oldValue;
       this.properties.set(key, prop);
     }
@@ -793,8 +808,8 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   public valid(property?: keyof TProps, setDirectly = false): Promise<boolean> {
-    // TODO: decide whether actually deprecating this is worth it.
-    console.log('DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
+    console.warn('\x1b[31m%s\x1b[0m',
+      'DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
     return this.validate(property, setDirectly);
   }
 
@@ -1099,8 +1114,15 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       throw new Error('No id passed to .load().');
     }
     const dbProps = await this.getHashAll(id);
-    this.property(dbProps);
+    const definitions = this.getDefinitions();
+
     Object.keys(dbProps).forEach((key) => {
+      if (definitions[key].load_pure) {
+        // prevents type casting/behaviour. especially useful for create-only properties like a createdAt timestamp
+        this.setProperty(key, dbProps[key], true);
+      } else {
+        this.property(key, dbProps[key]);
+      }
       this.__resetProp(key);
     });
     this.id = id;

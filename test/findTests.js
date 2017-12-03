@@ -932,7 +932,7 @@ exports.find = {
       nohm.prefix.hash + findUser.modelName + ':' + user.id, 'not_a_real_property', 'something... :-)',
       async (err) => {
         t.ok(!err, 'Unexpected redis error in custom query');
-        console.log('There should be an error in the next line');
+        console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be an error in the next line');
         await findUser.load(user.id);
         t.equals(user.property('name'), findUser.property('name'), 'The loaded version of the name was not the same as a set one.');
         t.equals(user.property('email'), findUser.property('email'), 'The loaded version of the email was not the same as a set one.');
@@ -1038,7 +1038,7 @@ exports.find = {
     t.expect(1);
 
     try {
-      console.log('There should be a redis deprecation warning in the next line.');
+      console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be a redis deprecation warning in the next line.');
       const ids = await UserFindMockup.find({
         number: {
           min: "1",
