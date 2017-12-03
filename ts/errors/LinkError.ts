@@ -1,4 +1,4 @@
-import { ILinkSaveResult } from '../model.d';
+import { ILinkSaveResult } from '../model.header';
 
 export interface ILinkError extends Error {
   errors: Array<ILinkSaveResult>;

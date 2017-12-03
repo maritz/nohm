@@ -1126,24 +1126,24 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  // options object typing:
    *  {
    *    continue_on_link_error?: boolean; // default false
-   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
+   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
    *    name: string;
    *    silent?: boolean;
    *  }
    *
-   * @param {NohmModel<IDictionary>} other The other instance that is being linked
+   * @param {NohmModel} other The other instance that is being linked
    * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback] Function that is called when the link is saved.
    */
-  public link<T extends NohmModel<IDictionary>>(other: T, callback?: TLinkCallback<T>): void;
-  public link<T extends NohmModel<IDictionary>>(
-    other: NohmModel<IDictionary>,
+  public link<T extends NohmModel>(other: T, callback?: TLinkCallback<T>): void;
+  public link<T extends NohmModel>(
+    other: NohmModel,
     optionsOrNameOrCallback: string | ILinkOptions,
     callback?: TLinkCallback<T>,
   ): void;
-  public link<T extends NohmModel<IDictionary>>(
-    other: NohmModel<IDictionary>,
+  public link<T extends NohmModel>(
+    other: NohmModel,
     optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
     callback?: TLinkCallback<T>,
   ): void {
@@ -1170,24 +1170,24 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  // options object typing:
    *  {
    *    continue_on_link_error?: boolean; // default false
-   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel<IDictionary>) => any;
+   *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
    *    name: string;
    *    silent?: boolean;
    *  }
    *
-   * @param {NohmModel<IDictionary>} other The other instance that is being unlinked (needs to have an id)
+   * @param {NohmModel} other The other instance that is being unlinked (needs to have an id)
    * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback]
    */
-  public unlink(other: NohmModel<IDictionary>, callback: () => any): void;
+  public unlink(other: NohmModel, callback: () => any): void;
   public unlink(
-    other: NohmModel<IDictionary>,
+    other: NohmModel,
     optionsOrNameOrCallback: string | ILinkOptions,
     callback?: () => any,
   ): void;
   public unlink(
-    other: NohmModel<IDictionary>,
+    other: NohmModel,
     optionsOrNameOrCallback: string | ILinkOptions | (() => any),
     callback?: () => any,
   ): void {
@@ -1290,11 +1290,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   /**
    * Resolves with true if the given object has a relation (optionally with the given relation name) to this.
    *
-   * @param {NohmModel<IDictionary>} obj
+   * @param {NohmModel} obj
    * @param {string} [relationName='default']
    * @returns {Promise<boolean>}
    */
-  public async belongsTo(obj: NohmModel<IDictionary>, relationName = 'default'): Promise<boolean> {
+  public async belongsTo(obj: NohmModel, relationName = 'default'): Promise<boolean> {
     callbackError(...arguments);
     if (!this.id || !obj.id) {
       throw new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.');

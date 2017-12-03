@@ -1,4 +1,4 @@
-import { validatiorFunction } from './model.d';
+import { validatiorFunction } from './model.header';
 
 // tslint:disable-next-line:no-var-requires
 const newRawValidators = require(__dirname + '/newValidators.js');

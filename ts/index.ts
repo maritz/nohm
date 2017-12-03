@@ -196,7 +196,7 @@ export class NohmClass {
    * Creates and returns a new model class with the given name and options.
    *  If you're using Typescript it is strongly advised to use Nohm.register() instead.
    *
-   * @param {string} name Name of the model. This needs to be unique and is used in data storage.
+   * @param {string} modelName Name of the model. This needs to be unique and is used in data storage.
    *                      Thus <b>changing this will invalidate existing data</b>!
    * @param {IModelDefinitions} options This is an object containing the actual model definitions.
    *                                    These are: properties, methods (optional) and the client (optional) to be used.
@@ -206,16 +206,16 @@ export class NohmClass {
    * @returns ModelClass
    */
   public model<TAdditionalMethods>(
-    name: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
-  ): Constructor<NohmModelExtendable<IDictionary> & TAdditionalMethods> & IStaticMethods {
-    if (!name) {
+    modelName: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
+  ): Constructor<NohmModelExtendable<IDictionary> & TAdditionalMethods> & IStaticMethods<NohmModel> {
+    if (!modelName) {
       this.logError('When creating a new model you have to provide a name!');
     }
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
 
     // tslint:disable-next-line:max-classes-per-file
-    @staticImplements<IStaticMethods>()
+    @staticImplements<IStaticMethods<CreatedClass>>()
     class CreatedClass extends NohmModelExtendable {
 
       public client = self.client;
@@ -223,7 +223,7 @@ export class NohmClass {
       protected nohmClass = self;
       protected options = options;
 
-      public readonly modelName = name;
+      public readonly modelName = modelName;
 
       constructor(...args: Array<any>) {
         super(...args);
@@ -253,7 +253,7 @@ export class NohmClass {
       }
 
       protected prefix(prefix: keyof INohmPrefixes): string {
-        return self.prefix[prefix] + name;
+        return self.prefix[prefix] + modelName;
       }
 
       protected rawPrefix(): INohmPrefixes {
@@ -261,39 +261,81 @@ export class NohmClass {
       }
 
       /**
+       * Loads a NohmModels via the given id.
+       *
+       * @param {*} id ID of the model to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async load<P extends NohmModel>(id: any): Promise<P> {
+        const model = await self.factory<P>(modelName);
+        await model.load(id);
+        return model;
+      }
+
+      /**
        * Finds ids of objects and loads them into full NohmModels.
        *
        * @param {ISearchOptions} searches
-       * @returns {Promise<Array<NohmModel<IDictionary>>>}
+       * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
-        const dummy = await self.factory(name);
+      public static async findAndLoad<P extends NohmModel>(
+        searches: ISearchOptions = {}
+      ): Promise<Array<P>> {
+        const dummy = await self.factory(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
         }
         const loadPromises = ids.map((id) => {
-          return self.factory(name, id);
+          return self.factory<P>(modelName, id);
         });
         return Promise.all(loadPromises);
       }
 
+      /**
+       * Sort the given ids or all stored ids by their SortOptions
+       *
+       * @see NohmModel.sort
+       * @static
+       * @param {ISortOptions<IDictionary>} [sortOptions={}] Search options
+       * @returns {Promise<Array<string>>} Array of ids
+       */
       public static async sort(
         sortOptions: ISortOptions<IDictionary> = {},
         ids: Array<string | number> | false = false,
       ): Promise<Array<string>> {
-        const dummy = await self.factory(name);
+        const dummy = await self.factory(modelName);
         return dummy.sort(sortOptions, ids);
       }
 
+      /**
+       * Search for ids
+       *
+       * @see NohmModel.find
+       * @static
+       * @param {ISearchOptions} [searches={}] Search options
+       * @returns {Promise<Array<string>>} Array of ids
+       */
       public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
-        const dummy = await self.factory(name);
+        const dummy = await self.factory(modelName);
         return dummy.find(searches);
+      }
+
+      /**
+       * Loads a NohmModels via the given id.
+       *
+       * @param {*} id ID of the model to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async remove(id: any, silent?: boolean): Promise<void> {
+        const model = await self.factory(modelName);
+        model.id = id;
+        await model.remove(silent);
       }
     }
 
     if (!temp) {
-      this.modelCache[name] = CreatedClass;
+      this.modelCache[modelName] = CreatedClass;
     }
 
     return CreatedClass as any;
@@ -355,7 +397,7 @@ export class NohmClass {
    */
   public register<T extends Constructor<NohmModelExtendable<IDictionary>>>(
     subClass: T, temp = false,
-  ): T & IStaticMethods {
+  ): T & IStaticMethods<NohmModel> {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
     const modelName = (subClass as any).modelName;
@@ -368,7 +410,7 @@ export class NohmClass {
     }
 
     // tslint:disable-next-line:max-classes-per-file
-    @staticImplements<IStaticMethods>()
+    @staticImplements<IStaticMethods<CreatedClass>>()
     class CreatedClass extends subClass {
       protected nohmClass = self;
 
@@ -425,23 +467,45 @@ export class NohmClass {
       }
 
       /**
+       * Loads a NohmModels via the given id.
+       *
+       * @param {*} id ID of the model to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async load<P extends NohmModel>(id: any): Promise<P> {
+        const model = await self.factory<P>(modelName);
+        await model.load(id);
+        return model;
+      }
+
+      /**
        * Finds ids of objects and loads them into full NohmModels.
        *
        * @param {ISearchOptions} searches
-       * @returns {Promise<Array<NohmModel<IDictionary>>>}
+       * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad(searches: ISearchOptions = {}): Promise<Array<NohmModel<IDictionary>>> {
+      public static async findAndLoad<P extends NohmModel>(
+        searches: ISearchOptions = {},
+      ): Promise<Array<P>> {
         const dummy = await self.factory(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
         }
         const loadPromises = ids.map((id) => {
-          return self.factory(dummy.modelName, id);
+          return self.factory<P>(dummy.modelName, id);
         });
         return Promise.all(loadPromises);
       }
 
+      /**
+       * Sort the given ids or all stored ids by their SortOptions
+       *
+       * @see NohmModel.sort
+       * @static
+       * @param {ISortOptions<IDictionary>} [sortOptions={}] Search options
+       * @returns {Promise<Array<string>>} Array of ids
+       */
       public static async sort(
         options: ISortOptions<IDictionary> = {},
         ids: Array<string | number> | false = false,
@@ -450,9 +514,29 @@ export class NohmClass {
         return dummy.sort(options, ids);
       }
 
+      /**
+       * Search for ids
+       *
+       * @see NohmModel.find
+       * @static
+       * @param {ISearchOptions} [searches={}] Search options
+       * @returns {Promise<Array<string>>} Array of ids
+       */
       public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
+      }
+
+      /**
+       * Loads a NohmModels via the given id.
+       *
+       * @param {*} id ID of the model to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async remove(id: any, silent?: boolean): Promise<void> {
+        const model = await self.factory(modelName);
+        model.id = id;
+        await model.remove(silent);
       }
     }
 

@@ -14,9 +14,9 @@
     "test": "node test/tests.js",
     "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
     "lint": "tslint --project ./",
-    "lint:auto-fix": "tslint --project ./ --fix",
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "lint:auto-fix": "tslint--project ./ --fix",
+    "build": "tsc --project ./",
+    "build:watch": "tsc --project ./ --watch --pretty",
     "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
     "prepublishOnly": "npm run lint && npm run build && npm run test && pkg-ok"
   },

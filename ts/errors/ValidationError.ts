@@ -1,4 +1,4 @@
-import { IDictionary } from '../model.d';
+import { IDictionary } from '../model.header';
 
 export interface IValidationError extends Error {
   errors: {

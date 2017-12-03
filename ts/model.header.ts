@@ -25,14 +25,16 @@ export type PropertyBehaviour = <TModel>(
   oldValue: any,
 ) => any;
 
-export interface IStaticMethods {
-  new(): NohmModel<IDictionary>;
-  findAndLoad(searches: ISearchOptions): Promise<Array<NohmModel<IDictionary>>>;
+export interface IStaticMethods<T extends NohmModel> {
+  new(): T;
+  load<P extends NohmModel>(id: any): Promise<P>;
+  findAndLoad<P extends NohmModel>(searches: ISearchOptions): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
     ids: Array<string | number> | false,
   ): Promise<Array<string>>;
   find(searches: ISearchOptions): Promise<Array<string>>;
+  remove(id: any): Promise<void>;
 }
 
 
@@ -74,7 +76,7 @@ export type TIdGenerators = 'default' | 'increment';
 export interface IModelOptions {
   metaCallback?: () => any;
   methods?: {
-    [name: string]: (this: NohmModel<IDictionary>, ...args: Array<any>) => any;
+    [name: string]: (this: NohmModel, ...args: Array<any>) => any;
   };
   properties: IModelPropertyDefinitions;
   publish?: boolean;
@@ -109,21 +111,21 @@ export interface IValidationResult {
 export interface IRelationChange {
   action: 'link' | 'unlink';
   callback?: (...args: Array<any>) => any;
-  object: NohmModel<IDictionary>;
+  object: NohmModel;
   options: ILinkOptions;
 }
 
 export interface ILinkOptions {
   continue_on_link_error?: boolean;
-  error?: (err: Error | string, otherObject: NohmModel<IDictionary>) => any;
+  error?: (err: Error | string, otherObject: NohmModel) => any;
   name: string;
   silent?: boolean;
 }
 
 export interface ILinkSaveResult {
   success: boolean;
-  child: NohmModel<IDictionary>;
-  parent: NohmModel<IDictionary>;
+  child: NohmModel;
+  parent: NohmModel;
   error: null | Error;
 }
 

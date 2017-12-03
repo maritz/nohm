@@ -52,7 +52,7 @@ class UserMockup extends NohmModel<IUserLinkProps> {
     return this.options.idGenerator;
   }
 }
-nohm.register(UserMockup);
+const userMockupClass = nohm.register(UserMockup);
 
 
 interface ICommentProps {
@@ -153,6 +153,7 @@ exports.Typescript = {
 
 
   'instances': async (t: any) => {
+    t.expect(7);
     // see above for their different ways of setup/definition
     const comment = new commentMockup();
     const user = await nohm.factory<UserMockup>('UserMockup');
@@ -167,13 +168,16 @@ exports.Typescript = {
       );
     }
 
-    t.expect(6);
 
     t.same(comment.property('text'), 'defaultComment', 'Getting property text of comment failed');
     t.same(user.property('test'), 'defaultTest', 'Getting property test of user failed');
     t.same(user.allProperties().name, 'defaultName', 'Getting allProperties().name of user failed');
     t.same(await user.validate(), true, 'Checking validity failed');
     t.same(user.errors.name, [], 'Error was set?');
+    await user.save();
+    const users = await userMockupClass.findAndLoad<UserMockup>({});
+    const nums: Array<number> = users.map((x) => x.property('number'));
+    t.same(nums, [123]);
 
     t.done();
   },

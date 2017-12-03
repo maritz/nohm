@@ -2,7 +2,6 @@ import * as fs from 'fs';
 
 import { NohmClass, nohm as instantiatedNohm } from './index';
 import { NohmModel } from './model';
-import { IDictionary } from './model.header';
 
 // tslint:disable-next-line:no-implicit-dependencies # we don't actually use express, just the typing
 import { RequestHandler as TRequestHandler } from 'express';
@@ -64,7 +63,7 @@ function customToString(obj: any, depth: number = 0): string {
 }
 
 function validationsFlatten(
-  model: new (...args: Array<any>) => NohmModel<IDictionary>,
+  model: new (...args: Array<any>) => NohmModel,
   exclusions: IExclusionsOption = {},
 ): string {
   const instance = new model();

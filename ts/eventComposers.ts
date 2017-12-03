@@ -1,8 +1,8 @@
 import { NohmModel, IDictionary } from './model';
-import { IPropertyDiff } from './model.d';
+import { IPropertyDiff } from './model.header';
 
 // The default (base) message creator
-export function defaultComposer(this: NohmModel<IDictionary>) {
+export function defaultComposer(this: NohmModel) {
   return {
     target: {
       id: this.id,
@@ -16,7 +16,7 @@ export { defaultComposer as create };
 
 
 // This populates the diff property for `save` and `update` events.
-function changeComposer(this: NohmModel<IDictionary>, diff: Array<void | IPropertyDiff<IDictionary>>) {
+function changeComposer(this: NohmModel, diff: Array<void | IPropertyDiff<IDictionary>>) {
   const result = defaultComposer.apply(this);
   result.target.diff = diff;
   return result;
@@ -25,14 +25,14 @@ function changeComposer(this: NohmModel<IDictionary>, diff: Array<void | IProper
 export { changeComposer as update, changeComposer as save };
 
 // This sets the id and properties
-export function remove(this: NohmModel<IDictionary>, id: string) {
+export function remove(this: NohmModel, id: string) {
   const result = defaultComposer.apply(this);
   result.target.id = id;
   return result;
 }
 
 
-function relationComposer(this: NohmModel<IDictionary>, parent: NohmModel<IDictionary>, relationName: string) {
+function relationComposer(this: NohmModel, parent: NohmModel, relationName: string) {
   const result: any = {};
   result.child = defaultComposer.call(this).target;
   result.parent = defaultComposer.call(parent).target;

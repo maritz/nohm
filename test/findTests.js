@@ -533,11 +533,8 @@ exports.find = {
     t.done();
   },
 
-  /*
-  Removed!
-  TODO: decide if we reimplement them later on
   shortForms: async (t) => {
-    t.expect(8);
+    t.expect(3);
     var shortFormMockup = nohm.model('shortFormMockup', {
       properties: {
         name: {
@@ -551,30 +548,25 @@ exports.find = {
       },
       idGenerator: 'increment'
     });
-    
-    var saved = await shortFormMockup.save();
-    t.same(saved, this, '`this` is not equal to the return value of save().');
-    var id = saved.id;
-    t.ok(saved instanceof shortFormMockup, '´this´ was not set to an instance of UserFindMockup');
-    t.ok(id > 0, 'The id was not set properly');
+
+    var saved = new shortFormMockup();
     saved.property('name', 'shortForm');
     await saved.save();
+    const id = saved.id;
     saved.property('name', 'asdasd'); // make sure our comparisons in load aren't bogus
-    await shortFormMockup.load(id);
-    t.ok(props.hasOwnProperty('name') && props.name === 'shortForm', 'The props argument was not properly passed in load.');
-    t.same(this.property('name'), 'shortForm', 'The `this` instance has some property issues.');
+    const loaded = await shortFormMockup.load(id);
+    t.same(loaded.property('name'), 'shortForm', 'The returned instance has some property issues.');
     const ids = await shortFormMockup.find({
       name: 'shortForm'
     });
     t.same(ids, [id], 'The found ids do not match [id]');
     await shortFormMockup.remove(id);
-    await shortFormMockup.find({
+    const idsAfterRemove = await shortFormMockup.find({
       name: 'shortForm'
     });
-    t.same(ids, [], 'Remove did not remove the correct instance. Uh-Oh.... :D ');
+    t.same(idsAfterRemove, [], 'Remove did not remove the correct instance. Uh-Oh....');
     t.done();
   },
-  */
 
   uuidLoadFind: async (t) => {
     t.expect(4);
