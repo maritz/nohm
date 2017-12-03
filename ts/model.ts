@@ -2,8 +2,35 @@ import { createHash } from 'crypto';
 import * as _ from 'lodash';
 import * as redis from 'redis';
 import * as traverse from 'traverse';
-import { v1 as uuid } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
+import { LinkError } from './errors/LinkError';
+import { ValidationError } from './errors/ValidationError';
+import * as messageComposers from './eventComposers';
+import { callbackError, checkEqual } from './helpers';
+import { idGenerators } from './idGenerators';
+import { INohmPrefixes, NohmClass } from './index';
+import {
+  IDictionary,
+  ILinkOptions,
+  ILinkSaveResult,
+  IModelOptions,
+  IModelPropertyDefinition,
+  IModelPropertyDefinitions,
+  IProperty,
+  IPropertyDiff,
+  IRelationChange,
+  ISaveOptions,
+  ISearchOption,
+  ISearchOptions,
+  ISortOptions,
+  IStructuredSearch,
+  IUnlinkKeyMapItem,
+  IValidationObject,
+  IValidationResult,
+  TLinkCallback,
+  TValidationDefinition,
+} from './model.header';
 import {
   DEL,
   EXEC,
@@ -19,34 +46,7 @@ import {
   SISMEMBER,
   SMEMBERS,
 } from './typed-redis-helper';
-import { LinkError } from './errors/LinkError';
-import { ValidationError } from './errors/ValidationError';
-import { checkEqual, callbackError } from './helpers';
-import { idGenerators } from './idGenerators';
-import { INohmPrefixes, NohmClass } from './index';
-import {
-  IDictionary,
-  ILinkOptions,
-  ILinkSaveResult,
-  IModelOptions,
-  IModelPropertyDefinition,
-  IModelPropertyDefinitions,
-  IProperty,
-  IPropertyDiff,
-  IRelationChange,
-  ISaveOptions,
-  ISearchOptions,
-  IUnlinkKeyMapItem,
-  IValidationObject,
-  IValidationResult,
-  TValidationDefinition,
-  IStructuredSearch,
-  ISearchOption,
-  ISortOptions,
-  TLinkCallback,
-} from './model.header';
 import { validators } from './validators';
-import * as messageComposers from './eventComposers';
 
 export {
   IDictionary,
@@ -554,7 +554,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         throw new ValidationError(this.errors);
       }
     }
-    const numIdExisting = await SISMEMBER(this.client, this.prefix('idsets'), this.id);
+    let numIdExisting: number = 0;
+    if (action !== 'create') {
+      numIdExisting = numIdExisting = await SISMEMBER(this.client, this.prefix('idsets'), this.id);
+    }
     if (action === 'create' && numIdExisting === 0) {
       await this.create();
     }
@@ -1155,7 +1158,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  }
    *
    * @param {NohmModel} other The other instance that is being linked
-   * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
+   * @param {(string | ILinkOptions | (() => any))} [optionsOrNameOrCallback] Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback] Function that is called when the link is saved.
    */
@@ -1199,23 +1202,25 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  }
    *
    * @param {NohmModel} other The other instance that is being unlinked (needs to have an id)
-   * @param {(string | ILinkOptions | (() => any))} optionsOrNameOrCallback Either a string for the
+   * @param {(string | ILinkOptions | (() => any))} [optionsOrNameOrCallback] Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback]
    */
-  public unlink(other: NohmModel, callback: () => any): void;
-  public unlink(
+  public unlink<T extends NohmModel>(other: T, callback?: TLinkCallback<T>): void;
+  public unlink<T extends NohmModel>(
     other: NohmModel,
     optionsOrNameOrCallback: string | ILinkOptions,
-    callback?: () => any,
+    callback?: TLinkCallback<T>,
   ): void;
-  public unlink(
+  public unlink<T extends NohmModel>(
     other: NohmModel,
-    optionsOrNameOrCallback: string | ILinkOptions | (() => any),
-    callback?: () => any,
+    optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
+    callback?: TLinkCallback<T>,
   ): void {
     if (typeof (optionsOrNameOrCallback) === 'function') {
       callback = optionsOrNameOrCallback;
+      optionsOrNameOrCallback = 'default';
+    } else if (typeof (optionsOrNameOrCallback) === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
     const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
