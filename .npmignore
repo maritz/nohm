@@ -2,7 +2,7 @@
 examples/
 extra/
 lib/
-ts/
+ts/**/*.ts
 !ts/universalValidators.js
 !tsOut/
 test/
