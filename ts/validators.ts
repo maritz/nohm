@@ -1,7 +1,10 @@
 import { validatiorFunction } from './model.header';
+import * as path from 'path';
 
+export const universalValidatorPath = path.join(__dirname, '..', 'ts', 'universalValidators.js');
 // tslint:disable-next-line:no-var-requires
-const newRawValidators = require(__dirname + '/newValidators.js');
+const newRawValidators = require(universalValidatorPath);
+
 
 /**
  * @namespace Validators

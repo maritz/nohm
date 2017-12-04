@@ -5,6 +5,7 @@ import { NohmModel } from './model';
 
 // tslint:disable-next-line:no-implicit-dependencies # we don't actually use express, just the typing
 import { RequestHandler as TRequestHandler } from 'express';
+import { universalValidatorPath } from './validators';
 
 export { TRequestHandler };
 
@@ -211,7 +212,7 @@ ${wrapExtraFiles(extraFiles, namespace)}
 // extravalidations
 ${wrapExtraFiles(nohm.getExtraValidatorFileNames(), namespace)/* needs to somehow access the same thing */}
 // validators.js
-${ fs.readFileSync(__dirname + '/newValidators.js', 'utf-8')}`;
+${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
 
 
   if (uglify) {

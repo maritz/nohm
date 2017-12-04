@@ -14,13 +14,13 @@
     "lib": [
       "es7"
     ],
-    "outDir": "./tsOut"
+    "outDir": "./tsOut",
+    "sourceMap": true
   },
   "files": [
     "./ts/index.ts"
   ],
   "include": [
-    "./ts/newValidators.js",
     "./ts/tests.ts"
   ],
   "exclude": [

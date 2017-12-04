@@ -15,9 +15,11 @@
     "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
     "lint": "tslint --project ./",
     "lint:auto-fix": "tslint--project ./ --fix",
+    "prebuild": "rimraf tsOut/",
     "build": "tsc --project ./",
     "build:watch": "tsc --project ./ --watch --pretty",
-    "dev": "concurrent --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
+    "predev": "npm run build",
+    "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
     "prepublishOnly": "npm run lint && npm run build && npm run test && pkg-ok"
   },
   "dependencies": {
@@ -39,6 +41,7 @@
     "nodemon": "^1.12.1",
     "nodeunit": "^0.9.1",
     "pkg-ok": "^1.1.0",
+    "rimraf": "^2.6.2",
     "tslint": "^5.8.0",
     "typescript": "^2.6.2"
   },

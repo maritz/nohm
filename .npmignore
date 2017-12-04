@@ -1,2 +1,15 @@
-nohm.komodoproject
-experiments.js
+.vscode/
+examples/
+extra/
+lib/
+ts/
+!ts/universalValidators.js
+!tsOut/
+test/
+typings/
+.editorconfig
+.eslintrc.json
+.gitmodules
+.travis.yml
+tsconfig.json
+tslint.json

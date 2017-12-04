@@ -273,6 +273,31 @@ export class NohmClass {
       }
 
       /**
+       * Loads an Array of NohmModels via the given ids. Any ids that do not exist will just be ignored.
+       *
+       * @param {Array<string>} ids Array of IDs of the models to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async loadMany<P extends NohmModel>(ids: Array<string>): Promise<Array<P>> {
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return [];
+        }
+        const loadPromises = ids.map(async (id) => {
+          try {
+            return await self.factory(modelName, id);
+          } catch (err) {
+            if (err && err.message === 'not found') {
+              return;
+            } else {
+              throw err;
+            }
+          }
+        });
+        const loadedModels = await Promise.all(loadPromises);
+        return loadedModels.filter<P>((model): model is P => typeof model !== 'undefined');
+      }
+
+      /**
        * Finds ids of objects and loads them into full NohmModels.
        *
        * @param {ISearchOptions} searches
@@ -281,7 +306,7 @@ export class NohmClass {
       public static async findAndLoad<P extends NohmModel>(
         searches: ISearchOptions = {},
       ): Promise<Array<P>> {
-        const dummy = await self.factory(modelName);
+        const dummy = await self.factory<P>(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
@@ -470,12 +495,37 @@ export class NohmClass {
        * Loads a NohmModels via the given id.
        *
        * @param {*} id ID of the model to be loaded
-       * @returns {Promise<NohmModel>}
+       * @returns {Promise<NohmModel|void>}
        */
       public static async load<P extends NohmModel>(id: any): Promise<P> {
         const model = await self.factory<P>(modelName);
         await model.load(id);
         return model;
+      }
+
+      /**
+       * Loads an Array of NohmModels via the given ids. Any ids that do not exist will just be ignored.
+       *
+       * @param {Array<string>} ids Array of IDs of the models to be loaded
+       * @returns {Promise<NohmModel>}
+       */
+      public static async loadMany<P extends NohmModel>(ids: Array<string>): Promise<Array<P>> {
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return [];
+        }
+        const loadPromises = ids.map(async (id) => {
+          try {
+            return await self.factory(modelName, id);
+          } catch (err) {
+            if (err && err.message === 'not found') {
+              return;
+            } else {
+              throw err;
+            }
+          }
+        });
+        const loadedModels = await Promise.all(loadPromises);
+        return loadedModels.filter<P>((model): model is P => typeof model !== 'undefined');
       }
 
       /**
@@ -564,7 +614,7 @@ export class NohmClass {
     } else {
       const model = this.modelCache[name];
       if (!model) {
-        return Promise.reject(`Model '${name}' not found.`);
+        throw new Error(`Model '${name}' not found.`);
       }
       const instance = new model() as T;
       if (id) {

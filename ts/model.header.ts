@@ -28,6 +28,7 @@ export type PropertyBehaviour = <TModel>(
 export interface IStaticMethods<T extends NohmModel> {
   new(): T;
   load<P extends NohmModel>(id: any): Promise<P>;
+  loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
   findAndLoad<P extends NohmModel>(searches: ISearchOptions): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
