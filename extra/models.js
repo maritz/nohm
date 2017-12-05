@@ -1,6 +1,6 @@
-var nohm = require('../lib/nohm').Nohm;
+var nohm = require('../').Nohm;
 
-var UserMockup = exports.user = nohm.model('UserMockup', {
+exports.user = nohm.model('UserMockup', {
   properties: {
     name: {
       type: 'string',
