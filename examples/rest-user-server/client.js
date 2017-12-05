@@ -1,10 +1,11 @@
+/*global $, nohmValidations*/
 $(function () {
   var updateUserList = function () {
     $.get('/User/list', function (response) {
       var $ul = $('#users');
       $ul.empty();
       $.each(response, function (index, item) {
-        $ul.append('<li>'+JSON.stringify(item)+'</li>');
+        $ul.append('<li>' + JSON.stringify(item) + '</li>');
       });
     });
   }
@@ -19,20 +20,20 @@ $(function () {
       var $this = $(this);
       data[$this.attr('name')] = $this.val();
     });
-    nohmValidations.validate('User', data, function (valid, errors) {
+    nohmValidations.validate('User', data).then((validation) => {
       $('#errors').empty();
-      if (valid) {
+      if (validation.result) {
         $('form').attr('disabled', true);
         $.post('/User/create', data, function (response) {
           if (response.result === 'success') {
             updateUserList();
           } else {
-            $('#errors').append('<li>Server failure: '+response.data);
+            $('#errors').append('<li>Server error: ' + JSON.stringify(response.data));
           }
         });
       } else {
-        $.each(errors, function (index, error) {
-          $('#errors').append('<li>'+index+': '+JSON.stringify(error));
+        $.each(validation.errors, function (index, error) {
+          $('#errors').append('<li>' + index + ': ' + JSON.stringify(error));
         });
       }
     });

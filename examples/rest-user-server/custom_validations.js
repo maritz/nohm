@@ -1,3 +1,3 @@
-exports.usernameIsAnton= function (value, options) {
-  callback(value === 'Arnold');
+exports.usernameIsAnton = function (value) {
+  return Promise.resolve(value === 'Arnold');
 };
