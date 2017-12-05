@@ -1,6 +1,7 @@
 const util = require('util');
 const args = require(__dirname + '/testArgs.js');
 const h = require('./helper.js');
+const _ = require('lodash');
 
 exports.checkModules = (t) => {
   var redis, nohm, async;
@@ -23,7 +24,6 @@ const prefix = args.prefix;
 // real tests start in 3.. 2.. 1.. NOW!
 const redis = args.redis;
 const Nohm = require(__dirname + '/../tsOut');
-const helper = require(__dirname + '/../lib/helpers');
 const async = require('async');
 
 const nohm = Nohm.Nohm;
@@ -117,7 +117,7 @@ exports.prepare = {
       testIntersection = function (arrs, resultTest) {
         var result;
 
-        result = helper.idIntersection.apply(null, arrs);
+        result = _.intersection.apply(_, arrs);
         t.same(result, resultTest, 'idIntersection did not perform correctly.');
       };
     t.expect(9);
@@ -138,7 +138,7 @@ exports.prepare = {
 
     testIntersection([arr6, arr7], ['hurgelwurz', 28, 39]);
 
-    testIntersection([arr3, arr8], [10, 3, 2]);
+    testIntersection([arr3, arr8], [2, 3, 10]);
 
     t.done();
   },

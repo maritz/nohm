@@ -1,6 +1,0 @@
-[submodule "test/nodeunit"]
-	path = test/nodeunit
-	url = git://github.com/caolan/nodeunit.git
-[submodule "lib/double-metaphone"]
-	path = lib/double-metaphone
-	url = git://github.com/maritz/js-double-metaphone.git
