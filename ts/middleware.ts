@@ -62,6 +62,7 @@ function customToString(obj: any, depth: number = 0): string {
     default:
       return '';
   }
+  return '';
 }
 
 function validationsFlatten(
