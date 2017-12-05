@@ -124,7 +124,9 @@
       if (options.regex instanceof RegExp) {
         return Promise.resolve(options.regex.test(value));
       } else {
-        return Promise.resolve(new RegExp(options.regex).test(value));
+        // TODO for v1.1: remove the console.error
+        console.error(new Error(`Invalid RegExp in nohm validation for model '${this.modelName}': ${options.regex}`));
+        return Promise.reject(new Error('Option for regexp validation was not a RegExp object.'));
       }
     },
 

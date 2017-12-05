@@ -186,13 +186,6 @@ var UserMockup = nohm.model('UserMockup', {
         'alphanumeric'
       ]
     },
-    noRegexp: {
-      type: 'string',
-      defaultValue: 'hurgel1234',
-      validations: [
-        'regexp'
-      ]
-    },
     regexp: {
       type: 'string',
       defaultValue: 'asd1',
@@ -208,7 +201,7 @@ var UserMockup = nohm.model('UserMockup', {
     },
     // TODO: write test for multi-validation properties
     /*
-    TODO: re-enable once custom validations are implemented
+    TODO for v1: re-enable once custom validations are implemented
     customValidationFile: {
       type: 'string',
       defaultValue: 'customValidationFile',
@@ -731,3 +724,38 @@ exports.validation = {
     }
   }
 };
+
+
+exports["invalid regexp option"] = async (t) => {
+  t.expect(1);
+
+  const model = nohm.model('invalidRegexpOption', {
+    properties: {
+      noRegexp: {
+        type: 'string',
+        defaultValue: 'hurgel1234',
+        validations: [
+          {
+            name: 'regexp',
+            options: {
+              regex: 'invalidRegexp'
+            }
+          }
+        ]
+      },
+    }
+  }, true);
+
+  const instance = new model();
+  try {
+    console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be an error message in the next line');
+    await instance.validate();
+    t.same(false, true, 'Validation did not throw with an invalid validation regexp');
+  } catch (err) {
+    t.same(err.message, 'Option for regexp validation was not a RegExp object.', 'Wrong error thrown')
+  } finally {
+    t.done();
+  }
+
+};
+
