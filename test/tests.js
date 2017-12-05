@@ -3,11 +3,7 @@ var nodeunit = require('nodeunit');
 // testrunner copied from nodeunit and edited a little
 var run = function (files) {
 
-  var red = function (str) { return "\033[31m" + str + "\033[39m" };
-  var green = function (str) { return "\033[32m" + str + "\033[39m" };
-  var bold = function (str) { return "\033[1m" + str + "\033[22m" };
-
-  nodeunit.reporters['default'].run(files, undefined, function (error) {
+  nodeunit.reporters['default'].run(files, undefined, function () {
     cleanup(function () {
       redis.end();
       process.exit();

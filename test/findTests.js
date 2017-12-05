@@ -1,4 +1,3 @@
-var async = require('async');
 var Nohm = require(__dirname + '/../tsOut/');
 var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
@@ -72,12 +71,6 @@ nohm.model('UniqueIntegerFind', {
     }
   }
 });
-
-var errLogger = function (err) {
-  if (err) {
-    console.dir(err);
-  }
-};
 
 var createUsers = function (props, modelName, callback) {
   if (typeof (modelName) === 'function') {
@@ -287,7 +280,6 @@ exports.find = {
   },
 
   findByUniqueOtherCase: function (t) {
-    var self = this;
     (async () => {
       var findUser = new UserFindMockup();
       var userUnique = this.users.filter(function (user) {
@@ -350,7 +342,6 @@ exports.find = {
   },
 
   findByNumericIndex: function (t) {
-    var self = this;
     (async () => {
       var findUser = new UserFindMockup();
       var users = this.users.filter(function (user) {
@@ -466,8 +457,7 @@ exports.find = {
 
 
   findNumericWithoutLimit: async (t) => {
-    var findUser = new UserFindMockup(),
-      usersLooped = 0;
+    var findUser = new UserFindMockup();
     t.expect(1);
 
     for (var i = 0, len = 55; i < len; i++) {
@@ -1039,7 +1029,7 @@ exports.find = {
 
     try {
       console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be a redis deprecation warning in the next line.');
-      const ids = await UserFindMockup.find({
+      await UserFindMockup.find({
         number: {
           min: "1",
           max: "not a number",

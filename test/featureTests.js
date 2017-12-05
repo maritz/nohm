@@ -4,17 +4,14 @@ const h = require('./helper.js');
 const _ = require('lodash');
 
 exports.checkModules = (t) => {
-  var redis, nohm, async;
-  t.expect(3);
+  var redis, nohm;
+  t.expect(2);
 
   redis = require('redis');
   t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
 
   nohm = require(__dirname + '/../tsOut');
   t.ok(typeof nohm === 'object', 'nohm should be available -- something is fishy here.');
-
-  async = require('async');
-  t.ok(typeof async !== 'undefined', 'async should be available.');
 
   t.done();
 };
@@ -548,7 +545,7 @@ exports.uniqueDeletion = async (t) => {
       t.equals(value, 0, 'The tmp unique key was not deleted if a non-unique saving failure occured.');
       t.done();
     });
-  };
+  }
 };
 
 exports.uniqueCaseInSensitive = async (t) => {
@@ -1190,7 +1187,7 @@ exports["loadPure"] = async (t) => {
       incrementOnChange: {
         defaultValue: 0,
         load_pure: true,
-        type: function (_a, _b, oldValue) {
+        type: function () {
           return 1 + this.property('incrementOnChange')
         },
       },

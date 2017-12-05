@@ -130,7 +130,7 @@ exports.middleware = {
 
   middlewareNoOptions: function (t) {
 
-    setup(t, 2, undefined, function (sandbox, str) {
+    setup(t, 2, undefined, function (sandbox) {
       var val = sandbox.nohmValidations.models.UserMiddlewareMockup;
       t.ok(val.name.indexOf('notEmpty') === 0, 'UserMiddlewareMockup did not have the proper validations');
       t.same(
@@ -205,7 +205,7 @@ exports.middleware = {
       t.same(validation.result, true, 'Validate did not work as expected with exclusions.');
 
       try {
-        const validation2 = await validate('ExcludedMiddlewareMockup', {
+        await validate('ExcludedMiddlewareMockup', {
           name: ''
         });
         t.ok(false, 'Validate should have thrown an error about an invalid modelname');

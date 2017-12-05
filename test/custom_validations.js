@@ -1,4 +1,4 @@
-exports.customValidationFile = function (value, opt) {
+exports.customValidationFile = function (value) {
   return Promise.resolve(value === 'customValidationFile');
 };
 

@@ -3,7 +3,7 @@
 
   const regexps = exports.regexps = {
     email: /^.+@.+\..+/i,
-    // tslint:disable-next-line:max-line-length
+    // eslint-disable-next-line
     url: /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i,
   };
 
@@ -18,7 +18,7 @@
     /**
      * Test if the value is alphanumeric or optional (params[0]) and empty
      */
-    alphanumeric: function alphanumeric(value, _options) {
+    alphanumeric: function alphanumeric(value) {
       return Promise.resolve(/^[\w]+$/.test(value));
     },
 
@@ -26,28 +26,28 @@
      * Make sure a value is a date that the Date object can parse.
      * Can be optional.
      */
-    date: function date(value, _options) {
+    date: function date(value) {
       return Promise.resolve(!/Invalid|NaN/.test((new Date(value)).toString()));
     },
 
     /**
      * Make sure a value is a valid ISO Date (YYYY-MM-DD) or is optional (params[0]) and empty
      */
-    dateISO: function dateISO(value, _options) {
-      return Promise.resolve(/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/.test(value));
+    dateISO: function dateISO(value) {
+      return Promise.resolve(/^\d{4}[/-]\d{1,2}[/-]\d{1,2}$/.test(value));
     },
 
     /**
      * Makes sure a string consists of only numeric digits.
      */
-    digits: function digits(value, _options) {
+    digits: function digits(value) {
       return Promise.resolve(/^\d+$/.test(value));
     },
 
     /**
      * Make sure a value is a valid email adress.
      */
-    email: function email(value, _options) {
+    email: function email(value) {
       return Promise.resolve(regexps.email.test(value));
     },
 
@@ -89,31 +89,31 @@
     /**
      * Make sure a value is a valid (SI, US or EU) number string or is optional (params[0]) and empty
      */
-    number: function number(value, _options) {
-      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?:[ ,\.]\d{3})+)(?:[\,\.]\d+)?$/.test(value));
+    number: function number(value) {
+      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?:[ ,.]\d{3})+)(?:[,.]\d+)?$/.test(value));
     },
 
     /**
      * Make sure a value is a valid EU number (thousands seperator point, decimal seperator comma)
      * string or is optional (params[0]) and empty
      */
-    numberEU: function numberEU(value, _options) {
-      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?:\.\d{3})+)(?:\,\d+)?$/.test(value));
+    numberEU: function numberEU(value) {
+      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d+)?$/.test(value));
     },
 
     /**
      * Make sure a value is a valid SI number (thousands seperator space, decimal seperator point or comma)
      * string or is optional (params[0]) and empty
      */
-    numberSI: function numberSI(value, _options) {
-      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?: \d{3})+)(?:[\,\.]\d+)?$/.test(value));
+    numberSI: function numberSI(value) {
+      return Promise.resolve(/^-?(?:\d+|\d{1,3}(?: \d{3})+)(?:[,.]\d+)?$/.test(value));
     },
 
     /**
      * Make sure a value is a valid US number (thousands seperator comma, decimal seperator point)
      * string or is optional (params[0]) and empty
      */
-    numberUS: function numberUS(value, _options) {
+    numberUS: function numberUS(value) {
       return Promise.resolve(/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value));
     },
 
@@ -131,14 +131,14 @@
     /**
      * Make sure a value is a valid url.
      */
-    url: function url(value, _options) {
+    url: function url(value) {
       return Promise.resolve(regexps.url.test(value));
     },
   };
 
   if (typeof (window) !== 'undefined' && typeof (nohmValidationsNamespaceName) !== 'undefined') {
     // we're in a browser and have a defined namespace
-    // TODO: remove any ?
+    // eslint-disable-next-line
     const nohm = window[nohmValidationsNamespaceName];
 
     // get extra validators
@@ -262,9 +262,10 @@
         if (dispatched === 0) {
           return done();
         }
-        for (var i = 0; i < dispatched; i++) {
-          if (typeof (funcs[i]) === 'function') {
-            funcs[i](); // this makes sure we first know how many funcs we have before we call them, thus not calling done() too early if all validators are instant
+        for (var n = 0; n < dispatched; n++) {
+          var func = funcs[n];
+          if (typeof (func) === 'function') {
+            func(); // this makes sure we first know how many funcs we have before we call them, thus not calling done() too early if all validators are instant
           } else {
             return resolve(new Error('There were invalid validators'));
           }
@@ -322,7 +323,7 @@
                 }
 
                 // Never move original objects, clone them
-                target[name] = Helper.$extend(deep, clone, copy);
+                target[name] = $extend(deep, clone, copy);
 
                 // Don't bring in undefined values
               } else if (copy !== undefined) {
@@ -347,11 +348,11 @@
         return false;
       }
 
-      // Own properties are enumerated firstly, so to speed up,
-      // if last one is own, then all properties are own.
-
       var key;
-      for (key in obj) { }
+      for (key in obj) {
+        // Own properties are enumerated firstly, so to speed up,
+        // if last one is own, then all properties are own.
+      }
 
       return key === undefined || obj.hasOwnProperty(key);
     };

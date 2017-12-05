@@ -95,17 +95,15 @@ exports.relation = {
     t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
     t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
     redis.keys(relationsprefix + '*', function (err, values) {
-      var args = [],
-        key,
-        firstDone = false,
-        keyCheck = function (err, members) {
-          t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
-          if (firstDone === true) {
-            t.done();
-          } else {
-            firstDone = true;
-          }
-        };
+      let firstDone = false;
+      const keyCheck = function (err, members) {
+        t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
+        if (firstDone === true) {
+          t.done();
+        } else {
+          firstDone = true;
+        }
+      };
       if (!err) {
         t.same(values.length, 3, 'Linking an object did not create the correct number of keys.');
         redis.smembers(values[0].toString(), keyCheck);
@@ -137,7 +135,7 @@ exports.relation = {
       t.equals(obj, role, 'The argument "obj" given to the unlink callback are not correct');
     });
 
-    user.unlink(role2, function (action, on) {
+    user.unlink(role2, function () {
       unlinkCallbackCalled2 = true;
     });
 
@@ -411,7 +409,7 @@ exports.relation = {
     comment.property('text', ''); // makes the first comment fail
 
     try {
-      const test = await role.save({ continue_on_link_error: true });
+      await role.save({ continue_on_link_error: true });
       t.done();
     } catch (e) {
       redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' + user.modelName + ':' + comment3.id, user.id,

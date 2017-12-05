@@ -14,12 +14,6 @@ var after = function (times, fn) {
   };
 };
 
-var error_callback = function (t) {
-  return function (err) {
-    t.same(err, null, 'Async failure.');
-  };
-};
-
 var secondaryClient = redis.createClient();
 
 module.exports = {
@@ -118,7 +112,6 @@ module.exports = {
     },
 
     tearDown: function (next) {
-      const self = this;
       (async () => {
         this.child.on('exit', () => {
           next();
@@ -128,7 +121,6 @@ module.exports = {
     },
 
     'create': function (t) {
-      const self = this;
       (async () => {
         t.expect(4);
         var instance = await nohm.factory('Tester');
@@ -159,7 +151,6 @@ module.exports = {
     },
 
     'update': function (t) {
-      const self = this;
       (async () => {
         t.expect(5);
         var instance = await nohm.factory('Tester');
@@ -195,7 +186,6 @@ module.exports = {
     },
 
     'save': function (t) {
-      const self = this;
       (async () => {
         t.expect(8);
         var instance = await nohm.factory('Tester');
@@ -236,7 +226,6 @@ module.exports = {
     },
 
     'remove': function (t) {
-      const self = this;
       (async () => {
         t.expect(4);
         var instance = await nohm.factory('Tester');
@@ -270,7 +259,6 @@ module.exports = {
     },
 
     'link': function (t) {
-      const self = this;
       (async () => {
         t.expect(8);
         var instance_child = await nohm.factory('Tester');
@@ -310,7 +298,6 @@ module.exports = {
     },
 
     'unlink': function (t) {
-      const self = this;
       (async () => {
         t.expect(8);
         var instance_child = await nohm.factory('Tester');
@@ -351,7 +338,6 @@ module.exports = {
     },
 
     'createOnce': function (t) {
-      const self = this;
       (async () => {
         // because testing a once event is a pain in the ass and really doesn't have many ways it can fail if the on method on the same event works, we only do on once test.
         t.expect(5);

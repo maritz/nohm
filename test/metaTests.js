@@ -1,6 +1,5 @@
 var async = require('async');
 var nohm = require(__dirname + '/../tsOut/').Nohm;
-var h = require(__dirname + '/helper.js');
 var args = require(__dirname + '/testArgs.js');
 var redis = args.redis;
 var crypto = require('crypto');
@@ -24,7 +23,7 @@ nohm.model('UserMetaMockup', {
       unique: true,
       validations: [
         'email',
-        function (vals, old) {
+        function (vals) {
           return Promise.resolve(vals !== 'thisisnoemail');
         }
       ]

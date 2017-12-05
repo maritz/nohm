@@ -1,5 +1,4 @@
 var nohm = require(__dirname + '/../tsOut').Nohm;
-var async = require('async');
 var util = require('util');
 
 nohm.setExtraValidations(__dirname + '/custom_validations.js');
@@ -157,7 +156,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid',
       validations: [
-        function (value, opt) {
+        function (value) {
           return Promise.resolve(value === 'valid');
         }
       ]
@@ -166,7 +165,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'valid2',
       validations: [
-        function (value, opt) {
+        function (value) {
           return Promise.resolve(value === 'valid2');
         }
       ]
@@ -175,7 +174,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'validNamed',
       validations: [
-        function customNamed(value, opt) {
+        function customNamed(value) {
           return Promise.resolve(value === 'validNamed');
         }
       ]
@@ -397,7 +396,7 @@ exports.validation = {
 
     t.done();
   },
-  
+
   castNumber: function (t) {
     var user = new UserMockup();
     t.expect(6);

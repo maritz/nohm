@@ -9,7 +9,7 @@ args.redis.on('ready', function () {
 require(__dirname + '/Model.js');
 
 process.on('message', async (msg) => {
-  let event, modelName, instance;
+  let event, modelName, instance, fn;
 
   switch (msg.question) {
     case 'does nohm have pubsub?':
@@ -72,7 +72,7 @@ process.on('message', async (msg) => {
     case 'unsubscribe':
       event = msg.args.event;
       modelName = msg.args.modelName;
-      const fn = msg.args.fn;
+      fn = msg.args.fn;
       instance = await nohm.factory(modelName);
       await instance.unsubscribe(event, fn);
       process.send({
