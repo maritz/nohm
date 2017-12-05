@@ -59,8 +59,9 @@ function customToString(obj: any, depth: number = 0): string {
         });
         return '{' + arr.join(',') + '}';
       }
+    default:
+      return '';
   }
-  return '';
 }
 
 function validationsFlatten(
