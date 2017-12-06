@@ -146,7 +146,9 @@ export class NohmClass {
 
   constructor({ prefix, client, meta, publish }: INohmOptions) {
     this.setPrefix(prefix);
-    this.setClient(client);
+    if (client) {
+      this.setClient(client);
+    }
     this.modelCache = {};
     this.extraValidators = [];
     this.meta = meta || true;
