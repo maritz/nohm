@@ -1,6 +1,6 @@
 {
   "name": "nohm",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "redis ORM (Object relational mapper)",
   "engines": {
     "node": ">=8"
