@@ -361,6 +361,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (prop.value !== value) {
       if (skipCast) {
         prop.value = value;
+        this.allPropertiesCache[key] = value;
       } else {
         prop.value = this.castProperty(key, prop, value);
       }

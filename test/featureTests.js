@@ -1239,3 +1239,43 @@ exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
   t.notDeepEqual(test, control, 'allProperties cache was not reset properly');
   t.done();
 };
+
+exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
+  t.expect(4);
+
+  const loadPureModel = nohm.model('loadPureModel', {
+    properties: {
+      incrementOnChange: {
+        defaultValue: 0,
+        load_pure: true,
+        type: function () {
+          return 1 + this.property('incrementOnChange')
+        },
+      },
+      createdAt: {
+        defaultValue: () => Date.now() + ':' + Math.random(),
+        load_pure: true,
+        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
+      }
+    }
+  }, true);
+
+  let loadPure = new loadPureModel();
+  const initialCreatedAt = loadPure.property('createdAt');
+  const initialIncrement = loadPure.property('incrementOnChange');
+  loadPure.property('incrementOnChange', 'asdasd');
+  loadPure.property('incrementOnChange', 'asdasd');
+  const incrementedTwice = initialIncrement + 2;
+
+  t.same(loadPure.allProperties().incrementOnChange, incrementedTwice, `allProperties() didn't have incrementOnChange property`);
+  t.same(loadPure.allProperties().createdAt, initialCreatedAt, `allProperties() didn't have createdAt property`);
+
+  await loadPure.save();
+
+  let controlLoadPure = new loadPureModel();
+  await controlLoadPure.load(loadPure.id);
+  t.same(controlLoadPure.allProperties().incrementOnChange, incrementedTwice, `allProperties() didn't have correct incrementOnChange after load`);
+  t.same(controlLoadPure.allProperties().createdAt, initialCreatedAt, `allProperties() didn't have correct createdAt after load`);
+
+  t.done();
+};
