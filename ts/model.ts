@@ -858,10 +858,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
       if (!result.valid) {
         valid = false;
-        if (!result.error) {
+        if (!result.errors || result.errors.length === 0) {
           throw new Error(`Validation failed but didn't provide an error message. Property name: ${result.key}.`);
         }
-        this.errors[result.key].push(result.error);
+        this.errors[result.key] = this.errors[result.key].concat(result.errors);
       }
     });
 
@@ -899,7 +899,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         );
         if (!valid) {
           result.valid = false;
-          result.error = validationObject.name;
+          if (!result.errors) {
+            result.errors = [];
+          }
+          result.errors.push(validationObject.name);
         }
       });
       await Promise.all(validationPromises);
@@ -1001,7 +1004,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const isFree = await this.isUniqueKeyFree(uniqueKey, setDirectly);
     if (!isFree) {
       return {
-        error: 'notUnique',
+        errors: ['notUnique'],
         key,
         valid: false,
       };

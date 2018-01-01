@@ -107,7 +107,7 @@ export interface IPropertyDiff<TKeys = string> {
 export interface IValidationResult {
   key: string;
   valid: boolean;
-  error?: string;
+  errors?: Array<string>;
 }
 
 export interface IRelationChange {

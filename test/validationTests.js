@@ -65,6 +65,12 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'blub@bla.de',
       validations: [
+        {
+          name: 'length', // not needed for a normal email validation, using this to test multiple validations
+          options: {
+            min: 3
+          }
+        },
         'email'
       ]
     },
@@ -769,6 +775,19 @@ exports['ValidationError only has objects for properties with errors'] = async (
     t.ok(e instanceof nohm.ValidationError, 'Unexpected error.');
     const errorKeys = Object.keys(e.errors);
     t.same(['name'], errorKeys, 'ValidationError was not restricted to error keys');
+    t.done();
+  }
+}
+
+exports['multiple validation failures produce multiple error entries'] = async (t) => {
+  var user = new UserMockup();
+  t.expect(1);
+
+  user.property('email', 'a');
+  try {
+    await user.save();
+  } catch (e) {
+    t.same(['length', 'email'], e.errors.email, 'ValidationError was not restricted to error keys');
     t.done();
   }
 }
