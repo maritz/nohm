@@ -1,4 +1,4 @@
-### v1.0.0
+### v1.0.0 (currently in alpha)
   - uses Promises instead of Callbacks for almost everything
   - complete refactor to Typescript - native typings are now provided
   - updated dependencies
