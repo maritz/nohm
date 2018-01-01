@@ -378,7 +378,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     if (typeof (type) === 'function') {
-      return type.call(this, newValue, key, prop.__oldValue);
+      return type.call(this, String(newValue), key, String(prop.__oldValue));
     }
 
     switch (type.toLowerCase()) {

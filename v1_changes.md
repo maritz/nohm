@@ -23,3 +23,4 @@ This file is not intended as documentation for users, instead it should make wri
 - findAndLoad() now returns an empty array if none are found instead of producing an error
 - .id property is now a getter/setter and always either null or string
 - the regexp validator now only takes valid RegExp objects as options
+- behaviours now always receive arguments as strings. before they would be string from redis but any from initialization/defaultValue

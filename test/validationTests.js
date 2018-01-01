@@ -31,7 +31,10 @@ var UserMockup = nohm.model('UserMockup', {
     },
     behaviour: {
       type: function incrby(value, key, old) {
-        return old + value;
+        if (typeof value !== 'string' || typeof old !== 'string') {
+          throw new Error('Behaviour arguments were not strings!');
+        }
+        return parseInt(old, 10) + parseInt(value, 10);
       },
       defaultValue: 1
     },
