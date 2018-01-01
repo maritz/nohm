@@ -3,129 +3,244 @@
 [![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
 [![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 [![Known Vulnerabilities (Snyk)](https://snyk.io/test/github/maritz/nohm/badge.svg)](https://snyk.io/test/github/maritz/nohm)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/09c66573b111460c8ebee2f897c0e512)](https://www.codacy.com/app/maritz-peters/nohm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maritz/nohm&amp;utm_campaign=Badge_Grade)
+
+## v0.9 README
+
+This README is for the upcoming v1.0 release which has a lot of breaking changes. For the README of the stable version [go here](https://github.com/maritz/nohm/tree/v0.9.8).
 
 ## Description
 
-Nohm is an object relational mapper (ORM) written for node.js and redis.
+Nohm is an object relational mapper (ORM) written for node.js and redis written in Typescript.
 
 ## Requirements
 
 * redis >= 2.4
 
-## Install
+## Add it to your project
 
-### Installing nohm
-
-    npm install nohm
+    npm install --save nohm
 
 ## Documentation
+
+(stable version, not v1!)
 http://maritz.github.com/nohm/
 
-## Examples
+## Example
+
+<details>
+
+<summary>Example ES6 code (click to expand)</summary>
 
 ~~~~ javascript
-  var nohm = require('nohm').Nohm;
-  var redis = require('redis').createClient();
+const NohmModule = require('nohm');
+// or if you use babel you can import
+// import { Nohm, NohmModel } from 'nohm';
+
+// This is the parent object where you set redis connection, create your models and some other configuration stuff
+const nohm = NohmModule.Nohm;
+
+nohm.setPrefix('example'); // This prefixes all redis keys. By default the prefix is "nohm"
+
+// This is a class that you can extend to create nohm models. Not needed when using nohm.model()
+const Model = NohmModule.NohmModel;
+
+const existingCountries = ['Narnia', 'Gondor', 'Tatooine']
+
+// Using ES6 classes here, but you could also use the old nohm.model definition
+class UserModel extends Model {
+  getCountryFlag() {
+    return `http://example.com/flag_${this.property('country')}.png`;
+  }
+}
+// Define the required static properties
+UserModel.modelName = 'User';
+UserModel.definitions = {
+  email: {
+    type: 'string',
+    unique: true,
+    validations: [
+      'email'
+    ],
+  },
+  country: {
+    type: 'string',
+    defaultValue: 'Narnia',
+    index: true,
+    validations: [
+      // the function name will be part of the validation error messages, so for this it would be "custom_checkCountryExists"
+      async function checkCountryExists(value) {
+        // needs to return a promise that resolves to a bool - async functions take care of the promise part
+        return existingCountries.includes(value);
+      },
+      {
+        name: 'length',
+        options: { min: 3, },
+      },
+    ],
+  },
+  visits: {
+    type: function incrVisitsBy(value, key, old) {
+      // arguments are always string here since they come from redis
+      // you are responsible for making sure they return in the type you want them to be.
+      return parseInt(old, 10) + parseInt(value, 10);
+    },
+    defaultValue: 0,
+    index: true,
+  }
+};
+
+// register our model in nohm and returns the resulting Class, do not use the UserModel directly!
+const UserModelClass = nohm.register(UserModel);
+
+const redis = require('redis').createClient();
+// wait for redis to connect, otherwise we might try to write to a non-existant redis server
+redis.on('connect', async () => {
 
   nohm.setClient(redis);
 
-  nohm.model('User', {
-    properties: {
-      name: {
-        type: 'string',
-        unique: true,
-        validations: [
-          'notEmpty'
-        ]
-      },
-      email: {
-        type: 'string',
-        unique: true,
-        validations: [
-          'email'
-        ]
-      },
-      country: {
-        type: 'string',
-        defaultValue: 'Tibet',
-        validations: [
-          'notEmpty'
-        ]
-      },
-      visits: {
-        type: function incrVisitsBy(value, key, old) {
-          return old + value;
-        },
-        defaultValue: 0,
-        index: true
-      }
-    },
-    methods: {
-      getCountryFlag: function () {
-        return 'http://example.com/flag_'+this.p('country')+'.png';
-      },
-    }
-  });
+  // factory returns a promise, resolving to a fresh instance (or a loaded one if id is provided, see below)
+  const user = await nohm.factory('User');
 
-  var user = nohm.factory('User');
-  user.p({
-    name: 'Mark',
-    email: 'mark@example.com',
-    country: 'Mexico',
+  // set some properties
+  user.property({
+    email: 'mark13@example.com',
+    country: 'Gondor',
     visits: 1
   });
-  user.save(function (err) {
-    if (err === 'invalid') {
-      console.log('properties were invalid: ', user.errors);
-    } else if (err) {
-      console.log(err); // database or unknown error
-    } else {
-      console.log('saved user! :-)');
-      user.remove(function (err) {
-        if (err) {
-          console.log(err); // database or unknown error
-        } else {
-          console.log('successfully removed user');
-        }
-      });
-    }
-  });
 
-  // try to load a user from the db
-  var otherUser = nohm.factory('User', 522, function (err) {
-    if (err === 'not found') {
-      console.log('no user with id 522 found :-(');
-    } else if (err) {
-      console.log(err); // database or unknown error
-    } else {
-      console.log(otherUser.allProperties());
+  try {
+    await user.save();
+  } catch (err) {
+    if (err instanceof NohmModule.ValidationError) {
+      // validation failed
+      for (const key in err.errors) {
+        const failures = err.errors[key];
+        console.log(`Validation of property '${key}' failed in these validators: '${failures.join(`', '`)}'.`);
+
+        // in a real app you'd probably do something with the validation errors (like make an object for the client)
+        // and then return or rethrow some other error
+      }
     }
+    // rethrow because we didn't recover from the error.
+    throw err;
+  }
+  console.log(`Saved user with id ${user.id}`);
+
+  const id = user.id;
+
+  // somewhere else we could then load the user again
+  const loadedUser = await UserModelClass.load(id); // this will throw an error if the user cannot be found
+
+  // alternatively you can use nohm.factory('User', id)
+
+  console.log(`User loaded. His properties are %j`, loadedUser.allProperties());
+  const newVisits = loadedUser.property('visits', 20);
+  console.log(`User vists set to ${newVisits}.`); // Spoiler: it's 21
+
+  // or find users by country
+  const gondorians = await UserModelClass.findAndLoad({
+    country: 'Gondor',
   });
+  console.log(`Here are all users from Gondor: %j`, gondorians.map((u) => u.property('email')));
+
+  await loadedUser.remove();
+  console.log(`User deleted from database.`);
+});
 ~~~~
 
+</details>
 
-* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server) (needs express)
-* [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi
+<details>
+
+<summary>Example Typescript code (click to expand)</summary>
+
+~~~~ typescript
+import { Nohm, NohmModel, TTypedDefinitions } from 'nohm';
+
+// We're gonna assume the basics are clear and the connection is set up etc. - look at the ES6 example otherwise.
+// This example highlights some of the typing capabilities in nohm.
+
+
+interface IUserProperties {
+  email: string;
+  visits: number;
+}
+
+class UserModel extends NohmModel<IUserProperties> {
+
+  public static modelName = 'User';
+
+  protected static definitions: TTypedDefinitions<IUserProperties> = {
+    // because of the TTypedDefinitions we can only define properties keys here that match our interface keys
+    // the structure of the definitions is also typed
+    email: {
+      type: 'string', // this is currently not checked. If you put a wrong type here, no compile error will appear.
+      unique: true,
+      validations: [
+        'email',
+      ],
+    },
+    visits: {
+      defaultValue: 0,
+      index: true,
+      type: function incrVisitsBy(value, _key, old): number {
+        return old + value; // Error: arguments are all strings, not assignable to number
+      },
+    },
+  };
+
+  public getVisitsAsString(): string {
+    return this.property('visits'); // Error: visits is number and thus not asignable to string
+  }
+
+  public static async loadTyped(id: string): Promise<UserModel> {
+    return userModelStatic.load<UserModel>(id);
+  }
+}
+
+const userModelStatic = nohm.register(UserModel);
+
+
+async function main() {
+
+  // currently you still have to pass the generic if you want typing for class methods
+  const user = await userModelStatic.load<UserModel>('some id');
+  // you can use the above defined loadTyped method to work around that.
+
+  const props = user.allProperties();
+  props.email; // string
+  props.id; // any
+  props.visits; // number
+  props.foo; // Error: Property foo does not exist
+  user.getVisitsAsString(); // string
+}
+
+main();
+~~~~
+
+</details>
+
+### More detailed examples
+
+* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server)
+* [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
 
 Do you have code that should/could be listed here? Message me!
 
-## Contribute?
-
-Yes, please contact me or just fork and request pulls. Any help or feedback is appreciated. If you use nohm I'd also be happy if you just drop me a quick msg about it.
-
 ## Running tests
-To run the tests you need to have nodeunit v0.6.4. This will be installed if you installed nohm with the --dev argument.
+
+To run the tests you need to have nodeunit v0.6.4. This will be installed if you installed nohm with the --dev argument or when checking out this project and running npm install in there.
 Otherwise you can run:
 
     npm install nodeunit@0.6.4
 
 Then run
 
-    node test/tests.js
+    npm run test
 
-*Careful*: This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)
-The tests also create a lot of keys in your database that look something like this:
+This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)
+
+**WARNING**: The tests also create a lot of keys in your database that look something like this:
 
     nohmtests:something:something
 
