@@ -183,8 +183,17 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'validNamed',
       validations: [
-        function customNamed(value) {
+        function customNamedFunc(value) {
           return Promise.resolve(value === 'validNamed');
+        }
+      ]
+    },
+    customNamedAsync: {
+      type: 'string',
+      defaultValue: 'validNamedAsync',
+      validations: [
+        async function customNamedAsyncFunc(value) {
+          return Promise.resolve(value === 'validNamedAsync');
         }
       ]
     },
@@ -697,7 +706,24 @@ exports.validation = {
     }, {
         custom: ['custom_custom'],
         custom2: ['custom_custom2'],
-        customNamed: ['custom_customNamed']
+        customNamed: ['custom_customNamedFunc']
+      }, 'Validating a user with custom validations failing did not put the proper error messages in user.errors.');
+    t.done();
+  },
+
+  customErrorNamesAsync: async (t) => {
+    var user = new UserMockup();
+    t.expect(1);
+
+    user.property({
+      customNamedAsync: 'INVALID'
+    });
+
+    await user.validate();
+    t.same({
+      customNamedAsync: user.errors.customNamedAsync
+    }, {
+        customNamedAsync: ['custom_customNamedAsyncFunc']
       }, 'Validating a user with custom validations failing did not put the proper error messages in user.errors.');
     t.done();
   },

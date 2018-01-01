@@ -912,9 +912,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private getValidationObject(validator: TValidationDefinition, key: keyof TProps): IValidationObject {
     if (typeof (validator) === 'function') {
-      const funcName = validator.toString().match(/^function ([\w]*)[\s]?\(/);
+      const funcName = validator.toString().match(/^(async )?function ([\w]*)[\s]?\(/);
       return {
-        name: `custom_${(funcName && funcName[1] ? funcName[1] : key)}`,
+        name: `custom_${(funcName && funcName[2] ? funcName[2] : key)}`,
         options: {},
         validator,
       };
