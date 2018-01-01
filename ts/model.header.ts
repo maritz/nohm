@@ -20,9 +20,9 @@ export interface IDictionary {
 
 export type PropertyBehaviour = <TModel>(
   this: TModel,
-  newValue: any,
+  newValue: string,
   key: string,
-  oldValue: any,
+  oldValue: string,
 ) => any;
 
 export interface IStaticMethods<T extends NohmModel> {
