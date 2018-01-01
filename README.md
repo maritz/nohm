@@ -6,7 +6,7 @@
 
 ## v0.9 README
 
-This README is for the upcoming v1.0 release which has a lot of breaking changes. For the README of the stable version [go here](https://github.com/maritz/nohm/tree/v0.9.8).
+This README is for the upcoming v2.0 release which has a lot of breaking changes. For the README of the stable version [go here](https://github.com/maritz/nohm/tree/v0.9.8).
 
 ## Description
 
@@ -18,11 +18,13 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
 
 ## Add it to your project
 
-    npm install --save nohm
+To add the current alpha vor v2 use the alpha tag
+
+    npm install --save nohm@alpha
 
 ## Documentation
 
-(stable version, not v1!)
+(stable version, not v2!)
 http://maritz.github.com/nohm/
 
 ## Example
