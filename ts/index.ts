@@ -609,7 +609,9 @@ export class NohmClass {
   }
 
   public async factory<T extends NohmModel<any>>(
-    name: string, id?: any, callback?: (this: T, err: string, properties: { [name: string]: any }) => any,
+    name: string,
+    id?: any,
+    callback?: any,
   ): Promise<T> {
     if (typeof callback === 'function') {
       throw new Error('Not implmented: factory does not support callback method anymore.');

@@ -756,6 +756,19 @@ exports["invalid regexp option"] = async (t) => {
   } finally {
     t.done();
   }
-
 };
 
+exports['ValidationError only has objects for properties with errors'] = async (t) => {
+  var user = new UserMockup();
+  t.expect(2);
+
+  user.property('name', '');
+  try {
+    await user.save();
+  } catch (e) {
+    t.ok(e instanceof nohm.ValidationError, 'Unexpected error.');
+    const errorKeys = Object.keys(e.errors);
+    t.same(['name'], errorKeys, 'ValidationError was not restricted to error keys');
+    t.done();
+  }
+}
