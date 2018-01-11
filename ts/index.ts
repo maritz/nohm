@@ -800,7 +800,3 @@ const nohm = new NohmClass({});
 
 export { nohm, nohm as Nohm };
 export default nohm;
-
-
-// old js code copy-pasted follows for now
-

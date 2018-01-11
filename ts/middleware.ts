@@ -3,15 +3,14 @@ import * as fs from 'fs';
 import { NohmClass, nohm as instantiatedNohm } from './index';
 import { NohmModel } from './model';
 
-// tslint:disable-next-line:no-implicit-dependencies # we don't actually use express, just the typing
-import { RequestHandler as TRequestHandler } from 'express';
 import { universalValidatorPath } from './validators';
-
-export { TRequestHandler };
+import { ServerRequest, ServerResponse } from 'http';
 
 export interface IExclusionsOption {
   [key: string]: Array<number | boolean> | boolean;
 }
+
+export type TRequestHandler = (req: ServerRequest, res: ServerResponse, next?: any) => void;
 
 export interface IMiddlewareOptions {
   url?: string;
@@ -236,14 +235,14 @@ ${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
     }
   }
 
-  return (req, res, next) => {
+  return (req: ServerRequest, res: ServerResponse, next?: any) => {
     if (req.url === url) {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'text/javascript');
       res.setHeader('Content-Length', str.length.toString());
       res.setHeader('Cache-Control', 'public, max-age=' + maxAge);
       res.end(str);
-    } else {
+    } else if (next && typeof (next) === 'function') {
       next();
     }
   };
