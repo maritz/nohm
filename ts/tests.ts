@@ -211,5 +211,34 @@ exports.Typescript = {
 
     t.done();
   },
+
+  'typing in find()': async (t: any) => {
+    // see above for their different ways of setup/definition
+    const user = await nohm.factory<UserMockup>('UserMockup');
+
+    t.expect(0);
+
+    try {
+      await user.find({
+        name: 'changedName',
+        number: 789,
+      });
+
+      await userMockupClass.find<IUserLinkProps>({
+        name: 'changedName',
+        number: 789,
+      });
+
+      await userMockupClass.findAndLoad<UserMockup, IUserLinkProps>({
+        name: 'changedName',
+        number: 789,
+      });
+    } catch (e) {
+      // properties aren't indexed, whatever... just testing that the generics are right and manually testing errors 
+      // in find options
+    }
+
+    t.done();
+  },
 };
 

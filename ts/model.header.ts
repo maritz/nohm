@@ -29,12 +29,20 @@ export interface IStaticMethods<T extends NohmModel> {
   new(): T;
   load<P extends NohmModel>(id: any): Promise<P>;
   loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
-  findAndLoad<P extends NohmModel>(searches: ISearchOptions): Promise<Array<P>>;
+  findAndLoad<P extends NohmModel, TProps extends IDictionary = {}>(
+    searches: Partial<{
+      [key in keyof TProps]: string | number | Partial<ISearchOption>;
+    }>,
+  ): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
     ids: Array<string | number> | false,
   ): Promise<Array<string>>;
-  find(searches: ISearchOptions): Promise<Array<string>>;
+  find<TProps extends IDictionary = {}>(
+    searches: Partial<{
+      [key in keyof TProps]: string | number | Partial<ISearchOption>;
+    }>,
+  ): Promise<Array<string>>;
   remove(id: any): Promise<void>;
 }
 
@@ -144,9 +152,7 @@ export interface ISearchOption {
   offset: number;
 }
 
-export interface ISearchOptions {
-  [key: string]: any | Partial<ISearchOption>;
-}
+export type TKey<TProps extends IDictionary> = keyof TProps;
 
 export interface IStructuredSearch<TProps extends IDictionary> {
   type: 'undefined' | 'unique' | 'set' | 'zset';

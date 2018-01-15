@@ -9,7 +9,6 @@ import {
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
-  ISearchOptions,
   ISortOptions,
   NohmModel,
   TLinkCallback,
@@ -27,6 +26,7 @@ import {
   timeProperty,
   timestampProperty,
   jsonProperty,
+  ISearchOption,
 } from './model.header';
 
 import { ValidationError } from './errors/ValidationError';
@@ -40,7 +40,6 @@ export {
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
   INohmPrefixes,
-  ISearchOptions,
   ISortOptions,
   IStaticMethods,
   LinkError,
@@ -305,8 +304,10 @@ export class NohmClass {
        * @param {ISearchOptions} searches
        * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad<P extends NohmModel>(
-        searches: ISearchOptions = {},
+      public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
+        searches: Partial<{
+          [key in keyof TProps]: string | number | Partial<ISearchOption>;
+        }>,
       ): Promise<Array<P>> {
         const dummy = await self.factory<P>(modelName);
         const ids = await dummy.find(searches);
@@ -343,7 +344,9 @@ export class NohmClass {
        * @param {ISearchOptions} [searches={}] Search options
        * @returns {Promise<Array<string>>} Array of ids
        */
-      public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
+      public static async find<TProps extends IDictionary>(searches: Partial<{
+        [key in keyof TProps]: string | number | Partial<ISearchOption>;
+      }> = {}): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
       }
@@ -536,10 +539,12 @@ export class NohmClass {
        * @param {ISearchOptions} searches
        * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad<P extends NohmModel>(
-        searches: ISearchOptions = {},
+      public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
+        searches: Partial<{
+          [key in keyof TProps]: string | number | Partial<ISearchOption>;
+        }>,
       ): Promise<Array<P>> {
-        const dummy = await self.factory(modelName);
+        const dummy = await self.factory<P>(modelName);
         const ids = await dummy.find(searches);
         if (ids.length === 0) {
           return [];
@@ -574,7 +579,9 @@ export class NohmClass {
        * @param {ISearchOptions} [searches={}] Search options
        * @returns {Promise<Array<string>>} Array of ids
        */
-      public static async find(searches: ISearchOptions = {}): Promise<Array<string>> {
+      public static async find<TProps extends IDictionary>(searches: Partial<{
+        [key in keyof TProps]: string | number | Partial<ISearchOption>;
+      }> = {}): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
       }

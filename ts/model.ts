@@ -22,7 +22,6 @@ import {
   IRelationChange,
   ISaveOptions,
   ISearchOption,
-  ISearchOptions,
   ISortOptions,
   IStructuredSearch,
   IUnlinkKeyMapItem,
@@ -54,7 +53,6 @@ export {
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
   IModelOptions,
-  ISearchOptions,
   ISortOptions,
   TLinkCallback,
 };
@@ -1383,9 +1381,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @param {ISearchOptions} searches
    * @returns {Promise<Array<any>>}
    */
-  public async find(searches: ISearchOptions = {}): Promise<Array<string>> {
-    // TODO: figure out a way to make ISearchOptions take the TProps generic to use as index
-
+  public async find(searches: Partial<{
+    [key in keyof TProps]: string | number | Partial<ISearchOption>;
+  }> = {}): Promise<Array<string>> {
     const structuredSearches = this.createStructuredSearchOptions(searches);
 
     const uniqueSearch = structuredSearches.find((search) => search.type === 'unique');
@@ -1419,9 +1417,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private createStructuredSearchOptions(searches: ISearchOptions): Array<IStructuredSearch<TProps>> {
+  private createStructuredSearchOptions(searches: Partial<{
+    [key in keyof TProps]: string | number | Partial<ISearchOption>;
+  }>): Array<IStructuredSearch<TProps>> {
     return Object.keys(searches).map((key) => {
       const search = searches[key];
+      if (!search) {
+        throw new Error('Invalid find() options.'); // this shouldn't occur
+      }
       const prop = this.getProperty(key);
       const definition = this.getDefinitions()[key];
       const structuredSearch: IStructuredSearch<TProps> = {
@@ -1432,7 +1435,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       };
       if (definition.unique) {
         if (definition.type === 'string') {
-          if (typeof (search.toLowerCase) !== 'function') {
+          if (typeof (search) !== 'string') {
             // tslint:disable-next-line:max-line-length
             throw new Error('Invalid search parameters: Searching for a unique (type "string") with a non-string value is not supported.');
           }
@@ -1443,11 +1446,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         if (!prop.__numericIndex && !definition.index) {
           throw new Error(`Trying to search for non-indexed and non-unique property '${key}' is not supported.`);
         }
-        const isDirectNumericSearch = !isNaN(parseInt(search, 10));
+        const isDirectNumericSearch = !isNaN(parseInt(search as string, 10));
         const isSimpleIndexSearch = !prop.__numericIndex || isDirectNumericSearch;
         if (!isSimpleIndexSearch && prop.__numericIndex) {
           structuredSearch.type = 'zset';
-          structuredSearch.options = search;
+          structuredSearch.options = search as Partial<ISearchOption>;
         } else if (definition.index === true) {
           structuredSearch.type = 'set';
         }
@@ -1584,7 +1587,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         const tempZaddArgs = [tmpKey];
         ids.forEach((id) => {
           tempZaddArgs.push('0', id as string);
-        }); // typecast because rediss doesn't care about numbers/string
+        }); // typecast because redis doesn't care about numbers/string
         client.zadd.apply(client, tempZaddArgs);
         client.zinterstore([tmpKey, 2, tmpKey, zsetKey]);
         zsetKey = tmpKey;
