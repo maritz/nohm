@@ -1279,3 +1279,28 @@ exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
 
   t.done();
 };
+
+exports["id with : should fail"] = async (t) => {
+  t.expect(1);
+
+  const wrongIdModel = nohm.model('wrongIdModel', {
+    properties: {
+      name: {
+        type: 'string',
+      },
+    },
+    idGenerator: () => {
+      return 'foo:bar';
+    },
+  }, true);
+
+  let instance = new wrongIdModel();
+
+  try {
+    await instance.save();
+  } catch (e) {
+    t.same(e.message, 'Nohm IDs cannot contain the character ":". Please change your idGenerator!', 'Error thrown by wrong id was wrong.');
+  }
+
+  t.done();
+};

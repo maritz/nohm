@@ -273,10 +273,10 @@ exports.relation = {
     user.link(role2);
 
     await user.save();
-    var should = [role.id, role2.id];
+    var should = [role.id, role2.id].sort();
     const relationIds = await user.getAll(role.modelName);
     t.ok(Array.isArray(relationIds), 'getAll() did not return an array.');
-    t.same(relationIds, should, 'getAll() did not return the correct array');
+    t.same(relationIds.sort(), should, 'getAll() did not return the correct array');
     t.done();
   },
 

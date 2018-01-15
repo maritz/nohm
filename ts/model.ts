@@ -586,6 +586,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
       id = await idGenerators[generator].call(idGenerators, this.client, this.prefix('incrementalIds'));
     }
+    if (typeof id === 'string' && id.includes(':')) {
+      // TODO: add documentation for this
+      // we need to do stuff with redis keys and we seperate parts of the redis key by :
+      // thus the id cannot contain that character.
+      throw new Error('Nohm IDs cannot contain the character ":". Please change your idGenerator!');
+    }
     return id;
   }
 
@@ -1277,7 +1283,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const keys = await SMEMBERS(this.client, relationKeysKey);
 
     const others: Array<IUnlinkKeyMapItem> = keys.map((key) => {
-      const matches = key.match(/:([\w]*):([\w]*):[\w]+$/i);
+      const matches = key.match(/:([\w]*):([\w]*):[^:]+$/i);
       if (!matches) {
         throw new Error('Malformed relation key found in the database! ' + key);
       }

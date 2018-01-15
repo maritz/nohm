@@ -24,3 +24,4 @@ This file is not intended as documentation for users, instead it should make wri
 - .id property is now a getter/setter and always either null or string
 - the regexp validator now only takes valid RegExp objects as options
 - behaviours now always receive arguments as strings. before they would be string from redis but any from initialization/defaultValue
+- ids MUST NOT contain double colons!
