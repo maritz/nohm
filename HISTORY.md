@@ -1,8 +1,15 @@
-### v1.0.0 (currently in alpha)
-  - uses Promises instead of Callbacks for almost everything
-  - complete refactor to Typescript - native typings are now provided
-  - updated dependencies
-  - lots of other changes
+# Changelogs
+
+## v2
+
+### v2.0.0 (currently in alpha)
+
+- uses Promises instead of Callbacks for almost everything
+- complete refactor to Typescript - native typings are now provided
+- updated dependencies
+- lots of other changes
+
+## v1
 
 ### v0.9.8 - 06.02.2016
   - Add instance context to custom validators. (thanks johngeorgewright)

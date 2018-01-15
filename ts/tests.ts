@@ -234,7 +234,7 @@ exports.Typescript = {
         number: 789,
       });
     } catch (e) {
-      // properties aren't indexed, whatever... just testing that the generics are right and manually testing errors 
+      // properties aren't indexed, whatever... just testing that the generics are right and manually testing errors
       // in find options
     }
 
