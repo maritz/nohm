@@ -13,8 +13,7 @@ var UserLinkMockup = nohm.model('UserLinkMockup', {
         'notEmpty'
       ]
     }
-  },
-  idGenerator: 'increment'
+  }
 });
 var CommentLinkMockup = nohm.model('CommentLinkMockup', {
   properties: {
@@ -33,8 +32,7 @@ var RoleLinkMockup = nohm.model('RoleLinkMockup', {
       type: 'string',
       defaultValue: 'user'
     }
-  },
-  idGenerator: 'increment'
+  }
 });
 
 
@@ -75,7 +73,7 @@ exports.relation = {
       role2 = new RoleLinkMockup(),
       linkCallbackCalled = false,
       linkCallbackCalled2 = false;
-    t.expect(9);
+    t.expect(14);
 
     user.link(role, function (action, on, name, obj) {
       linkCallbackCalled = true;
@@ -92,22 +90,27 @@ exports.relation = {
     });
 
     await user.save();
+
     t.ok(linkCallbackCalled, 'The provided callback for linking was not called.');
     t.ok(linkCallbackCalled2, 'The provided callback for the second(!) linking was not called.');
     redis.keys(relationsprefix + '*', function (err, values) {
-      let firstDone = false;
-      const keyCheck = function (err, members) {
-        t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
-        if (firstDone === true) {
-          t.done();
-        } else {
-          firstDone = true;
-        }
+      const keyCheck = function (compareIds) {
+        return (err, members) => {
+          t.equals(members.length, compareIds.length, 'The set of a relationship contained the wrong amount of ids.');
+          members.forEach((member) => {
+            t.ok(compareIds.includes(member), 'The set of a relationship contained a wrong id');
+          });
+        };
       };
       if (!err) {
         t.same(values.length, 3, 'Linking an object did not create the correct number of keys.');
-        redis.smembers(values[0].toString(), keyCheck);
-        redis.smembers(values[1].toString(), keyCheck);
+        values.forEach((value) => {
+          const isForeignLink = value.includes(':defaultForeign:');
+          // user links to role1 and role2, each role links to only user
+          const ids = isForeignLink ? [user.id] : [role.id, role2.id];
+          redis.smembers(value.toString(), keyCheck(ids));
+        });
+        t.done();
       } else {
         console.dir(err);
         t.done();
@@ -201,6 +204,7 @@ exports.relation = {
 
     await role2.save();
     var tmpid = user.id;
+
     await user.remove();
     async.parallel([
       function (next) {
