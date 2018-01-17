@@ -1304,3 +1304,27 @@ exports["id with : should fail"] = async (t) => {
 
   t.done();
 };
+
+exports["manually setting id should allow saving with uniques"] = async (t) => {
+  // see https://github.com/maritz/nohm/issues/82 for details
+  t.expect(1);
+
+  const props = {
+    name: 'manualIdWithuniques',
+    email: 'manualIdWithuniques@example.com'
+  };
+
+  let origInstance = new UserMockup();
+  origInstance.property(props)
+  await origInstance.save();
+
+  let instance = new UserMockup();
+  instance.id = origInstance.id;
+  instance.property(props);
+
+  await instance.save();
+  // just getting here means we pass. do a dummy test just to make a test run
+  t.same(instance.id, origInstance.id, 'Something went horribly wrong.');
+
+  t.done();
+};

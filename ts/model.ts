@@ -1010,6 +1010,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     } else if (!setDirectly && dbValue === 0) {
       // setDirectly === false means using exists which returns 0 if the value did *not* exist
       isFreeUnique = true;
+    } else if (setDirectly && dbValue === 0) {
+      // setDirectly === true means using setnx which returns 1 if the value did *not* exist
+      // if it did exist, we check if the unique is the same as the one on this model.
+      // see https://github.com/maritz/nohm/issues/82 for use-case
+      const dbId = await GET(this.client, key);
+      if (dbId === this.stringId()) {
+        isFreeUnique = true;
+      }
     }
     debug(`Checked unique '%s' for '%s.%s'. Result: '%s' because setDirectly: '%o' && dbValue: '%d'.`,
       key, this.modelName, this.id, isFreeUnique, setDirectly, dbValue);
