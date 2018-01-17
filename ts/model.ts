@@ -1422,7 +1422,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }>): Array<IStructuredSearch<TProps>> {
     return Object.keys(searches).map((key) => {
       const search = searches[key];
-      if (!search) {
+      if (typeof search === 'undefined') {
         throw new Error('Invalid find() options.'); // this shouldn't occur
       }
       const prop = this.getProperty(key);

@@ -39,7 +39,8 @@ var UserFindMockup = nohm.model('UserFindMockup', {
     },
     bool: {
       type: 'bool',
-      defaultValue: false
+      defaultValue: false,
+      index: true
     }
   },
   idGenerator: 'increment'
@@ -102,36 +103,44 @@ exports.find = {
     var t = this;
     h.cleanUp(redis, args.prefix, function () {
       createUsers([{
+        // id: 1
         name: 'numericindextest',
         email: 'numericindextest@hurgel.de',
         gender: 'male',
         number: 3
       }, {
+        // id: 2
         name: 'numericindextest',
         email: 'numericindextest2@hurgel.de',
         gender: 'male',
         number: 4,
         number2: 33
       }, {
+        // id: 3
         name: 'numericindextest',
         email: 'numericindextest3@hurgel.de',
         gender: 'female',
         number: 4,
         number2: 1
       }, {
+        // id: 4
         name: 'uniquefind',
         email: 'uniquefind@hurgel.de'
       }, {
+        // id: 5
         name: 'indextest',
         email: 'indextest@hurgel.de'
       }, {
+        // id: 6
         name: 'indextest',
         email: 'indextest2@hurgel.de'
       }, {
+        // id: 7
         name: 'a_sort_first',
         email: 'a_sort_first@hurgel.de',
         number: 1
       }, {
+        // id: 8
         name: 'z_sort_last',
         email: 'z_sort_last@hurgel.de',
         number: 100000
@@ -1012,7 +1021,7 @@ exports.find = {
         endpoints: '('
       }
     });
-    t.same([7, 6, 5, 4], ids, 'Defining an endpoint failed.');
+    t.same([7, 6, 5, 4], ids, 'Defining only the left endpoint failed.');
     const ids2 = await UserFindMockup.find({
       number: {
         min: 3,
@@ -1020,7 +1029,7 @@ exports.find = {
         endpoints: ')'
       }
     });
-    t.same([1], ids2, 'Defining an endpoint failed.');
+    t.same([1], ids2, 'Defining only the right endpoint failed.');
     t.done();
   },
 
@@ -1085,7 +1094,44 @@ exports.find = {
     });
     t.same(ids, [2, 3, 8], 'The found ids were incorrect.');
     t.done();
-  }
+  },
 
+  "find bool with true": async (t) => {
+    var findUser = new UserFindMockup();
+    t.expect(2);
+
+    const ids = await findUser.find({
+      bool: true
+    });
+    t.same(ids, [], 'Found ids even though none should exist.');
+
+    const user = new UserFindMockup();
+    user.property({
+      name: 'findBoolTrue',
+      email: 'findBoolTrue@example.com',
+      bool: true,
+    });
+    await user.save();
+
+    const ids2 = await findUser.find({
+      bool: true
+    });
+    t.same(ids2, [user.id], 'The found ids were incorrect.');
+
+    t.done();
+  },
+
+  "find bool with false": function (t) {
+    var findUser = new UserFindMockup();
+    t.expect(1);
+
+    (async () => {
+      const ids = await findUser.find({
+        bool: false
+      });
+      t.same(ids, this.userIds, 'The found ids were incorrect.');
+      t.done();
+    })();
+  },
 
 };
