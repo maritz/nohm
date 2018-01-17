@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as Debug from 'debug';
 
 import { NohmClass, nohm as instantiatedNohm } from './index';
 import { NohmModel } from './model';
@@ -22,6 +23,8 @@ export interface IMiddlewareOptions {
   extraFiles?: string | Array<string>;
   uglify?: any;
 }
+
+const debug = Debug('nohm:middleware');
 
 const MAX_DEPTH = 5;
 
@@ -190,8 +193,9 @@ export function middleware(
     extraFiles = [extraFiles];
   }
 
+
   // collect models
-  const arr: Array<string> = [];
+  const collectedModels: Array<string> = [];
   const models = nohm.getModels();
   Object.keys(models).forEach((name) => {
     const model = models[name];
@@ -202,18 +206,18 @@ export function middleware(
       if (exclusion === true || exclusion === false) {
         exclusion = {};
       }
-      arr.push(validationsFlatten(model, exclusion));
+      collectedModels.push(validationsFlatten(model, exclusion));
     }
   });
 
   let str = `var nohmValidationsNamespaceName = "${namespace}";
-var ${namespace}={"extraValidations": [], "models":{${arr.join(',')}}};
-// extrafiles
-${wrapExtraFiles(extraFiles, namespace)}
-// extravalidations
-${wrapExtraFiles(nohm.getExtraValidatorFileNames(), namespace)/* needs to somehow access the same thing */}
-// validators.js
-${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
+  var ${namespace}={"extraValidations": [], "models":{${collectedModels.join(',')}}};
+  // extrafiles
+  ${wrapExtraFiles(extraFiles, namespace)}
+  // extravalidations
+  ${wrapExtraFiles(nohm.getExtraValidatorFileNames(), namespace)/* needs to somehow access the same thing */}
+  // validators.js
+  ${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
 
 
   if (uglify) {
@@ -234,6 +238,8 @@ ${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
       str = pro.gen_code(squeezed);
     }
   }
+  debug(`Setting up middleware to be served on '%s' with namespace '%s' and collected these models: %o`,
+    url, namespace, collectedModels);
 
   return (req: ServerRequest, res: ServerResponse, next?: any) => {
     if (req.url === url) {

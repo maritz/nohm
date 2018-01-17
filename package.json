@@ -23,6 +23,7 @@
     "prepublishOnly": "npm run build && npm run test && pkg-ok"
   },
   "dependencies": {
+    "debug": "^3.1.0",
     "lodash": "^4.17.4",
     "redis": "^2.8.0",
     "traverse": "^0.6.6",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@types/async": "^2.0.47",
+    "@types/debug": "0.0.30",
     "@types/express": "^4.11.0",
     "@types/lodash": "^4.14.92",
     "@types/node": "^9.3.0",

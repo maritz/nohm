@@ -1,6 +1,7 @@
 import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
 import { IMiddlewareOptions, middleware, TRequestHandler } from './middleware';
 import * as redis from 'redis';
+import * as Debug from 'debug';
 
 import { getPrefix, INohmPrefixes } from './helpers';
 import {
@@ -58,6 +59,8 @@ export {
   timestampProperty,
 };
 
+const debug = Debug('nohm:index');
+const debugPubSub = Debug('nohm:pubSub');
 
 const PUBSUB_ALL_PATTERN = '*:*';
 
@@ -144,6 +147,7 @@ export class NohmClass {
   private extraValidators: Array<string>;
 
   constructor({ prefix, client, meta, publish }: INohmOptions) {
+    debug('Creating NohmClass.', arguments);
     this.setPrefix(prefix);
     if (client) {
       this.setClient(client);
@@ -167,6 +171,7 @@ export class NohmClass {
    * Note: this will not affect models that have a client set on their own.
    */
   public setPrefix(prefix = 'nohm') {
+    debug('Setting new prefix.', prefix);
     this.prefix = getPrefix(prefix);
   }
 
@@ -175,6 +180,8 @@ export class NohmClass {
    * Note: this will not affect models that have a client set on their own.
    */
   public setClient(client?: redis.RedisClient) {
+    debug('Setting new redis client. Connected: %s; Address: %s.',
+      client && client.connected, client && (client as any).address);
     if (client && !client.connected) {
       this.logError(`WARNING: setClient() received a redis client that is not connected yet.
       Consider waiting for an established connection before setting it.`);
@@ -212,6 +219,7 @@ export class NohmClass {
     if (!modelName) {
       this.logError('When creating a new model you have to provide a name!');
     }
+    debug('Registering new model using model().', modelName, options, temp);
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
 
@@ -439,6 +447,8 @@ export class NohmClass {
       throw new Error('A class passed to nohm.register() did not have static property definitions.');
     }
 
+    debug('Registering new model using register().', modelName, (subClass as any).definitions, temp);
+
     // tslint:disable-next-line:max-classes-per-file
     @staticImplements<IStaticMethods<CreatedClass>>()
     class CreatedClass extends subClass {
@@ -618,11 +628,11 @@ export class NohmClass {
   public async factory<T extends NohmModel<any>>(
     name: string,
     id?: any,
-    callback?: any,
   ): Promise<T> {
-    if (typeof callback === 'function') {
+    if (typeof arguments[1] === 'function' || typeof arguments[2] === 'function') {
       throw new Error('Not implmented: factory does not support callback method anymore.');
     } else {
+      debug(`Factory is creating a new instance of '%s' with id %s.`, name, id);
       const model = this.modelCache[name];
       if (!model) {
         throw new Error(`Model '${name}' not found.`);
@@ -668,6 +678,8 @@ export class NohmClass {
     }
     const deletes: Array<Promise<void>> = [];
 
+    debug(`PURGING DATABASE!`, client && client.connected, client && (client as any).address, this.prefix);
+
     Object.keys(this.prefix).forEach((key) => {
       const prefix = (this.prefix as any)[key];
       if (typeof prefix === 'object') {
@@ -687,6 +699,7 @@ export class NohmClass {
    * Set some extra validator files. These will also be exported to the browser via connect middleware if used.
    */
   public setExtraValidations(files: string | Array<string>) {
+    debug(`Setting extra validation files`, files);
     if (!Array.isArray(files)) {
       files = [files];
     }
@@ -715,13 +728,18 @@ export class NohmClass {
   }
 
   public setPublish(publish: boolean) {
-    this.publish = publish;
+    debug(`Setting publish mode to '%o'.`, !!publish);
+    this.publish = !!publish;
   }
 
   public getPubSubClient(): redis.RedisClient {
     return this.publishClient;
   }
   public setPubSubClient(client: redis.RedisClient): Promise<void> {
+
+    debug(`Setting pubSub client. Connected: '%s'; Address: '%s'.`,
+      client && client.connected, client && (client as any).address);
+
     this.publishClient = client;
     return this.initPubSub();
   }
@@ -740,6 +758,8 @@ export class NohmClass {
 
     await PSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
 
+    debugPubSub(`Redis PSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
+
     this.publishClient.on('pmessage', (_pattern, channel, message) => {
       const suffix = channel.slice(this.prefix.channel.length);
       const parts = suffix.match(/([^:]+)/g); // Pattern = _prefix_:channel:_modelname_:_action_
@@ -756,6 +776,8 @@ export class NohmClass {
 
       try {
         payload = message ? JSON.parse(message) : {};
+        debugPubSub(`Redis published message for model '%s' with action '%s' and message: '%j'.`,
+          modelName, action, payload);
       } catch (e) {
         this.logError(`A published message is not valid JSON. Was : "${message}"`);
         return;
@@ -770,6 +792,7 @@ export class NohmClass {
     callback: (payload: any) => void,
   ): Promise<void> {
     await this.initPubSub();
+    debugPubSub(`Redis subscribing to event '%s'.`, eventName);
     this.publishEventEmitter.on(eventName, callback);
   }
 
@@ -778,6 +801,7 @@ export class NohmClass {
     callback: (payload: any) => void,
   ): Promise<void> {
     await this.initPubSub();
+    debugPubSub(`Redis subscribing once to event '%s'.`, eventName);
     this.publishEventEmitter.once(eventName, callback);
   }
 
@@ -786,6 +810,7 @@ export class NohmClass {
     fn?: any,
   ): void {
     if (this.publishEventEmitter) {
+      debugPubSub(`Redis unsubscribing from event '%s' with fn?: %s.`, eventName, fn);
       if (!fn) {
         this.publishEventEmitter.removeAllListeners(eventName);
       } else {
@@ -796,6 +821,7 @@ export class NohmClass {
 
   public async closePubSub(): Promise<redis.RedisClient> {
     if (this.isPublishSubscribed === true) {
+      debugPubSub(`Redis PUNSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
       this.isPublishSubscribed = false;
       await PUNSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
     }

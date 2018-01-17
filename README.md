@@ -229,6 +229,29 @@ main();
 
 Do you have code that should/could be listed here? Message me!
 
+## Debug
+
+Nohm uses the [debug](https://github.com/visionmedia/debug) module under the namespace "nohm". To see detailed debug logging set the environment variable DEBUG accordingly:
+
+    DEBUG="nohm:*" node yourApp.js
+
+Available submodules are `nohm:index`, `nohm:model`, `nohm:middleware`, `nohm:pubSub` and `nohm:idGenerator`.
+
+## Developing nohm
+
+If you want to make changes to nohm, you can fork or clone it. Then install the dependencies:
+
+    npm install
+
+and run the development scripts (compile & watch & tests):
+
+    npm run dev
+
+When submitting PRs, please make sure that you run the linter and that everything still builds fine.  
+The easiest way to do that is to run the `prepublishOnly` script:
+
+    npm run prepublishOnly
+
 ## Running tests
 
 To run the tests you need to have nodeunit v0.6.4. This will be installed if you installed nohm with the --dev argument or when checking out this project and running npm install in there.
@@ -255,3 +278,5 @@ You may also change the prefix ("nohmtests") part doing something like
 Now the keys will look like this:
 
     YourNewPrefix:something:something
+
+Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.
