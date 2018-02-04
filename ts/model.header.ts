@@ -31,7 +31,7 @@ export interface IStaticMethods<T extends NohmModel> {
   loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
   findAndLoad<P extends NohmModel, TProps extends IDictionary = {}>(
     searches: Partial<{
-      [key in keyof TProps]: string | number | Partial<ISearchOption>;
+      [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
     }>,
   ): Promise<Array<P>>;
   sort(
@@ -40,7 +40,7 @@ export interface IStaticMethods<T extends NohmModel> {
   ): Promise<Array<string>>;
   find<TProps extends IDictionary = {}>(
     searches: Partial<{
-      [key in keyof TProps]: string | number | Partial<ISearchOption>;
+      [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
     }>,
   ): Promise<Array<string>>;
   remove(id: any): Promise<void>;
