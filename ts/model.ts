@@ -1439,7 +1439,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @returns {Promise<Array<any>>}
    */
   public async find(searches: Partial<{
-    [key in keyof TProps]: string | number | Partial<ISearchOption>;
+    [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
   }> = {}): Promise<Array<string>> {
     const structuredSearches = this.createStructuredSearchOptions(searches);
 
@@ -1479,7 +1479,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private createStructuredSearchOptions(searches: Partial<{
-    [key in keyof TProps]: string | number | Partial<ISearchOption>;
+    [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
   }>): Array<IStructuredSearch<TProps>> {
     return Object.keys(searches).map((key) => {
       const search = searches[key];

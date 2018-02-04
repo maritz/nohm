@@ -314,7 +314,7 @@ export class NohmClass {
        */
       public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
         searches: Partial<{
-          [key in keyof TProps]: string | number | Partial<ISearchOption>;
+          [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
         }>,
       ): Promise<Array<P>> {
         const dummy = await self.factory<P>(modelName);
@@ -353,7 +353,7 @@ export class NohmClass {
        * @returns {Promise<Array<string>>} Array of ids
        */
       public static async find<TProps extends IDictionary>(searches: Partial<{
-        [key in keyof TProps]: string | number | Partial<ISearchOption>;
+        [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
       }> = {}): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
@@ -551,7 +551,7 @@ export class NohmClass {
        */
       public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
         searches: Partial<{
-          [key in keyof TProps]: string | number | Partial<ISearchOption>;
+          [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
         }>,
       ): Promise<Array<P>> {
         const dummy = await self.factory<P>(modelName);
@@ -590,7 +590,7 @@ export class NohmClass {
        * @returns {Promise<Array<string>>} Array of ids
        */
       public static async find<TProps extends IDictionary>(searches: Partial<{
-        [key in keyof TProps]: string | number | Partial<ISearchOption>;
+        [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
       }> = {}): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
