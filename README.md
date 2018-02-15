@@ -259,7 +259,11 @@ Otherwise you can run:
 
     npm install nodeunit@0.6.4
 
-Then run
+Build the javascript files:
+
+    npm run build
+
+Then run the tests:
 
     npm run test
 
