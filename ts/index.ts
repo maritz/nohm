@@ -234,8 +234,8 @@ export class NohmClass {
 
       public readonly modelName = modelName;
 
-      constructor(...args: Array<any>) {
-        super(...args);
+      constructor() {
+        super();
         if (self.meta) {
           this.meta = {
             inDb: false,
@@ -313,7 +313,7 @@ export class NohmClass {
        * @returns {Promise<Array<NohmModel>>}
        */
       public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
-        searches: Partial<{
+        searches?: Partial<{
           [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
         }>,
       ): Promise<Array<P>> {
@@ -550,7 +550,7 @@ export class NohmClass {
        * @returns {Promise<Array<NohmModel>>}
        */
       public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
-        searches: Partial<{
+        searches?: Partial<{
           [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
         }>,
       ): Promise<Array<P>> {
