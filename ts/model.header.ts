@@ -94,7 +94,6 @@ export interface IModelOptions {
 }
 
 export interface ISaveOptions {
-  continue_on_link_error: boolean;
   silent: boolean;
   skip_validation_and_unique_indexes: boolean;
 }
@@ -126,7 +125,6 @@ export interface IRelationChange {
 }
 
 export interface ILinkOptions {
-  continue_on_link_error?: boolean;
   error?: (err: Error | string, otherObject: NohmModel) => any;
   name: string;
   silent?: boolean;
