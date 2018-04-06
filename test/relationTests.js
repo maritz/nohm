@@ -384,7 +384,7 @@ exports.relation = {
       comment = new CommentLinkMockup(),
       comment2 = new CommentLinkMockup(),
       comment3 = new CommentLinkMockup();
-    t.expect(4);
+    t.expect(9);
 
     role.link(user, {
       error: function (err, obj) {
@@ -413,9 +413,14 @@ exports.relation = {
     comment.property('text', ''); // makes the first comment fail
 
     try {
-      await role.save({ continue_on_link_error: true });
+      await role.save();
       t.done();
     } catch (e) {
+      t.ok(e instanceof nohm.LinkError, 'Error thrown by save() was not a link error.');
+      t.same(e.errors.length, 1, 'LinkError contained too many error items');
+      t.same(e.errors[0].parent, user, 'LinkError parent was not user.');
+      t.same(e.errors[0].child, comment, 'LinkError child was not comment.');
+      t.ok(e.errors[0].error instanceof nohm.ValidationError, 'LinkError contained error was not ValidationError.');
       redis.sismember(relationsprefix + comment3.modelName + ':defaultForeign:' + user.modelName + ':' + comment3.id, user.id,
         function (err, value) {
           t.ok(!err, 'There was a redis error');
