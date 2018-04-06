@@ -4,10 +4,198 @@
 
 ### v2.0.0 (currently in alpha)
 
-- uses Promises instead of Callbacks for almost everything
-- complete refactor to Typescript - native typings are now provided
+#### BREAKING CHANGES
+
+##### Promises
+
+All callbacks have been changed to promises (except events).
+
+To migrate your code, replace callback functions with promise handlers.
+
+Old:
+~~~~ javascript
+instance.load(123, (err, props) => {
+  console.log(err, props);
+});
+~~~~
+
+New:
+
+~~~~ javascript
+try {
+  const props = await modelInstance.load(123);
+  console.log(props)
+} catch (err) {
+  console.log(err);
+}
+~~~~
+
+##### Default IDs
+
+Previously, default ids were a custom random implementation, that wasn't very safe. Now uuid v1 is used by default.
+
+Existing default ids should still work with the new versions, but any new default ids created after the update will be uuid v1.
+
+##### Validation definitions
+
+The format for validations was previously based on arrays, and strict indices had to be maintained for different parts of the definition.
+
+Now validation definitions are objects and have proper keys.
+
+Old:
+~~~~ javascript
+someProperty: {
+  type: 'integer',
+  defaultValue: 5,
+  validations: [
+    [ 
+      'minMax',
+      {
+        min: 2,
+        max: 20
+      }
+    ]
+  ]
+},
+~~~~
+
+New:
+
+~~~~ javascript
+someProperty: {
+  type: 'integer',
+  defaultValue: 5,
+  validations: [
+    {
+      name: 'minMax',
+      options: {
+        min: 2,
+        max: 20
+      }
+    }
+  ]
+},
+~~~~
+
+
+##### Errorhandling
+
+Previously there were cases where an error without a callback would just log out something about it and then continue on.
+
+Now with Promises the behaviour will be similar (built-in unhandled rejection log) until Node.js starts to treat unhandled rejection by terminating the process.
+
+###### Validation
+
+Validation failures *during `save()`* previously returned a string 'invalid' and the errors then had to be checked in `instance.errors`.
+
+Now validation failures *during `save()`* reject with a ValidationError.
+
+Old:
+~~~~ javascript
+instance.save((err) => {
+  if (err) {
+    if (err === 'invalid') {
+      console.log('validation failed. reasons:', instance.errors);
+    } else {
+      console.error('saving failed with unknown error:', err);
+    }
+  } else {
+    console.log('success!');
+  }
+});
+~~~~
+
+New:
+~~~~ javascript
+try {
+  await instance.save();
+  console.log('success!');
+} catch (err) {
+  if (err instanceof nohm.ValidationError) {
+    console.log('validation failed. reasons:', err.errors); // or instance.errors still, if you prefer
+  } else {
+    console.error('saving failed with unknown error:', err);
+  }
+  console.log(err);
+}
+~~~~
+
+
+###### Linking errors
+
+Previously linking errors had 2 different ways to be handled, controlled via the continue_on_link_error option.
+
+This meant that either all linked objects were attempted to be stored, regardless of a failure in any linked object saving and success callback was called *or* as soon as one failed, no more links were stored during that save call and an immediate error callback would be issued.
+
+The new behaviour is that it always attempts to save all linked objects in series (not parllel), but if any of them fail a rejection is issued *at the end of the saving process*. The reason it is done in series is that it makes saves more predictable (and thus testable) and it reduces the risk of race-conditions in the link chain. 
+
+This makes it abundandly clear that you are in an error state while at the same time allowing for recovery by inspecting the failures and acting accordingly.
+
+A LinkError object is an extension of Error and additionally contains an "errors" array:
+
+~~~~ javascript
+linkError.errors == [
+  {
+    parent: NohmModel, // the instance on which .link() was performed
+    child: NohmModel, // the instance that was given to .link() as argument
+    error: Error | ValidationError | LinkError, // the error that occured while saving child.
+  }
+]
+~~~~
+
+In addition the callbacks that can be provided to the .link() call options object receive different arguments now. The errors array from the linked object is not passed seperately as the second argument anymore, instead it is just the thrown Error object as first argument and the linked object instance as second.
+
+Old:
+~~~~ javascript
+instance.link(other, {
+  error: (err, errors, linkedInstance) => {
+    errors === linkedInstance.errors,
+    other === linkedInstance
+  }
+});
+~~~~
+
+New:
+~~~~ javascript
+instance.link(other, {
+  error: (err, linkedInstance) => {
+    other === linkedInstance
+  },
+});
+~~~~
+
+
+##### Other
+
+- `model.load()` and `instance.load()` now return the same as .allProperties(), meaning the id field is now included in addition to the normal properties
+- `instance.valid()` was renamed to `instance.validate()`.
+- `instance.allProperties()` no longer has a json option (it stringified the return)
+- `instance.propertyReset()` no longer returns anything (previously always true)
+- `nohm.factory()` was previously only async if an id was provided - now it always returns a Promise, regardless of arguments provided
+- `instance.remove()` now sets `instance.id` property to null instead of 0. (this previously potentially caused issues with integer ids starting at 0)
+- The constructor for a model instance can no longer be used to immediately load the model by passing an id+callback. Use `nohm.factory()` instead or constructor and `instance.load()` afterwards.
+- passing invalid search keys (aka. property names that aren't defined as indexed) to `.find()` now throws an error instead of logging an error and returning an empty array.
+- `nohm.connect()` is renamed to `nohm.middleware()`
+- `nohm.middleware()` assumes that you are targeting browsers that have Promise support or that you have a Promise shim.
+- `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behaviour the same in `find()` and `findAndLoad()`.
+- `instance.id` is now a getter/setter that always returns null (no id set) or a string
+- the new `instance.isLoaded` is true when the instance has been loaded or saved at least once and `instance.id` has not been manually changed.
+- the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relationchanges)
+- custom ID generators *must* resolve with strings that do **not** contain double colons (:)
+- behaviours (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
+- the regexp validator now only takes valid RegExp objects as the .regex option and resolves with an error 
+
+#### Non-breaking changes
+
+- `instance.p()` and `instance.prop()` have been deprecated.  `instance.property()` is the only version going forward.
 - updated dependencies
-- lots of other changes
+
+##### Typescript
+
+Almost the entire code base was rewritten in Typescript.
+
+This means typing your models is now a lot easier. For additional examples of the typing possibilities, see the [README.md examples](https://github.com/maritz/nohm/blob/master/README.md#example) or the [Typescript tests](https://github.com/maritz/nohm/blob/master/ts/tests.ts).
+
 
 ## v1
 
