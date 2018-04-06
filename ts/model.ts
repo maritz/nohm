@@ -535,7 +535,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public async save(
     options?: ISaveOptions,
-  ): Promise<Array<ILinkSaveResult> | LinkError> {
+  ): Promise<void> {
     // TODO for v1: instead of the old continue_on_link_error behaviour, we should
     // add a way to deepValidate before saving. Meaning all relationChanges (only link)
     // get validated and if one of them is not valid, we abort before starting the save
