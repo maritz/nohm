@@ -486,9 +486,9 @@ exports.relation = {
   },
 
   unlinkRelationChangeCleanup: function(t) {
-    let user = new UserLinkMockup();
-    let role = new RoleLinkMockup();
-    let role2 = new RoleLinkMockup();
+    var user = new UserLinkMockup();
+    var role = new RoleLinkMockup();
+    var role2 = new RoleLinkMockup();
     t.expect(3);
 
     user.link(role);
