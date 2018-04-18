@@ -28,14 +28,23 @@ exports.helpers = {
   },
 
   checkEqual: function(t) {
+    // One is saved and loaded
+    // Get id from the saved model
+    // attach from
     var role = new RoleLinkMockup();
     var role2 = new RoleLinkMockup();
-    t.expect(1);
+    role.save(function (err) {
+      if (!err) {
+        role2.id = role.id;
 
-    var equality = helperLib.checkEqual(role, role2);
+        t.expect(1);
 
-    t.same(equality, true, 'checkEqual Helper should evaluate two different instances with the same values as equal.');
-    t.done();
+        var equality = helperLib.checkEqual(role, role2);
+
+        t.same(equality, true, 'checkEqual Helper should evaluate two different instances with the same values as equal.');
+        t.done();
+      }
+    })
   }
 
 };
