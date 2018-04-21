@@ -5,6 +5,12 @@ var redis = args.redis;
 var h = require(__dirname+'/helper.js');
 var relationsprefix = nohm.prefix.relations;
 var UserLinkMockup = nohm.model('UserLinkMockup', {
+  idGenerator: function(cb) {
+    function rnd() {
+      return Math.floor(Math.random() * 1e9).toString(36);
+    }
+    cb((+ new Date()).toString(36) + rnd() + rnd() + '+-_');
+  },
   properties: {
     name: {
       type: 'string',
@@ -14,7 +20,7 @@ var UserLinkMockup = nohm.model('UserLinkMockup', {
       ]
     }
   },
-  idGenerator: 'increment'
+  // idGenerator: 'increment'
 });
 var CommentLinkMockup = nohm.model('CommentLinkMockup', {
   properties: {
@@ -100,7 +106,7 @@ exports.relation = {
           key,
           firstDone = false,
           keyCheck = function (err, members) {
-            t.equals(members[0], '1', 'The set of a relationship contained a wrong member');
+            t.equals(members[0], user.id, 'The set of a relationship contained a wrong member');
             if (firstDone === true) {
               t.done();
             } else {
