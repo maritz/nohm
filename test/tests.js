@@ -2,11 +2,10 @@ var nodeunit = require('nodeunit');
 
 // testrunner copied from nodeunit and edited a little
 var run = function (files) {
-
-  nodeunit.reporters['default'].run(files, undefined, function () {
+  nodeunit.reporters['default'].run(files, undefined, function (error) {
     cleanup(function () {
       redis.end();
-      process.exit();
+      process.exit(error ? 1 : 0);
     });
   });
 };

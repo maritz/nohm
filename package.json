@@ -10,6 +10,12 @@
     "lib": "./ts"
   },
   "types": "./tsOut/index.d.ts",
+  "files": [
+    "tsOut/",
+    "HISTORY.md",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node test/tests.js",
     "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",

@@ -183,7 +183,7 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'validNamed',
       validations: [
-        function customNamedFunc(value) {
+        function /*test*/ customNamedFunc(value) {
           return Promise.resolve(value === 'validNamed');
         }
       ]

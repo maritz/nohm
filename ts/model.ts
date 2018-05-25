@@ -944,9 +944,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private getValidationObject(validator: TValidationDefinition, key: keyof TProps): IValidationObject {
     if (typeof (validator) === 'function') {
-      const funcName = validator.toString().match(/^(async )?function ([\w]*)[\s]?\(/);
+      const funcName = validator.name || key;
       return {
-        name: `custom_${(funcName && funcName[2] ? funcName[2] : key)}`,
+        name: `custom_${funcName}`,
         options: {},
         validator,
       };
