@@ -536,7 +536,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   public async save(
     options?: ISaveOptions,
   ): Promise<void> {
-    // TODO for v1: instead of the old continue_on_link_error behaviour, we should
+    // TODO for v2.1: instead of the old continue_on_link_error behaviour, we should
     // add a way to deepValidate before saving. Meaning all relationChanges (only link)
     // get validated and if one of them is not valid, we abort before starting the save
     callbackError(...arguments);
@@ -1102,7 +1102,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private async deleteDbCall(): Promise<void> {
-    // TODO for v1: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
+    // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
     const multi = this.client.MULTI();
 
