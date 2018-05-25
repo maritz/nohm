@@ -517,8 +517,7 @@ exports.relation = {
     });
   },
 
-
-  unlinkAll: function (t) {
+  unlinkAllWithUuid: function (t) {
     // uses unlinkAll in remove
     var user = new UserWithUuidLinkMockup(),
       role = new RoleWithUuidLinkMockup(),
