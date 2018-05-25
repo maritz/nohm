@@ -1,0 +1,50 @@
+var nohm = require(__dirname+'/../lib/nohm').Nohm;
+var args = require(__dirname+'/testArgs.js');
+var redis = args.redis;
+var helperLib = require(__dirname+'/../lib/helpers.js');
+var h = require(__dirname+'/helper.js');
+
+var RoleLinkMockup = nohm.model('RoleLinkMockup', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'user'
+    }
+  },
+  idGenerator: 'increment'
+});
+
+exports.helpers = {
+  
+  setUp: function (next) {
+    if ( ! nohm.client) {
+      nohm.setClient(redis);
+    }
+    next();
+  },
+  
+  tearDown: function (next) {
+    h.cleanUp(redis, args.prefix, next);
+  },
+
+  checkEqual: function(t) {
+    // One is saved and loaded
+    // Get id from the saved model
+    // attach from
+    var role = new RoleLinkMockup();
+    var role2 = new RoleLinkMockup();
+    role.save(function (err) {
+      if (!err) {
+        role2.id = role.id;
+
+        t.expect(1);
+
+        var equality = helperLib.checkEqual(role, role2);
+
+        t.same(equality, true, 'checkEqual Helper should evaluate two different instances with the same values as equal.');
+        t.done();
+      }
+    })
+  }
+
+};

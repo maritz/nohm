@@ -483,6 +483,21 @@ exports.relation = {
         }
       );
     });
+  },
+
+  unlinkRelationChangeCleanup: function(t) {
+    var user = new UserLinkMockup();
+    var role = new RoleLinkMockup();
+    var role2 = new RoleLinkMockup();
+    t.expect(3);
+
+    user.link(role);
+    user.unlink(role2); // Different role instance, same values.
+
+    t.same(user.relationChanges.length, 1, 'There is more than one relationchange in the array, checks have not succeeded');
+    t.same(user.relationChanges[0].action, 'unlink', 'The action on the relation change should be the unlink action. Link should be removed.');
+    t.same(user.relationChanges[0].object, role2, 'Object on the relation change should equal the role object passed to unlink.');
+    t.done();
   }
 };
  
