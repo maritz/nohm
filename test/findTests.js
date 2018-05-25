@@ -234,6 +234,16 @@ exports.find = {
     t.done();
   },
 
+  findAndLoadAll: async function (t) {
+    t.expect(3);
+
+    const users = await UserFindMockup.findAndLoad();
+    t.ok(Array.isArray(users), 'The loaded users was not of the expected type (Array).');
+    t.equals(users.length, 8, 'The loaded number of users was not 8.');
+    t.ok(users[0] instanceof UserFindMockup, 'The loaded user is not a nohm instance');
+    t.done();
+  },
+
   findAll: function (t) {
     var self = this;
     var findUser = new UserFindMockup();

@@ -528,7 +528,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * Save an instance to the database. Updating or Creating as needed depending on if the instance already has an id.
    *
    * @param {ISaveOptions} [options={
-   *     continue_on_link_error: false,
    *     silent: false,
    *     skip_validation_and_unique_indexes: false,
    *   }]
@@ -537,12 +536,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   public async save(
     options?: ISaveOptions,
   ): Promise<void> {
-    // TODO for v1: right now continue_on_link_error is always "true" since it's the current
-    // behavior without options and the option isn't passed.
-    // Need to check if the option should work again.
+    // TODO for v1: instead of the old continue_on_link_error behaviour, we should
+    // add a way to deepValidate before saving. Meaning all relationChanges (only link)
+    // get validated and if one of them is not valid, we abort before starting the save
     callbackError(...arguments);
     options = {
-      continue_on_link_error: false,
       silent: false,
       skip_validation_and_unique_indexes: false,
       ...options,
@@ -754,7 +752,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
     for (const [_key, fn] of changeFns.entries()) {
-      // TODO for v1: implement continue_on_link_error
       saveResults = saveResults.concat(await fn());
     }
     return saveResults;
@@ -1209,7 +1206,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @example
    *  // options object typing:
    *  {
-   *    continue_on_link_error?: boolean; // default false
    *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
    *    name: string;
    *    silent?: boolean;
@@ -1255,7 +1251,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @example
    *  // options object typing:
    *  {
-   *    continue_on_link_error?: boolean; // default false
    *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
    *    name: string;
    *    silent?: boolean;
