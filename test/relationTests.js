@@ -36,6 +36,38 @@ var RoleLinkMockup = nohm.model('RoleLinkMockup', {
   },
   idGenerator: 'increment'
 });
+var UserWithUuidLinkMockup = nohm.model('UserWithUuidLinkMockup', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'UUID_user'
+    }
+  },
+  idGenerator: function (cb) {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    cb(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
+  }
+});
+var RoleWithUuidLinkMockup = nohm.model('RoleWithUuidLinkMockup', {
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'UUID_role'
+    }
+  },
+  idGenerator: function (cb) {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    cb(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
+  }
+});
 
 
 exports.relation = {
@@ -501,7 +533,60 @@ exports.relation = {
     t.same(user.relationChanges[0].action, 'unlink', 'The action on the relation change should be the unlink action. Link should be removed.');
     t.same(user.relationChanges[0].object, role2, 'Object on the relation change should equal the role object passed to unlink.');
     t.done();
-  }
+  },
+
+  unlinkAllWithUuid: function (t) {
+    // uses unlinkAll in remove
+    var user = new UserWithUuidLinkMockup(),
+      role = new RoleWithUuidLinkMockup(),
+      role2 = new RoleWithUuidLinkMockup();
+    t.expect(7);
+
+    user.link(role);
+    user.link(role2);
+
+    user.save(function (err) {
+      t.ok(!err, 'there was an unexpected error while saving.');
+      user.unlinkAll(null, function(err) {
+        t.ok(!err, 'An unexpected redis error occured.');
+        async.parallel([
+            function (next) {
+              redis.exists(relationsprefix+user.modelName+':default:'+role.modelName+':'+role.id,
+                function (err, value) {
+                  t.equals(value, 0, 'The link to the role was not deleted');
+                  next(err);
+                });
+            },
+            function (next) {
+              redis.exists(relationsprefix+role.modelName+':defaultForeign:'+user.modelName+':'+user.id,
+                function (err, value) {
+                  t.equals(value, 0, 'The foreign link to the role was not deleted');
+                  next(err);
+                });
+            },
+            function (next) {
+              redis.exists(relationsprefix+user.modelName+':default:'+role.modelName+':'+role2.id,
+                function (err, value) {
+                  t.equals(value, 0, 'The link to the role was not deleted');
+                  next(err);
+                });
+            },
+            function (next) {
+              redis.exists(relationsprefix+role2.modelName+':defaultForeign:'+user.modelName+':'+user.id,
+                function (err, value) {
+                  t.equals(value, 0, 'The foreign link to the role was not deleted');
+                  next(err);
+                });
+            }],
+          function (err) {
+            t.ok(!err, 'An unexpected redis error occured.');
+            t.done();
+          }
+        );
+      });
+    });
+  },
+
 };
  
 /* Maybe this isn't such a good idea. I like that model definitions are completely
