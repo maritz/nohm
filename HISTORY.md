@@ -191,6 +191,7 @@ instance.link(other, {
 #### Non-breaking changes
 
 * `instance.p()` and `instance.prop()` have been deprecated. `instance.property()` is the only version going forward.
+* some bugs fixed
 * updated dependencies
 
 ##### Typescript
