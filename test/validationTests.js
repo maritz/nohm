@@ -783,7 +783,6 @@ exports["invalid regexp option"] = async (t) => {
 
   const instance = new model();
   try {
-    console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be an error message in the next line');
     await instance.validate();
     t.same(false, true, 'Validation did not throw with an invalid validation regexp');
   } catch (err) {
