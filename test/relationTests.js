@@ -491,6 +491,9 @@ exports.relation = {
     var role2 = new RoleLinkMockup();
     t.expect(3);
 
+    role.id = '12345';
+    role2.id = role.id;
+
     user.link(role);
     user.unlink(role2); // Different role instance, same values.
 
