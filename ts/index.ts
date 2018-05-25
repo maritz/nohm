@@ -1,9 +1,11 @@
-import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
-import { IMiddlewareOptions, middleware, TRequestHandler } from './middleware';
-import * as redis from 'redis';
 import * as Debug from 'debug';
+import { EventEmitter } from 'events';
+import * as redis from 'redis';
 
+import { LinkError } from './errors/LinkError';
+import { ValidationError } from './errors/ValidationError';
 import { getPrefix, INohmPrefixes } from './helpers';
+import { IMiddlewareOptions, middleware, TRequestHandler } from './middleware';
 import {
   IDictionary,
   ILinkOptions,
@@ -14,25 +16,21 @@ import {
   NohmModel,
   TLinkCallback,
 } from './model';
-
 import {
-  IStaticMethods,
-  TTypedDefinitions,
-  stringProperty,
   boolProperty,
-  integerProperty,
-  floatProperty,
-  numberProperty,
   dateProperty,
+  floatProperty,
+  integerProperty,
+  ISearchOption,
+  IStaticMethods,
+  jsonProperty,
+  numberProperty,
+  stringProperty,
   timeProperty,
   timestampProperty,
-  jsonProperty,
-  ISearchOption,
+  TTypedDefinitions,
 } from './model.header';
-
-import { ValidationError } from './errors/ValidationError';
-import { LinkError } from './errors/LinkError';
-import { EventEmitter } from 'events';
+import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
 
 export {
   IDictionary,
@@ -193,7 +191,7 @@ export class NohmClass {
 
   public logError(err: string | Error | null) {
     if (err) {
-      console.dir({
+      console.error({ // TODO: Make this a wrapped NohmError if not already an error
         message: err,
         name: 'Nohm Error',
       });

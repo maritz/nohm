@@ -1,16 +1,16 @@
 import { createHash } from 'crypto';
+import * as Debug from 'debug';
 import * as _ from 'lodash';
 import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v4 as uuid } from 'uuid';
-import * as Debug from 'debug';
 
+import { INohmPrefixes, NohmClass } from '.';
 import { LinkError } from './errors/LinkError';
 import { ValidationError } from './errors/ValidationError';
 import * as messageComposers from './eventComposers';
 import { callbackError, checkEqual } from './helpers';
 import { idGenerators } from './idGenerators';
-import { INohmPrefixes, NohmClass } from './index';
 import {
   IDictionary,
   ILinkOptions,
@@ -188,7 +188,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
             // tslint:disable-next-line:max-line-length
             console.warn('\x1b[31m%s\x1b[0m', `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
             // tslint:disable-next-line:max-line-length
-            console.warn('\x1b[31m%s\x1b[0m', `DEPRECATED: Overwriting built-in methhods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`, errorForStack.stack);
+            console.warn('\x1b[31m%s\x1b[0m', `DEPRECATED: Overwriting built-in methods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`, errorForStack.stack);
           }, 1);
           (this as any)['_super_' + name] = (this as any)[name].bind(this);
         }
@@ -331,14 +331,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   public property<TProp extends keyof TProps>(key: TProp, value: any): TProps[TProp];
   // tslint:disable-next-line:unified-signatures
   public property(
-    valuesObject: Partial<{[key in keyof TProps]: any}>,
-  ): Partial<{[key in keyof TProps]: TProps[key]}>;
+    valuesObject: Partial<{ [key in keyof TProps]: any }>,
+  ): Partial<{ [key in keyof TProps]: TProps[key] }>;
   public property<TProp extends keyof TProps>(
-    keyOrValues: keyof TProps | Partial<{[key in keyof TProps]: any}>,
+    keyOrValues: keyof TProps | Partial<{ [key in keyof TProps]: any }>,
     value?: any,
-  ): TProps[TProp] | Partial<{[key in keyof TProps]: any}> {
+  ): TProps[TProp] | Partial<{ [key in keyof TProps]: any }> {
     if (!this.isPropertyKey(keyOrValues)) {
-      const obj: Partial<{[key in keyof TProps]: any}> = {};
+      const obj: Partial<{ [key in keyof TProps]: any }> = {};
       Object.keys(keyOrValues).forEach((key) => {
         obj[key] = this.property(key, keyOrValues[key]);
       });
@@ -1618,10 +1618,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     const fieldType = this.getDefinitions()[options.field].type;
+    const isIndexed = this.getDefinitions()[options.field].index;
 
-    const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : '');
+    const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : undefined);
     const direction = options.direction ? options.direction : 'ASC';
-    const scored = typeof (fieldType) === 'string' ? indexNumberTypes.includes(fieldType) : false;
+    const scored = typeof (fieldType) === 'string' && isIndexed ? indexNumberTypes.includes(fieldType) : false;
     let start = 0;
     let stop = 100;
     if (Array.isArray(options.limit) && options.limit.length > 0) {
@@ -1672,17 +1673,32 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         'BY', `${this.prefix('hash')}:*->${options.field}`,
         'LIMIT', String(start), String(stop),
         direction,
-        alpha);
+        alpha as any, // any casting because passing in an empty string actually results in errors in some cases
+      );
     }
     if (ids) {
       client.del(tmpKey);
     }
     const replies = await EXEC<any>(client);
+    let reply: Array<Error | any>;
     if (ids) {
       // 2 redis commands to create the temp keys, then the query
-      return replies[2];
+      reply = replies.splice(2, 1)[0];
     } else {
-      return replies[0];
+      reply = replies.splice(0, 1)[0];
+    }
+    replies.forEach((otherReply) => {
+      if (otherReply instanceof Error) {
+        const warnMessage = otherReply.stack ? otherReply.stack : otherReply.message;
+        console.warn(`Error during ${this.modelName}.sort() multi.exec(): ${warnMessage}`);
+      }
+    });
+    if (reply instanceof Error) {
+      // multi responses are returned as arrays and each item can be an error
+      // if the reply of the sort command that gives us our ids fails, we want to throw
+      throw reply;
+    } else {
+      return reply;
     }
   }
 

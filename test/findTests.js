@@ -41,6 +41,13 @@ var UserFindMockup = nohm.model('UserFindMockup', {
       type: 'bool',
       defaultValue: false,
       index: true
+    },
+    numberNonIndexed: {
+      type: 'integer'
+    },
+    customNonIndexed: {
+      defaultValue: 4,
+      type: function () { return 4; }
     }
   },
   idGenerator: 'increment'
@@ -908,6 +915,46 @@ exports.find = {
           limit: [0, 10]
         }, []);
         t.same(0, ids.length, 'Sorting went wrong when ids.length is 0.');
+        t.done();
+      })();
+    },
+
+    "non-indexed non-string property": function (t) {
+      t.expect(1);
+
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.property('numberNonIndexed');
+        b = b.property('numberNonIndexed');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return '' + user.id;
+      });
+
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'numberNonIndexed'
+        }, this.userIds);
+        t.same(sorted_ids, ids, 'Sorting non-indexed number field went wrong.');
+        t.done();
+      })();
+    },
+
+    "non-indexed custom type property": function (t) {
+      t.expect(1);
+
+      var sorted_ids = this.users.sort(function (a, b) {
+        a = a.property('customNonIndexed');
+        b = b.property('customNonIndexed');
+        return a > b ? 1 : (a < b ? -1 : 0);
+      }).map(function (user) {
+        return '' + user.id;
+      });
+
+      (async () => {
+        const ids = await UserFindMockup.sort({
+          field: 'customNonIndexed'
+        }, this.userIds);
+        t.same(sorted_ids, ids, 'Sorting non-indexed custom type field went wrong.');
         t.done();
       })();
     }
