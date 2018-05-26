@@ -1,19 +1,15 @@
-# Changelogs
+# v2.0.0 (currently in alpha)
 
-## v2
+## BREAKING CHANGES
 
-### v2.0.0 (currently in alpha)
-
-#### BREAKING CHANGES
-
-##### Node version >= 8
+### Node version >= 8
 
 nohm v0.9 / v1.x supports node versions all the way back to v0.10 and is tested in our CI environments as such.
 
 nohm v2 onwards will restrict this to more current versions of node. At the time of this writing all tests pass on node 8.x, 9.x and 10.x.  
 For now the CI will stay set up to **support 8.x, lts/\* (currently 8.x as well) and stable (currently v10)**. When/if support for 8.x is cancelled, this will be another breaking change and declared as such.
 
-##### Promises
+### Promises
 
 All callbacks have been changed to promises (except events and link optional callbacks).
 
@@ -38,13 +34,13 @@ try {
 }
 ```
 
-##### Default IDs
+### Default IDs
 
 Previously, default ids were a custom random implementation, that wasn't very safe. Now uuid v1 is used by default.
 
 Existing default ids should still work with the new versions, but any new default ids created after the update will be uuid v1.
 
-##### Validation definitions
+### Validation definitions
 
 The format for validations was previously based on arrays, and strict indices had to be maintained for different parts of the definition.
 
@@ -86,17 +82,17 @@ someProperty: {
 },
 ```
 
-##### Errorhandling
+### Errorhandling
 
 Previously there were cases where an error without a callback would just log out something about it and then continue on.
 
 Now with Promises the behaviour will be similar (built-in unhandled rejection log) until Node.js starts to treat unhandled rejection by terminating the process.
 
-###### Validation
+#### Validation
 
-Validation failures _during `save()`_ previously returned a string 'invalid' and the errors then had to be checked in `instance.errors`.
+Validation failures during `save()` previously returned a string 'invalid' and the errors then had to be checked in `instance.errors`.
 
-Now validation failures _during `save()`_ reject with a ValidationError.
+Now validation failures during `save()` reject with a ValidationError.
 
 Old:
 
@@ -130,7 +126,7 @@ try {
 }
 ```
 
-###### Linking errors
+#### Linking errors
 
 Previously linking errors had 2 different ways to be handled, controlled via the continue_on_link_error option.
 
@@ -175,7 +171,7 @@ instance.link(other, {
 });
 ```
 
-##### Other
+### Other breaking changes
 
 * `model.load()` and `instance.load()` now return the same as .allProperties(), meaning the id field is now included in addition to the normal properties
 * `instance.valid()` was renamed to `instance.validate()`.
@@ -195,21 +191,19 @@ instance.link(other, {
 * behaviours (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
 * the regexp validator now only takes valid RegExp objects as the .regex option and resolves with an error
 
-#### Non-breaking changes
+## Non-breaking changes
 
 * `instance.p()` and `instance.prop()` have been deprecated. `instance.property()` is the only version going forward.
 * some bugs fixed
 * updated dependencies
 
-##### Typescript
+### Typescript
 
 Almost the entire code base was rewritten in Typescript.
 
 This means typing your models is now a lot easier. For additional examples of the typing possibilities, see the [README.md examples](https://github.com/maritz/nohm/blob/master/README.md#example) or the [Typescript tests](https://github.com/maritz/nohm/blob/master/ts/tests.ts).
 
-## v1
-
-### v1.0.0 - 2018/05/25
+# v1.0.0 - 2018/05/25
 
 Nohm v1 is published without any major change from v0.9.8.
 v1.0.x will be maintenance (critical bugs) only.
@@ -220,7 +214,7 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 * Fixes unlinkAll() (and thus remove()) not working properly with some id types.
 * Fixes custom validation function name parsing in node v10+
 
-### v0.9.8 - 2016/02/06
+# v0.9.8 - 2016/02/06
 
 * Add instance context to custom validators. (thanks johngeorgewright)
 
@@ -238,7 +232,7 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
   * redis 2.4.2
   * (dev) nodeunit 0.9.1
 
-### v0.9.8 - 06.02.2016
+# v0.9.8 - 06.02.2016
 
 * Add instance context to custom validators. (thanks johngeorgewright)
 
@@ -256,19 +250,19 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
   * redis 2.4.2
   * (dev) nodeunit 0.9.1
 
-### v0.9.7 - 09.05.2015
+# v0.9.7 - 09.05.2015
 
 * BREAKS BACKWARDS COMPATIBILITY! (but only slightly and shouldn't really be an issue for most uses)
 * Fix for date parsing - only affects ISO date strings of format that has ' +HH:MM' or ' -HH:MM' at the end) and only on machines that are not set UTC (which servers usually are)
 * Update async & nodeunit dependencies
 
-### v0.9.6 - 05.09.2014
+# v0.9.6 - 05.09.2014
 
 * Add save option skip_validation_and_unique_indexes (thanks RoxasShadow)
 * Bug fixes (thanks exortech)
 * Update dependencies
 
-### v0.9.3 - 06.07.2013
+# v0.9.3 - 06.07.2013
 
 * Add endpoints option to find() (thanks to interruptz)
 * Add min>max options to find() that trigger descending search (thanks to interruptz)
@@ -276,62 +270,62 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 * Remove checking and setting meta.version on every model init
 * Bug fixes
 
-### v0.9.2 - 04.12.2012
+# v0.9.2 - 04.12.2012
 
 * Add findAndLoad as a convenience method
 * Fix a problem with getAll if different idGenerators were used
 
-### v0.9.1 - 21.08.2012
+# v0.9.1 - 21.08.2012
 
 * Fix uniques to now be completely case-insensitive
 
-### v0.9.0 - 06.06.2012
+# v0.9.0 - 06.06.2012
 
 * setClient/getClient now issue warnings on unconnected clients
 * Bug fixes
 
-### v0.9.0-pre3 - 04.03.2012
+# v0.9.0-pre3 - 04.03.2012
 
 * Support for common variants on bool/string/integer/timestamp
 * Bug fixes
 
-### v0.9.0-pre - 2012-03-14
+# v0.9.0-pre - 2012-03-14
 
 * BREAKS BACKWARDS COMPATIBILITY! change relation names for clearer handling ("child" is now "default", "xyzParent" is now "xyzForeign")
 * Added error handler to link/unlink
 * Bug fixes
 
-### v0.7.2 - 2012-01-19
+# v0.7.2 - 2012-01-19
 
 * add .sort()
 
-### v0.7.1
+# v0.7.1
 
 * Fix unique handling bugs
 
-### v0.7.0
+# v0.7.0
 
 * BREAKS BACKWARDS COMPATIBILTY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
 * add nohm.connect() connect middleware that delivers browser validation js
 * Fix empty strings being locked on unique properties
 * Fix uniques to be case insensitive
 
-### v0.6.4
+# v0.6.4
 
 * unique values are now case insensitive when validating or searching
 * now compatible with node v0.6.3
 * now uses nodeunit v0.6.4
 
-### v0.6.3
+# v0.6.3
 
 * add Nohm.factory(modelName, [id, callback])
 * update redis dependency to 0.7.1
 
-### v0.6.1 & v0.6.2
+# v0.6.1 & v0.6.2
 
 * bug fixes
 
-### v0.6
+# v0.6
 
 * changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILTY)
 * added ability to choose from different id generation mechanisms (for example incremental or custom functions)
@@ -339,13 +333,13 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 * changed `this` in callbacks to be the instance you manipulated/loaded
 * bug fixes
 
-### v0.5
+# v0.5
 
 * "value" in model properties renamed to "defaultValue"
 * "has()" renamed to "belongsTo()"
 * bug fixes
 
-### v0.4
+# v0.4
 
 * documentation
 * added instance.exists(id, callback)
@@ -355,32 +349,32 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 * removed admin app (now in https://github.com/maritz/nohm-admin)
 * bug fixes and code improvements
 
-### v0.3
+# v0.3
 
 * refactored a lot of the code
 
-### v0.2
+# v0.2
 
 * merged admin branch (this adds an optional and very basic admin web interface)
 * a lot of fixes for find and indexes
 
-### v0.1.4
+# v0.1.4
 
 * three small changes
 
-### v0.1.3
+# v0.1.3
 
 * added numLinks()
 * lots of bugfixes and some semi-internal changes
 
-### v0.1.2
+# v0.1.2
 
 * a few bugfixes in uniques, find() and load()
 
-### v0.1.1
+# v0.1.1
 
 * expose redis via nohm.redis
 
-## v0.1
+# v0.1
 
 * all basic functionality included
