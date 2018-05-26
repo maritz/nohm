@@ -794,7 +794,7 @@ SomeModel.sort(
   {
     field: 'name',
     direction: 'DESC',
-    limit: [50. 25],
+    limit: [50, 25],
   },
   function(err, ids) {
     // ids is an array of 25 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
