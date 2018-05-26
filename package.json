@@ -2,6 +2,7 @@
   "name": "nohm",
   "version": "2.0.0-alpha.11",
   "description": "redis ORM (Object relational mapper)",
+  "lisense": "MIT",
   "engines": {
     "node": ">=8"
   },
