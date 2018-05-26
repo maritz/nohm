@@ -6,9 +6,16 @@
 
 #### BREAKING CHANGES
 
+##### Node version >= 8
+
+nohm v0.9 / v1.x supports node versions all the way back to v0.10 and is tested in our CI environments as such.
+
+nohm v2 onwards will restrict this to more current versions of node. At the time of this writing all tests pass on node 8.x, 9.x and 10.x.  
+For now the CI will stay set up to **support 8.x, lts/\* (currently 8.x as well) and stable (currently v10)**. When/if support for 8.x is cancelled, this will be another breaking change and declared as such.
+
 ##### Promises
 
-All callbacks have been changed to promises (except events).
+All callbacks have been changed to promises (except events and link optional callbacks).
 
 To migrate your code, replace callback functions with promise handlers.
 
