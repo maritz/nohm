@@ -4,9 +4,9 @@
 [![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 [![Known Vulnerabilities (Snyk)](https://snyk.io/test/github/maritz/nohm/badge.svg)](https://snyk.io/test/github/maritz/nohm)
 
-## v0.9 README
+## v1 README
 
-This README is for the upcoming v2.0 release which has a lot of breaking changes. For the README of the stable version [go here](https://github.com/maritz/nohm/tree/v0.9.8).
+This README is for the upcoming v2.0 release which has a lot of breaking changes. For the README of the version that is currently marked as stable in npm [go here](https://github.com/maritz/nohm/tree/v1_maintenance).
 
 ## Description
 
@@ -24,8 +24,9 @@ To add the current alpha vor v2 use the alpha tag
 
 ## Documentation
 
-(stable version, not v2!)
-http://maritz.github.com/nohm/
+[v1 (current stable) documentation](http://maritz.github.com/nohm/)
+
+[v2 documentation](https://maritz.github.io/nohm/index_v2.html)
 
 ## Example
 
