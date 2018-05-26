@@ -62,7 +62,7 @@ layout: default
 
 ### Overview
 
-Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
+Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping 'Object-relational Mapping') for [redis](http://www.redis.io).
 This How-To is intended to give you a good understanding of how nohm works.
 
 ### v2 Breaking changes
@@ -76,16 +76,16 @@ For a full list of all breaking changes [see the HISTORY.md](https://github.com/
 There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
 
 **Note:** Almost all code examples here assume the following code:
-{% highlight js %}
+
+```javascript
 const nohm = require('nohm').Nohm;
 const redisClient = require('redis').createClient();
 redis.on('connect', () => {
-nohm.setClient(redisClient);
+  nohm.setClient(redisClient);
 
- // example code goes here!
-
+  // example code goes here!
 });
-{% endhighlight %}
+```
 
 #### NohmClass, NohmModel, etc. The module explained
 
@@ -99,21 +99,22 @@ The `nohm` module exports several objects/classes:
 
 The first thing you should do is set a prefix for the redis keys. This should be unique on the redis database you're using since you may run into conflicts otherwise.
 You can do this with the following command:
-{% highlight js %}
+
+```javascript
 nohm.setPrefix('yourAppPrefixForRedis');
-{% endhighlight %}
+```
 
 #### Client
 
 You need to set a redis client for nohm. You should connect and select the appropriate database before you set it.
 
-{% highlight js %}
+```javascript
 const redisClient = require('redis').createClient();
 // wait for redis to connect, to make sure everything will work as expected
 redis.on('connect', () => {
-nohm.setClient(redisClient);
+  nohm.setClient(redisClient);
 });
-{% endhighlight %}
+```
 
 #### Logging
 
@@ -121,15 +122,15 @@ By default nohm just logs errors it encounters to the console. However you can o
 
 TODO: once v2 has proper logging support, change this.
 
-{% highlight js %}
-// this will throw all errors nohm encounters
-nohm.logError = function (err) {
-throw new Error({
-name: "Nohm Error",
-message: err
-});
-}
-{% endhighlight %}
+```javascript
+// this will throw all errors nohm encounters - not recommended
+nohm.logError = function(err) {
+  throw new Error({
+    name: 'Nohm Error',
+    message: err,
+  });
+};
+```
 
 ### Models
 
@@ -141,17 +142,18 @@ When using plain objects you use the nohm.model() when using classes (in ES6 or 
 
 #### nohm.model()
 
-{% highlight js %}
+```javascript
 const someModel = nohm.model('YourModelName', {
-properties: {
-// ... here you'll define your properties
-},
-methods: { // optional
-// ... here you'll define your custom methods
-},
-client: someRedisClient // optional
+  properties: {
+    // ... here you'll define your properties
+  },
+  methods: {
+    // optional
+    // ... here you'll define your custom methods
+  },
+  client: someRedisClient, // optional
 });
-{% endhighlight %}
+```
 
 <p><small>Strictly speaking the properties are optional as well, but a model really doesn't make sense without them.</small></p>
 
@@ -162,9 +164,9 @@ The second is an object containing properties, methods and the client.
 
 If you want your model to have custom methods you can define them in the `methods` object. They will be bound to the model and thus inside them the 'this' keyword is the instance of a model.
 
-##### Client
+##### Redis client
 
-You can optionally set a redis client for a model.
+You can optionally set a redis client for a model by passing it as the property `client`.
 
 **Important**: Currently relations between models on different DBs do NOT work!
 
@@ -177,22 +179,22 @@ The workaround is to define them afterwards on the class object as seen below.
 
 ES6+ Example:
 
-{% highlight js %}
+```javascript
 const NohmModel = require('nohm').NohmModel;
 class SomeModel extends NohmModel {
-public someMethod() {
-console.log(this.property('name'));
-}
+  public someMethod() {
+    console.log(this.property('name'));
+  }
 }
 
 ClassModel.modelName = 'SomeModelName';
 ClassModel.definitions = {
-name: {
-type: 'string',
-unique: true
-}
+  name: {
+    type: 'string',
+    unique: true
+  }
 };
-{% endhighlight %}
+```
 
 #### Properties (.model()) / Definitions (.register())
 
@@ -216,7 +218,7 @@ A property can have the following options: (explained in more detail later)
     The default value a property will have when the model is initialized.<br/>
     Can even be a function that will be called each time a new instance is created and the return value will be the value of the property.<br/>
 
-    <b>Note</b>: If you do not define a default value, it will be 0.
+    *Note*: If you do not define a default value, it will be 0.
 
   </dd>
   <dt>
@@ -248,45 +250,40 @@ A property can have the following options: (explained in more detail later)
 
 Here's an example of a very basic user model:
 
-{% highlight js %}
+```javascript
 const User = nohm.model('User', {
-properties: {
-name: {
-type: 'string',
-unique: true,
-validations: [
-'notEmpty'
-]
-},
-email: {
-type: 'string',
-unique: true,
-validations: [
-'notEmpty',
-'email'
-]
-},
-password: {
-defaultValue: '',
-type: (value) => {
-return `${value}someSeed`; // and hash it of course, but to make this short that is omitted in this example
-},
-validations: [
-{
-name: 'length',
-options: {
-min: 6
-}
-}
-]
-},
-visits: {
-type: 'integer',
-index: true
-}
-}
+  properties: {
+    name: {
+      type: 'string',
+      unique: true,
+      validations: ['notEmpty'],
+    },
+    email: {
+      type: 'string',
+      unique: true,
+      validations: ['notEmpty', 'email'],
+    },
+    password: {
+      defaultValue: '',
+      type: (value) => {
+        return `${value}someSeed`; // and hash it of course, but to make this short that is omitted in this example
+      },
+      validations: [
+        {
+          name: 'length',
+          options: {
+            min: 6,
+          },
+        },
+      ],
+    },
+    visits: {
+      type: 'integer',
+      index: true,
+    },
+  },
 });
-{% endhighlight %}
+```
 
 ##### Types/Behaviours
 
@@ -324,16 +321,17 @@ The return value of the function will be the new value of the property.
 Note that the redis client will convert everything to strings before storing!
 
 A simple example:
-{% highlight js %}
+
+```javascript
 const User = nohm.model('User', {
-properties: {
-balance: {
-defaultValue: 0,
-type: function changeBalance(value, key, old) {
-return old + value;
-}
-}
-}
+  properties: {
+    balance: {
+      defaultValue: 0,
+      type: function changeBalance(value, key, old) {
+        return old + value;
+      },
+    },
+  },
 });
 
 const test = new User();
@@ -344,7 +342,7 @@ test.p('balance', 10);
 test.p('balance'); // 15
 test.p('balance', -6);
 test.p('balance'); // 9
-{% endhighlight %}
+```
 
 ##### Validators
 
@@ -359,44 +357,45 @@ _Note_: Functions included like this cannot be exported to the browser!
 _Note_: The function name is used in the error fields if validation fails. Thus using arrow functions here might not be desirable.
 
 Here's an example with all three ways:
-{% highlight js %}
+
+```javascript
 const validatorModel = nohm.model('validatorModel', {
-properties: {
-builtIns: {
-type: 'string',
-validations: [
-'notEmpty',
-{
-name: 'length',
-options: {
-max: 20
-}
-}
-]
-},
-optionalEmail: {
-type: 'string',
-unique: true,
-validations: [
-{
-name: 'email',
-options: {
-optional: true // every built-in validation supports the optional option
-}
-}
-]
-},
-customValidation: {
-type: 'integer',
-validations: [
-function checkIsFour(value, options) {
-return Promise.resolve(value === 4);
-}
-]
-}
-}
+  properties: {
+    builtIns: {
+      type: 'string',
+      validations: [
+        'notEmpty',
+        {
+          name: 'length',
+          options: {
+            max: 20,
+          },
+        },
+      ],
+    },
+    optionalEmail: {
+      type: 'string',
+      unique: true,
+      validations: [
+        {
+          name: 'email',
+          options: {
+            optional: true, // every built-in validation supports the optional option
+          },
+        },
+      ],
+    },
+    customValidation: {
+      type: 'integer',
+      validations: [
+        function checkIsFour(value, options) {
+          return Promise.resolve(value === 4);
+        },
+      ],
+    },
+  },
 });
-{% endhighlight %}
+```
 
 You can find the documentation of the [built-in validations in the api](api/symbols/validators.html) or look directly [at the source code](https://github.com/maritz/nohm/blob/master/lib/validators.js).
 // TODO: decide what to do with this...
@@ -409,70 +408,73 @@ If you need to define custom validations as functions and want them to be export
 
 Example customValidation.js:
 
-{% highlight js %}
-exports.usernameIsAnton = function (value, options) {
-if (options.revert) {
-callback(value !== 'Anton');
-} else {
-callback(value === 'Anton');
-}
+```javascript
+exports.usernameIsAnton = function(value, options) {
+  if (options.revert) {
+    callback(value !== 'Anton');
+  } else {
+    callback(value === 'Anton');
+  }
 };
-{% endhighlight %}
+```
 
 This is then included like this:
 
-{% highlight js %}
-Nohm.setExtraValidations('customValidation.js')
-{% endhighlight %}
+```javascript
+Nohm.setExtraValidations('customValidation.js');
+```
 
 Now you can use this validation in your model definitions like this:
 
-{% highlight js %}
+```javascript
 nohm.model('validatorModel', {
-properties: {
-customValidation: {
-type: 'string',
-validations: [
-'usernameIsAnton',
-// or
-['usernameIsAnton', {
-revert: true
-}]
-]
-}
-}
+  properties: {
+    customValidation: {
+      type: 'string',
+      validations: [
+        'usernameIsAnton',
+        // or
+        [
+          'usernameIsAnton',
+          {
+            revert: true,
+          },
+        ],
+      ],
+    },
+  },
 });
-{% endhighlight %}
+```
 
 #### ID generation
 
 By default the ids of instances are uuid v1 and generated at the time of the first save call. You can however either choose an incremental id scheme or provide a custom function for generating ids.
 
-{% highlight js %}
+```javascript
 nohm.model('incrementalIdModel', {
-idGenerator: 'increment',
-properties: {
-// ...
-},
+  idGenerator: 'increment',
+  properties: {
+    // ...
+  },
 });
 //ids of incremental will be 1, 2, 3 ...
 
-cpmst prefix = 'bob';
+const prefix = 'bob';
 const step = 50;
 let counter = 200;
 Nohm.model('customIdModel', {
-idGenerator: function () {
-// ids of custom will be bob250, bob300, bob350 ...
-counter += step;
-return Promise.resolve(prefix+counter);
-},
-properties: {
-// ...
-},
+  idGenerator: async () => {
+    // ids of custom will be bob250, bob300, bob350 ...
+    counter += step;
+    return prefix + counter;
+  },
+  properties: {
+    // ...
+  },
 });
 // this is just an example and not a good implementation,
 // because it keeps the counter purely in memory
-{% endhighlight %}
+```
 
 ### Creating an instance
 
@@ -482,10 +484,10 @@ There are two basic ways to create an instance of a model.
 
 Using the new keyword on the return of .model() or .register().
 
-{% highlight js %}
+```javascript
 const UserModel = nohm.model('UserModel', {});
 const user = new UserModel();
-{% endhighlight %}
+```
 
 This has the drawback that you need to keep track of your models.
 
@@ -493,38 +495,38 @@ This has the drawback that you need to keep track of your models.
 
 Alternatively you can use the factory method of a NohmClass instance.
 
-{% highlight js %}
+```typescript
 // define your model in a userModel.js or similar
 nohm.model('UserModel', {});
 
 // anywhere else in your code
 const user = await nohm.factory('UserModel');
 // note the await, because factory always returns a promise
-{% endhighlight %}
+```
 
 You can also pass an id as the 2nd argument to immediately load the data from db.
 
-{% highlight js %}
+```typescript
 const user = await nohm.factory('UserModel', 123);
 user.id === 123; // true
 user.isLoaded === true; // true
-{% endhighlight %}
+```
 
 ### Setting/Getting properties
 
 The method property() gets and sets properties of an instance.
 
-{% highlight js %}
+```javascript
 const user = new User();
 user.property('name', 'test');
 user.property('name'); // returns 'test'
 user.property({
-name: 'test2',
-email: 'someMail@example.com'
+  name: 'test2',
+  email: 'someMail@example.com',
 });
 user.property('name'); // returns 'test2'
 user.property('email'); // returns 'someMail@example.com'
-{% endhighlight %}
+```
 
 The convenience short versions .p() and .prop() still exist, but are deprecated and cause a deprecation warning.
 
@@ -538,19 +540,19 @@ In the following code examples we assume the model of the [valitators section](#
 
 #### Calling valid()
 
-{% highlight js %}
+```typescript
 user.property({
-builtIns: 'teststringlongerthan20chars',
-optionalEmail: 'hurgs',
-customValidation: 3
+  builtIns: 'teststringlongerthan20chars',
+  optionalEmail: 'hurgs',
+  customValidation: 3,
 });
 const valid = await user.validate(undefined, false);
-if ( ! valid) {
-user.errors; // { builtIns: ['length'], optionalEmail: ['email'], customValidation: ['custom'] }
+if (!valid) {
+  user.errors; // { builtIns: ['length'], optionalEmail: ['email'], customValidation: ['custom'] }
 } else {
-// valid! YEHAA!
+  // valid! YEHAA!
 }
-{% endhighlight %}
+```
 
 There are a few things to note here:
 
@@ -569,9 +571,9 @@ Instead, if you want to share custom validations with frontend and backend, they
 
 TODO: Check/fix/update this once the custom validation files are ported in v2.
 
-{% highlight js %}
+```javascript
 nohm.middleware(options);
-{% endhighlight %}
+```
 
 The middleware takes an argument containing the following options:
 
@@ -581,38 +583,42 @@ The middleware takes an argument containing the following options:
 * `extraFiles` - Extra files containing validations. You should only use this if they are not already set via Nohm.setExtraValidations as nohm.connect automatically includes those.
 * `maxAge` - Cache control (in seconds)
 
-{% highlight js %}
-server.use(nohm.middleware(
-// options object
-{
-url: '/nohm.js',
-namespace: 'nohm',
-exclusions: {
-User: { // modelName
-name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-salt: true // this will completely ignore all validations for the salt property
-},
-Privileges: true // this will completely ignore the Priviledges model
-}
-}));
-{% endhighlight %}
+```typescript
+server.use(
+  nohm.middleware(
+    // options object
+    {
+      url: '/nohm.js',
+      namespace: 'nohm',
+      exclusions: {
+        User: {
+          // modelName
+          name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
+          salt: true, // this will completely ignore all validations for the salt property
+        },
+        Privileges: true, // this will completely ignore the Priviledges model
+      },
+    },
+  ),
+);
+```
 
 If you now include /nohm.js (or default /nohmValidations.js) in your page, you can validate any model in the browser like this:
 
-{% highlight js %}
+```typescript
 // using defined namespace from above. default would be nohmValidations
 const { valid, errors } = await nohm.validate('User', {
-name: 'test123',
-email: 'test@test.de',
-password: '\*\*\*\*\*\*'
+  name: 'test123',
+  email: 'test@test.de',
+  password: '******',
 });
 if (valid) {
-alert('User is valid!');
+  alert('User is valid!');
 } else {
-alert('Oh no, your user data was not accepted!');
-// errors is the same format as on the server model.errors
+  alert('Oh no, your user data was not accepted!');
+  // errors is the same format as on the server model.errors
 }
-{% endhighlight %}
+```
 
 Of course you have to make sure your supported browsers can handle Async/Await, most likely with a transformation step and Promise shims.
 
@@ -624,69 +630,71 @@ This means that if you haven't either manually set the id or load()ed the instan
 
 Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
 
-{% highlight js %}
+```typescript
 try {
-await user.save();
-// it's in the db :)
+  await user.save();
+  // it's in the db :)
 } catch (error) {
-if (error instanceof nohm.ValidationError) {
-// erros = the errors in validation
+  if (error instanceof nohm.ValidationError) {
+    // erros = the errors in validation
+  }
 }
-}
-{% endhighlight %}
+```
 
 Save can take an optional object containing options, which defaults to this:
 
-{% highlight js %}
+```javascript
 user.save({
-// If true, no events from this save are published
-silent: false,
+  // If true, no events from this save are published
+  silent: false,
 
-// By default if user was linked to two objects before saving and the first linking fails, the second link will not be saved either.
-// Set this to true to try saving all relations, regardless of previous linking errors.
-continue_on_link_error: false,
+  // By default if user was linked to two objects before saving and the first linking fails, the second link will not be saved either.
+  // Set this to true to try saving all relations, regardless of previous linking errors.
+  continue_on_link_error: false,
 
-// Set to true to skip validation entirely.
-// _WARNING_: This can cause severe problems. Think hard before using this.
-// It skips checking _and setting_ unique indexes.
-// It is also NOT passed to linked objects that have to be saved.
-skip_validation_and_unique_indexes: false
+  // Set to true to skip validation entirely.
+  // _WARNING_: This can cause severe problems. Think hard before using this.
+  // It skips checking _and setting_ unique indexes.
+  // It is also NOT passed to linked objects that have to be saved.
+  skip_validation_and_unique_indexes: false,
 });
-{% endhighlight %}
+```
 
 ### Deleting
 
 Calling remove() completely removes the instance from the db, including realtions - but not the related instances - so it is not a cascading remove.
 This only works on instances where the id is set (manually or from load()).
 
-{% highlight js %}
+```typescript
 const user = await nohm.factory('User');
 user.id = 123;
 try {
-await user.remove({ // options object can be omitted
-silent: true, // whether remove event is published. defaults to false.
-});
+  await user.remove({
+    // options object can be omitted
+    silent: true, // whether remove event is published. defaults to false.
+  });
 } catch (error) {
-// removal failed.
+  // removal failed.
 }
-{% endhighlight %}
+```
 
 ### Loading
 
 To populate the properties of an existing instance you have to load it via ID.
 
 If the instance does not exist a new Error('not found') is thrown.
-{% highlight js %}  
+
+```typescript
 try {
-const properties = user.load(1234);
+  const properties = await user.load(1234);
 } catch (err) {
-if (err && err.message === 'not found') {
-// user does not exist
-} else {
-// unknown error
+  if (err && err.message === 'not found') {
+    // user does not exist
+  } else {
+    // unknown error
+  }
 }
-}
-{% endhighlight %}
+```
 
 ### Finding
 
@@ -697,10 +705,10 @@ The function to do so is always .find(), but what it does depends on the argumen
 
 Simply calling find() without arguments will retrieve all IDs.
 
-{% highlight js %}
+```typescript
 const ids = await SomeModel.find();
 // ids = array of ids
-{% endhighlight %}
+```
 
 #### Finding by Index
 
@@ -715,14 +723,15 @@ After all search queries of a find() have been processed the intersection of the
 Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behaviour).
 
 Example:
-{% highlight js %}
+
+```typescript
 const ids = await SomeModel.find({
-someString: 'hurg'
-someBoolean: false
+  someString: 'hurg',
+  someBoolean: false,
 });
 // ids = array of all instances that have (somestring === 'hurg' && someBoolean === false)
 // if no instances match the search an empty array is returned
-{% endhighlight %}
+```
 
 ##### Finding by numeric index
 
@@ -730,31 +739,33 @@ Numeric indexes are created for all properties that have `index` set to true and
 The search needs to be an object that optionaly contains further filters: min, max, offset and limit.
 This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)
 They default to this:
-{% highlight js %}
+
+```javascript
 {
-min: '-inf',
-max: '+inf',
-offset: '+inf', // only used if a limit is defined
-limit: undefined
+  min: '-inf',
+  max: '+inf',
+  offset: '+inf', // only used if a limit is defined
+  limit: undefined
 }
-{% endhighlight %}
+```
 
 To specify an infinite limit while using an offset use limit: 0.
 
 Example:
-{% highlight js %}
+
+```typescript
 const ids = await SomeModel.find({
-someInteger: {
-min: 10,
-max: 40,
-offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
-limit: 5
-},
-SomeTimestamp: {
-max: + new Date() // timestamp before now
-}
+  someInteger: {
+    min: 10,
+    max: 40,
+    offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
+    limit: 5,
+  },
+  SomeTimestamp: {
+    max: +new Date(), // timestamp before now
+  },
 });
-{% endhighlight %}
+```
 
 **Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smallest search has.
 
@@ -773,18 +784,19 @@ You can also search for exact numeric values by using the syntax of a simple ind
 In nohm you can do this by specifying an endpoints option. The default is '[]' which creates the redis default: inclusive queries.
 
 Example:
-{% highlight js %}
+
+```typescript
 const ids = await SomeModel.find({
-someInteger: {
-min: 10,
-max: 20,
-endpoints: '(]' // exclude models that have someInteger === 10, but include 20
-// endpoints: '(' short form for the same as above
-// endpoints: '[)' would mean include 10, but exclude 20
-// endpoints: '()' would excludes 10 and 20
-}
+  someInteger: {
+    min: 10,
+    max: 20,
+    endpoints: '(]', // exclude models that have someInteger === 10, but include 20
+    // endpoints: '(' short form for the same as above
+    // endpoints: '[)' would mean include 10, but exclude 20
+    // endpoints: '()' would excludes 10 and 20
+  },
 });
-{% endhighlight %}
+```
 
 ### Sorting
 
@@ -793,67 +805,69 @@ However it might be a good idea to do more complex sorts manually.
 
 #### Sort all from DB
 
-{% highlight js %}
-let ids = await SomeModel.sort({ // options object
-// ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically ascending by name
-field: 'name' // field is mandatory
+```typescript
+let ids = await SomeModel.sort({
+  // options object
+  // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically ascending by name
+  field: 'name', // field is mandatory
 });
 
 ids = await SomeModel.sort({
-// ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically descending by name
-field: 'name',
-direction: 'DESC'
+  // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically descending by name
+  field: 'name',
+  direction: 'DESC',
 });
 
 ids = await SomeModel.sort({
-// ids is an array of 100 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
-field: 'name',
-direction: 'DESC',
-start: 50
+  // ids is an array of 100 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+  field: 'name',
+  direction: 'DESC',
+  start: 50,
 });
 
 ids = await SomeModel.sort({
-// ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
-field: 'name',
-direction: 'DESC',
-start: 50,
-limit: 50
+  // ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+  field: 'name',
+  direction: 'DESC',
+  start: 50,
+  limit: 50,
 });
 
 // this
 ids = await SomeModel.sort({
-// ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
-field: 'last_edit',
-start: -10,
-limit: 10
+  // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+  field: 'last_edit',
+  start: -10,
+  limit: 10,
 });
 
 // would have the same result as:
 ids = await SomeModel.sort({
-// ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
-field: 'last_edit',
-direction: 'DESC',
-start: 0,
-limit: 10
+  // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+  field: 'last_edit',
+  direction: 'DESC',
+  start: 0,
+  limit: 10,
 });
-{% endhighlight %}
+```
 
 #### Sort a subset by given IDs
 
 If you have an array of IDs and want them in a sorted order, you can use the same method with the same options but giving the array as the second argument. This is especially useful if combined with find().
 
-{% highlight js %}
+```typescript
 // assuming car model
 const ferrariIDs = await Car.find({
-manufacturer: 'ferrari',
+  manufacturer: 'ferrari',
 });
-const sortedFerariIDs = Car.sort({
-field: 'build_year'
-},
-ferrariIDs, // array of found ferrari car ids
+const sortedFerariIDs = Car.sort(
+  {
+    field: 'build_year',
+  },
+  ferrariIDs, // array of found ferrari car ids
 );
 // sortedFerrariIDs = oldest 100 ferrari cars
-{% endhighlight %}
+```
 
 _Note_; If performance is very important it might be a good idea to do this kind of find/sort combination yourself in a multi query to the redis DB or as a lua script in redis, depending on complexity.
 
@@ -877,12 +891,12 @@ This again has the upside of more flexibility in relations, but the downside of 
 
 Some Examples:
 
-{% highlight js %}
+```javascript
 User1.link(AdminRole);
 User1.link(AuthorRole);
 User2.link(UserManagerRole, 'createdBy');
 User2.link(UserManagerRole, 'temp');
-{% endhighlight %}
+```
 
 Now (after saving) these relations exist:
 
@@ -900,37 +914,37 @@ Usage: instance.link(otherInstance, \[options\])
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
 
-{% highlight js %}
+```javascript
 User1.link(AdminRole);
-{% endhighlight %}
+```
 
 The relation is only written to the DB when User1 is saved. (not when saving Admin!)
 
-{% highlight js %}
+```typescript
 const User = await nohm.factory('User');
 User.link(AdminRole);
 try {
-await User.save();
-// User1 and Admin are saved and the relation is in the DB
+  await User.save();
+  // User1 and Admin are saved and the relation is in the DB
 } catch (err) {
-if (err instanceof Nohm.LinkError) {
-// error occured during linking, in this case probably AdminRole validation
-// err.errors is an Array of these objects:
-/_
-{
-success: boolean;
-child: NohmModel;
-parent: NohmModel;
-error: null | Error;
+  if (err instanceof Nohm.LinkError) {
+    // error occured during linking, in this case probably AdminRole validation
+    // err.errors is an Array of these objects:
+    /*
+      {
+      success: boolean;
+      child: NohmModel;
+      parent: NohmModel;
+      error: null | Error;
+      }
+    */
+  } else if (err instanceof Nohm.ValidationError) {
+    // User failed to validate
+  } else {
+    // unknown error
+  }
 }
-_/
-} else if (err instanceof Nohm.ValidationError) {
-// User failed to validate
-} else {
-// unknown error
-}
-}
-{% endhighlight %}
+```
 
 There are several things that happen here:
 
@@ -947,17 +961,17 @@ The options object has 2 available options:
 
 // TODO: fix the link options docs
 
-{% highlight js %}
+```typescript
 User1.link(ManagerRole, {
-name: 'hasRole', // otherwise defaults to "default"
-error: function (error_mesage, validation_errors, object) {
-// this is called if there was an error while saving the linked object (ManagerRole in this case)
-// error_message is the error ManagerRole.save() reported
-// validation_errors is ManagerRole.errors
-// object is ManagerRole
-}
+  name: 'hasRole', // otherwise defaults to "default"
+  error: function(error_mesage, validation_errors, object) {
+    // this is called if there was an error while saving the linked object (ManagerRole in this case)
+    // error_message is the error ManagerRole.save() reported
+    // validation_errors is ManagerRole.errors
+    // object is ManagerRole
+  },
 });
-{% endhighlight %}
+```
 
 #### unlink
 
@@ -971,9 +985,9 @@ Usage: instance.belongsTo(otherInstance, \[relationName\])
 
 This checks if an instance has a relationship to another relationship.
 
-{% highlight js %}
+```typescript
 const isManager = await User.belongsTo(ManagerRole);
-{% endhighlight %}
+```
 
 This requires that User as well as ManagerRole have an id set.
 
@@ -983,7 +997,7 @@ Usage: instance.numLinks(modelName, \[relationName\])
 
 This checks how many relations of one name pair an Instance has to another Model.
 
-{% highlight js %}
+```typescript
 // assuming the relation definitions from above
 
 let num = await User1.numLinks('RoleModel');
@@ -997,7 +1011,7 @@ num = await User1.numLinks('RoleModel', 'createdBy');
 // get the amount of links that are named 'temp':
 num = await User1.numLinks('RoleModel', 'temp');
 // num will be 0
-{% endhighlight %}
+```
 
 #### getAll
 
@@ -1005,7 +1019,7 @@ Usage: instance.getAll(modelName, \[relationName\])
 
 This gets the IDs of all linked instances.
 
-{% highlight js %}
+```typescript
 let roleIds = await User1.getAll('RoleModel');
 // roleIds = [1,2]
 
@@ -1014,7 +1028,7 @@ roleIds = await User1.getAll('RoleModel', 'createdBy');
 
 roleIds = await User2.getAll('RoleModel', 'temp');
 // roleIds = [3]
-{% endhighlight %}
+```
 
 ### Publish / Subscribe
 
@@ -1029,7 +1043,7 @@ To use PubSub 2 steps are required:
 
 ##### Setting the second redis client
 
-{% highlight js %}
+```typescript
 const secondClient = require('redis').createClient();
 await nohm.setPubSubClient(secondClient);
 // Yey, we can start subscribing :)
@@ -1038,36 +1052,36 @@ await nohm.setPubSubClient(secondClient);
 const client = nohm.closePubSub();
 // client == secondClient
 // Note: this doesn't stop nohm from publishing, just subscribing
-{% endhighlight %}
+```
 
 ##### Configuring nohm globally to publish
 
-{% highlight js %}
+```typescript
 nohm.setPublish(true); // this client will publish on all modelsby default
 nohm.setPublish(false); // this client will not publish by default
-{% endhighlight %}
+```
 
 ##### Configuring models to publish
 
-{% highlight js %}
+```typescript
 // This model will publish no matter what the global publish setting is.
 nohm.model('Publish', {
-properties: {},
-publish: true
+  properties: {},
+  publish: true
 }):
 
 // This model will only publish if the global setting is set to true.
 nohm.model('No_publish', {
-properties: {}
+  properties: {}
 });
-{% endhighlight %}
+```
 
 #### Checking if a model is set to publish
 
-{% highlight js %}
+```typescript
 const model = await nohm.factory('someModelName');
 model.getPublish(); // returns whether the model someModelName will publish
-{% endhighlight %}
+```
 
 #### Usage
 
@@ -1082,37 +1096,35 @@ There are 6 events that get published:
 
 All\* these event callbacks get an object containing these properties:
 
-{% highlight js %}
+```javascript
 {
-target: {
-id: 'id_of_the_instance',
-modelName: 'name_of_the_model',
-properties: {} // instance.allProperties() from where the event was fired
-
-    // only in save/update:
-    diff: {} // instance.propertyDiff()
-
+  target: {
+  id: 'id_of_the_instance',
+  modelName: 'name_of_the_model',
+  properties: {} // instance.allProperties() from where the event was fired
+      // only in save/update:
+      diff: {} // instance.propertyDiff()
+  }
 }
-}
-{% endhighlight %}
+```
 
 \*The Exceptions are link and unlink:
 
-{% highlight js %}
+```javascript
 {
-child: {
-id: 'id_of_the_child_instance',
-modelName: 'name_of_the_child_model',
-properties: {} // child.allProperties() from where the event was fired
-},
-parent: {
-id: 'id_of_the_parent_instance',
-modelName: 'name_of_the_parent_model',
-properties: {} // parent.allProperties() from where the event was fired
-},
-relation: 'child' // relation name
+  child: {
+    id: 'id_of_the_child_instance',
+    modelName: 'name_of_the_child_model',
+    properties: {} // child.allProperties() from where the event was fired
+  },
+  parent: {
+    id: 'id_of_the_parent_instance',
+    modelName: 'name_of_the_parent_model',
+    properties: {} // parent.allProperties() from where the event was fired
+  },
+  relation: 'child' // relation name
 }
-{% endhighlight %}
+```
 
 To handle subscribing to these events there are 3 functions to use: model.subscribe, model.subscribeOnce and model.unsubscribe.
 
@@ -1122,12 +1134,16 @@ Subscribe to all actions of a specified event type on a model.
 
 Example:
 
-{% highlight js %}
+```typescript
 const model = await nohm.factory('someModel');
-model.subscribe('update', function (event) {
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+model.subscribe('update', function(event) {
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
 });
-{% endhighlight %}
+```
 
 ##### model.subscribeOnce
 
@@ -1135,16 +1151,20 @@ Subscribe and after it is fired once, unsubcsribe.
 
 Example:
 
-{% highlight js %}
+```typescript
 let updates = 0;
 const model = await nohm.factory('someModel');
-model.subscribeOnce('update', function (event) {
-// will only be called once no matter how many updates happen after 1 has published
-updates++;
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
-console.log(updates);
+model.subscribeOnce('update', function(event) {
+  // will only be called once no matter how many updates happen after 1 has published
+  updates++;
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
+  console.log(updates);
 });
-{% endhighlight %}
+```
 
 ##### model.unsubscribe
 
@@ -1152,10 +1172,14 @@ Unsubscribe one or all listeners.
 
 Example:
 
-{% highlight js %}
+```typescript
 const model = await nohm.factory('someModel');
-const callback = function (event) {
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+const callback = function(event) {
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
 };
 model.subscribe('update', callback);
 
@@ -1164,7 +1188,7 @@ model.unsubscribe('update', callback);
 
 // or unsubscribe all
 model.unsubscribe('update');
-{% endhighlight %}
+```
 
 ### Extras
 
@@ -1175,19 +1199,20 @@ Some things that don't really fit anywhere else in this documentation.
 For some functions there are short forms.
 
 Instead of having to do something like:
-{% highlight js %}
+
+```typescript
 const user = new User();
 await user.load(1);
 user.property('name', 'test');
-{% endhighlight %}
+```
 
 You can do this:
 
-{% highlight js %}
+```typescript
 const user = await User.load(1);
 user.property('name', 'test');
 });
-{% endhighlight %}
+```
 
 This currently works for the following functions: load, find, save and remove.
 It is really only a shortcut.
@@ -1198,28 +1223,27 @@ A shortcut for loading all instances of ids in an Array.
 
 Contrary to .load() this does not throw on non existant ids and instead just resolves with all models that existed.
 
-{% highlight js %}
+```typescript
 const ids = [1, 2, 1593];
 const cars = await CarModel.loadMany(ids);
 cars.forEach((car) => {
-// if for example id 2 is not found, only car.id 1 and 1593 will be in cars
-console.log('A car was found: ', car.allProperties());
+  // if for example id 2 is not found, only car.id 1 and 1593 will be in cars
+  console.log('A car was found: ', car.allProperties());
 });
-
-{% endhighlight %}
+```
 
 #### findAndLoad
 
 A shortcut for find() and load().
 
-{% highlight js %}
+```typescript
 const cars = await CarModel.findAndLoad({
-manufacturer: 'ferrari'
+  manufacturer: 'ferrari'
 });
 // cars = array of nohm instances of ferraris
 cars.forEach((car) => {
-if (car.property('build_year') < 1990)) {
-console.log('You should probably check out', car.id);
-}
+  if (car.property('build_year') < 1990)) {
+    console.log('You should probably check out', car.id);
+  }
 });
-{% endhighlight %}
+```

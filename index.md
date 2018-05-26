@@ -63,7 +63,7 @@ layout: default
 
 ### Overview
 
-Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational Mapping") for [redis](http://www.redis.io).
+Nohm is an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping 'Object-relational Mapping') for [redis](http://www.redis.io).
 This How-To is intended to give you a good understanding of how nohm works.
 
 ### Basics
@@ -71,19 +71,21 @@ This How-To is intended to give you a good understanding of how nohm works.
 There are some things you need to do before you can use nohm. If you just want to know how to actually use nohm models, skip to the next part [Models](#models).
 
 **Note:** Almost all code examples here assume the following code:
-{% highlight js %}
+
+```javascript
 var nohm = require('nohm').Nohm;
 var redisClient = require('redis').createClient();
 nohm.setClient(redisClient);
-{% endhighlight %}
+```
 
 #### Prefix
 
 The first thing you should do is set a prefix for the redis keys. This should be unique on the redis database you're using since you may run into conflicts otherwise.
 You can do this with the following command:
-{% highlight js %}
+
+```javascript
 nohm.setPrefix('yourAppPrefixForRedis');
-{% endhighlight %}
+```
 
 (Note that you probably shouldn't select such a long prefix since that adds overhead to the redis communication.)
 
@@ -91,25 +93,25 @@ nohm.setPrefix('yourAppPrefixForRedis');
 
 You need to set a redis client for nohm. You should connect and select the appropriate database before you set it.
 
-{% highlight js %}
+```javascript
 var redisClient = require('redis').createClient();
 redisClient.select(4); // or something
 nohm.setClient(redisClient);
-{% endhighlight %}
+```
 
 #### Logging
 
 By default nohm just logs errors it encounters to the console. However you can overwrite the logError method with anything you want:
 
-{% highlight js %}
+```javascript
 // this will throw all errors nohm encounters
-nohm.logError = function (err) {
-throw new Error({
-name: "Nohm Error",
-message: err
-});
-}
-{% endhighlight %}
+nohm.logError = function(err) {
+  throw new Error({
+    name: 'Nohm Error',
+    message: err,
+  });
+};
+```
 
 **IMPORTANT**: Sadly this is not actually fully true yet. There are a few places where nohm will just throw. TODO!
 
@@ -117,17 +119,18 @@ message: err
 
 You start by defining a Model. A model needs a name and properties and can optionally have custom methods and a redis client.
 
-{% highlight js %}
+```javascript
 var someModel = nohm.model('YourModelName', {
-properties: {
-// ... here you'll define your properties
-},
-methods: { // optional
-// ... here you'll define your custom methods
-},
-client: someRedisClient // optional
+  properties: {
+    // ... here you'll define your properties
+  },
+  methods: {
+    // optional
+    // ... here you'll define your custom methods
+  },
+  client: someRedisClient, // optional
 });
-{% endhighlight %}
+```
 
 <p><small>Strictly speaking the properties are optional as well, but a model really doesn't make sense without them.</small></p>
 
@@ -138,9 +141,9 @@ The second is an object containing properties, methods and the client.
 
 If you want your model to have custom methods you can define them here. They will be bound to the model and thus inside them the 'this' keyword is the instance of a model.
 
-#### Client
+#### Redis client
 
-You can optionally set a redis client for a model. This means that you can theoretically store every model on a different redis db. (I don't recommend this at all!)
+You can optionally set a redis client for a model by passing it as the property `client`. This means that you can theoretically store every model on a different redis db. (I don't recommend this at all!)
 **Important**: Currently relations between models on different dbs do NOT work! This might get implemented at a later stage if there's any interest for it.
 
 #### Properties
@@ -197,42 +200,40 @@ A property can have the following options: (explained in more detail later)
 
 Here's an example of a very basic user model:
 
-{% highlight js %}
+```javascript
 var User = nohm.model('User', {
-properties: {
-name: {
-type: 'string',
-unique: true,
-validations: [
-['notEmpty']
-]
-},
-email: {
-type: 'string',
-unique: true,
-validations: [
-['notEmpty'],
-['email']
-]
-},
-password: {
-defaultValue: '',
-type: function (value) {
-return value + 'someSeed'; // and hash it of course, but to make this short that is omitted in this example
-},
-validations: [
-['length', {
-min: 6
-}]
-]
-},
-visits: {
-type: 'integer',
-index: true
-}
-}
+  properties: {
+    name: {
+      type: 'string',
+      unique: true,
+      validations: [['notEmpty']],
+    },
+    email: {
+      type: 'string',
+      unique: true,
+      validations: [['notEmpty'], ['email']],
+    },
+    password: {
+      defaultValue: '',
+      type: function(value) {
+        return value + 'someSeed'; // and hash it of course, but to make this short that is omitted in this example
+      },
+      validations: [
+        [
+          'length',
+          {
+            min: 6,
+          },
+        ],
+      ],
+    },
+    visits: {
+      type: 'integer',
+      index: true,
+    },
+  },
 });
-{% endhighlight %}
+```
 
 ##### Types/Behaviours
 
@@ -270,16 +271,17 @@ The return value of the function will be the new value of the property.
 Note that the redis client will convert everything to strings before storing!
 
 A simple example:
-{% highlight js %}
+
+```javascript
 var User = nohm.model('User', {
-properties: {
-balance: {
-defaultValue: 0,
-type: function changeBalance(value, key, old) {
-return old + value;
-}
-}
-}
+  properties: {
+    balance: {
+      defaultValue: 0,
+      type: function changeBalance(value, key, old) {
+        return old + value;
+      },
+    },
+  },
 });
 
 var test = new User();
@@ -290,7 +292,7 @@ test.p('balance', 10);
 test.p('balance'); // 15
 test.p('balance', -6);
 test.p('balance'); // 9
-{% endhighlight %}
+```
 
 ##### Validators
 
@@ -302,38 +304,45 @@ The callback expects one argument: (bool) whether the value is valid or not.
 _Note_: Functions included like this cannot be exported to the browser!
 
 Here's an example with all three ways:
-{% highlight js %}
+
+```javascript
 var validatorModel = nohm.model('validatorModel', {
-properties: {
-builtIns: {
-type: 'string',
-validations: [
-'notEmpty',
-['length', {
-max: 20 // 20 will be the second parameter given to the maxLength validator function (the first being the new value)
-}]
-]
-},
-optionalEmail: {
-type: 'string',
-unique: true,
-validations: [
-['email', {
-optional: true // every validation supports the optional option
-}]
-]
-},
-customValidation: {
-type: 'integer',
-validations: [
-function checkIsFour(value, options, callback) {
-callback(value === 4);
-}
-]
-}
-}
+  properties: {
+    builtIns: {
+      type: 'string',
+      validations: [
+        'notEmpty',
+        [
+          'length',
+          {
+            max: 20, // 20 will be the second parameter given to the maxLength validator function (the first being the new value)
+          },
+        ],
+      ],
+    },
+    optionalEmail: {
+      type: 'string',
+      unique: true,
+      validations: [
+        [
+          'email',
+          {
+            optional: true, // every validation supports the optional option
+          },
+        ],
+      ],
+    },
+    customValidation: {
+      type: 'integer',
+      validations: [
+        function checkIsFour(value, options, callback) {
+          callback(value === 4);
+        },
+      ],
+    },
+  },
 });
-{% endhighlight %}
+```
 
 You can find the documentation of the [built-in validations in the api](api/symbols/validators.html) or look directly [at the source code](https://github.com/maritz/nohm/blob/master/lib/validators.js).
 
@@ -343,56 +352,57 @@ If you need to define custom validations as functions and want them to be export
 
 Example customValidation.js:
 
-{% highlight js %}
-exports.usernameIsAnton= function (value, options) {
-if (options.revert) {
-callback(value !== 'Anton');
-} else {
-callback(value === 'Anton');
-}
+```javascript
+exports.usernameIsAnton = function(value, options) {
+  if (options.revert) {
+    callback(value !== 'Anton');
+  } else {
+    callback(value === 'Anton');
+  }
 };
-{% endhighlight %}
+```
 
 This is then included like this:
 
-{% highlight js %}
-Nohm.setExtraValidations('customValidation.js')
-{% endhighlight %}
+```javascript
+Nohm.setExtraValidations('customValidation.js');
+```
 
 Now you can use this validation in your model definitions like this:
 
-{% highlight js %}
+```javascript
 nohm.model('validatorModel', {
-properties: {
-customValidation: {
-type: 'string',
-validations: [
-'usernameIsAnton',
-// or
-['usernameIsAnton', {
-revert: true
-}]
-]
-}
-}
+  properties: {
+    customValidation: {
+      type: 'string',
+      validations: [
+        'usernameIsAnton',
+        // or
+        [
+          'usernameIsAnton',
+          {
+            revert: true,
+          },
+        ],
+      ],
+    },
+  },
 });
-{% endhighlight %}
+```
 
 #### ID generation
 
 By default the ids of instances are unique strings and generated at the time of the first save call. You can however either choose an incremental id scheme or provide a custom function for generating ids.
 
-{% highlight js %}
+```javascript
 var incremental = nohm.model('incrementalIdModel', {
-properties: {
-name: {
-type: 'string',
-validations: [
-'notEmpty'
-]
-}
-},
-idGenerator: 'increment'
+  properties: {
+    name: {
+      type: 'string',
+      validations: ['notEmpty'],
+    },
+  },
+  idGenerator: 'increment',
 });
 //ids of incremental will be 1, 2, 3 ...
 
@@ -400,22 +410,20 @@ var prefix = 'bob';
 var counter = 200;
 var step = 50;
 var custom = Nohm.model('customIdModel', {
-properties: {
-name: {
-type: 'string',
-defaultValue: 'tom',
-validations: [
-'notEmpty'
-]
-}
-},
-idGenerator: function (cb) {
-counter += step;
-cb(prefix+counter);
-}
+  properties: {
+    name: {
+      type: 'string',
+      defaultValue: 'tom',
+      validations: ['notEmpty'],
+    },
+  },
+  idGenerator: function(cb) {
+    counter += step;
+    cb(prefix + counter);
+  },
 });
 // ids of custom will be bob250, bob300, bob350 ...
-{% endhighlight %}
+```
 
 ### Creating an instance
 
@@ -425,10 +433,10 @@ There are two basic ways to create an instance of a model.
 
 Using the new keyword on the return of Nohm.model.
 
-{% highlight js %}
+```javascript
 var UserModel = Nohm.model('UserModel', {});
 var user = new UserModel();
-{% endhighlight %}
+```
 
 This has the drawback that you need to keep track of your models.
 
@@ -436,37 +444,37 @@ This has the drawback that you need to keep track of your models.
 
 This is the easier and preferred method.
 
-{% highlight js %}
+```javascript
 Nohm.model('UserModel', {});
 var user = Nohm.factory('UserModel');
-{% endhighlight %}
+```
 
 You can also pass an id and callback as the 2nd and 3rd arguments to immediately load the data from db.
 
-{% highlight js %}
+```javascript
 Nohm.model('UserModel', {});
-var user = Nohm.factory('UserModel', 123, function (err) {
-if (err) {
-// db error or id not found
-}
+var user = Nohm.factory('UserModel', 123, function(err) {
+  if (err) {
+    // db error or id not found
+  }
 });
-{% endhighlight %}
+```
 
 ### Setting/Getting properties
 
 The function p/prop/property (all the same) gets and sets properties of an instance.
 
-{% highlight js %}
+```javascript
 var user = new User();
 user.p('name', 'test');
 user.p('name'); // returns 'test'
 user.p({
-name: 'test2',
-email: 'someMail@example.com'
+  name: 'test2',
+  email: 'someMail@example.com',
 });
 user.p('name'); // returns 'test2'
 user.p('email'); // returns 'someMail@example.com'
-{% endhighlight %}
+```
 
 There are several other methods for dealing with properties: [allProperties](api/symbols/Nohm.html#.allProperties), [propertyReset](api/symbols/Nohm.html#.propertyReset), [propertyDiff](api/symbols/Nohm.html#.propertyDiff)
 
@@ -477,20 +485,20 @@ In the following code examples we assume the model of the [valitators section](#
 
 #### Calling valid()
 
-{% highlight js %}
+```javascript
 user.p({
-builtIns: 'teststringlongerthan20chars',
-optionalEmail: 'hurgs',
-customValidation: 3
+  builtIns: 'teststringlongerthan20chars',
+  optionalEmail: 'hurgs',
+  customValidation: 3,
 });
-user.valid(false, false, function (valid) {
-if ( ! valid) {
-user.errors; // { builtIns: ['length'], optionalEmail: ['email'], customValidation: ['custom'] }
-} else {
-// valid! YEHAA!
-}
+user.valid(false, false, function(valid) {
+  if (!valid) {
+    user.errors; // { builtIns: ['length'], optionalEmail: ['email'], customValidation: ['custom'] }
+  } else {
+    // valid! YEHAA!
+  }
 });
-{% endhighlight %}
+```
 
 There are a few things to note here:
 
@@ -503,9 +511,9 @@ There are a few things to note here:
 You can also do most validations in the browser by using the nohm-connect-middleware. (except custom validations defined in the model definition)
 This is useful if you don't want to do the ajax round trip for every small validation you might have.
 
-{% highlight js %}
+```javascript
 Nohm.connect(options);
-{% endhighlight %}
+```
 
 Connect takes an argument containing the following options:
 
@@ -515,39 +523,47 @@ Connect takes an argument containing the following options:
 * `extraFiles` - Extra files containing validations. You should only use this if they are not already set via Nohm.setExtraValidations as nohm.connect automatically includes those.
 * `maxAge` - Cache control (in seconds)
 
-{% highlight js %}
-server.use(nohm.connect(
-// options object
-{
-url: '/nohm.js',
-namespace: 'nohm',
-exclusions: {
-User: { // modelName
-name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
-salt: true // this will completely ignore all validations for the salt property
-},
-Privileges: true // this will completely ignore the Priviledges model
-}
-}));
-{% endhighlight %}
+```javascript
+server.use(
+  nohm.connect(
+    // options object
+    {
+      url: '/nohm.js',
+      namespace: 'nohm',
+      exclusions: {
+        User: {
+          // modelName
+          name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
+          salt: true, // this will completely ignore all validations for the salt property
+        },
+        Privileges: true, // this will completely ignore the Priviledges model
+      },
+    },
+  ),
+);
+```
 
 If you now include /nohm.js (or default /nohmValidations.js) in your page, you can validate any model in the browser like this:
 
-{% highlight js %}
+```javascript
 // using defined namespace from above. default would be nohmValidations
-nohm.validate('User', {
-name: 'test123',
-email: 'test@test.de',
-password: '\*\*\*\*\*\*'
-}, function (valid, errors) {
-if (valid) {
-alert('User is valid!');
-} else {
-alert('Oh no, your user data was not accepted!');
-// errors is the same format as on the server model.errors
-}
-});
-{% endhighlight %}
+nohm.validate(
+  'User',
+  {
+    name: 'test123',
+    email: 'test@test.de',
+    password: '******',
+  },
+  function(valid, errors) {
+    if (valid) {
+      alert('User is valid!');
+    } else {
+      alert('Oh no, your user data was not accepted!');
+      // errors is the same format as on the server model.errors
+    }
+  },
+);
+```
 
 ### Saving
 
@@ -555,65 +571,72 @@ Saving an instance automatically decides whether it needs to be created or updat
 This means that if you haven't either manually set the id or load()ed the instance from the database, it will try to create a new instance.
 Saving automatically validates the entire instance. If it is not valid, nothing will be saved.
 
-{% highlight js %}
-user.save(function (err) {
-if (err) {
-user.errors; // the errors in validation
-} else {
-// it's in the db :)
-}
+```javascript
+user.save(function(err) {
+  if (err) {
+    user.errors; // the errors in validation
+  } else {
+    // it's in the db :)
+  }
 });
-{% endhighlight %}
+```
 
 Save can take an optional object containing options, which defaults to this:
 
-{% highlight js %}
-user.save({
-// If true, no events from this save are published
-silent: false,
+```javascript
+user.save(
+  {
+    // If true, no events from this save are published
+    silent: false,
 
     // By default if user was linked to two objects before saving and the first linking fails, the second link will not be saved either.
     // Set this to true to try saving all relations, regardless of previous linking errors.
 
-continue_on_link_error: false,
+    continue_on_link_error: false,
 
     // Set to true to skip validation entirely.
     // *WARNING*: This can cause severe problems. Think hard before using this
     // It skips checking *and setting* unique indexes It is also NOT passed to linked objects that have to be saved.
 
-skip_validation_and_unique_indexes: false
-}, function (err) {
-});
-{% endhighlight %}
+    skip_validation_and_unique_indexes: false,
+  },
+  function(err) {},
+);
+```
 
 ### Deleting
 
 Calling remove() completely removes the instance from the db, including realtions (but not the related instances - so it is not a cascading remove).
 This only works on instances where the id is set (manually or from load()).
 
-{% highlight js %}
+```javascript
 var user = nohm.factory('User');
 user.id = 123;
-user.remove({ // options object can be omitted
-silent: true, // whether remove event is published. defaults to false.
-}, function (err) {
-// user is gone.
-});
-{% endhighlight %}
+user.remove(
+  {
+    // options object can be omitted
+    silent: true, // whether remove event is published. defaults to false.
+  },
+  function(err) {
+    // user is gone.
+  },
+);
+```
 
 ### Loading
 
 To populate the properties of an existing instance you have to load it via ID.
-{% highlight js %}
-user.load(1234, function (err, properties) {
-if (err) {
-// err may be a redis error or "not found" if the id was not found in the db.
-} else {
-console.log(properties);
-// you could use this.allProperties() instead, which also gives you the 'id' property
-}
+
+```javascript
+user.load(1234, function(err, properties) {
+  if (err) {
+    // err may be a redis error or "not found" if the id was not found in the db.
+  } else {
+    console.log(properties);
+    // you could use this.allProperties() instead, which also gives you the 'id' property
+  }
 });
-{% endhighlight %}
+```
 
 ### Finding
 
@@ -624,11 +647,11 @@ The function to do so is always .find(), but what it does depends on the argumen
 
 Simply calling find() with only a callback will retrieve all IDs.
 
-{% highlight js %}
-SomeModel.find(function (err, ids) {
-// ids = array of ids
+```javascript
+SomeModel.find(function(err, ids) {
+  // ids = array of ids
 });
-{% endhighlight %}
+```
 
 #### Finding by Index
 
@@ -644,14 +667,18 @@ To limit/filter/sort the overall result you have to manually edit the returned a
 Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behaviour).
 
 Example:
-{% highlight js %}
-SomeModel.find({
-someString: 'hurg'
-someBoolean: false
-}, function (err, ids) {
-// ids = array of all instances that have (somestring === 'hurg' && someBoolean === false)
-});
-{% endhighlight %}
+
+```javascript
+SomeModel.find(
+  {
+    someString: 'hurg',
+    someBoolean: false,
+  },
+  function(err, ids) {
+    // ids = array of all instances that have (somestring === 'hurg' && someBoolean === false)
+  },
+);
+```
 
 ##### Finding by numeric index
 
@@ -659,33 +686,36 @@ Numeric indexes are created for all properties that have `index` set to true and
 The search needs to be an object that optionaly contains further filters: min, max, offset and limit.
 This uses the redis command [zrangebyscore](http://redis.io/commands/zrangebyscore) and the filters are the same as the arguments passed to that command. (limit = count)
 They default to this:
-{% highlight js %}
+
+```javascript
 {
-min: '-inf',
-max: '+inf',
-offset: '+inf', // only used if a limit is defined
-limit: undefined
+  min: '-inf',
+  max: '+inf',
+  offset: '+inf', // only used if a limit is defined
+  limit: undefined
 }
-{% endhighlight %}
+```
 
 To specify an infinite limit while using an offset use limit: 0.
 
 Example:
-{% highlight js %}
-SomeModel.find({
-someInteger: {
-min: 10,
-max: 40,
-offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
-limit: 5
-},
-SomeTimestamp: {
-max: + new Date() // timestamp before now
-}
-}, function (err, ids) {
 
-});
-{% endhighlight %}
+```javascript
+SomeModel.find(
+  {
+    someInteger: {
+      min: 10,
+      max: 40,
+      offset: 15, // this in combination with the limit would work as a kind of pagination where only five results are returned, starting from result 15
+      limit: 5,
+    },
+    SomeTimestamp: {
+      max: +new Date(), // timestamp before now
+    },
+  },
+  function(err, ids) {},
+);
+```
 
 **Important**: The limit is only specific to the index you are searching for. In this example it will limit the someInteger search to 5 results, but the someTimestamp search is unlimited. Since the overall result will be an intersection of all searches, there can only be as many ids as the limit of the smallest search has.
 
@@ -704,20 +734,22 @@ You can also search for exact numeric values by using the syntax of a simple ind
 In nohm you can do this by specifying an endpoints option. The default is '[]' which creates the redis default: inclusive queries.
 
 Example:
-{% highlight js %}
-SomeModel.find({
-someInteger: {
-min: 10,
-max: 20,
-endpoints: '(]' // exclude models that have someInteger === 10, but include 20
-// endpoints: '(' short form for the same as above
-// endpoints: '[)' would mean include 10, but exclude 20
-// endpoints: '()' would excludes 10 and 20
-}
-}, function (err, ids) {
 
-});
-{% endhighlight %}
+```javascript
+SomeModel.find(
+  {
+    someInteger: {
+      min: 10,
+      max: 20,
+      endpoints: '(]', // exclude models that have someInteger === 10, but include 20
+      // endpoints: '(' short form for the same as above
+      // endpoints: '[)' would mean include 10, but exclude 20
+      // endpoints: '()' would excludes 10 and 20
+    },
+  },
+  function(err, ids) {},
+);
+```
 
 ### Sorting
 
@@ -726,75 +758,98 @@ However it might be a good idea to do more complex sorts manually.
 
 #### Sort all from DB
 
-{% highlight js %}
-SomeModel.sort({ // options object
-field: 'name' // field is mandatory
-}, function (err, ids) {
-// ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically ascending by name
-});
+```javascript
+SomeModel.sort(
+  {
+    // options object
+    field: 'name', // field is mandatory
+  },
+  function(err, ids) {
+    // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically ascending by name
+  },
+);
 
-SomeModel.sort({
-field: 'name',
-direction: 'DESC'
-}, function (err, ids) {
-// ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically descending by name
-});
+SomeModel.sort(
+  {
+    field: 'name',
+    direction: 'DESC',
+  },
+  function(err, ids) {
+    // ids is an array of the first 100 ids of SomeModel instances in the db, sorted alphabetically descending by name
+  },
+);
 
-SomeModel.sort({
-field: 'name',
-direction: 'DESC',
-start: 50
-}, function (err, ids) {
-// ids is an array of 100 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
-});
+SomeModel.sort(
+  {
+    field: 'name',
+    direction: 'DESC',
+    start: 50,
+  },
+  function(err, ids) {
+    // ids is an array of 100 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+  },
+);
 
-SomeModel.sort({
-field: 'name',
-direction: 'DESC',
-start: 50,
-limit: 50
-}, function (err, ids) {
-// ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
-});
+SomeModel.sort(
+  {
+    field: 'name',
+    direction: 'DESC',
+    start: 50,
+    limit: 50,
+  },
+  function(err, ids) {
+    // ids is an array of 50 ids of SomeModel instances in the db, sorted alphabetically descending by name - starting at the 50th
+  },
+);
 
 // this
-SomeModel.sort({
-field: 'last_edit',
-start: -10,
-limit: 10
-}, function (err, ids) {
-// ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
-});
+SomeModel.sort(
+  {
+    field: 'last_edit',
+    start: -10,
+    limit: 10,
+  },
+  function(err, ids) {
+    // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+  },
+);
 // would have the same result as:
-SomeModel.sort({
-field: 'last_edit',
-direction: 'DESC',
-start: 0,
-limit: 10
-}, function (err, ids) {
-// ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
-});
-{% endhighlight %}
+SomeModel.sort(
+  {
+    field: 'last_edit',
+    direction: 'DESC',
+    start: 0,
+    limit: 10,
+  },
+  function(err, ids) {
+    // ids is an array of the 10 last edited instances in the model (provided last_edit is filled properly on edit)
+  },
+);
+```
 
 #### Sort a subset by given IDs
 
 If you have an array of IDs and want them in a sorted order, you can use the same method with the same options but giving the array as the second argument. This is especially useful if combined with find().
 
-{% highlight js %}
+```javascript
 // assuming car model
-Car.find({
-manufacturer: 'ferrari',
-}, function (err, ferrari_ids) {
-Car.sort({
-field: 'build_year'
-},
-ferrari_ids, // array of found ferrari car ids
-function (err, sorted_ids) {
-// sorted_ids = max. 100 oldest ferrari cars
-}
+Car.find(
+  {
+    manufacturer: 'ferrari',
+  },
+  function(err, ferrari_ids) {
+    Car.sort(
+      {
+        field: 'build_year',
+      },
+      ferrari_ids, // array of found ferrari car ids
+      function(err, sorted_ids) {
+        // sorted_ids = max. 100 oldest ferrari cars
+      },
+    );
+  },
 );
-});
-{% endhighlight %}
+```
 
 _Note_; If performance is very important it might be a good idea to do this kind of find/sort combination yourself in a multi query to the redis DB.
 
@@ -820,12 +875,12 @@ Relation names **must** consist of **only** characters that match the regexp [\w
 
 Some Examples:
 
-{% highlight js %}
+```javascript
 User1.link(AdminRole);
 User1.link(AuthorRole);
 User2.link(UserManagerRole, 'createdBy');
 User2.link(UserManagerRole, 'temp');
-{% endhighlight %}
+```
 
 Now (after saving) these relations exist:
 
@@ -843,23 +898,23 @@ Usage: instance.link(otherInstance, \[options,\] \[callback\])
 This creates a relation (link) to another instance.
 The most basic usage is to just use the first argument:
 
-{% highlight js %}
+```javascript
 User1.link(AdminRole);
-{% endhighlight %}
+```
 
 The relation is only written to the DB when User1 is saved. (not when saving Admin!)
 
-{% highlight js %}
+```javascript
 var User = nohm.factory('User');
 User.link(AdminRole);
-User.save(function (err, is_link_error, link_error_model_name) {
-if ( ! err) {
-// User1 and Admin are saved
-} else {
-// an error occured while saving.
-}
+User.save(function(err, is_link_error, link_error_model_name) {
+  if (!err) {
+    // User1 and Admin are saved
+  } else {
+    // an error occured while saving.
+  }
 });
-{% endhighlight %}
+```
 
 There are several things that happen here:
 First User1 is validated. If User1 is invalid the save callback is called with the error.
@@ -873,17 +928,17 @@ This process works infinitely deep. However this process is not atomic, thus it 
 link can take an optional options object or link name as the second argument. If it is a string, it's assumed to be the link name.
 The options object has 2 available options:
 
-{% highlight js %}
+```javascript
 User1.link(ManagerRole, {
-name: 'hasRole', // otherwise defaults to "default"
-error: function (error_mesage, validation_errors, object) {
-// this is called if there was an error while saving the linked object (ManagerRole in this case)
-// error_message is the error ManagerRole.save() reported
-// validation_errors is ManagerRole.errors
-// object is ManagerRole
-}
+  name: 'hasRole', // otherwise defaults to "default"
+  error: function(error_mesage, validation_errors, object) {
+    // this is called if there was an error while saving the linked object (ManagerRole in this case)
+    // error_message is the error ManagerRole.save() reported
+    // validation_errors is ManagerRole.errors
+    // object is ManagerRole
+  },
 });
-{% endhighlight %}
+```
 
 #### unlink
 
@@ -897,13 +952,13 @@ Usage: instance.belongsTo(otherInstance, \[relationName,\] \[callback\])
 
 This checks if an instance has a relationship to another relationship.
 
-{% highlight js %}
-User1.belongsTo(ManagerRole, function (err, is_manager) {
-if (is_manager) {
-// User1 is linked to ManagerRole
-}
+```javascript
+User1.belongsTo(ManagerRole, function(err, is_manager) {
+  if (is_manager) {
+    // User1 is linked to ManagerRole
+  }
 });
-{% endhighlight %}
+```
 
 This requires that User1 as well as Admin are loaded from DB. (Or saved on the variable holding the instance)
 
@@ -913,24 +968,24 @@ Usage: instance.numLinks(modelName, \[relationName,\] \[callback\])
 
 This checks how many relations of one name pair an Instance has to another Model.
 
-{% highlight js %}
+```javascript
 // assuming the relation definitions from above
 
-User1.numLinks('RoleModel', function (err, num) {
-// num will be 2
-// note that it is not 3, because the default link name is used
+User1.numLinks('RoleModel', function(err, num) {
+  // num will be 2
+  // note that it is not 3, because the default link name is used
 });
 
 // get the amount of links that are named 'createdBy':
-User1.numLinks('RoleModel', 'createdBy', function (err, num) {
-// num will be 1
+User1.numLinks('RoleModel', 'createdBy', function(err, num) {
+  // num will be 1
 });
 
 // get the amount of links that are named 'temp':
-User1.numLinks('RoleModel', 'temp', function (err, num) {
-// num will be 0
+User1.numLinks('RoleModel', 'temp', function(err, num) {
+  // num will be 0
 });
-{% endhighlight %}
+```
 
 #### getAll
 
@@ -938,19 +993,19 @@ Usage: instance.getAll(modelName, \[relationName,\] \[callback\])
 
 This gets the IDs of all linked instances.
 
-{% highlight js %}
-User1.getAll('RoleModel', function (err, roleIds) {
-// roleIds = [1,2]
+```javascript
+User1.getAll('RoleModel', function(err, roleIds) {
+  // roleIds = [1,2]
 });
 
-User1.getAll('RoleModel', 'createdBy', function (err, roleIds) {
-// roleIds = [3]
+User1.getAll('RoleModel', 'createdBy', function(err, roleIds) {
+  // roleIds = [3]
 });
 
-User2.getAll('RoleModel', 'temp', function (err, roleIds) {
-// roleIds = [3]
+User2.getAll('RoleModel', 'temp', function(err, roleIds) {
+  // roleIds = [3]
 });
-{% endhighlight %}
+```
 
 ### Publish / Subscribe
 
@@ -965,51 +1020,50 @@ To use PubSub 2 steps are required:
 
 ##### Setting the second redis client
 
-{% highlight js %}
+```javascript
 var secondClient = require('redis').createClient();
-nohm.setPubSubClient(secondClient, function (err) {
-if (err) {
-console.log('Error while initializing the second redis client');
-} else {
-// Yey, we can start subscribing :)
+nohm.setPubSubClient(secondClient, function(err) {
+  if (err) {
+    console.log('Error while initializing the second redis client');
+  } else {
+    // Yey, we can start subscribing :)
 
     // to close the pubsub connection and make the redis client available for normal commands again:
-    nohm.closePubSub(function (err, client) {
+    nohm.closePubSub(function(err, client) {
       // client == secondClient
       // nohm will still publish though
     });
-
-}
+  }
 });
-{% endhighlight %}
+```
 
 ##### Configuring nohm globally to publish
 
-{% highlight js %}
+```javascript
 nohm.setPublish(true); // this client will publish on all models
 nohm.setPublish(false); // this client will only publish on models that are configured to publish themselves
-{% endhighlight %}
+```
 
 ##### Configuring models to publish
 
-{% highlight js %}
+```javascript
 // This model will publish no matter what the global publish setting is.
 nohm.model('Publish', {
-properties: {},
-publish: true
-}):
+  properties: {},
+  publish: true,
+});
 
 // This model will only publish if the global setting is set to true.
 nohm.model('No_publish', {
-properties: {}
+  properties: {},
 });
-{% endhighlight %}
+```
 
 #### Checking if a model is set to publish
 
-{% highlight js %}
+```javascript
 nohm.factory('someModelName').getPublish(); // returns whether the model someModelName will publish
-{% endhighlight %}
+```
 
 #### Usage
 
@@ -1024,37 +1078,37 @@ There are 6 events that get published:
 
 All\* these event callbacks get an object containing these properties:
 
-{% highlight js %}
+```javascript
 {
-target: {
-id: 'id_of_the_instance',
-modelName: 'name_of_the_model',
-properties: {} // instance.allProperties() from where the event was fired
+  target: {
+    id: 'id_of_the_instance',
+    modelName: 'name_of_the_model',
+    properties: {} // instance.allProperties() from where the event was fired
 
     // only in save/update:
     diff: {} // instance.propertyDiff()
 
+  }
 }
-}
-{% endhighlight %}
+```
 
 \*The Exceptions are link and unlink:
 
-{% highlight js %}
+```javascript
 {
-child: {
-id: 'id_of_the_child_instance',
-modelName: 'name_of_the_child_model',
-properties: {} // child.allProperties() from where the event was fired
-},
-parent: {
-id: 'id_of_the_parent_instance',
-modelName: 'name_of_the_parent_model',
-properties: {} // parent.allProperties() from where the event was fired
-},
-relation: 'child' // relation name
+  child: {
+    id: 'id_of_the_child_instance',
+    modelName: 'name_of_the_child_model',
+    properties: {} // child.allProperties() from where the event was fired
+  },
+  parent: {
+    id: 'id_of_the_parent_instance',
+    modelName: 'name_of_the_parent_model',
+    properties: {} // parent.allProperties() from where the event was fired
+  },
+  relation: 'child' // relation name
 }
-{% endhighlight %}
+```
 
 To handle subscribing to these events there are 3 functions to use: model.subscribe, model.subscribeOnce and model.unsubscribe.
 
@@ -1064,11 +1118,15 @@ Subscribe to all actions of a specified event type on a model.
 
 Example:
 
-{% highlight js %}
-nohm.factory('someModel').subscribe('update', function (event) {
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+```javascript
+nohm.factory('someModel').subscribe('update', function(event) {
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
 });
-{% endhighlight %}
+```
 
 ##### model.subscribeOnce
 
@@ -1076,15 +1134,19 @@ Subscribe and after it is fired once, unsubcsribe.
 
 Example:
 
-{% highlight js %}
+```javascript
 var updates = 0;
-nohm.factory('someModel').subscribeOnce('update', function (event) {
-// will only be called once no matter how many updates happen after 1 has published
-updates++;
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
-console.log(updates);
+nohm.factory('someModel').subscribeOnce('update', function(event) {
+  // will only be called once no matter how many updates happen after 1 has published
+  updates++;
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
+  console.log(updates);
 });
-{% endhighlight %}
+```
 
 ##### model.unsubscribe
 
@@ -1092,10 +1154,14 @@ Unsubscribe one or all listeners.
 
 Example:
 
-{% highlight js %}
+```javascript
 var model = nohm.factory('someModel');
-var callback = function (event) {
-console.log('someModel with id'+event.target.id+' was updated and now looks like this:', event.target.properties);
+var callback = function(event) {
+  console.log(
+    'someModel with id %s was updated and now looks like this:',
+    event.target.id,
+    event.target.properties,
+  );
 };
 model.subscribe('update', callback);
 
@@ -1104,7 +1170,7 @@ model.unsubscribe('update', callback);
 
 // or unsubscribe all
 model.unsubscribe('update');
-{% endhighlight %}
+```
 
 ### Extras
 
@@ -1115,20 +1181,21 @@ Some things that don't really fit anywhere else in this documentation.
 For some functions there are short forms.
 
 Instead of having to do something like:
-{% highlight js %}
+
+```javascript
 var user = new User();
-user.load(1, function () {
-user.p('name', 'test');
+user.load(1, function() {
+  user.p('name', 'test');
 });
-{% endhighlight %}
+```
 
 You can do this:
 
-{% highlight js %}
-User.load(1, function () {
-this.p('name', 'test');
+```javascript
+User.load(1, function() {
+  this.p('name', 'test');
 });
-{% endhighlight %}
+```
 
 This currently works for the following functions: load, find, save and remove.
 It is really only a shortcut.
@@ -1137,15 +1204,18 @@ It is really only a shortcut.
 
 A shortcut for find() and load().
 
-{% highlight js %}
-CarModel.findAndLoad({
-manufacturer: 'ferrari'
-}, function (err, cars) {
-// cars = array of nohm instances of ferraris
-cars.forEach(function (car) {
-if (car.p('build_year') < 1990)) {
-console.log('You should probably check out', car.id);
-}
-});
-});
-{% endhighlight %}
+```javascript
+CarModel.findAndLoad(
+  {
+    manufacturer: 'ferrari',
+  },
+  function(err, cars) {
+    // cars = array of nohm instances of ferraris
+    cars.forEach(function(car) {
+      if (car.p('build_year') < 1990) {
+        console.log('You should probably check out', car.id);
+      }
+    });
+  },
+);
+```
