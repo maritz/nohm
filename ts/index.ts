@@ -73,7 +73,9 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
    */
   protected _initOptions() {
     // overwritten in NohmClass.model/register
-    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
+    throw new Error(
+      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+    );
   }
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -82,7 +84,9 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
    */
   protected prefix(_prefix: keyof INohmPrefixes): string {
     // overwritten in NohmClass.model/register
-    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
+    throw new Error(
+      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+    );
   }
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -91,7 +95,9 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
    */
   protected rawPrefix(): INohmPrefixes {
     // overwritten in NohmClass.model/register
-    throw new Error('Class is not extended proplery. Use the return Nohm.register() instead of your class directly.');
+    throw new Error(
+      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+    );
   }
 }
 
@@ -111,7 +117,6 @@ function staticImplements<T>() {
 }
 
 export class NohmClass {
-
   /**
    * The redis prefixed key object.
    * Defaults to prefixing with 'nohm' which then creates keys like 'nohm:idsets:someModel'.
@@ -139,7 +144,7 @@ export class NohmClass {
   private publishEventEmitter: EventEmitter;
 
   private modelCache: {
-    [name: string]: Constructor<NohmModel<any>>,
+    [name: string]: Constructor<NohmModel<any>>;
   };
 
   private extraValidators: Array<string>;
@@ -154,8 +159,8 @@ export class NohmClass {
     this.extraValidators = [];
     this.meta = meta || true;
     this.isPublishSubscribed = false;
-    if (typeof (publish) !== 'undefined') {
-      if (typeof (publish) !== 'boolean') {
+    if (typeof publish !== 'undefined') {
+      if (typeof publish !== 'boolean') {
         this.setPublish(true);
         this.setPubSubClient(publish);
       } else {
@@ -178,10 +183,14 @@ export class NohmClass {
    * Note: this will not affect models that have a client set on their own.
    */
   public setClient(client?: redis.RedisClient) {
-    debug('Setting new redis client. Connected: %s; Address: %s.',
-      client && client.connected, client && (client as any).address);
+    debug(
+      'Setting new redis client. Connected: %s; Address: %s.',
+      client && client.connected,
+      client && (client as any).address,
+    );
     if (client && !client.connected) {
-      this.logError(`WARNING: setClient() received a redis client that is not connected yet.
+      this
+        .logError(`WARNING: setClient() received a redis client that is not connected yet.
       Consider waiting for an established connection before setting it.`);
     } else if (!client) {
       client = redis.createClient();
@@ -191,7 +200,8 @@ export class NohmClass {
 
   public logError(err: string | Error | null) {
     if (err) {
-      console.error({ // TODO: Make this a wrapped NohmError if not already an error
+      console.error({
+        // TODO: Make this a wrapped NohmError if not already an error
         message: err,
         name: 'Nohm Error',
       });
@@ -212,8 +222,11 @@ export class NohmClass {
    * @returns ModelClass
    */
   public model<TAdditionalMethods>(
-    modelName: string, options: IModelOptions & { properties: IModelPropertyDefinitions }, temp = false,
-  ): Constructor<NohmModelExtendable<IDictionary> & TAdditionalMethods> & IStaticMethods<NohmModel> {
+    modelName: string,
+    options: IModelOptions & { properties: IModelPropertyDefinitions },
+    temp = false,
+  ): Constructor<NohmModelExtendable<IDictionary> & TAdditionalMethods> &
+    IStaticMethods<NohmModel> {
     if (!modelName) {
       this.logError('When creating a new model you have to provide a name!');
     }
@@ -224,7 +237,6 @@ export class NohmClass {
     // tslint:disable-next-line:max-classes-per-file
     @staticImplements<IStaticMethods<CreatedClass>>()
     class CreatedClass extends NohmModelExtendable {
-
       public client = self.client;
 
       protected nohmClass = self;
@@ -285,7 +297,9 @@ export class NohmClass {
        * @param {Array<string>} ids Array of IDs of the models to be loaded
        * @returns {Promise<NohmModel>}
        */
-      public static async loadMany<P extends NohmModel>(ids: Array<string>): Promise<Array<P>> {
+      public static async loadMany<P extends NohmModel>(
+        ids: Array<string>,
+      ): Promise<Array<P>> {
         if (!Array.isArray(ids) || ids.length === 0) {
           return [];
         }
@@ -301,7 +315,9 @@ export class NohmClass {
           }
         });
         const loadedModels = await Promise.all(loadPromises);
-        return loadedModels.filter<P>((model): model is P => typeof model !== 'undefined');
+        return loadedModels.filter<P>(
+          (model): model is P => typeof model !== 'undefined',
+        );
       }
 
       /**
@@ -310,10 +326,19 @@ export class NohmClass {
        * @param {ISearchOptions} searches
        * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
-        searches?: Partial<{
-          [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-        }>,
+      public static async findAndLoad<
+        P extends NohmModel,
+        TProps extends IDictionary
+      >(
+        searches?: Partial<
+          {
+            [key in keyof TProps]:
+              | string
+              | number
+              | boolean
+              | Partial<ISearchOption>
+          }
+        >,
       ): Promise<Array<P>> {
         const dummy = await self.factory<P>(modelName);
         const ids = await dummy.find(searches);
@@ -350,9 +375,17 @@ export class NohmClass {
        * @param {ISearchOptions} [searches={}] Search options
        * @returns {Promise<Array<string>>} Array of ids
        */
-      public static async find<TProps extends IDictionary>(searches: Partial<{
-        [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-      }> = {}): Promise<Array<string>> {
+      public static async find<TProps extends IDictionary>(
+        searches: Partial<
+          {
+            [key in keyof TProps]:
+              | string
+              | number
+              | boolean
+              | Partial<ISearchOption>
+          }
+        > = {},
+      ): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
       }
@@ -432,20 +465,30 @@ export class NohmClass {
    *   bar.allProperties().name === 'testName'; // no error
    */
   public register<T extends Constructor<NohmModelExtendable<IDictionary>>>(
-    subClass: T, temp = false,
+    subClass: T,
+    temp = false,
   ): T & IStaticMethods<NohmModel> {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
     const modelName = (subClass as any).modelName;
     if (!modelName) {
-      throw new Error('A class passed to nohm.register() did not have static a modelName property.');
+      throw new Error(
+        'A class passed to nohm.register() did not have static a modelName property.',
+      );
     }
 
     if (!(subClass as any).definitions) {
-      throw new Error('A class passed to nohm.register() did not have static property definitions.');
+      throw new Error(
+        'A class passed to nohm.register() did not have static property definitions.',
+      );
     }
 
-    debug('Registering new model using register().', modelName, (subClass as any).definitions, temp);
+    debug(
+      'Registering new model using register().',
+      modelName,
+      (subClass as any).definitions,
+      temp,
+    );
 
     // tslint:disable-next-line:max-classes-per-file
     @staticImplements<IStaticMethods<CreatedClass>>()
@@ -499,7 +542,9 @@ export class NohmClass {
       } {
         const definitions = (CreatedClass as any).definitions;
         if (!definitions) {
-          throw new Error(`Model was not defined with proper static definitions: '${modelName}'`);
+          throw new Error(
+            `Model was not defined with proper static definitions: '${modelName}'`,
+          );
         }
         return definitions;
       }
@@ -522,7 +567,9 @@ export class NohmClass {
        * @param {Array<string>} ids Array of IDs of the models to be loaded
        * @returns {Promise<NohmModel>}
        */
-      public static async loadMany<P extends NohmModel>(ids: Array<string>): Promise<Array<P>> {
+      public static async loadMany<P extends NohmModel>(
+        ids: Array<string>,
+      ): Promise<Array<P>> {
         if (!Array.isArray(ids) || ids.length === 0) {
           return [];
         }
@@ -538,7 +585,9 @@ export class NohmClass {
           }
         });
         const loadedModels = await Promise.all(loadPromises);
-        return loadedModels.filter<P>((model): model is P => typeof model !== 'undefined');
+        return loadedModels.filter<P>(
+          (model): model is P => typeof model !== 'undefined',
+        );
       }
 
       /**
@@ -547,10 +596,19 @@ export class NohmClass {
        * @param {ISearchOptions} searches
        * @returns {Promise<Array<NohmModel>>}
        */
-      public static async findAndLoad<P extends NohmModel, TProps extends IDictionary>(
-        searches?: Partial<{
-          [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-        }>,
+      public static async findAndLoad<
+        P extends NohmModel,
+        TProps extends IDictionary
+      >(
+        searches?: Partial<
+          {
+            [key in keyof TProps]:
+              | string
+              | number
+              | boolean
+              | Partial<ISearchOption>
+          }
+        >,
       ): Promise<Array<P>> {
         const dummy = await self.factory<P>(modelName);
         const ids = await dummy.find(searches);
@@ -587,9 +645,17 @@ export class NohmClass {
        * @param {ISearchOptions} [searches={}] Search options
        * @returns {Promise<Array<string>>} Array of ids
        */
-      public static async find<TProps extends IDictionary>(searches: Partial<{
-        [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-      }> = {}): Promise<Array<string>> {
+      public static async find<TProps extends IDictionary>(
+        searches: Partial<
+          {
+            [key in keyof TProps]:
+              | string
+              | number
+              | boolean
+              | Partial<ISearchOption>
+          }
+        > = {},
+      ): Promise<Array<string>> {
         const dummy = await self.factory(modelName);
         return dummy.find(searches);
       }
@@ -627,8 +693,13 @@ export class NohmClass {
     name: string,
     id?: any,
   ): Promise<T> {
-    if (typeof arguments[1] === 'function' || typeof arguments[2] === 'function') {
-      throw new Error('Not implmented: factory does not support callback method anymore.');
+    if (
+      typeof arguments[1] === 'function' ||
+      typeof arguments[2] === 'function'
+    ) {
+      throw new Error(
+        'Not implmented: factory does not support callback method anymore.',
+      );
     } else {
       debug(`Factory is creating a new instance of '%s' with id %s.`, name, id);
       const model = this.modelCache[name];
@@ -676,7 +747,12 @@ export class NohmClass {
     }
     const deletes: Array<Promise<void>> = [];
 
-    debug(`PURGING DATABASE!`, client && client.connected, client && (client as any).address, this.prefix);
+    debug(
+      `PURGING DATABASE!`,
+      client && client.connected,
+      client && (client as any).address,
+      this.prefix,
+    );
 
     Object.keys(this.prefix).forEach((key) => {
       const prefix = (this.prefix as any)[key];
@@ -734,9 +810,11 @@ export class NohmClass {
     return this.publishClient;
   }
   public setPubSubClient(client: redis.RedisClient): Promise<void> {
-
-    debug(`Setting pubSub client. Connected: '%s'; Address: '%s'.`,
-      client && client.connected, client && (client as any).address);
+    debug(
+      `Setting pubSub client. Connected: '%s'; Address: '%s'.`,
+      client && client.connected,
+      client && (client as any).address,
+    );
 
     this.publishClient = client;
     return this.initPubSub();
@@ -744,7 +822,9 @@ export class NohmClass {
 
   private async initPubSub(): Promise<void> {
     if (!this.getPubSubClient) {
-      throw new Error('A second redis client must set via nohm.setPubSubClient before using pub/sub methods.');
+      throw new Error(
+        'A second redis client must set via nohm.setPubSubClient before using pub/sub methods.',
+      );
     } else if (this.isPublishSubscribed === true) {
       // already in pubsub mode, don't need to initialize it again.
       return;
@@ -754,9 +834,15 @@ export class NohmClass {
     this.publishEventEmitter.setMaxListeners(0); // TODO: check if this is sensible
     this.isPublishSubscribed = true;
 
-    await PSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+    await PSUBSCRIBE(
+      this.publishClient,
+      this.prefix.channel + PUBSUB_ALL_PATTERN,
+    );
 
-    debugPubSub(`Redis PSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
+    debugPubSub(
+      `Redis PSUBSCRIBE for '%s'.`,
+      this.prefix.channel + PUBSUB_ALL_PATTERN,
+    );
 
     this.publishClient.on('pmessage', (_pattern, channel, message) => {
       const suffix = channel.slice(this.prefix.channel.length);
@@ -774,10 +860,16 @@ export class NohmClass {
 
       try {
         payload = message ? JSON.parse(message) : {};
-        debugPubSub(`Redis published message for model '%s' with action '%s' and message: '%j'.`,
-          modelName, action, payload);
+        debugPubSub(
+          `Redis published message for model '%s' with action '%s' and message: '%j'.`,
+          modelName,
+          action,
+          payload,
+        );
       } catch (e) {
-        this.logError(`A published message is not valid JSON. Was : "${message}"`);
+        this.logError(
+          `A published message is not valid JSON. Was : "${message}"`,
+        );
         return;
       }
 
@@ -803,12 +895,13 @@ export class NohmClass {
     this.publishEventEmitter.once(eventName, callback);
   }
 
-  public unsubscribeEvent(
-    eventName: string,
-    fn?: any,
-  ): void {
+  public unsubscribeEvent(eventName: string, fn?: any): void {
     if (this.publishEventEmitter) {
-      debugPubSub(`Redis unsubscribing from event '%s' with fn?: %s.`, eventName, fn);
+      debugPubSub(
+        `Redis unsubscribing from event '%s' with fn?: %s.`,
+        eventName,
+        fn,
+      );
       if (!fn) {
         this.publishEventEmitter.removeAllListeners(eventName);
       } else {
@@ -819,9 +912,15 @@ export class NohmClass {
 
   public async closePubSub(): Promise<redis.RedisClient> {
     if (this.isPublishSubscribed === true) {
-      debugPubSub(`Redis PUNSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
+      debugPubSub(
+        `Redis PUNSUBSCRIBE for '%s'.`,
+        this.prefix.channel + PUBSUB_ALL_PATTERN,
+      );
       this.isPublishSubscribed = false;
-      await PUNSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+      await PUNSUBSCRIBE(
+        this.publishClient,
+        this.prefix.channel + PUBSUB_ALL_PATTERN,
+      );
     }
     return this.publishClient;
   }

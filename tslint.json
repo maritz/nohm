@@ -10,28 +10,18 @@
       "check-format",
       "allow-leading-underscore"
     ],
-    "quotemark": [
-      true,
-      "avoid-escape",
-      "single"
-    ],
-    "ordered-imports": [
-      false
-    ],
-    "member-ordering": [
-      false
-    ],
+    "quotemark": [true, "avoid-escape", "single"],
+    "ordered-imports": [false],
+    "member-ordering": [false],
     "no-trailing-whitespace": true,
-    "no-consecutive-blank-lines": [
-      false
-    ],
-    "no-console": [
-      false
-    ],
-    "array-type": [
+    "no-consecutive-blank-lines": [false],
+    "no-console": [false],
+    "array-type": [true, "generic"],
+    "prefer-conditional-expression": false,
+    "trailing-comma": [
       true,
-      "generic"
+      { "multiline": "always", "singleline": "never", "esSpecCompliant": true }
     ],
-    "prefer-conditional-expression": false
+    "object-literal-key-quotes": [true, "as-needed"]
   }
 }

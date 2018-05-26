@@ -1,24 +1,27 @@
-import * as fs from 'fs';
 import * as Debug from 'debug';
-
-import { NohmClass, nohm as instantiatedNohm } from './index';
-import { NohmModel } from './model';
-
-import { universalValidatorPath } from './validators';
+import * as fs from 'fs';
 import { ServerRequest, ServerResponse } from 'http';
+
+import { nohm as instantiatedNohm, NohmClass } from '.';
+import { NohmModel } from './model';
+import { universalValidatorPath } from './validators';
 
 export interface IExclusionsOption {
   [key: string]: Array<number | boolean> | boolean;
 }
 
-export type TRequestHandler = (req: ServerRequest, res: ServerResponse, next?: any) => void;
+export type TRequestHandler = (
+  req: ServerRequest,
+  res: ServerResponse,
+  next?: any,
+) => void;
 
 export interface IMiddlewareOptions {
   url?: string;
   namespace?: string;
   maxAge?: number;
   exclusions?: {
-    [key: string]: IExclusionsOption | boolean,
+    [key: string]: IExclusionsOption | boolean;
   };
   extraFiles?: string | Array<string>;
   uglify?: any;
@@ -30,10 +33,12 @@ const MAX_DEPTH = 5;
 
 function customToString(obj: any, depth: number = 0): string {
   if (depth > MAX_DEPTH) {
-    console.warn((new Error('nohm: middleware customToString() maxdepth exceeded')).stack);
+    console.warn(
+      new Error('nohm: middleware customToString() maxdepth exceeded').stack,
+    );
     return '';
   }
-  switch (typeof (obj)) {
+  switch (typeof obj) {
     case 'string':
       return '"' + obj + '"';
     case 'number':
@@ -96,7 +101,9 @@ function validationsFlatten(
   });
 
   Object.keys(definitions).forEach((key) => {
-    const isExcepted = exclusionsStrings.indexOf(key) !== -1 && !exclusionsObject.hasOwnProperty(key);
+    const isExcepted =
+      exclusionsStrings.indexOf(key) !== -1 &&
+      !exclusionsObject.hasOwnProperty(key);
     if (!isExcepted) {
       const vals = definitions[key].validations;
       if (Array.isArray(vals) && vals.length > 0) {
@@ -193,7 +200,6 @@ export function middleware(
     extraFiles = [extraFiles];
   }
 
-
   // collect models
   const collectedModels: Array<string> = [];
   const models = nohm.getModels();
@@ -211,22 +217,31 @@ export function middleware(
   });
 
   let str = `var nohmValidationsNamespaceName = "${namespace}";
-  var ${namespace}={"extraValidations": [], "models":{${collectedModels.join(',')}}};
+  var ${namespace}={"extraValidations": [], "models":{${collectedModels.join(
+    ',',
+  )}}};
   // extrafiles
   ${wrapExtraFiles(extraFiles, namespace)}
   // extravalidations
-  ${wrapExtraFiles(nohm.getExtraValidatorFileNames(), namespace)/* needs to somehow access the same thing */}
+  ${
+    wrapExtraFiles(
+      nohm.getExtraValidatorFileNames(),
+      namespace,
+    ) /* needs to somehow access the same thing */
+  }
   // validators.js
-  ${ fs.readFileSync(universalValidatorPath, 'utf-8')}`;
-
+  ${fs.readFileSync(universalValidatorPath, 'utf-8')}`;
 
   if (uglify) {
     try {
       // tslint:disable-next-line:no-implicit-dependencies
       uglify = require('uglify-js');
     } catch (e) {
-      console.warn('You tried to use the uglify option in Nohm.connect but uglify-js is not requirable.',
-        'Continuing without uglify.', e);
+      console.warn(
+        'You tried to use the uglify option in Nohm.connect but uglify-js is not requirable.',
+        'Continuing without uglify.',
+        e,
+      );
     }
     if (uglify.parser && uglify.uglify) {
       const jsp = uglify.parser;
@@ -238,8 +253,12 @@ export function middleware(
       str = pro.gen_code(squeezed);
     }
   }
-  debug(`Setting up middleware to be served on '%s' with namespace '%s' and collected these models: %o`,
-    url, namespace, collectedModels);
+  debug(
+    `Setting up middleware to be served on '%s' with namespace '%s' and collected these models: %o`,
+    url,
+    namespace,
+    collectedModels,
+  );
 
   return (req: ServerRequest, res: ServerResponse, next?: any) => {
     if (req.url === url) {
@@ -248,7 +267,7 @@ export function middleware(
       res.setHeader('Content-Length', str.length.toString());
       res.setHeader('Cache-Control', 'public, max-age=' + maxAge);
       res.end(str);
-    } else if (next && typeof (next) === 'function') {
+    } else if (next && typeof next === 'function') {
       next();
     }
   };

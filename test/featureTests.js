@@ -8,10 +8,16 @@ exports.checkModules = (t) => {
   t.expect(2);
 
   redis = require('redis');
-  t.ok(typeof redis.createClient === 'function', 'the redis client library should be available.');
+  t.ok(
+    typeof redis.createClient === 'function',
+    'the redis client library should be available.',
+  );
 
   nohm = require(__dirname + '/../tsOut');
-  t.ok(typeof nohm === 'object', 'nohm should be available -- something is fishy here.');
+  t.ok(
+    typeof nohm === 'object',
+    'nohm should be available -- something is fishy here.',
+  );
 
   t.done();
 };
@@ -31,21 +37,17 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'string',
       defaultValue: 'test',
       unique: true,
-      validations: [
-        'notEmpty'
-      ]
+      validations: ['notEmpty'],
     },
     visits: {
       type: 'integer',
-      index: true
+      index: true,
     },
     email: {
       type: 'string',
       unique: true,
       defaultValue: 'email@email.de',
-      validations: [
-        'email'
-      ]
+      validations: ['email'],
     },
     emailOptional: {
       type: 'string',
@@ -55,54 +57,57 @@ var UserMockup = nohm.model('UserMockup', {
         {
           name: 'email',
           options: {
-            optional: true
-          }
-        }
-      ]
+            optional: true,
+          },
+        },
+      ],
     },
     country: {
       type: 'string',
       defaultValue: 'Tibet',
       index: true,
-      validations: [
-        'notEmpty'
-      ]
+      validations: ['notEmpty'],
     },
     json: {
       type: 'json',
-      defaultValue: '{}'
-    }
+      defaultValue: '{}',
+    },
   },
-  idGenerator: 'increment'
+  idGenerator: 'increment',
 });
 
 nohm.model('NonIncrement', {
   properties: {
-    name: 'No name'
-  }
+    name: 'No name',
+  },
 });
 
 nohm.model('UniqueInteger', {
   properties: {
     unique: {
       type: 'integer',
-      unique: true
-    }
-  }
+      unique: true,
+    },
+  },
 });
 
-
 exports.prepare = {
-  redisClean: function (t) {
+  redisClean: function(t) {
     t.expect(1);
-    redis.keys(prefix + ':*:*Mockup:*', function (err, value) {
-      const check = (Array.isArray(value) && value.length === 0) || value === null;
-      t.ok(check, 'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS ' + prefix + ':*:*Mockup:*" to see what keys could be the cause.');
+    redis.keys(prefix + ':*:*Mockup:*', function(err, value) {
+      const check =
+        (Array.isArray(value) && value.length === 0) || value === null;
+      t.ok(
+        check,
+        'The redis database seems to contain fragments from previous nohm testruns. Use the redis command "KEYS ' +
+          prefix +
+          ':*:*Mockup:*" to see what keys could be the cause.',
+      );
       t.done();
     });
   },
 
-  idIntersection: function (t) {
+  idIntersection: function(t) {
     var arr1 = [1, 2, 3, 4, 5, 6, 7, 8, 9],
       arr2 = [2, 3, 4, 10],
       arr3 = [2, 3, 4, 10],
@@ -111,7 +116,7 @@ exports.prepare = {
       arr6 = ['hurgelwurz', 28, 39],
       arr7 = ['hurgelwurz', 28, 39],
       arr8 = [10, 3, 2],
-      testIntersection = function (arrs, resultTest) {
+      testIntersection = function(arrs, resultTest) {
         var result;
 
         result = _.intersection.apply(_, arrs);
@@ -140,7 +145,7 @@ exports.prepare = {
     t.done();
   },
 
-  setRedisClient: function (t) {
+  setRedisClient: function(t) {
     t.expect(2);
     nohm.client = null;
     t.throws(
@@ -148,21 +153,18 @@ exports.prepare = {
         new UserMockup();
       },
       /No redis client/,
-      'Creating a model without having a redis client set did not throw an error.'
+      'Creating a model without having a redis client set did not throw an error.',
     );
 
     nohm.setClient(redis);
 
-    t.doesNotThrow(
-      () => {
-        new UserMockup();
-      },
-      'Creating a model with a redis client set threw an error.'
-    );
+    t.doesNotThrow(() => {
+      new UserMockup();
+    }, 'Creating a model with a redis client set threw an error.');
     t.done();
   },
 
-  setPrefix: function (t) {
+  setPrefix: function(t) {
     const oldPrefix = nohm.prefix;
     t.expect(1);
     const expectPrefix = {
@@ -183,110 +185,180 @@ exports.prepare = {
     };
 
     nohm.setPrefix('hurgel');
-    t.same(nohm.prefix, expectPrefix, 'Setting a custom prefix did not work as expected');
+    t.same(
+      nohm.prefix,
+      expectPrefix,
+      'Setting a custom prefix did not work as expected',
+    );
 
     nohm.prefix = oldPrefix;
     t.done();
-  }
+  },
 };
 
 exports.propertyTests = {
-  propertyGetter: function (t) {
+  propertyGetter: function(t) {
     const user = new UserMockup();
     t.expect(7);
 
-    t.equals(typeof (user.p), 'function', 'Property getter short p is not available.');
+    t.equals(
+      typeof user.p,
+      'function',
+      'Property getter short p is not available.',
+    );
 
-    t.equals(typeof (user.prop), 'function', 'Property getter short prop is not available.');
+    t.equals(
+      typeof user.prop,
+      'function',
+      'Property getter short prop is not available.',
+    );
 
-    t.equals(typeof (user.property), 'function', 'Property getter is not available.');
+    t.equals(
+      typeof user.property,
+      'function',
+      'Property getter is not available.',
+    );
 
-    t.equals(user.property('email'), 'email@email.de', 'Property getter did not return the correct value for email.');
+    t.equals(
+      user.property('email'),
+      'email@email.de',
+      'Property getter did not return the correct value for email.',
+    );
 
-    t.equals(user.property('name'), 'test', 'Property getter did not return the correct value for name.');
-
+    t.equals(
+      user.property('name'),
+      'test',
+      'Property getter did not return the correct value for name.',
+    );
 
     t.throws(
       () => {
         user.property('hurgelwurz');
       },
       /Invalid property key 'hurgelwurz'\./,
-      'Calling .property() with an undefined key did not throw an error.'
+      'Calling .property() with an undefined key did not throw an error.',
     );
 
-    t.same(user.property('json'), {}, 'Property getter did not return the correct value for json.');
+    t.same(
+      user.property('json'),
+      {},
+      'Property getter did not return the correct value for json.',
+    );
     t.done();
   },
 
-
-  propertySetter: function (t) {
+  propertySetter: function(t) {
     const user = new UserMockup();
     const controlUser = new UserMockup();
     t.expect(6);
 
-    t.same(user.property('email', 123), '', 'Setting a property did not return the new value that was set (with casting).');
+    t.same(
+      user.property('email', 123),
+      '',
+      'Setting a property did not return the new value that was set (with casting).',
+    );
 
     user.property('email', 'asdasd');
-    t.equals(user.property('email'), 'asdasd', 'Setting a property did not actually set the property to the correct value');
+    t.equals(
+      user.property('email'),
+      'asdasd',
+      'Setting a property did not actually set the property to the correct value',
+    );
 
     user.property('email', 'test@test.de');
-    t.ok(user.property('email') !== controlUser.property('email'), 'Creating a new instance of an Object does not create fresh properties.');
+    t.ok(
+      user.property('email') !== controlUser.property('email'),
+      'Creating a new instance of an Object does not create fresh properties.',
+    );
 
     user.property({
       name: 'objectTest',
-      email: 'object@test.de'
+      email: 'object@test.de',
     });
 
-    t.equals(user.property('name'), 'objectTest', 'Setting multiple properties by providing one object did not work correctly for the name.');
-    t.equals(user.property('email'), 'object@test.de', 'Setting multiple properties by providing one object did not work correctly for the email.');
+    t.equals(
+      user.property('name'),
+      'objectTest',
+      'Setting multiple properties by providing one object did not work correctly for the name.',
+    );
+    t.equals(
+      user.property('email'),
+      'object@test.de',
+      'Setting multiple properties by providing one object did not work correctly for the email.',
+    );
 
     user.property('json', {
-      test: 1
+      test: 1,
     });
 
-    t.equals(user.property('json').test, 1, 'Setting a json property did not work correctly.');
+    t.equals(
+      user.property('json').test,
+      1,
+      'Setting a json property did not work correctly.',
+    );
 
     t.done();
   },
 
-
-  propertyDiff: function (t) {
+  propertyDiff: function(t) {
     const user = new UserMockup();
     const beforeName = user.property('name');
     const afterName = 'hurgelwurz';
     const beforeEmail = user.property('email');
     const afterEmail = 'email.propertyDiff@test';
     t.expect(5);
-    const shouldName = [{
-      key: 'name',
-      before: beforeName,
-      after: afterName
-    }];
-    const shouldMail = [{
-      key: 'email',
-      before: beforeEmail,
-      after: afterEmail
-    }];
+    const shouldName = [
+      {
+        key: 'name',
+        before: beforeName,
+        after: afterName,
+      },
+    ];
+    const shouldMail = [
+      {
+        key: 'email',
+        before: beforeEmail,
+        after: afterEmail,
+      },
+    ];
     const shouldNameAndMail = shouldName.concat(shouldMail);
 
-    t.ok(user.propertyDiff(), 'Property diff returned changes even though there were none');
+    t.ok(
+      user.propertyDiff(),
+      'Property diff returned changes even though there were none',
+    );
 
     user.property('name', afterName);
-    t.same(shouldName, user.propertyDiff(), 'Property diff did not correctly recognize the changed property `name`.');
+    t.same(
+      shouldName,
+      user.propertyDiff(),
+      'Property diff did not correctly recognize the changed property `name`.',
+    );
 
     user.property('email', afterEmail);
-    t.same(shouldName, user.propertyDiff('name'), 'Property diff did not correctly filter for changes only in `name`.');
+    t.same(
+      shouldName,
+      user.propertyDiff('name'),
+      'Property diff did not correctly filter for changes only in `name`.',
+    );
 
-    t.same(shouldNameAndMail, user.propertyDiff(), 'Property diff did not correctly recognize the changed properties `name` and `email`.');
+    t.same(
+      shouldNameAndMail,
+      user.propertyDiff(),
+      'Property diff did not correctly recognize the changed properties `name` and `email`.',
+    );
 
     user.property('name', beforeName);
-    t.same(shouldMail, user.propertyDiff(), 'Property diff did not correctly recognize the reset property `name`.');
+    t.same(
+      shouldMail,
+      user.propertyDiff(),
+      'Property diff did not correctly recognize the reset property `name`.',
+    );
 
     t.done();
   },
 
-
-  propertyReset: function (t) {
+  propertyReset: function(t) {
     const user = new UserMockup();
     const beforeName = user.property('name');
     const beforeEmail = user.property('email');
@@ -295,19 +367,29 @@ exports.propertyTests = {
     user.property('name', user.property('name') + 'hurgelwurz');
     user.property('email', user.property('email') + 'asdasd');
     user.propertyReset('name');
-    t.same(user.property('name'), beforeName, 'Property reset did not properly reset `name`.');
+    t.same(
+      user.property('name'),
+      beforeName,
+      'Property reset did not properly reset `name`.',
+    );
 
-    t.ok(user.property('email') !== beforeEmail, 'Property reset reset `email` when it shouldn\'t have.');
+    t.ok(
+      user.property('email') !== beforeEmail,
+      "Property reset reset `email` when it shouldn't have.",
+    );
 
     user.property('name', user.property('name') + 'hurgelwurz');
     user.propertyReset();
-    t.ok(user.property('name') === beforeName && user.property('email') === beforeEmail, 'Property reset did not properly reset `name` and `email`.');
+    t.ok(
+      user.property('name') === beforeName &&
+        user.property('email') === beforeEmail,
+      'Property reset did not properly reset `name` and `email`.',
+    );
 
     t.done();
   },
 
-
-  allProperties: function (t) {
+  allProperties: function(t) {
     const user = new UserMockup();
     t.expect(1);
 
@@ -320,12 +402,12 @@ exports.propertyTests = {
       emailOptional: user.property('emailOptional'),
       country: user.property('country'),
       json: {},
-      id: user.id
+      id: user.id,
     };
     t.same(should, user.allProperties(), 'Getting all properties failed.');
 
     t.done();
-  }
+  },
 };
 
 exports.create = async (t) => {
@@ -340,11 +422,20 @@ exports.create = async (t) => {
     // right now the promise rejections from this lead to a unhandledPromiseRejection
     await user.save();
 
-    redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
+    redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function(err, value) {
       t.ok(!err, 'There was a redis error in the create test check.');
-      t.ok(value.name.toString() === 'createTest', 'The user name was not saved properly');
-      t.ok(value.visits.toString() === '0', 'The user visits were not saved properly');
-      t.ok(value.email.toString() === 'createTest@asdasd.de', 'The user email was not saved properly');
+      t.ok(
+        value.name.toString() === 'createTest',
+        'The user name was not saved properly',
+      );
+      t.ok(
+        value.visits.toString() === '0',
+        'The user visits were not saved properly',
+      );
+      t.ok(
+        value.email.toString() === 'createTest@asdasd.de',
+        'The user email was not saved properly',
+      );
       t.done();
     });
   }, 'Creating a user did not work.:' + user.errors);
@@ -355,10 +446,13 @@ exports.remove = async (t) => {
   let testExists;
   t.expect(7);
 
-  testExists = function (what, key, callback) {
-    redis.exists(key, function (err, value) {
+  testExists = function(what, key, callback) {
+    redis.exists(key, function(err, value) {
       t.ok(!err, 'There was a redis error in the remove test check.');
-      t.ok(value === 0, 'Deleting a user did not work: ' + what + ', key: ' + key);
+      t.ok(
+        value === 0,
+        'Deleting a user did not work: ' + what + ', key: ' + key,
+      );
       callback();
     });
   };
@@ -370,27 +464,51 @@ exports.remove = async (t) => {
   const id = user.id;
   await user.remove();
 
-  t.equals(user.id, null, 'Removing an object from the db did not set the id to null');
-  async.series([
-    function (callback) {
-      testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
-    },
-    function (callback) {
-      redis.sismember(prefix + ':index:UserMockup:name:' + user.property('name'), id, function (err, value) {
-        t.ok((err === null && value === 0), 'Deleting a model did not properly delete the normal index.');
-      });
-      callback();
-    },
-    function (callback) {
-      redis.zscore(prefix + ':scoredindex:UserMockup:visits', id, function (err, value) {
-        t.ok((err === null && value === null), 'Deleting a model did not properly delete the scored index.');
-      });
-      callback();
-    },
-    function (callback) {
-      testExists('uniques', prefix + ':uniques:UserMockup:name:' + user.property('name'), callback);
-    }
-  ], t.done);
+  t.equals(
+    user.id,
+    null,
+    'Removing an object from the db did not set the id to null',
+  );
+  async.series(
+    [
+      function(callback) {
+        testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
+      },
+      function(callback) {
+        redis.sismember(
+          prefix + ':index:UserMockup:name:' + user.property('name'),
+          id,
+          function(err, value) {
+            t.ok(
+              err === null && value === 0,
+              'Deleting a model did not properly delete the normal index.',
+            );
+          },
+        );
+        callback();
+      },
+      function(callback) {
+        redis.zscore(prefix + ':scoredindex:UserMockup:visits', id, function(
+          err,
+          value,
+        ) {
+          t.ok(
+            err === null && value === null,
+            'Deleting a model did not properly delete the scored index.',
+          );
+        });
+        callback();
+      },
+      function(callback) {
+        testExists(
+          'uniques',
+          prefix + ':uniques:UserMockup:name:' + user.property('name'),
+          callback,
+        );
+      },
+    ],
+    t.done,
+  );
 };
 
 exports.idSets = async (t) => {
@@ -401,16 +519,28 @@ exports.idSets = async (t) => {
 
   await user.save();
   tmpid = user.id;
-  redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, async (err, value) => {
-    t.ok(!err, 'There was an unexpected redis error.');
-    t.equals(value, 1, 'The userid was not part of the idset after saving.');
-    await user.remove();
-    redis.sismember(prefix + ':idsets:' + user.modelName, tmpid, (err, value) => {
+  redis.sismember(
+    prefix + ':idsets:' + user.modelName,
+    tmpid,
+    async (err, value) => {
       t.ok(!err, 'There was an unexpected redis error.');
-      t.equals(value, 0, 'The userid was still part of the idset after removing.');
-      t.done();
-    });
-  });
+      t.equals(value, 1, 'The userid was not part of the idset after saving.');
+      await user.remove();
+      redis.sismember(
+        prefix + ':idsets:' + user.modelName,
+        tmpid,
+        (err, value) => {
+          t.ok(!err, 'There was an unexpected redis error.');
+          t.equals(
+            value,
+            0,
+            'The userid was still part of the idset after removing.',
+          );
+          t.done();
+        },
+      );
+    },
+  );
 };
 
 exports.update = async (t) => {
@@ -423,13 +553,19 @@ exports.update = async (t) => {
   user.property('name', 'updateTest2');
   user.property('email', 'updateTest2@email.de');
   await user.save();
-  redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function (err, value) {
+  redis.hgetall(prefix + ':hash:UserMockup:' + user.id, function(err, value) {
     t.ok(!err, 'There was a redis error in the update test check.');
     if (err) {
       t.done();
     }
-    t.ok(value.name.toString() === 'updateTest2', 'The user name was not updated properly');
-    t.ok(value.email.toString() === 'updateTest2@email.de', 'The user email was not updated properly');
+    t.ok(
+      value.name.toString() === 'updateTest2',
+      'The user name was not updated properly',
+    );
+    t.ok(
+      value.email.toString() === 'updateTest2@email.de',
+      'The user email was not updated properly',
+    );
     t.done();
   });
 };
@@ -444,28 +580,65 @@ exports.unique = async (t) => {
   user2.property('name', 'duplicateTest');
   user2.property('email', 'dubplicateTest@test.de'); // intentional typo dub
   await user1.save();
-  redis.get(prefix + ':uniques:UserMockup:name:duplicatetest', async (err, value) => {
-    t.ok(user1.id, 'Userid b0rked while checking uniques');
-    t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
-    const valid = await user2.validate(false, false);
-    t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly');
-    try {
-      await user2.save();
-      t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
-    } catch (err) {
-      t.ok(err instanceof nohm.ValidationError, 'A saved unique property was not recognized as a duplicate');
-      t.same(err.errors.name, ['notUnique'], 'A saved unique property was not recognized as a duplicate');
+  redis.get(
+    prefix + ':uniques:UserMockup:name:duplicatetest',
+    async (err, value) => {
+      t.ok(user1.id, 'Userid b0rked while checking uniques');
+      t.equals(
+        parseInt(value, 10),
+        user1.id,
+        'The unique key did not have the correct id',
+      );
+      const valid = await user2.validate(false, false);
+      t.ok(
+        !valid,
+        'A unique property was not recognized as a duplicate in valid without setDirectly',
+      );
+      try {
+        await user2.save();
+        t.ok(
+          false,
+          'Saving a model with an invalid non-unique property did not throw/reject.',
+        );
+      } catch (err) {
+        t.ok(
+          err instanceof nohm.ValidationError,
+          'A saved unique property was not recognized as a duplicate',
+        );
+        t.same(
+          err.errors.name,
+          ['notUnique'],
+          'A saved unique property was not recognized as a duplicate',
+        );
 
-      redis.exists(prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de', (err, value) => {
-        t.equals(value, 0, 'The tmp unique lock was not deleted for a failed save.');
-        redis.get(prefix + ':uniques:UserMockup:name:duplicatetest', (err, value) => {
-          t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-          t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
-          t.done();
-        });
-      });
-    }
-  });
+        redis.exists(
+          prefix + ':uniques:UserMockup:email:dubbplicatetest@test.de',
+          (err, value) => {
+            t.equals(
+              value,
+              0,
+              'The tmp unique lock was not deleted for a failed save.',
+            );
+            redis.get(
+              prefix + ':uniques:UserMockup:name:duplicatetest',
+              (err, value) => {
+                t.ok(
+                  !err,
+                  'There was an unexpected probllem: ' + util.inspect(err),
+                );
+                t.same(
+                  parseInt(value, 10),
+                  user1.id,
+                  'The unique key did not have the correct id after trying to save another unique.',
+                );
+                t.done();
+              },
+            );
+          },
+        );
+      }
+    },
+  );
 };
 
 exports.uniqueLowerCase = async (t) => {
@@ -478,22 +651,45 @@ exports.uniqueLowerCase = async (t) => {
   user2.property('name', 'lowercasetest');
   user2.property('email', 'lowercasetest@test.de');
   await user1.save();
-  redis.get(prefix + ':uniques:UserMockup:name:' + user1.property('name').toLowerCase(), async (err, value) => {
-    t.equals(parseInt(value, 10), user1.id, 'The unique key did not have the correct id');
-    const valid = await user2.validate(false, false);
-    t.ok(!valid, 'A unique property was not recognized as a duplicate in valid without setDirectly.');
-    try {
-      await user2.save();
-      t.ok(false, 'Saving a model with an invalid non-unique property did not throw/reject.');
-    } catch (err) {
-      t.ok(err instanceof nohm.ValidationError, 'A saved unique property was not recognized as a duplicate');
-      redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function (err, value) {
-        t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
-        t.same(parseInt(value, 10), user1.id, 'The unique key did not have the correct id after trying to save another unique.');
-        t.done();
-      });
-    }
-  });
+  redis.get(
+    prefix + ':uniques:UserMockup:name:' + user1.property('name').toLowerCase(),
+    async (err, value) => {
+      t.equals(
+        parseInt(value, 10),
+        user1.id,
+        'The unique key did not have the correct id',
+      );
+      const valid = await user2.validate(false, false);
+      t.ok(
+        !valid,
+        'A unique property was not recognized as a duplicate in valid without setDirectly.',
+      );
+      try {
+        await user2.save();
+        t.ok(
+          false,
+          'Saving a model with an invalid non-unique property did not throw/reject.',
+        );
+      } catch (err) {
+        t.ok(
+          err instanceof nohm.ValidationError,
+          'A saved unique property was not recognized as a duplicate',
+        );
+        redis.get(prefix + ':uniques:UserMockup:name:lowercasetest', function(
+          err,
+          value,
+        ) {
+          t.ok(!err, 'There was an unexpected probllem: ' + util.inspect(err));
+          t.same(
+            parseInt(value, 10),
+            user1.id,
+            'The unique key did not have the correct id after trying to save another unique.',
+          );
+          t.done();
+        });
+      }
+    },
+  );
 };
 
 exports.uniqueDeleteWhenOtherFails = async (t) => {
@@ -506,11 +702,23 @@ exports.uniqueDeleteWhenOtherFails = async (t) => {
   try {
     await user.save();
   } catch (err) {
-    t.ok(err instanceof nohm.ValidationError, 'There was an unexpected problem: ' + util.inspect(err));
-    redis.exists(prefix + ':uniques:UserMockup:name:' + user.property('name').toLowerCase(), function (err, value) {
-      t.equals(value, 0, 'The unique was locked although there were errors in the non-unique checks.');
-      t.done();
-    });
+    t.ok(
+      err instanceof nohm.ValidationError,
+      'There was an unexpected problem: ' + util.inspect(err),
+    );
+    redis.exists(
+      prefix +
+        ':uniques:UserMockup:name:' +
+        user.property('name').toLowerCase(),
+      function(err, value) {
+        t.equals(
+          value,
+          0,
+          'The unique was locked although there were errors in the non-unique checks.',
+        );
+        t.done();
+      },
+    );
   }
 };
 
@@ -523,7 +731,11 @@ exports.uniqueOnlyCheckSpecified = async (t) => {
   user.property('email', 'duplicateTest@test.de');
   const valid = await user.validate('name');
   t.same(valid, false, 'Checking the duplication status failed in valid().');
-  t.same(user.errors.email, [], 'Checking the duplication status of one property set the error for another one.');
+  t.same(
+    user.errors.email,
+    [],
+    'Checking the duplication status of one property set the error for another one.',
+  );
   t.done();
 };
 
@@ -532,19 +744,26 @@ exports.uniqueDeletion = async (t) => {
   t.expect(2);
 
   user.property({
-    'name': 'dubplicateDeletionTest',
-    'email': 'dubplicateDeletionTest@test.de',
-    'country': ''
+    name: 'dubplicateDeletionTest',
+    email: 'dubplicateDeletionTest@test.de',
+    country: '',
   });
 
   try {
     await user.save();
   } catch (err) {
     t.ok(err, 'The invalid property country did not trigger a failure.');
-    redis.exists(prefix + ':uniques:UserMockup:name:dubplicateDeletionTest', function (err, value) {
-      t.equals(value, 0, 'The tmp unique key was not deleted if a non-unique saving failure occured.');
-      t.done();
-    });
+    redis.exists(
+      prefix + ':uniques:UserMockup:name:dubplicateDeletionTest',
+      function(err, value) {
+        t.equals(
+          value,
+          0,
+          'The tmp unique key was not deleted if a non-unique saving failure occured.',
+        );
+        t.done();
+      },
+    );
   }
 };
 
@@ -554,19 +773,27 @@ exports.uniqueCaseInSensitive = async (t) => {
   t.expect(3);
 
   user.property({
-    'name': 'uniqueCaseInSensitive',
-    'email': 'uniqueCaseInSensitive@test.de'
+    name: 'uniqueCaseInSensitive',
+    email: 'uniqueCaseInSensitive@test.de',
   });
   user2.property({
-    'name': user.property('name').toLowerCase(),
-    'email': user.property('email').toLowerCase()
+    name: user.property('name').toLowerCase(),
+    email: user.property('email').toLowerCase(),
   });
 
   await user.save();
   const valid = await user2.validate();
   t.ok(!valid, 'A duplicate (different case) unique property was validated.');
-  t.same(user2.errors.name, ['notUnique'], 'The error for name was not correct.');
-  t.same(user2.errors.email, ['notUnique'], 'The error for email was not correct.');
+  t.same(
+    user2.errors.name,
+    ['notUnique'],
+    'The error for name was not correct.',
+  );
+  t.same(
+    user2.errors.email,
+    ['notUnique'],
+    'The error for email was not correct.',
+  );
   t.done();
 };
 
@@ -574,24 +801,34 @@ exports.uniqueEmpty = async (t) => {
   const user = new UserMockup();
   t.expect(4);
 
-  redis.exists(prefix + ':uniques:UserMockup:emailOptional:', async (err, exists) => {
-    t.ok(!err, 'redis.keys failed.');
-    t.same(exists, 0, 'An empty unique was set before the test for it was run');
-    user.property({
-      'name': 'emailOptional',
-      'email': 'emailOptionalTest@test.de',
-      'emailOptional': ''
-    });
-    await user.save();
-    redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function (err, keys) {
+  redis.exists(
+    prefix + ':uniques:UserMockup:emailOptional:',
+    async (err, exists) => {
       t.ok(!err, 'redis.keys failed.');
-      t.same(keys.length, 0, 'An empty unique was set');
-      t.done();
-    });
-  });
+      t.same(
+        exists,
+        0,
+        'An empty unique was set before the test for it was run',
+      );
+      user.property({
+        name: 'emailOptional',
+        email: 'emailOptionalTest@test.de',
+        emailOptional: '',
+      });
+      await user.save();
+      redis.keys(prefix + ':uniques:UserMockup:emailOptional:', function(
+        err,
+        keys,
+      ) {
+        t.ok(!err, 'redis.keys failed.');
+        t.same(keys.length, 0, 'An empty unique was set');
+        t.done();
+      });
+    },
+  );
 };
 
-exports["integer uniques"] = async (t) => {
+exports['integer uniques'] = async (t) => {
   t.expect(3);
   const obj = await nohm.factory('UniqueInteger');
   const obj2 = await nohm.factory('UniqueInteger');
@@ -599,14 +836,21 @@ exports["integer uniques"] = async (t) => {
   obj2.property('unique', 123);
 
   await obj.save();
-  t.same(obj.allProperties(), {
-    unique: 123,
-    id: obj.id
-  }, 'Properties not correct');
+  t.same(
+    obj.allProperties(),
+    {
+      unique: 123,
+      id: obj.id,
+    },
+    'Properties not correct',
+  );
   try {
     await obj2.save();
   } catch (err) {
-    t.ok(err instanceof nohm.ValidationError, 'Unique integer conflict did not result in error.');
+    t.ok(
+      err instanceof nohm.ValidationError,
+      'Unique integer conflict did not result in error.',
+    );
     await obj.remove();
     t.doesNotThrow(async () => {
       await obj2.save();
@@ -625,19 +869,39 @@ exports.indexes = async (t) => {
   user.property('visits', 20);
 
   await user.save();
-  redis.sismember(prefix + ':index:UserMockup:country:indexTestCountry', user.id, function (err, value) {
-    t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-    t.ok(value === 1, 'The country index did not have the user as one of its ids.');
-    redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function (err, value) {
+  redis.sismember(
+    prefix + ':index:UserMockup:country:indexTestCountry',
+    user.id,
+    function(err, value) {
       t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-      t.ok(value == user.property('visits'), 'The visits index did not have the correct score.');
-      redis.sismember(prefix + ':index:UserMockup:visits:' + user.property('visits'), user.id, function (err, value) {
+      t.ok(
+        value === 1,
+        'The country index did not have the user as one of its ids.',
+      );
+      redis.zscore(prefix + ':scoredindex:UserMockup:visits', user.id, function(
+        err,
+        value,
+      ) {
         t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
-        t.ok(value === 1, 'The visits index did not have the user as one of its ids.');
-        t.done();
+        t.ok(
+          value == user.property('visits'),
+          'The visits index did not have the correct score.',
+        );
+        redis.sismember(
+          prefix + ':index:UserMockup:visits:' + user.property('visits'),
+          user.id,
+          function(err, value) {
+            t.ok(!err, 'There was an unexpected problem: ' + util.inspect(err));
+            t.ok(
+              value === 1,
+              'The visits index did not have the user as one of its ids.',
+            );
+            t.done();
+          },
+        );
       });
-    });
-  });
+    },
+  );
 };
 
 exports.__updated = async (t) => {
@@ -645,15 +909,24 @@ exports.__updated = async (t) => {
   t.expect(3);
   await user.save();
   user.property('name', 'hurgelwurz');
-  t.ok(user.properties.get('name').__updated === true, '__updated was not ser on property `name`.');
+  t.ok(
+    user.properties.get('name').__updated === true,
+    '__updated was not ser on property `name`.',
+  );
   user.property('name', 'test');
-  t.ok(user.properties.get('name').__updated === false, 'Changing a var manually to the original didn\'t reset the internal __updated var');
+  t.ok(
+    user.properties.get('name').__updated === false,
+    "Changing a var manually to the original didn't reset the internal __updated var",
+  );
   await user.remove();
 
   const user2 = new UserMockup();
   user2.property('name', 'hurgelwurz');
   user2.propertyReset();
-  t.ok(user2.properties.get('name').__updated === false, 'Changing a var by propertyReset to the original didn\'t reset the internal __updated var');
+  t.ok(
+    user2.properties.get('name').__updated === false,
+    "Changing a var by propertyReset to the original didn't reset the internal __updated var",
+  );
   t.done();
 };
 
@@ -665,11 +938,14 @@ exports.deleteNonExistant = async (t) => {
   try {
     await user.remove();
   } catch (err) {
-    t.same(err, new Error('not found'), 'Trying to delete an instance that doesn\'t exist did not return "not found".');
+    t.same(
+      err,
+      new Error('not found'),
+      'Trying to delete an instance that doesn\'t exist did not return "not found".',
+    );
     t.done();
   }
 };
-
 
 const MethodOverwrite = nohm.model('methodOverwrite', {
   properties: {
@@ -677,66 +953,97 @@ const MethodOverwrite = nohm.model('methodOverwrite', {
       type: 'string',
       defaultValue: 'test',
       unique: true,
-      validations: [
-        'notEmpty'
-      ]
+      validations: ['notEmpty'],
     },
   },
   methods: {
     test: function test() {
       return this.property('name');
-    }
-  }
+    },
+  },
 });
 
 exports.methods = async (t) => {
   const methodOverwrite = new MethodOverwrite();
   t.expect(2);
 
-  t.same(typeof (methodOverwrite.test), 'function', 'Adding a method to a model did not create that method on a new instance.');
-  t.same(methodOverwrite.test(), methodOverwrite.property('name'), 'The test method did not work properly. (probably doesn\'t have the correct `this`.');
+  t.same(
+    typeof methodOverwrite.test,
+    'function',
+    'Adding a method to a model did not create that method on a new instance.',
+  );
+  t.same(
+    methodOverwrite.test(),
+    methodOverwrite.property('name'),
+    "The test method did not work properly. (probably doesn't have the correct `this`.",
+  );
   t.done();
-  console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be 2 warnings in the next few lines somewhere.');
+  console.warn(
+    '\x1b[1m\x1b[34m%s\x1b[0m',
+    'There should be 2 warnings in the next few lines somewhere.',
+  );
 };
 
-const MethodOverwriteSuperMethod = nohm.model('methodOverwriteSuperMethod', {
-  properties: {
-    name: {
-      type: 'string',
-      defaultValue: 'test',
-      unique: true,
-      validations: [
-        'notEmpty'
-      ]
+const MethodOverwriteSuperMethod = nohm.model(
+  'methodOverwriteSuperMethod',
+  {
+    properties: {
+      name: {
+        type: 'string',
+        defaultValue: 'test',
+        unique: true,
+        validations: ['notEmpty'],
+      },
+    },
+    methods: {
+      prop: function prop(name) {
+        if (name === 'super') return this._super_prop('name');
+        else return this._super_prop.apply(this, arguments, 0);
+      },
     },
   },
-  methods: {
-    prop: function prop(name) {
-      if (name === 'super')
-        return this._super_prop('name');
-      else
-        return this._super_prop.apply(this, arguments, 0);
-    }
-  }
-}, true); // temporary to prevent connectMiddleware later from throwing a bunch of deprecation warnings
+  true,
+); // temporary to prevent connectMiddleware later from throwing a bunch of deprecation warnings
 exports.methodsSuper = async (t) => {
   const methodOverwrite = new MethodOverwriteSuperMethod();
   t.expect(4);
 
-  t.same(typeof (methodOverwrite.prop), 'function', 'Overwriting a method in a model definition did not create that method on a new instance.');
-  t.same(typeof (methodOverwrite._super_prop), 'function', 'Overwriting a method in a model definition did not create the _super_ method on a new instance.');
-  t.same(methodOverwrite.prop('super'), methodOverwrite.property('name'), 'The super test method did not work properly.');
+  t.same(
+    typeof methodOverwrite.prop,
+    'function',
+    'Overwriting a method in a model definition did not create that method on a new instance.',
+  );
+  t.same(
+    typeof methodOverwrite._super_prop,
+    'function',
+    'Overwriting a method in a model definition did not create the _super_ method on a new instance.',
+  );
+  t.same(
+    methodOverwrite.prop('super'),
+    methodOverwrite.property('name'),
+    'The super test method did not work properly.',
+  );
   methodOverwrite.prop('name', 'methodTest');
-  t.same(methodOverwrite.property('name'), 'methodTest', 'The super test method did not properly handle arguments');
+  t.same(
+    methodOverwrite.property('name'),
+    'methodTest',
+    'The super test method did not properly handle arguments',
+  );
   t.done();
-  console.warn('\x1b[1m\x1b[34m%s\x1b[0m', 'There should be a warning with a stack trace in the next few lines somewhere.');
+  console.warn(
+    '\x1b[1m\x1b[34m%s\x1b[0m',
+    'There should be a warning with a stack trace in the next few lines somewhere.',
+  );
 };
 
-exports["no super method if none needed"] = async (t) => {
+exports['no super method if none needed'] = async (t) => {
   const user = new UserMockup();
   t.expect(1);
 
-  t.ok(!user.hasOwnProperty('_super_test'), 'Defining a method that does not overwrite a nohm method created a _super_.');
+  t.ok(
+    !user.hasOwnProperty('_super_test'),
+    'Defining a method that does not overwrite a nohm method created a _super_.',
+  );
   t.done();
 };
 
@@ -749,8 +1056,16 @@ exports.uniqueDefaultOverwritten = async (t) => {
   try {
     await user2.save();
   } catch (err) {
-    t.ok(err instanceof nohm.ValidationError, 'Saving a default unique value did not return with the error "invalid"');
-    t.same(user2.errors.name, ['notUnique'], 'Saving a default unique value returned the wrong error: ' + user2.errors.name);
+    t.ok(
+      err instanceof nohm.ValidationError,
+      'Saving a default unique value did not return with the error "invalid"',
+    );
+    t.same(
+      user2.errors.name,
+      ['notUnique'],
+      'Saving a default unique value returned the wrong error: ' +
+        user2.errors.name,
+    );
     t.done();
   }
 };
@@ -760,13 +1075,17 @@ exports.allPropertiesJson = async (t) => {
   user.property('json', { test: 1 });
   user.property({
     name: 'allPropertiesJson',
-    email: 'allPropertiesJson@test.de'
+    email: 'allPropertiesJson@test.de',
   });
   t.expect(1);
 
   await user.save();
   const testProps = user.allProperties();
-  t.same(testProps.json, user.property('json'), 'allProperties did not properly parse json properties');
+  t.same(
+    testProps.json,
+    user.property('json'),
+    'allProperties did not properly parse json properties',
+  );
   t.done();
 };
 
@@ -824,19 +1143,28 @@ exports.defaultAsFunction = async (t) => {
     properties: {
       time: {
         type: 'timestamp',
-        defaultValue: function () {
-          return (+ new Date());
-        }
-      }
-    }
+        defaultValue: function() {
+          return +new Date();
+        },
+      },
+    },
   });
   const test1 = new TestMockup();
-  setTimeout(function () {
+  setTimeout(function() {
     const test2 = new TestMockup();
 
-    t.ok(typeof (test1.property('time')) === 'number', 'time of test1 is not a number');
-    t.ok(typeof (test2.property('time')) === 'number', 'time of test2 is not a number');
-    t.ok(test1.property('time') < test2.property('time'), 'time of test2 is not lower than test1');
+    t.ok(
+      typeof test1.property('time') === 'number',
+      'time of test1 is not a number',
+    );
+    t.ok(
+      typeof test2.property('time') === 'number',
+      'time of test2 is not a number',
+    );
+    t.ok(
+      test1.property('time') < test2.property('time'),
+      'time of test2 is not lower than test1',
+    );
     t.done();
   }, 10);
 };
@@ -848,13 +1176,13 @@ exports.defaultIdGeneration = async (t) => {
     properties: {
       name: {
         type: 'string',
-        defaultValue: 'defaultIdGeneration'
-      }
-    }
+        defaultValue: 'defaultIdGeneration',
+      },
+    },
   });
   const test1 = new TestMockup();
   await test1.save();
-  t.same(typeof (test1.id), 'string', 'The generated id was not a string');
+  t.same(typeof test1.id, 'string', 'The generated id was not a string');
   t.done();
 };
 
@@ -873,17 +1201,25 @@ exports.factory = async (t) => {
   t.expect(2);
   const name = 'UserMockup';
   const user = await nohm.factory(name);
-  t.same(user.modelName, name, 'Using the factory to get an instance did not work.');
+  t.same(
+    user.modelName,
+    name,
+    'Using the factory to get an instance did not work.',
+  );
 
   try {
     await nohm.factory(name, 1234124235);
   } catch (err) {
-    t.same(err.message, 'not found', 'Instantiating a user via factory with an id and callback did not try to load it');
+    t.same(
+      err.message,
+      'not found',
+      'Instantiating a user via factory with an id and callback did not try to load it',
+    );
     t.done();
   }
 };
 
-exports["factory with non-integer id"] = async (t) => {
+exports['factory with non-integer id'] = async (t) => {
   t.expect(1);
   const name = 'NonIncrement';
   const obj = await nohm.factory(name);
@@ -891,20 +1227,24 @@ exports["factory with non-integer id"] = async (t) => {
   await obj.save();
 
   var obj2 = await nohm.factory(name, obj.id);
-  t.same(obj2.allProperties(), obj.allProperties(), 'The loaded object seems to have wrong properties');
+  t.same(
+    obj2.allProperties(),
+    obj.allProperties(),
+    'The loaded object seems to have wrong properties',
+  );
   t.done();
 };
 
 exports.purgeDB = async (t) => {
   t.expect(4);
-  var countKeys = function (prefix, callback) {
-    redis.keys(prefix + '*', function (err, orig_num) {
+  var countKeys = function(prefix, callback) {
+    redis.keys(prefix + '*', function(err, orig_num) {
       callback(err, orig_num.length);
     });
   };
 
   const tests = [];
-  Object.keys(nohm.prefix).forEach(function (key) {
+  Object.keys(nohm.prefix).forEach(function(key) {
     if (typeof nohm.prefix[key] === 'object') {
       Object.keys(nohm.prefix[key]).forEach((innerKey) => {
         tests.push(async.apply(countKeys, nohm.prefix[key][innerKey]));
@@ -916,26 +1256,30 @@ exports.purgeDB = async (t) => {
 
   async.series(tests, async (err, num_arr) => {
     t.ok(!err, 'Unexpected redis error');
-    const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+    const count = num_arr.reduce(function(num, add) {
+      return num + add;
+    }, 0);
     t.ok(count > 0, 'Database did not have any keys bevore purgeDb call');
     await nohm.purgeDb();
-    async.series(tests, function (err, num_arr) {
+    async.series(tests, function(err, num_arr) {
       t.ok(!err, 'Unexpected redis error');
-      const count = num_arr.reduce(function (num, add) { return num + add; }, 0);
+      const count = num_arr.reduce(function(num, add) {
+        return num + add;
+      }, 0);
       t.same(count, 0, 'Database did have keys left after purging.');
       t.done();
     });
   });
 };
 
-exports["no key left behind"] = async (t) => {
+exports['no key left behind'] = async (t) => {
   const user = await nohm.factory('UserMockup');
   const user2 = await nohm.factory('UserMockup');
   t.expect(3);
 
   user2.property({
     name: 'user2',
-    email: 'user2@test.com'
+    email: 'user2@test.com',
   });
 
   user.link(user2);
@@ -950,7 +1294,7 @@ exports["no key left behind"] = async (t) => {
       await user2.save();
       await user2.remove();
       await user.remove();
-      redis.keys(prefix + ':*', function (err, keys) {
+      redis.keys(prefix + ':*', function(err, keys) {
         t.ok(!err, 'Unexpected redis error');
         // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
         t.same(keys.length, 4, 'Not all keys were removed from the database');
@@ -960,18 +1304,22 @@ exports["no key left behind"] = async (t) => {
   });
 };
 
-exports["temporary model definitions"] = async (t) => {
+exports['temporary model definitions'] = async (t) => {
   t.expect(2);
   const user = await nohm.factory('UserMockup');
 
   // new temporary model definition with same name
-  var TempUserMockup = nohm.model('UserMockup', {
-    properties: {
-      well_shit: {
-        type: 'string'
-      }
-    }
-  }, true);
+  var TempUserMockup = nohm.model(
+    'UserMockup',
+    {
+      properties: {
+        well_shit: {
+          type: 'string',
+        },
+      },
+    },
+    true,
+  );
   const new_user = new TempUserMockup();
 
   const user2 = await nohm.factory('UserMockup');
@@ -981,7 +1329,9 @@ exports["temporary model definitions"] = async (t) => {
   t.done();
 };
 
-exports["changing unique frees old unique with uppercase values"] = async (t) => {
+exports['changing unique frees old unique with uppercase values'] = async (
+  t,
+) => {
   t.expect(1);
   const obj = await nohm.factory('UserMockup');
   const obj2 = await nohm.factory('UserMockup');
@@ -992,7 +1342,10 @@ exports["changing unique frees old unique with uppercase values"] = async (t) =>
 
   await obj.save();
   await obj2.load(obj.id);
-  obj2.property('name', 'changing unique property frees the value to something else');
+  obj2.property(
+    'name',
+    'changing unique property frees the value to something else',
+  );
   await obj2.save();
   await obj3.load(obj.id);
   obj2.property('name', old);
@@ -1002,17 +1355,20 @@ exports["changing unique frees old unique with uppercase values"] = async (t) =>
     // the way it actually tests whether the uniques are freed is by not throwing errors during save
     t.same(obj2.id, obj3.id, 'Something went wrong');
   } catch (err) {
-    t.ok(!err, 'Unexpected saving error. (May be because old uniques are not freed properly on change.');
+    t.ok(
+      !err,
+      'Unexpected saving error. (May be because old uniques are not freed properly on change.',
+    );
   } finally {
     t.done();
   }
 };
 
-exports["removing unique frees unique with uppercase values"] = async (t) => {
+exports['removing unique frees unique with uppercase values'] = async (t) => {
   t.expect(1);
   const obj = await nohm.factory('UserMockup');
   const obj2 = await nohm.factory('UserMockup');
-  const old = "Removing Unique Property Frees The Value";
+  const old = 'Removing Unique Property Frees The Value';
   obj.property('name', old);
   obj.property('email', 'remove_frees@unique.de');
 
@@ -1026,31 +1382,50 @@ exports["removing unique frees unique with uppercase values"] = async (t) => {
   t.done();
 };
 
-exports["register nohm model via ES6 class definition"] = async (t) => {
+exports['register nohm model via ES6 class definition'] = async (t) => {
   try {
-    class ClassModel extends Nohm.NohmModel {
-    }
+    class ClassModel extends Nohm.NohmModel {}
     ClassModel.modelName = 'ClassModel';
     ClassModel.definitions = {
       name: {
         type: 'string',
-        unique: true
-      }
+        unique: true,
+      },
     };
 
     const ModelCtor = nohm.register(ClassModel);
     const instance = new ModelCtor();
     const factoryInstance = await nohm.factory('ClassModel');
 
-    t.same(instance.id, null, 'Created model does not have null as id before saving');
+    t.same(
+      instance.id,
+      null,
+      'Created model does not have null as id before saving',
+    );
 
-    t.same(typeof ModelCtor.findAndLoad, 'function', 'Created model class does not have static findAndLoad().');
-    t.same(factoryInstance.modelName, 'ClassModel', 'Created factory model does not have the correct modelName.');
-    t.same(instance.modelName, 'ClassModel', 'Created model does not have the correct modelName.');
+    t.same(
+      typeof ModelCtor.findAndLoad,
+      'function',
+      'Created model class does not have static findAndLoad().',
+    );
+    t.same(
+      factoryInstance.modelName,
+      'ClassModel',
+      'Created factory model does not have the correct modelName.',
+    );
+    t.same(
+      instance.modelName,
+      'ClassModel',
+      'Created model does not have the correct modelName.',
+    );
 
     instance.property('name', 'registerES6Test');
     await instance.save();
-    t.notEqual(instance.id, null, 'Created model does not have an id after saving.');
+    t.notEqual(
+      instance.id,
+      null,
+      'Created model does not have an id after saving.',
+    );
 
     t.done();
   } catch (err) {
@@ -1059,9 +1434,9 @@ exports["register nohm model via ES6 class definition"] = async (t) => {
     t.same(false, true);
     t.done();
   }
-}
+};
 
-exports["return value of .property() with object"] = async (t) => {
+exports['return value of .property() with object'] = async (t) => {
   const user = new UserMockup();
   t.expect(1);
 
@@ -1078,11 +1453,15 @@ exports["return value of .property() with object"] = async (t) => {
     email: object.email,
     visits: 1,
   };
-  t.same(compareObject, properties, 'The returned properties were not correct.');
+  t.same(
+    compareObject,
+    properties,
+    'The returned properties were not correct.',
+  );
   t.done();
 };
 
-exports["id always stringified"] = async (t) => {
+exports['id always stringified'] = async (t) => {
   t.expect(3);
 
   const user = new UserMockup();
@@ -1095,7 +1474,7 @@ exports["id always stringified"] = async (t) => {
   t.done();
 };
 
-exports["isLoaded"] = async (t) => {
+exports['isLoaded'] = async (t) => {
   t.expect(6);
 
   let user = await nohm.factory('NonIncrement');
@@ -1114,11 +1493,15 @@ exports["isLoaded"] = async (t) => {
   await loadUser.load(id);
   t.same(loadUser.isLoaded, true, 'isLaoded false after load()');
   loadUser.id = 'asdasd';
-  t.same(loadUser.isLoaded, false, 'isLaoded true after setting manual id on loaded user');
+  t.same(
+    loadUser.isLoaded,
+    false,
+    'isLaoded true after setting manual id on loaded user',
+  );
   t.done();
 };
 
-exports["isDirty"] = async (t) => {
+exports['isDirty'] = async (t) => {
   t.expect(12);
 
   let user = await nohm.factory('UserMockup');
@@ -1151,7 +1534,7 @@ exports["isDirty"] = async (t) => {
   t.done();
 };
 
-exports["create-only failure attempt without load_pure"] = async (t) => {
+exports['create-only failure attempt without load_pure'] = async (t) => {
   t.expect(2);
 
   nohm.model('withoutLoadPureCreateOnlyModel', {
@@ -1159,27 +1542,34 @@ exports["create-only failure attempt without load_pure"] = async (t) => {
       createdAt: {
         defaultValue: () => Date.now() + ':' + Math.random(),
         type: (_a, _b, oldValue) => oldValue, // never change the value after creation
-      }
-    }
+      },
+    },
   });
 
   let loadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
   const initialValue = loadPure.property('createdAt');
   loadPure.property('createdAt', 'asdasd');
 
-  t.same(loadPure.property('createdAt'), initialValue, 'Behaviour failed to prevent property change');
+  t.same(
+    loadPure.property('createdAt'),
+    initialValue,
+    'Behaviour failed to prevent property change',
+  );
 
   await loadPure.save();
   let controlLoadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
   await controlLoadPure.load(loadPure.id);
 
-  t.notEqual(controlLoadPure.property('createdAt'), initialValue, 'create-only loading produced non-cast value (should only happen with load_pure)');
+  t.notEqual(
+    controlLoadPure.property('createdAt'),
+    initialValue,
+    'create-only loading produced non-cast value (should only happen with load_pure)',
+  );
 
   t.done();
 };
 
-
-exports["loadPure"] = async (t) => {
+exports['loadPure'] = async (t) => {
   t.expect(4);
 
   nohm.model('loadPureModel', {
@@ -1187,16 +1577,16 @@ exports["loadPure"] = async (t) => {
       incrementOnChange: {
         defaultValue: 0,
         load_pure: true,
-        type: function () {
-          return 1 + this.property('incrementOnChange')
+        type: function() {
+          return 1 + this.property('incrementOnChange');
         },
       },
       createdAt: {
         defaultValue: () => Date.now() + ':' + Math.random(),
         load_pure: true,
         type: (_a, _b, oldValue) => oldValue, // never change the value after creation
-      }
-    }
+      },
+    },
   });
 
   let loadPure = await nohm.factory('loadPureModel');
@@ -1207,19 +1597,35 @@ exports["loadPure"] = async (t) => {
   loadPure.property('incrementOnChange', 'asdasd');
   const incrementedTwice = initialIncrement + 2;
 
-  t.same(loadPure.property('incrementOnChange'), incrementedTwice, 'incrementedTwice change did not work');
-  t.same(loadPure.property('createdAt'), initialCreatedAt, 'Behaviour failed to prevent property change');
+  t.same(
+    loadPure.property('incrementOnChange'),
+    incrementedTwice,
+    'incrementedTwice change did not work',
+  );
+  t.same(
+    loadPure.property('createdAt'),
+    initialCreatedAt,
+    'Behaviour failed to prevent property change',
+  );
 
   await loadPure.save();
   let controlLoadPure = await nohm.factory('loadPureModel');
   await controlLoadPure.load(loadPure.id);
-  t.same(controlLoadPure.property('incrementOnChange'), incrementedTwice, 'incrementedTwice was changed during load');
-  t.same(controlLoadPure.property('createdAt'), initialCreatedAt, 'create-only loading produced typecast value');
+  t.same(
+    controlLoadPure.property('incrementOnChange'),
+    incrementedTwice,
+    'incrementedTwice was changed during load',
+  );
+  t.same(
+    controlLoadPure.property('createdAt'),
+    initialCreatedAt,
+    'create-only loading produced typecast value',
+  );
 
   t.done();
 };
 
-exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
+exports['allPorperties() cache is reset on propertyReset()'] = async (t) => {
   t.expect(3);
 
   let user = await nohm.factory('UserMockup');
@@ -1228,7 +1634,7 @@ exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
   user.property({
     name,
     email,
-  })
+  });
   const test = user.allProperties();
   user.propertyReset();
 
@@ -1240,25 +1646,29 @@ exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
   t.done();
 };
 
-exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
+exports['allPorperties() cache is reset on propertyReset()'] = async (t) => {
   t.expect(4);
 
-  const loadPureModel = nohm.model('loadPureModel', {
-    properties: {
-      incrementOnChange: {
-        defaultValue: 0,
-        load_pure: true,
-        type: function () {
-          return 1 + this.property('incrementOnChange')
+  const loadPureModel = nohm.model(
+    'loadPureModel',
+    {
+      properties: {
+        incrementOnChange: {
+          defaultValue: 0,
+          load_pure: true,
+          type: function() {
+            return 1 + this.property('incrementOnChange');
+          },
+        },
+        createdAt: {
+          defaultValue: () => Date.now() + ':' + Math.random(),
+          load_pure: true,
+          type: (_a, _b, oldValue) => oldValue, // never change the value after creation
         },
       },
-      createdAt: {
-        defaultValue: () => Date.now() + ':' + Math.random(),
-        load_pure: true,
-        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
-      }
-    }
-  }, true);
+    },
+    true,
+  );
 
   let loadPure = new loadPureModel();
   const initialCreatedAt = loadPure.property('createdAt');
@@ -1267,55 +1677,79 @@ exports["allPorperties() cache is reset on propertyReset()"] = async (t) => {
   loadPure.property('incrementOnChange', 'asdasd');
   const incrementedTwice = initialIncrement + 2;
 
-  t.same(loadPure.allProperties().incrementOnChange, incrementedTwice, `allProperties() didn't have incrementOnChange property`);
-  t.same(loadPure.allProperties().createdAt, initialCreatedAt, `allProperties() didn't have createdAt property`);
+  t.same(
+    loadPure.allProperties().incrementOnChange,
+    incrementedTwice,
+    `allProperties() didn't have incrementOnChange property`,
+  );
+  t.same(
+    loadPure.allProperties().createdAt,
+    initialCreatedAt,
+    `allProperties() didn't have createdAt property`,
+  );
 
   await loadPure.save();
 
   let controlLoadPure = new loadPureModel();
   await controlLoadPure.load(loadPure.id);
-  t.same(controlLoadPure.allProperties().incrementOnChange, incrementedTwice, `allProperties() didn't have correct incrementOnChange after load`);
-  t.same(controlLoadPure.allProperties().createdAt, initialCreatedAt, `allProperties() didn't have correct createdAt after load`);
+  t.same(
+    controlLoadPure.allProperties().incrementOnChange,
+    incrementedTwice,
+    `allProperties() didn't have correct incrementOnChange after load`,
+  );
+  t.same(
+    controlLoadPure.allProperties().createdAt,
+    initialCreatedAt,
+    `allProperties() didn't have correct createdAt after load`,
+  );
 
   t.done();
 };
 
-exports["id with : should fail"] = async (t) => {
+exports['id with : should fail'] = async (t) => {
   t.expect(1);
 
-  const wrongIdModel = nohm.model('wrongIdModel', {
-    properties: {
-      name: {
-        type: 'string',
+  const wrongIdModel = nohm.model(
+    'wrongIdModel',
+    {
+      properties: {
+        name: {
+          type: 'string',
+        },
+      },
+      idGenerator: () => {
+        return 'foo:bar';
       },
     },
-    idGenerator: () => {
-      return 'foo:bar';
-    },
-  }, true);
+    true,
+  );
 
   let instance = new wrongIdModel();
 
   try {
     await instance.save();
   } catch (e) {
-    t.same(e.message, 'Nohm IDs cannot contain the character ":". Please change your idGenerator!', 'Error thrown by wrong id was wrong.');
+    t.same(
+      e.message,
+      'Nohm IDs cannot contain the character ":". Please change your idGenerator!',
+      'Error thrown by wrong id was wrong.',
+    );
   }
 
   t.done();
 };
 
-exports["manually setting id should allow saving with uniques"] = async (t) => {
+exports['manually setting id should allow saving with uniques'] = async (t) => {
   // see https://github.com/maritz/nohm/issues/82 for details
   t.expect(1);
 
   const props = {
     name: 'manualIdWithuniques',
-    email: 'manualIdWithuniques@example.com'
+    email: 'manualIdWithuniques@example.com',
   };
 
   let origInstance = new UserMockup();
-  origInstance.property(props)
+  origInstance.property(props);
   await origInstance.save();
 
   let instance = new UserMockup();

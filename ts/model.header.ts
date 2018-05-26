@@ -1,7 +1,17 @@
 import { NohmModel } from './model';
 
-export type TPropertyTypeNames = 'string' | 'bool' | 'boolean' | 'integer' | 'int' | 'float' |
-  'number' | 'date' | 'time' | 'timestamp' | 'json';
+export type TPropertyTypeNames =
+  | 'string'
+  | 'bool'
+  | 'boolean'
+  | 'integer'
+  | 'int'
+  | 'float'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'timestamp'
+  | 'json';
 export const stringProperty: TPropertyTypeNames = 'string';
 export const boolProperty: TPropertyTypeNames = 'bool';
 export const integerProperty: TPropertyTypeNames = 'integer';
@@ -12,7 +22,9 @@ export const timeProperty: TPropertyTypeNames = 'time';
 export const timestampProperty: TPropertyTypeNames = 'timestamp';
 export const jsonProperty: TPropertyTypeNames = 'json';
 
-export interface IPropertyObject { [index: string]: any; }
+export interface IPropertyObject {
+  [index: string]: any;
+}
 
 export interface IDictionary {
   [index: string]: any;
@@ -26,26 +38,37 @@ export type PropertyBehaviour = <TModel>(
 ) => any;
 
 export interface IStaticMethods<T extends NohmModel> {
-  new(): T;
+  new (): T;
   load<P extends NohmModel>(id: any): Promise<P>;
   loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
   findAndLoad<P extends NohmModel, TProps extends IDictionary = {}>(
-    searches: Partial<{
-      [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-    }>,
+    searches: Partial<
+      {
+        [key in keyof TProps]:
+          | string
+          | number
+          | boolean
+          | Partial<ISearchOption>
+      }
+    >,
   ): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
     ids: Array<string | number> | false,
   ): Promise<Array<string>>;
   find<TProps extends IDictionary = {}>(
-    searches: Partial<{
-      [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-    }>,
+    searches: Partial<
+      {
+        [key in keyof TProps]:
+          | string
+          | number
+          | boolean
+          | Partial<ISearchOption>
+      }
+    >,
   ): Promise<Array<string>>;
   remove(id: any): Promise<void>;
 }
-
 
 export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
 
@@ -55,7 +78,10 @@ export interface IValidationObject {
   validator: validatiorFunction;
 }
 
-export type TValidationDefinition = string | { name: string, options: any } | validatiorFunction;
+export type TValidationDefinition =
+  | string
+  | { name: string; options: any }
+  | validatiorFunction;
 
 export interface IModelPropertyDefinition {
   /**
@@ -74,7 +100,7 @@ export interface IModelPropertyDefinition {
 }
 
 export type TTypedDefinitions<TProps extends IDictionary> = {
-  [props in keyof TProps]: IModelPropertyDefinition;
+  [props in keyof TProps]: IModelPropertyDefinition
 };
 
 export interface IModelPropertyDefinitions {
@@ -166,4 +192,9 @@ export interface ISortOptions<TProps extends IDictionary> {
   limit?: Array<number>;
 }
 
-export type TLinkCallback<T> = (action: string, ownModelName: string, relationName: string, other: T) => void;
+export type TLinkCallback<T> = (
+  action: string,
+  ownModelName: string,
+  relationName: string,
+  other: T,
+) => void;

@@ -3,7 +3,7 @@ var nohm = require(__dirname + '/../../tsOut/').Nohm;
 var args = require(__dirname + '/../testArgs.js');
 
 nohm.setPrefix(args.prefix);
-args.redis.on('ready', function () {
+args.redis.on('ready', function() {
   nohm.setClient(args.redis);
 });
 require(__dirname + '/Model.js');
@@ -15,23 +15,25 @@ process.on('message', async (msg) => {
     case 'does nohm have pubsub?':
       process.send({
         question: msg.question,
-        answer: nohm.getPubSubClient()
+        answer: nohm.getPubSubClient(),
       });
       break;
 
     case 'initialize':
       try {
-        await nohm.setPubSubClient(redis.createClient(args.redis_port, args.redis_host));
+        await nohm.setPubSubClient(
+          redis.createClient(args.redis_port, args.redis_host),
+        );
         process.send({
           question: msg.question,
           answer: true,
-          error: null
+          error: null,
         });
       } catch (err) {
         process.send({
           question: msg.question,
           answer: err || true,
-          error: err
+          error: err,
         });
       }
       break;
@@ -40,11 +42,11 @@ process.on('message', async (msg) => {
       event = msg.args.event;
       modelName = msg.args.modelName;
       instance = await nohm.factory(modelName);
-      await instance.subscribe(event, function (change) {
+      await instance.subscribe(event, function(change) {
         process.send({
           question: 'subscribe',
           answer: change,
-          event: event
+          event: event,
         });
       });
       process.send({
@@ -57,10 +59,10 @@ process.on('message', async (msg) => {
       event = msg.args.event;
       modelName = msg.args.modelName;
       instance = await nohm.factory(modelName);
-      await instance.subscribeOnce(event, function (change) {
+      await instance.subscribeOnce(event, function(change) {
         process.send({
           question: 'subscribeOnce',
-          answer: change
+          answer: change,
         });
       });
       process.send({
@@ -77,7 +79,7 @@ process.on('message', async (msg) => {
       await instance.unsubscribe(event, fn);
       process.send({
         question: 'unsubscribe',
-        answer: true
+        answer: true,
       });
       break;
   }

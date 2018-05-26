@@ -6,9 +6,9 @@ require(__dirname + '/pubsub/Model.js');
 
 var child_path = __dirname + '/pubsub/child.js';
 
-var after = function (times, fn) {
-  return function () {
-    if ((--times) <= 0) {
+var after = function(times, fn) {
+  return function() {
+    if (--times <= 0) {
       fn.apply(this, arguments);
     }
   };
@@ -17,34 +17,44 @@ var after = function (times, fn) {
 var secondaryClient = redis.createClient();
 
 module.exports = {
-
-  'after helper function': function (t) {
-
+  'after helper function': function(t) {
     var counter = 0;
 
-    var _test = after(3, function () {
+    var _test = after(3, function() {
       counter += 1;
     });
 
-    _test(); _test(); _test();
+    _test();
+    _test();
+    _test();
 
     t.equal(counter, 1, 'Function has been called a wrong number of times');
     t.done();
-
   },
 
   'set/get pubSub client': async (t) => {
     t.expect(2);
     await nohm.setPubSubClient(secondaryClient);
-    t.same(nohm.getPubSubClient(), secondaryClient, 'Second redis client wasn\'t set properly');
-    t.ok(nohm.getPubSubClient().subscription_set, 'Second redis client isn\'t subscribed to anything');
+    t.same(
+      nohm.getPubSubClient(),
+      secondaryClient,
+      "Second redis client wasn't set properly",
+    );
+    t.ok(
+      nohm.getPubSubClient().subscription_set,
+      "Second redis client isn't subscribed to anything",
+    );
     t.done();
   },
 
   'close pubSub client': async (t) => {
     t.expect(1);
     const client = await nohm.closePubSub();
-    t.same(client, secondaryClient, 'closePubSub returned a wrong redis client');
+    t.same(
+      client,
+      secondaryClient,
+      'closePubSub returned a wrong redis client',
+    );
     client.end(true);
     t.done();
   },
@@ -53,27 +63,43 @@ module.exports = {
     t.expect(4);
 
     var no_publish = await nohm.factory('no_publish');
-    t.same(no_publish.getPublish(), false, 'model without publish returned true');
+    t.same(
+      no_publish.getPublish(),
+      false,
+      'model without publish returned true',
+    );
 
     var publish = await nohm.factory('Tester');
     t.same(publish.getPublish(), true, 'model with publish returned false');
 
     nohm.setPublish(true);
-    t.same(no_publish.getPublish(), true, 'model without publish but global publish returned false');
+    t.same(
+      no_publish.getPublish(),
+      true,
+      'model without publish but global publish returned false',
+    );
 
     nohm.setPublish(false);
-    t.same(publish.getPublish(), true, 'model with publish and global publish false returned false');
+    t.same(
+      publish.getPublish(),
+      true,
+      'model with publish and global publish false returned false',
+    );
 
     t.done();
   },
 
-  'nohm in child process doesn\'t have pubsub yet': function (t) {
+  "nohm in child process doesn't have pubsub yet": function(t) {
     t.expect(1);
     var question = 'does nohm have pubsub?';
     var child = child_process.fork(child_path);
-    var checkNohmPubSubNotInitialized = function (msg) {
+    var checkNohmPubSubNotInitialized = function(msg) {
       if (msg.question === question) {
-        t.same(msg.answer, undefined, 'PubSub in the child process was already initialized.');
+        t.same(
+          msg.answer,
+          undefined,
+          'PubSub in the child process was already initialized.',
+        );
         child.kill();
         t.done();
       }
@@ -82,10 +108,10 @@ module.exports = {
     child.send({ question: question });
   },
 
-  'initialized': {
-    setUp: function (next) {
-      var child = this.child = child_process.fork(child_path, process.argv);
-      child.on('message', function (msg) {
+  initialized: {
+    setUp: function(next) {
+      var child = (this.child = child_process.fork(child_path, process.argv));
+      child.on('message', function(msg) {
         if (msg.question === 'initialize' && msg.answer === true) {
           next();
         }
@@ -94,9 +120,9 @@ module.exports = {
         }
       });
 
-      child.ask = function (request, callback) {
+      child.ask = function(request, callback) {
         return new Promise((resolve) => {
-          child.on('message', function (msg) {
+          child.on('message', function(msg) {
             if (msg.question === request.question) {
               if (msg.answer === 'ACK') {
                 resolve();
@@ -111,7 +137,7 @@ module.exports = {
       child.send({ question: 'initialize' });
     },
 
-    tearDown: function (next) {
+    tearDown: function(next) {
       (async () => {
         this.child.on('exit', () => {
           next();
@@ -120,26 +146,40 @@ module.exports = {
       })();
     },
 
-    'create': function (t) {
+    create: function(t) {
       (async () => {
         t.expect(4);
         var instance = await nohm.factory('Tester');
         instance.property('dummy', 'create');
 
-        await this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'create',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var target = msg.answer.target;
-          t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance.id, target.id, 'Id from create event wrong');
-          t.same(instance.modelName, target.modelName, 'Modelname from create event wrong');
-          t.same(instance.allProperties(), target.properties, 'Properties from create event wrong');
-          t.done();
-        });
+        await this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'create',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var target = msg.answer.target;
+            t.ok(
+              instance.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(instance.id, target.id, 'Id from create event wrong');
+            t.same(
+              instance.modelName,
+              target.modelName,
+              'Modelname from create event wrong',
+            );
+            t.same(
+              instance.allProperties(),
+              target.properties,
+              'Properties from create event wrong',
+            );
+            t.done();
+          },
+        );
 
         try {
           instance.save();
@@ -150,28 +190,42 @@ module.exports = {
       })();
     },
 
-    'update': function (t) {
+    update: function(t) {
       (async () => {
         t.expect(5);
         var instance = await nohm.factory('Tester');
         instance.property('dummy', 'update');
         var diff;
 
-        await this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'update',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var answer = msg.answer;
-          t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance.id, answer.target.id, 'Id from update event wrong');
-          t.same(instance.modelName, answer.target.modelName, 'Modelname from update event wrong');
-          t.same(instance.allProperties(), answer.target.properties, 'Properties from update event wrong');
-          t.same(diff, answer.target.diff, 'Diffs from update event wrong');
-          t.done();
-        });
+        await this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'update',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var answer = msg.answer;
+            t.ok(
+              instance.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(instance.id, answer.target.id, 'Id from update event wrong');
+            t.same(
+              instance.modelName,
+              answer.target.modelName,
+              'Modelname from update event wrong',
+            );
+            t.same(
+              instance.allProperties(),
+              answer.target.properties,
+              'Properties from update event wrong',
+            );
+            t.same(diff, answer.target.diff, 'Diffs from update event wrong');
+            t.done();
+          },
+        );
 
         try {
           await instance.save();
@@ -185,7 +239,7 @@ module.exports = {
       })();
     },
 
-    'save': function (t) {
+    save: function(t) {
       (async () => {
         t.expect(8);
         var instance = await nohm.factory('Tester');
@@ -194,23 +248,37 @@ module.exports = {
         var counter = 0;
         var props = [];
 
-        this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'save',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var answer = msg.answer;
-          t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance.id, answer.target.id, 'Id from save event wrong');
-          t.same(instance.modelName, answer.target.modelName, 'Modelname from save event wrong');
-          t.same(props[counter], answer.target.properties, 'Properties from save event wrong');
-          counter++;
-          if (counter >= 2) {
-            t.done();
-          }
-        });
+        this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'save',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var answer = msg.answer;
+            t.ok(
+              instance.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(instance.id, answer.target.id, 'Id from save event wrong');
+            t.same(
+              instance.modelName,
+              answer.target.modelName,
+              'Modelname from save event wrong',
+            );
+            t.same(
+              props[counter],
+              answer.target.properties,
+              'Properties from save event wrong',
+            );
+            counter++;
+            if (counter >= 2) {
+              t.done();
+            }
+          },
+        );
 
         try {
           await instance.save();
@@ -225,27 +293,42 @@ module.exports = {
       })();
     },
 
-    'remove': function (t) {
+    remove: function(t) {
       (async () => {
         t.expect(4);
         var instance = await nohm.factory('Tester');
         instance.property('dummy', 'remove');
         var old_id;
 
-        await this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'remove',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var answer = msg.answer;
-          t.same(instance.id, null, 'ID was not reset properly before the child returned the event.');
-          t.same(old_id, answer.target.id, 'Id from remove event wrong');
-          t.same(instance.modelName, answer.target.modelName, 'Modelname from remove event wrong');
-          t.same(instance.allProperties(), answer.target.properties, 'Properties from remove event wrong');
-          t.done();
-        });
+        await this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'remove',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var answer = msg.answer;
+            t.same(
+              instance.id,
+              null,
+              'ID was not reset properly before the child returned the event.',
+            );
+            t.same(old_id, answer.target.id, 'Id from remove event wrong');
+            t.same(
+              instance.modelName,
+              answer.target.modelName,
+              'Modelname from remove event wrong',
+            );
+            t.same(
+              instance.allProperties(),
+              answer.target.properties,
+              'Properties from remove event wrong',
+            );
+            t.done();
+          },
+        );
 
         try {
           await instance.save();
@@ -258,7 +341,7 @@ module.exports = {
       })();
     },
 
-    'link': function (t) {
+    link: function(t) {
       (async () => {
         t.expect(8);
         var instance_child = await nohm.factory('Tester');
@@ -267,26 +350,58 @@ module.exports = {
         instance_parent.property('dummy', 'link_parent');
         instance_child.link(instance_parent);
 
-        await this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'link',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var answer = msg.answer;
-          t.ok(instance_child.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance_child.id, answer.child.id, 'Id from link event wrong');
-          t.same(instance_child.modelName, answer.child.modelName, 'Modelname from link event wrong');
-          t.same(instance_child.allProperties(), answer.child.properties, 'Properties from link event wrong');
+        await this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'link',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var answer = msg.answer;
+            t.ok(
+              instance_child.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(
+              instance_child.id,
+              answer.child.id,
+              'Id from link event wrong',
+            );
+            t.same(
+              instance_child.modelName,
+              answer.child.modelName,
+              'Modelname from link event wrong',
+            );
+            t.same(
+              instance_child.allProperties(),
+              answer.child.properties,
+              'Properties from link event wrong',
+            );
 
-          t.ok(instance_parent.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance_parent.id, answer.parent.id, 'Id from link event wrong');
-          t.same(instance_parent.modelName, answer.parent.modelName, 'Modelname from link event wrong');
-          t.same(instance_parent.allProperties(), answer.parent.properties, 'Properties from link event wrong');
-          t.done();
-        });
-
+            t.ok(
+              instance_parent.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(
+              instance_parent.id,
+              answer.parent.id,
+              'Id from link event wrong',
+            );
+            t.same(
+              instance_parent.modelName,
+              answer.parent.modelName,
+              'Modelname from link event wrong',
+            );
+            t.same(
+              instance_parent.allProperties(),
+              answer.parent.properties,
+              'Properties from link event wrong',
+            );
+            t.done();
+          },
+        );
 
         try {
           await instance_child.save();
@@ -297,7 +412,7 @@ module.exports = {
       })();
     },
 
-    'unlink': function (t) {
+    unlink: function(t) {
       (async () => {
         t.expect(8);
         var instance_child = await nohm.factory('Tester');
@@ -306,25 +421,58 @@ module.exports = {
         instance_parent.property('dummy', 'unlink_parent');
         instance_child.link(instance_parent);
 
-        await this.child.ask({
-          question: 'subscribe',
-          args: {
-            event: 'unlink',
-            modelName: 'Tester'
-          }
-        }, function (msg) {
-          var answer = msg.answer;
-          t.ok(instance_child.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance_child.id, answer.child.id, 'Id from unlink event wrong');
-          t.same(instance_child.modelName, answer.child.modelName, 'Modelname from unlink event wrong');
-          t.same(instance_child.allProperties(), answer.child.properties, 'Properties from unlink event wrong');
+        await this.child.ask(
+          {
+            question: 'subscribe',
+            args: {
+              event: 'unlink',
+              modelName: 'Tester',
+            },
+          },
+          function(msg) {
+            var answer = msg.answer;
+            t.ok(
+              instance_child.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(
+              instance_child.id,
+              answer.child.id,
+              'Id from unlink event wrong',
+            );
+            t.same(
+              instance_child.modelName,
+              answer.child.modelName,
+              'Modelname from unlink event wrong',
+            );
+            t.same(
+              instance_child.allProperties(),
+              answer.child.properties,
+              'Properties from unlink event wrong',
+            );
 
-          t.ok(instance_parent.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance_parent.id, answer.parent.id, 'Id from unlink event wrong');
-          t.same(instance_parent.modelName, answer.parent.modelName, 'Modelname from unlink event wrong');
-          t.same(instance_parent.allProperties(), answer.parent.properties, 'Properties from unlink event wrong');
-          t.done();
-        });
+            t.ok(
+              instance_parent.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(
+              instance_parent.id,
+              answer.parent.id,
+              'Id from unlink event wrong',
+            );
+            t.same(
+              instance_parent.modelName,
+              answer.parent.modelName,
+              'Modelname from unlink event wrong',
+            );
+            t.same(
+              instance_parent.allProperties(),
+              answer.parent.properties,
+              'Properties from unlink event wrong',
+            );
+            t.done();
+          },
+        );
 
         try {
           await instance_child.save();
@@ -337,7 +485,7 @@ module.exports = {
       })();
     },
 
-    'createOnce': function (t) {
+    createOnce: function(t) {
       (async () => {
         // because testing a once event is a pain in the ass and really doesn't have many ways it can fail if the on method on the same event works, we only do on once test.
         t.expect(5);
@@ -345,29 +493,51 @@ module.exports = {
         instance.property('dummy', 'create_once');
         var once_done = 0;
 
-        await this.child.ask({
-          question: 'subscribeOnce',
-          args: {
-            event: 'create',
-            modelName: 'Tester'
-          }
-        }, async (msg) => {
-          var answer = msg.answer;
-          once_done++;
-          t.ok(instance.id.length > 0, 'ID was not set properly before the child returned the event.');
-          t.same(instance.id, answer.target.id, 'Id from createOnce event wrong');
-          t.same(instance.modelName, answer.target.modelName, 'Modelname from createOnce event wrong');
-          t.same(instance.allProperties(), answer.target.properties, 'Properties from createOnce event wrong');
+        await this.child.ask(
+          {
+            question: 'subscribeOnce',
+            args: {
+              event: 'create',
+              modelName: 'Tester',
+            },
+          },
+          async (msg) => {
+            var answer = msg.answer;
+            once_done++;
+            t.ok(
+              instance.id.length > 0,
+              'ID was not set properly before the child returned the event.',
+            );
+            t.same(
+              instance.id,
+              answer.target.id,
+              'Id from createOnce event wrong',
+            );
+            t.same(
+              instance.modelName,
+              answer.target.modelName,
+              'Modelname from createOnce event wrong',
+            );
+            t.same(
+              instance.allProperties(),
+              answer.target.properties,
+              'Properties from createOnce event wrong',
+            );
 
-          var instance_inner = await nohm.factory('Tester');
-          instance_inner.property('dummy', 'create_once_again');
-          instance_inner.save();
+            var instance_inner = await nohm.factory('Tester');
+            instance_inner.property('dummy', 'create_once_again');
+            instance_inner.save();
 
-          setTimeout(function () {
-            t.same(once_done, 1, 'subscribeOnce called the callback more than once.');
-            t.done();
-          }, 150); // this is fucked up :(
-        });
+            setTimeout(function() {
+              t.same(
+                once_done,
+                1,
+                'subscribeOnce called the callback more than once.',
+              );
+              t.done();
+            }, 150); // this is fucked up :(
+          },
+        );
 
         try {
           await instance.save();
@@ -378,7 +548,7 @@ module.exports = {
       })();
     },
 
-    'silenced': function (t) {
+    silenced: function(t) {
       var self = this;
       t.expect(1);
       (async () => {
@@ -388,19 +558,22 @@ module.exports = {
 
         var events = ['create', 'update', 'save', 'remove', 'link', 'unlink'];
 
-        events.forEach(function (event) {
-          self.child.ask({
-            question: 'subscribe',
-            args: {
-              event: event,
-              modelName: 'Tester'
-            }
-          }, function (msg) {
-            if (msg.event === event) {
-              console.log('Received message from child:', msg);
-              answered = true;
-            }
-          });
+        events.forEach(function(event) {
+          self.child.ask(
+            {
+              question: 'subscribe',
+              args: {
+                event: event,
+                modelName: 'Tester',
+              },
+            },
+            function(msg) {
+              if (msg.event === event) {
+                console.log('Received message from child:', msg);
+                answered = true;
+              }
+            },
+          );
         });
 
         try {
@@ -413,7 +586,7 @@ module.exports = {
           instance.unlink(second);
           await instance.save({ silent: true });
           await instance.remove({ silent: true });
-          setTimeout(function () {
+          setTimeout(function() {
             t.same(answered, false, 'There was an event!');
             t.done();
           }, 250);
@@ -422,6 +595,6 @@ module.exports = {
           t.same(err, null, 'There was an unexpected error!');
         }
       })();
-    }
-  }
+    },
+  },
 };

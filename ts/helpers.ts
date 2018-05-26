@@ -1,4 +1,3 @@
-
 export interface INohmPrefixes {
   channel: string;
   hash: string;
@@ -41,12 +40,16 @@ export function checkEqual(obj1: any, obj2: any): boolean {
   }
   if (obj1 === obj2) {
     return true;
-  } else if (obj1.hasOwnProperty('modelName') && obj2.hasOwnProperty('modelName') &&
-    obj1.modelName === obj2.modelName) {
+  } else if (
+    obj1.hasOwnProperty('modelName') &&
+    obj2.hasOwnProperty('modelName') &&
+    obj1.modelName === obj2.modelName
+  ) {
     // if both have been saved, both must have the same id.
     if (obj1.id && obj2.id && obj1.id === obj2.id) {
       return true;
-    } else if (obj1.id && obj2.id) { // both have been saved but do not share the same id -> must be different.
+    } else if (obj1.id && obj2.id) {
+      // both have been saved but do not share the same id -> must be different.
       return false;
     }
 
@@ -62,7 +65,9 @@ export function callbackError(...args: Array<any>) {
   if (args.length > 0) {
     const lastArgument = args[args.length - 1];
     if (typeof lastArgument === 'function') {
-      throw new Error('Callback style has been removed. Use the returned promise.');
+      throw new Error(
+        'Callback style has been removed. Use the returned promise.',
+      );
     }
   }
 }

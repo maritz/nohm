@@ -22,10 +22,10 @@ instance.load(123, (err, props) => {
 
 New:
 
-```javascript
+```typescript
 try {
   const props = await modelInstance.load(123);
-  console.log(props)
+  console.log(props);
 } catch (err) {
   console.log(err);
 }
@@ -94,7 +94,7 @@ Now validation failures _during `save()`_ reject with a ValidationError.
 Old:
 
 ```javascript
-instance.save(err => {
+instance.save((err) => {
   if (err) {
     if (err === 'invalid') {
       console.log('validation failed. reasons:', instance.errors);
@@ -109,7 +109,7 @@ instance.save(err => {
 
 New:
 
-```javascript
+```typescript
 try {
   await instance.save();
   console.log('success!');
@@ -136,12 +136,13 @@ This makes it abundandly clear that you are in an error state while at the same 
 A LinkError object is an extension of Error and additionally contains an "errors" array:
 
 ```javascript
-linkError.errors == [
+linkError.errors ==
+  [
     {
       parent: NohmModel, // the instance on which .link() was performed
       child: NohmModel, // the instance that was given to .link() as argument
-      error: Error | ValidationError | LinkError // the error that occured while saving child.
-    }
+      error: Error | ValidationError | LinkError, // the error that occured while saving child.
+    },
   ];
 ```
 
@@ -152,9 +153,8 @@ Old:
 ```javascript
 instance.link(other, {
   error: (err, errors, linkedInstance) => {
-    errors === linkedInstance.errors &&
-    other === linkedInstance;
-  }
+    errors === linkedInstance.errors && other === linkedInstance;
+  },
 });
 ```
 
@@ -164,7 +164,7 @@ New:
 instance.link(other, {
   error: (err, linkedInstance) => {
     other === linkedInstance;
-  }
+  },
 });
 ```
 

@@ -1,5 +1,5 @@
+import { Nohm, NohmModel, TTypedDefinitions } from '.';
 import { integerProperty, stringProperty } from './model.header';
-import { Nohm, NohmModel, TTypedDefinitions } from './index';
 
 const nohm = Nohm;
 
@@ -28,58 +28,53 @@ class UserMockup extends NohmModel<IUserLinkProps> {
     name: {
       defaultValue: 'defaultName',
       type: stringProperty,
-      validations: [
-        'notEmpty',
-      ],
+      validations: ['notEmpty'],
     },
     number: {
       defaultValue: 123,
       type: integerProperty,
-      validations: [
-        'notEmpty',
-      ],
+      validations: ['notEmpty'],
     },
     test: {
       defaultValue: 'defaultTest',
       type: stringProperty,
-      validations: [
-        'notEmpty',
-      ],
+      validations: ['notEmpty'],
     },
   };
 
-  public testMethodTypecheck(_arg1: string, _arg2: number): undefined | string | (() => any) {
+  public testMethodTypecheck(
+    _arg1: string,
+    _arg2: number,
+  ): undefined | string | (() => any) {
     return this.options.idGenerator;
   }
 }
 const userMockupClass = nohm.register(UserMockup);
 
-
 interface ICommentProps {
   text: string;
 }
-const commentMockup = nohm.register(class extends NohmModel<ICommentProps> {
-  public static modelName = 'CommentMockup';
+const commentMockup = nohm.register(
+  class extends NohmModel<ICommentProps> {
+    public static modelName = 'CommentMockup';
 
-  protected static definitions: TTypedDefinitions<ICommentProps> = {
-    text: {
-      defaultValue: 'defaultComment',
-      type: 'string',
-      validations: [
-        'notEmpty',
-      ],
-    },
-  };
+    protected static definitions: TTypedDefinitions<ICommentProps> = {
+      text: {
+        defaultValue: 'defaultComment',
+        type: 'string',
+        validations: ['notEmpty'],
+      },
+    };
 
-  get pName(): string {
-    return this.allProperties().text;
-  }
+    get pName(): string {
+      return this.allProperties().text;
+    }
 
-  set pName(value: string) {
-    this.property('text', value);
-  }
-});
-
+    set pName(value: string) {
+      this.property('text', value);
+    }
+  },
+);
 
 interface IRoleLinkProps {
   name: string;
@@ -99,14 +94,13 @@ class RoleLinkMockup extends NohmModel<IRoleLinkProps> {
 }
 
 exports.Typescript = {
-
-  'setUp': (next: () => any) => {
+  setUp: (next: () => any) => {
     if (!nohm.client) {
       nohm.setClient(redis);
     }
     next();
   },
-  'tearDown': (next: () => any) => {
+  tearDown: (next: () => any) => {
     h.cleanUp(redis, args.prefix, next);
   },
 
@@ -119,47 +113,77 @@ exports.Typescript = {
       test2(player: any): Promise<void>;
     }
 
-    const simpleModel = nohm.model<IAdditionalMethods>('SimpleModelRegistration', {
-      properties: {
-        name: {
-          defaultValue: 'simple',
-          type: 'string',
+    const simpleModel = nohm.model<IAdditionalMethods>(
+      'SimpleModelRegistration',
+      {
+        properties: {
+          name: {
+            defaultValue: 'simple',
+            type: 'string',
+          },
+        },
+        // tslint:disable-next-line:object-literal-sort-keys
+        methods: {
+          test1(): Promise<boolean> {
+            return this.validate();
+          },
+          async test2(player: any) {
+            await this.save();
+            this.link(player, 'leader');
+            this.link(player);
+          },
         },
       },
-      // tslint:disable-next-line:object-literal-sort-keys
-      methods: {
-        test1(): Promise<boolean> {
-          return this.validate();
-        },
-        async test2(player: any) {
-          await this.save();
-          this.link(player, 'leader');
-          this.link(player);
-        },
-      },
-    });
+    );
 
-    t.same(typeof commentMockup.findAndLoad, 'function', 'findAndLoad was not set on commentMockup');
-    t.same(typeof commentMockup.sort, 'function', 'findAndLoad was not set on commentMockup');
-    t.same(typeof commentMockup.find, 'function', 'findAndLoad was not set on commentMockup');
-    t.same(typeof simpleModel.findAndLoad, 'function', 'findAndLoad was not set on commentMockup');
-    t.same(typeof simpleModel.sort, 'function', 'findAndLoad was not set on commentMockup');
-    t.same(typeof simpleModel.find, 'function', 'findAndLoad was not set on commentMockup');
+    t.same(
+      typeof commentMockup.findAndLoad,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
+    t.same(
+      typeof commentMockup.sort,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
+    t.same(
+      typeof commentMockup.find,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
+    t.same(
+      typeof simpleModel.findAndLoad,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
+    t.same(
+      typeof simpleModel.sort,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
+    t.same(
+      typeof simpleModel.find,
+      'function',
+      'findAndLoad was not set on commentMockup',
+    );
     const test = new simpleModel();
     test.test1();
 
     t.done();
   },
 
-
-  'instances': async (t: any) => {
+  instances: async (t: any) => {
     t.expect(7);
     // see above for their different ways of setup/definition
     const comment = new commentMockup();
     const user = await nohm.factory<UserMockup>('UserMockup');
     try {
       const role = new RoleLinkMockup();
-      t.same(1234, role, 'Directly constructing a class did not throw an error.');
+      t.same(
+        1234,
+        role,
+        'Directly constructing a class did not throw an error.',
+      );
     } catch (err) {
       t.same(
         err.message,
@@ -168,10 +192,21 @@ exports.Typescript = {
       );
     }
 
-
-    t.same(comment.property('text'), 'defaultComment', 'Getting property text of comment failed');
-    t.same(user.property('test'), 'defaultTest', 'Getting property test of user failed');
-    t.same(user.allProperties().name, 'defaultName', 'Getting allProperties().name of user failed');
+    t.same(
+      comment.property('text'),
+      'defaultComment',
+      'Getting property text of comment failed',
+    );
+    t.same(
+      user.property('test'),
+      'defaultTest',
+      'Getting property test of user failed',
+    );
+    t.same(
+      user.allProperties().name,
+      'defaultName',
+      'Getting allProperties().name of user failed',
+    );
     t.same(await user.validate(), true, 'Checking validity failed');
     t.same(user.errors.name, [], 'Error was set?');
     await user.save();
@@ -182,10 +217,15 @@ exports.Typescript = {
     t.done();
   },
 
-  'method declaration is typechecked & idgenerator set from static': async (t: any) => {
+  'method declaration is typechecked & idgenerator set from static': async (
+    t: any,
+  ) => {
     t.expect(1);
     const testInstance = await nohm.factory<UserMockup>('UserMockup');
-    const idGenerator: undefined | string | (() => any) = testInstance.testMethodTypecheck('asd', 123);
+    const idGenerator:
+      | undefined
+      | string
+      | (() => any) = testInstance.testMethodTypecheck('asd', 123);
     t.same(idGenerator, 'increment', 'The typecheck method returned false.');
     t.done();
   },
@@ -203,11 +243,23 @@ exports.Typescript = {
       number: 789,
     });
 
-    t.ok(name === 'defaultName', 'Getting assigned and typed name of user failed.');
+    t.ok(
+      name === 'defaultName',
+      'Getting assigned and typed name of user failed.',
+    );
     t.ok(num === 456, 'Getting assigned and typed number of user failed.');
-    t.ok(multiple.name === 'changedName', 'Getting assigned and typed multi.name of user failed.');
-    t.ok(multiple.number === 789, 'Getting assigned and typed multi.number of user failed.');
-    t.ok(multiple.test === undefined, 'Getting assigned and typed multi.test of user failed.');
+    t.ok(
+      multiple.name === 'changedName',
+      'Getting assigned and typed multi.name of user failed.',
+    );
+    t.ok(
+      multiple.number === 789,
+      'Getting assigned and typed multi.number of user failed.',
+    );
+    t.ok(
+      multiple.test === undefined,
+      'Getting assigned and typed multi.test of user failed.',
+    );
 
     t.done();
   },
@@ -241,4 +293,3 @@ exports.Typescript = {
     t.done();
   },
 };
-

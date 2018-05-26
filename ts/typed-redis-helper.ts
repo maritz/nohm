@@ -17,7 +17,10 @@ export function GET(client: RedisClient | Multi, key: string): Promise<string> {
   });
 }
 
-export function EXISTS(client: RedisClient | Multi, key: string): Promise<number> {
+export function EXISTS(
+  client: RedisClient | Multi,
+  key: string,
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     if (!client.EXISTS) {
       return reject(new Error(errorMessage));
@@ -47,7 +50,11 @@ export function DEL(client: RedisClient | Multi, key: string): Promise<void> {
   });
 }
 
-export function SET(client: RedisClient | Multi, key: string, value: string): Promise<void> {
+export function SET(
+  client: RedisClient | Multi,
+  key: string,
+  value: string,
+): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!client.SET) {
       return reject(new Error(errorMessage));
@@ -65,23 +72,31 @@ export function SET(client: RedisClient | Multi, key: string, value: string): Pr
 export function MSET(
   client: RedisClient | Multi,
   keyValueArrayOrString: string | Array<string>,
-  ...keyValuePairs: Array<string>,
+  ...keyValuePairs: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!client.MSET) {
       return reject(new Error(errorMessage));
     }
-    client.MSET.apply(client, [keyValueArrayOrString, ...keyValuePairs, (err: Error | null) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    }]);
+    client.MSET.apply(client, [
+      keyValueArrayOrString,
+      ...keyValuePairs,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    ]);
   });
 }
 
-export function SETNX(client: RedisClient | Multi, key: string, value: string): Promise<number> {
+export function SETNX(
+  client: RedisClient | Multi,
+  key: string,
+  value: string,
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     if (!client.SETNX) {
       return reject(new Error(errorMessage));
@@ -96,7 +111,10 @@ export function SETNX(client: RedisClient | Multi, key: string, value: string): 
   });
 }
 
-export function SMEMBERS(client: RedisClient | Multi, key: string): Promise<Array<string>> {
+export function SMEMBERS(
+  client: RedisClient | Multi,
+  key: string,
+): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
     if (!client.SMEMBERS) {
       return reject(new Error(errorMessage));
@@ -111,7 +129,10 @@ export function SMEMBERS(client: RedisClient | Multi, key: string): Promise<Arra
   });
 }
 
-export function SCARD(client: RedisClient | Multi, key: string): Promise<number> {
+export function SCARD(
+  client: RedisClient | Multi,
+  key: string,
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     if (!client.SCARD) {
       return reject(new Error(errorMessage));
@@ -126,7 +147,11 @@ export function SCARD(client: RedisClient | Multi, key: string): Promise<number>
   });
 }
 
-export function SISMEMBER(client: RedisClient | Multi, key: string, value: string): Promise<number> {
+export function SISMEMBER(
+  client: RedisClient | Multi,
+  key: string,
+  value: string,
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     if (!client.SISMEMBER) {
       return reject(new Error(errorMessage));
@@ -141,7 +166,11 @@ export function SISMEMBER(client: RedisClient | Multi, key: string, value: strin
   });
 }
 
-export function SADD(client: RedisClient | Multi, key: string, value: string): Promise<number> {
+export function SADD(
+  client: RedisClient | Multi,
+  key: string,
+  value: string,
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     if (!client.SADD) {
       return reject(new Error(errorMessage));
@@ -159,23 +188,30 @@ export function SADD(client: RedisClient | Multi, key: string, value: string): P
 export function SINTER(
   client: RedisClient | Multi,
   keyArrayOrString: string | Array<string>,
-  ...keys: Array<string>,
+  ...keys: Array<string>
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
     if (!client.SINTER) {
       return reject(new Error(errorMessage));
     }
-    client.SINTER.apply(client, [keyArrayOrString, ...keys, (err: Error | null, values: Array<string>) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(values);
-      }
-    }]);
+    client.SINTER.apply(client, [
+      keyArrayOrString,
+      ...keys,
+      (err: Error | null, values: Array<string>) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(values);
+        }
+      },
+    ]);
   });
 }
 
-export function HGETALL(client: RedisClient | Multi, key: string): Promise<{ [key: string]: string }> {
+export function HGETALL(
+  client: RedisClient | Multi,
+  key: string,
+): Promise<{ [key: string]: string }> {
   return new Promise<{ [key: string]: string }>((resolve, reject) => {
     if (!client.HGETALL) {
       return reject(new Error(errorMessage));
@@ -208,37 +244,45 @@ export function EXEC<T>(client: Multi): Promise<Array<T>> {
 export function PSUBSCRIBE(
   client: RedisClient,
   patternOrPatternArray: string | Array<string>,
-  ...patterns: Array<string>,
+  ...patterns: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!client.PSUBSCRIBE) {
       return reject(new Error(errorMessage));
     }
-    client.PSUBSCRIBE.apply(client, [patternOrPatternArray, ...patterns, (err: Error | null) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    }]);
+    client.PSUBSCRIBE.apply(client, [
+      patternOrPatternArray,
+      ...patterns,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    ]);
   });
 }
 
 export function PUNSUBSCRIBE(
   client: RedisClient,
   patternOrPatternArray: string | Array<string>,
-  ...patterns: Array<string>,
+  ...patterns: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!client.PUNSUBSCRIBE) {
       return reject(new Error(errorMessage));
     }
-    client.PUNSUBSCRIBE.apply(client, [patternOrPatternArray, ...patterns, (err: Error | null) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    }]);
+    client.PUNSUBSCRIBE.apply(client, [
+      patternOrPatternArray,
+      ...patterns,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    ]);
   });
 }

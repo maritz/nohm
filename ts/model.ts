@@ -68,21 +68,29 @@ const debugPubSub = Debug('nohm:pubSub');
  */
 const indexNumberTypes = ['integer', 'float', 'timestamp'];
 
-export type TAllowedEventNames = 'create' | 'save' | 'update' | 'remove' | 'link' | 'unlink';
-const eventActions: Array<TAllowedEventNames> = ['create', 'update', 'save', 'remove', 'unlink', 'link'];
-
+export type TAllowedEventNames =
+  | 'create'
+  | 'save'
+  | 'update'
+  | 'remove'
+  | 'link'
+  | 'unlink';
+const eventActions: Array<TAllowedEventNames> = [
+  'create',
+  'update',
+  'save',
+  'remove',
+  'unlink',
+  'link',
+];
 
 abstract class NohmModel<TProps extends IDictionary = IDictionary> {
-
-
   public client: redis.RedisClient;
-  public errors: {
-    [key in keyof TProps]: Array<string>;
-  };
+  public errors: { [key in keyof TProps]: Array<string> };
   public meta: {
-    inDb: boolean,
-    properties: IModelPropertyDefinitions,
-    version: string,
+    inDb: boolean;
+    properties: IModelPropertyDefinitions;
+    version: string;
   };
   public readonly modelName: string;
 
@@ -95,9 +103,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private _id: null | string;
   private _isLoaded: boolean;
   private _isDirty: boolean;
-  private allPropertiesCache: {
-    [key in keyof TProps]: any;
-  } & { id: any };
+  private allPropertiesCache: { [key in keyof TProps]: any } & { id: any };
   private inDb: boolean;
   private tmpUniqueKeys: Array<string>;
 
@@ -125,7 +131,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     propKeys.forEach((key: keyof TProps) => {
       const definition = this.getDefinitions()[key];
       let defaultValue = definition.defaultValue || 0;
-      if (typeof (defaultValue) === 'function') {
+      if (typeof defaultValue === 'function') {
         defaultValue = defaultValue();
       }
       this.properties.set(key, {
@@ -134,7 +140,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         __updated: false,
         value: undefined,
       });
-      if (typeof (definition.type) === 'function') {
+      if (typeof definition.type === 'function') {
         // behaviours should not be called on initialization - thus leaving it at defaultValue
         this.setProperty(key, defaultValue, true);
       } else {
@@ -171,7 +177,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     tmp.__oldValue = tmp.value;
     type genericFunction = (...args: Array<any>) => any;
     let type: string | genericFunction = this.getDefinitions()[property].type;
-    if (typeof (type) !== 'string') {
+    if (typeof type !== 'string') {
       type = '__notIndexed__';
     }
     tmp.__numericIndex = indexNumberTypes.indexOf(type) > -1;
@@ -180,15 +186,24 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private addMethods(methods?: { [name: string]: () => any }) {
     if (methods) {
       _.each(methods, (method, name) => {
-        if (typeof ((this as any)[name]) !== 'undefined') {
+        if (typeof (this as any)[name] !== 'undefined') {
           const errorForStack = new Error('Deprecation warning');
           setTimeout(() => {
             // Timeout to make sure we have this.modelName. this function is called in constructor and thus
             //  doesn't always have modelName yet
             // tslint:disable-next-line:max-line-length
-            console.warn('\x1b[31m%s\x1b[0m', `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
-            // tslint:disable-next-line:max-line-length
-            console.warn('\x1b[31m%s\x1b[0m', `DEPRECATED: Overwriting built-in methods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`, errorForStack.stack);
+            console.warn(
+              '\x1b[31m%s\x1b[0m',
+              `WARNING: Overwriting existing property/method '${name}' in '${
+                this.modelName
+              }' because of method definition.`,
+            );
+            console.warn(
+              '\x1b[31m%s\x1b[0m',
+              // tslint:disable-next-line:max-line-length
+              `DEPRECATED: Overwriting built-in methods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`,
+              errorForStack.stack,
+            );
           }, 1);
           (this as any)['_super_' + name] = (this as any)[name].bind(this);
         }
@@ -199,11 +214,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private updateMeta(
-    callback: (
-      error: string | Error | null, version?: string,
-    ) => any = (..._args: Array<any>) => { /* noop */ },
+    callback: (error: string | Error | null, version?: string) => any = (
+      ..._args: Array<any>
+    ) => {
+      /* noop */
+    },
   ) {
-
     setTimeout(async () => {
       // setTimeout to defer execution to the next process/browser tick
       // this means we will have modelName set and meta doesnt take precedence over other operations
@@ -219,13 +235,17 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         }
       });
 
-
       try {
         const dbVersion = await GET(this.client, versionKey);
         if (this.meta.version !== dbVersion) {
           const generator = this.options.idGenerator || 'default';
-          debug(`Setting meta for model '%s' with version '%s' and idGenerator '%s' to %j.`,
-            this.modelName, this.meta.version, generator, properties);
+          debug(
+            `Setting meta for model '%s' with version '%s' and idGenerator '%s' to %j.`,
+            this.modelName,
+            this.meta.version,
+            generator,
+            properties,
+          );
           await Promise.all([
             SET(this.client, idGeneratorKey, generator.toString()),
             SET(this.client, propertiesKey, JSON.stringify(properties)),
@@ -240,7 +260,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
     }, 1);
   }
-
 
   /**
    * DO NOT OVERWRITE THIS; USED INTERNALLY
@@ -278,7 +297,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return hash.digest('hex');
   }
 
-
   /**
    * Alias for .property().
    * This method is deprecated, use .property() instead.
@@ -315,7 +333,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @returns {key is keyof TProps}
    */
   private isPropertyKey(key: any): key is keyof TProps {
-    return typeof (key) === 'string';
+    return typeof key === 'string';
   }
 
   /**
@@ -327,9 +345,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @returns {(any)} Returns the property as set after type casting
    */
   public property<TProp extends keyof TProps>(key: TProp): TProps[TProp];
-  // tslint:disable-next-line:unified-signatures
-  public property<TProp extends keyof TProps>(key: TProp, value: any): TProps[TProp];
-  // tslint:disable-next-line:unified-signatures
+  public property<TProp extends keyof TProps>(
+    key: TProp,
+    value: any, // tslint:disable-line:unified-signatures
+  ): TProps[TProp];
   public property(
     valuesObject: Partial<{ [key in keyof TProps]: any }>,
   ): Partial<{ [key in keyof TProps]: TProps[key] }>;
@@ -383,13 +402,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private castProperty(key: keyof TProps, prop: IProperty, newValue: any): any {
     const type = this.getDefinitions()[key].type;
 
-    if (typeof (type) === 'undefined') {
+    if (typeof type === 'undefined') {
       return newValue;
     }
 
     debug(`Casting property '%s' with type %o`, key, type);
 
-    if (typeof (type) === 'function') {
+    if (typeof type === 'function') {
       return type.call(this, String(newValue), key, String(prop.__oldValue));
     }
 
@@ -398,10 +417,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       case 'bool':
         return newValue === 'false' ? false : !!newValue;
       case 'string':
-        return (
-          (!(newValue instanceof String) ||
-            newValue.toString() === '') && typeof newValue !== 'string'
-        ) ? ''
+        return (!(newValue instanceof String) || newValue.toString() === '') &&
+          typeof newValue !== 'string'
+          ? ''
           : newValue;
       case 'integer':
       case 'int':
@@ -432,7 +450,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
                 timezoneOffset *= -1;
               }
               // make sure it is set in UTC here
-              newValue = newValue.substring(0, newValue.length - matches[0].length) + 'Z';
+              newValue =
+                newValue.substring(0, newValue.length - matches[0].length) +
+                'Z';
             } else {
               timezoneOffset = new Date(newValue).getTimezoneOffset();
             }
@@ -441,7 +461,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         }
         return parseInt(newValue, 10);
       case 'json':
-        if (typeof (newValue) === 'object') {
+        if (typeof newValue === 'object') {
           return JSON.stringify(newValue);
         } else {
           try {
@@ -468,7 +488,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *      after: 'AB'
    *    }]
    */
-  public propertyDiff(key?: keyof TProps): Array<void | IPropertyDiff<keyof TProps>> {
+  public propertyDiff(
+    key?: keyof TProps,
+  ): Array<void | IPropertyDiff<keyof TProps>> {
     // TODO: determine if returning an array is really the best option
     if (key) {
       return [this.onePropertyDiff(key)];
@@ -533,9 +555,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *   }]
    * @returns {Promise<void>}
    */
-  public async save(
-    options?: ISaveOptions,
-  ): Promise<void> {
+  public async save(options?: ISaveOptions): Promise<void> {
     // TODO for v2.1: instead of the old continue_on_link_error behaviour, we should
     // add a way to deepValidate before saving. Meaning all relationChanges (only link)
     // get validated and if one of them is not valid, we abort before starting the save
@@ -556,7 +576,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       this.id = uuid();
     }
 
-    debug(`Saving instance '%s.%s' with action '%s'.`, this.modelName, this.id, action);
+    debug(
+      `Saving instance '%s.%s' with action '%s'.`,
+      this.modelName,
+      this.id,
+      action,
+    );
     let isValid = true;
     if (options.skip_validation_and_unique_indexes === false) {
       isValid = await this.validate(undefined, true);
@@ -570,11 +595,20 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     let numIdExisting: number = 0;
     if (action !== 'create') {
-      numIdExisting = numIdExisting = await SISMEMBER(this.client, this.prefix('idsets'), this.id);
+      numIdExisting = numIdExisting = await SISMEMBER(
+        this.client,
+        this.prefix('idsets'),
+        this.id,
+      );
     }
     if (action === 'create' && numIdExisting === 0) {
-      debug(`Creating new instance '%s.%s' because action was '%s' and numIdExisting was %d.`,
-        this.modelName, this.id, action, numIdExisting);
+      debug(
+        `Creating new instance '%s.%s' because action was '%s' and numIdExisting was %d.`,
+        this.modelName,
+        this.id,
+        action,
+        numIdExisting,
+      );
       await this.create();
     }
     await this.update(options);
@@ -593,19 +627,25 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private async generateId(): Promise<string> {
     let id = null;
     let generator = this.options.idGenerator;
-    if (typeof (generator) === 'function') {
+    if (typeof generator === 'function') {
       id = await generator.call(this);
     } else {
       if (!generator || !idGenerators[generator]) {
         generator = 'default';
       }
-      id = await idGenerators[generator].call(idGenerators, this.client, this.prefix('incrementalIds'));
+      id = await idGenerators[generator].call(
+        idGenerators,
+        this.client,
+        this.prefix('incrementalIds'),
+      );
     }
     if (typeof id === 'string' && id.includes(':')) {
       // TODO: add documentation for this
       // we need to do stuff with redis keys and we seperate parts of the redis key by :
       // thus the id cannot contain that character.
-      throw new Error('Nohm IDs cannot contain the character ":". Please change your idGenerator!');
+      throw new Error(
+        'Nohm IDs cannot contain the character ":". Please change your idGenerator!',
+      );
     }
     return id;
   }
@@ -630,13 +670,19 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
     }
     if (mSetArguments.length !== 0) {
-      debug(`Setting all unique indices of model '%s.%s' to new id '%s'.`,
-        this.modelName, this.id, id);
+      debug(
+        `Setting all unique indices of model '%s.%s' to new id '%s'.`,
+        this.modelName,
+        this.id,
+        id,
+      );
       return MSET(this.client, mSetArguments);
     }
   }
 
-  private async update(options: ISaveOptions): Promise<Array<ILinkSaveResult> | LinkError> {
+  private async update(
+    options: ISaveOptions,
+  ): Promise<Array<ILinkSaveResult> | LinkError> {
     if (!this.id) {
       throw new Error('Update was called without having an id set.');
     }
@@ -664,18 +710,19 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const linkResults = await this.storeLinks(options);
     this.relationChanges = [];
 
-    const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
+    const linkFailures = linkResults.filter(
+      (linkResult) => !linkResult.success,
+    );
 
     if (linkFailures.length > 0) {
-      throw new LinkError(
-        linkFailures,
-      );
+      throw new LinkError(linkFailures);
     }
 
     this.inDb = true;
 
     let diff;
-    if (this.getPublish()) { // don't need the diff otherwise
+    if (this.getPublish()) {
+      // don't need the diff otherwise
       diff = this.propertyDiff();
     }
 
@@ -693,10 +740,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     return linkResults;
-
   }
 
-  private async storeLinks(options: ISaveOptions): Promise<Array<ILinkSaveResult>> {
+  private async storeLinks(
+    options: ISaveOptions,
+  ): Promise<Array<ILinkSaveResult>> {
     const changeFns = this.relationChanges.map((change) => {
       return async () => {
         // TODO: decide whether silent should actually be overwritten for all cases
@@ -710,14 +758,21 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         };
         try {
           if (!change.object.id) {
-            debug(`Saving %sed '%s' instance from '%s.%s' with relation '%s' because it had no id.`,
-              change.action, change.object.modelName, this.modelName, this.id, change.options.name);
+            debug(
+              `Saving %sed '%s' instance from '%s.%s' with relation '%s' because it had no id.`,
+              change.action,
+              change.object.modelName,
+              this.modelName,
+              this.id,
+              change.options.name,
+            );
             await change.object.save(options);
           }
           await this.saveLinkRedis(change);
           try {
-            if (typeof (change.callback) === 'function') {
-              change.callback.call(this,
+            if (typeof change.callback === 'function') {
+              change.callback.call(
+                this,
                 change.action,
                 this.modelName,
                 change.options.name,
@@ -729,7 +784,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           }
         } catch (err) {
           const isSubLinkError = err instanceof LinkError;
-          if (!isSubLinkError && typeof (change.options.error) === 'function') {
+          if (!isSubLinkError && typeof change.options.error === 'function') {
             try {
               change.options.error(err, change.object);
             } catch (e) {
@@ -758,7 +813,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private getRelationKey(otherName: string, relationName: string) {
-    return `${this.prefix('relations')}:${relationName}:${otherName}:${this.id}`;
+    return `${this.prefix('relations')}:${relationName}:${otherName}:${
+      this.id
+    }`;
   }
 
   private async saveLinkRedis(change: IRelationChange): Promise<void> {
@@ -768,12 +825,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     const multi = this.client.MULTI();
     // relation to other
-    const toKey = this.getRelationKey(change.object.modelName, change.options.name);
-    // first store the information to which other model names the instance has a relation to
-    multi[command](
-      `${relationKeyPrefix}${this.modelName}:${this.id}`,
-      toKey,
+    const toKey = this.getRelationKey(
+      change.object.modelName,
+      change.options.name,
     );
+    // first store the information to which other model names the instance has a relation to
+    multi[command](`${relationKeyPrefix}${this.modelName}:${this.id}`, toKey);
     // second store the information which specific other model id that relation is referring to
     multi[command](toKey, change.object.stringId());
 
@@ -786,8 +843,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     multi[command](fromKey, this.stringId());
 
     try {
-      debug(`Linking in redis.`,
-        this.modelName, change.options.name, command);
+      debug(`Linking in redis.`, this.modelName, change.options.name, command);
       await EXEC(multi);
       if (!change.options.silent) {
         this.fireEvent(change.action, change.object, change.options.name);
@@ -799,7 +855,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       throw err;
     }
   }
-
 
   private setIndices(multi: redis.Multi | redis.RedisClient) {
     for (const [key, prop] of this.properties) {
@@ -813,37 +868,77 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         if (this.getDefinitions()[key].type === 'string') {
           oldUniqueValue = (oldUniqueValue as string).toLowerCase();
         }
-        debug(`Removing old unique '%s' from '%s.%s' because propUpdated: %o && this.inDb %o.`,
-          key, this.modelName, this.id, prop.__updated, this.inDb);
-        multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
+        debug(
+          `Removing old unique '%s' from '%s.%s' because propUpdated: %o && this.inDb %o.`,
+          key,
+          this.modelName,
+          this.id,
+          prop.__updated,
+          this.inDb,
+        );
+        multi.DEL(
+          `${this.prefix('unique')}:${key}:${oldUniqueValue}`,
+          this.nohmClass.logError,
+        );
       }
 
       // set new normal index
       if (isIndex && isDirty) {
         if (prop.__numericIndex) {
-          debug(`Adding numeric index '%s' to '%s.%s'.`,
-            key, this.modelName, this.id, prop.__updated, this.inDb);
+          debug(
+            `Adding numeric index '%s' to '%s.%s'.`,
+            key,
+            this.modelName,
+            this.id,
+            prop.__updated,
+            this.inDb,
+          );
           // we use scored sets for things like "get all users older than 5"
           const scoredPrefix = this.prefix('scoredindex');
           if (this.inDb) {
-            multi.ZREM(`${scoredPrefix}:${key}`, this.stringId(), this.nohmClass.logError);
+            multi.ZREM(
+              `${scoredPrefix}:${key}`,
+              this.stringId(),
+              this.nohmClass.logError,
+            );
           }
-          multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.stringId(), this.nohmClass.logError);
+          multi.ZADD(
+            `${scoredPrefix}:${key}`,
+            prop.value,
+            this.stringId(),
+            this.nohmClass.logError,
+          );
         }
-        debug(`Adding index '%s' to '%s.%s'.`,
-          key, this.modelName, this.id, prop.__updated, this.inDb);
+        debug(
+          `Adding index '%s' to '%s.%s'.`,
+          key,
+          this.modelName,
+          this.id,
+          prop.__updated,
+          this.inDb,
+        );
         const prefix = this.prefix('index');
         if (this.inDb) {
-          multi.SREM(`${prefix}:${key}:${prop.__oldValue}`, this.stringId(), this.nohmClass.logError);
+          multi.SREM(
+            `${prefix}:${key}:${prop.__oldValue}`,
+            this.stringId(),
+            this.nohmClass.logError,
+          );
         }
-        multi.SADD(`${prefix}:${key}:${prop.value}`, this.stringId(), this.nohmClass.logError);
+        multi.SADD(
+          `${prefix}:${key}:${prop.value}`,
+          this.stringId(),
+          this.nohmClass.logError,
+        );
       }
     }
   }
 
   public valid(property?: keyof TProps, setDirectly = false): Promise<boolean> {
-    console.warn('\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
+    console.warn(
+      '\x1b[31m%s\x1b[0m',
+      'DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.',
+    );
     return this.validate(property, setDirectly);
   }
 
@@ -857,7 +952,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * This prevents race conditions but should probably only be used internally
    * @returns {Promise<boolean>} Promise resolves to true if checked properties are valid.
    */
-  public async validate(property?: keyof TProps, setDirectly = false): Promise<boolean> {
+  public async validate(
+    property?: keyof TProps,
+    setDirectly = false,
+  ): Promise<boolean> {
     callbackError(...arguments);
     const nonUniqueValidations: Array<Promise<IValidationResult>> = [];
     for (const [key, prop] of this.properties) {
@@ -866,7 +964,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
-    let validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(nonUniqueValidations);
+    let validationResults: Array<IValidationResult> = await Promise.all<
+      IValidationResult
+    >(nonUniqueValidations);
 
     let valid = validationResults.some((result) => result.valid);
 
@@ -881,7 +981,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         uniqueValidations.push(this.checkUniques(setDirectly, key, prop));
       }
     }
-    const uniqueValidationResults = await Promise.all<IValidationResult>(uniqueValidations);
+    const uniqueValidationResults = await Promise.all<IValidationResult>(
+      uniqueValidations,
+    );
     validationResults = validationResults.concat(uniqueValidationResults);
 
     validationResults.forEach((result) => {
@@ -891,7 +993,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       if (!result.valid) {
         valid = false;
         if (!result.errors || result.errors.length === 0) {
-          throw new Error(`Validation failed but didn't provide an error message. Property name: ${result.key}.`);
+          throw new Error(
+            `Validation failed but didn't provide an error message. Property name: ${
+              result.key
+            }.`,
+          );
         }
         this.errors[result.key] = this.errors[result.key].concat(result.errors);
       }
@@ -904,7 +1010,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return valid;
   }
 
-  private async validateProperty(key: string, property: IProperty): Promise<IValidationResult> {
+  private async validateProperty(
+    key: string,
+    property: IProperty,
+  ): Promise<IValidationResult> {
     const result: IValidationResult = {
       key,
       valid: true,
@@ -916,34 +1025,41 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         optional: false,
         trim: true,
       };
-      const validationObjects = validations.map((validator) => this.getValidationObject(validator, key));
-      const validationPromises: Array<Promise<void>> = validationObjects.map(async (validationObject) => {
-        if (validationObject.options.optional && !property.value) {
-          return;
-        }
-        const valid = await validationObject.validator.call(
-          this,
-          property.value,
-          {
-            ...validatorOptions,
-            ...validationObject.options,
-          },
-        );
-        if (!valid) {
-          result.valid = false;
-          if (!result.errors) {
-            result.errors = [];
+      const validationObjects = validations.map((validator) =>
+        this.getValidationObject(validator, key),
+      );
+      const validationPromises: Array<Promise<void>> = validationObjects.map(
+        async (validationObject) => {
+          if (validationObject.options.optional && !property.value) {
+            return;
           }
-          result.errors.push(validationObject.name);
-        }
-      });
+          const valid = await validationObject.validator.call(
+            this,
+            property.value,
+            {
+              ...validatorOptions,
+              ...validationObject.options,
+            },
+          );
+          if (!valid) {
+            result.valid = false;
+            if (!result.errors) {
+              result.errors = [];
+            }
+            result.errors.push(validationObject.name);
+          }
+        },
+      );
       await Promise.all(validationPromises);
     }
     return result;
   }
 
-  private getValidationObject(validator: TValidationDefinition, key: keyof TProps): IValidationObject {
-    if (typeof (validator) === 'function') {
+  private getValidationObject(
+    validator: TValidationDefinition,
+    key: keyof TProps,
+  ): IValidationObject {
+    if (typeof validator === 'function') {
       const funcName = validator.name || key;
       return {
         name: `custom_${funcName}`,
@@ -951,7 +1067,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         validator,
       };
     } else {
-      if (typeof (validator) === 'string') {
+      if (typeof validator === 'string') {
         // predefined validator method
         return {
           name: validator,
@@ -967,7 +1083,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         };
       } else {
         throw new Error(
-          `Bad validation definition for model '${this.modelName}' for validator '${validator}'.`,
+          `Bad validation definition for model '${
+            this.modelName
+          }' for validator '${validator}'.`,
         );
       }
     }
@@ -988,7 +1106,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return true;
   }
 
-  private async isUniqueKeyFree(key: string, setDirectly: boolean): Promise<boolean> {
+  private async isUniqueKeyFree(
+    key: string,
+    setDirectly: boolean,
+  ): Promise<boolean> {
     let dbValue: number;
     if (setDirectly) {
       /*
@@ -1016,8 +1137,15 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         isFreeUnique = true;
       }
     }
-    debug(`Checked unique '%s' for '%s.%s'. Result: '%s' because setDirectly: '%o' && dbValue: '%d'.`,
-      key, this.modelName, this.id, isFreeUnique, setDirectly, dbValue);
+    debug(
+      `Checked unique '%s' for '%s.%s'. Result: '%s' because setDirectly: '%o' && dbValue: '%d'.`,
+      key,
+      this.modelName,
+      this.id,
+      isFreeUnique,
+      setDirectly,
+      dbValue,
+    );
     return isFreeUnique;
   }
 
@@ -1044,8 +1172,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     const uniqueKey = this.getUniqueKey(key, property);
-    debug(`Checking unique '%s' for '%s.%s' at '%s'.`,
-      key, this.modelName, this.id, uniqueKey);
+    debug(
+      `Checking unique '%s' for '%s.%s' at '%s'.`,
+      key,
+      this.modelName,
+      this.id,
+      uniqueKey,
+    );
     const isFree = await this.isUniqueKeyFree(uniqueKey, setDirectly);
     if (!isFree) {
       return {
@@ -1066,8 +1199,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   private async clearTemporaryUniques(): Promise<void> {
     if (this.tmpUniqueKeys.length > 0) {
-      debug(`Clearing temp uniques '%o' for '%s.%s'.`,
-        this.tmpUniqueKeys, this.modelName, this.id);
+      debug(
+        `Clearing temp uniques '%o' for '%s.%s'.`,
+        this.tmpUniqueKeys,
+        this.modelName,
+        this.id,
+      );
       const deletes: Array<Promise<void>> = this.tmpUniqueKeys.map((key) => {
         return DEL(this.client, key);
       });
@@ -1118,7 +1255,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         multi.del(`${this.prefix('unique')}:${key}:${value}`);
       }
       if (this.getDefinitions()[key].index === true) {
-        multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.stringId());
+        multi.srem(
+          `${this.prefix('index')}:${key}:${prop.__oldValue}`,
+          this.stringId(),
+        );
       }
       if (prop.__numericIndex === true) {
         multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.stringId());
@@ -1138,7 +1278,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public async exists(id: any): Promise<boolean> {
     callbackError(...arguments);
-    return !!await SISMEMBER(this.client, this.prefix('idsets'), id);
+    return !!(await SISMEMBER(this.client, this.prefix('idsets'), id));
   }
 
   private async getHashAll(id: any): Promise<Partial<TProps>> {
@@ -1152,8 +1292,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         return;
       }
       if (!this.getDefinitions()[key]) {
-        // tslint:disable-next-line:max-line-length
-        this.nohmClass.logError(`A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
+        this.nohmClass.logError(
+          // tslint:disable-next-line:max-line-length
+          `A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`,
+        );
         return;
       }
       props[key] = values[key];
@@ -1173,8 +1315,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     Object.keys(dbProps).forEach((key) => {
       if (definitions[key].load_pure) {
         // prevents type casting/behaviour. especially useful for create-only properties like a createdAt timestamp
-        debug(`Loading property '%s' from '%s.%s' as pure (no type casting).`,
-          key, this.modelName, id);
+        debug(
+          `Loading property '%s' from '%s.%s' as pure (no type casting).`,
+          key,
+          this.modelName,
+          id,
+        );
         this.setProperty(key, dbProps[key], true);
       } else {
         this.property(key, dbProps[key]);
@@ -1186,7 +1332,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     this._isLoaded = true;
     return this.allProperties();
   }
-
 
   /**
    * Links one object to another.
@@ -1227,10 +1372,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
     callback?: TLinkCallback<T>,
   ): void {
-    if (typeof (optionsOrNameOrCallback) === 'function') {
+    if (typeof optionsOrNameOrCallback === 'function') {
       callback = optionsOrNameOrCallback;
       optionsOrNameOrCallback = 'default';
-    } else if (typeof (optionsOrNameOrCallback) === 'undefined') {
+    } else if (typeof optionsOrNameOrCallback === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
     const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
@@ -1240,8 +1385,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       object: other,
       options,
     });
-    debug(`Set link for '%s.%s': %o`,
-      this.modelName, this.id, this.relationChanges[this.relationChanges.length - 1]);
+    debug(
+      `Set link for '%s.%s': %o`,
+      this.modelName,
+      this.id,
+      this.relationChanges[this.relationChanges.length - 1],
+    );
   }
 
   /**
@@ -1261,7 +1410,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  relation name (default: 'default') or an options object (see example above) or the callback
    * @param {() => any} [callback]
    */
-  public unlink<T extends NohmModel>(other: T, callback?: TLinkCallback<T>): void;
+  public unlink<T extends NohmModel>(
+    other: T,
+    callback?: TLinkCallback<T>,
+  ): void;
   public unlink<T extends NohmModel>(
     other: NohmModel,
     optionsOrNameOrCallback: string | ILinkOptions,
@@ -1272,15 +1424,17 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
     callback?: TLinkCallback<T>,
   ): void {
-    if (typeof (optionsOrNameOrCallback) === 'function') {
+    if (typeof optionsOrNameOrCallback === 'function') {
       callback = optionsOrNameOrCallback;
       optionsOrNameOrCallback = 'default';
-    } else if (typeof (optionsOrNameOrCallback) === 'undefined') {
+    } else if (typeof optionsOrNameOrCallback === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
     const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
     this.relationChanges.forEach((change, key) => {
-      const sameRelationChange = change.options.name === options.name && checkEqual(change.object, other);
+      const sameRelationChange =
+        change.options.name === options.name &&
+        checkEqual(change.object, other);
       if (sameRelationChange) {
         this.relationChanges.splice(key, 1);
       }
@@ -1291,12 +1445,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       object: other,
       options,
     });
-    debug(`Set unlink for '%s.%s': %o`,
-      this.modelName, this.id, this.relationChanges[this.relationChanges.length - 1]);
+    debug(
+      `Set unlink for '%s.%s': %o`,
+      this.modelName,
+      this.id,
+      this.relationChanges[this.relationChanges.length - 1],
+    );
   }
 
   private getLinkOptions(optionsOrName: string | ILinkOptions): ILinkOptions {
-    if (typeof (optionsOrName) === 'string') {
+    if (typeof optionsOrName === 'string') {
       return {
         name: optionsOrName,
       };
@@ -1309,10 +1467,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private isMultiClient(client: any): client is redis.Multi {
-    return client && typeof (client.exec) === 'function';
+    return client && typeof client.exec === 'function';
   }
 
-  public async unlinkAll(givenClient?: redis.RedisClient | redis.Multi): Promise<void> {
+  public async unlinkAll(
+    givenClient?: redis.RedisClient | redis.Multi,
+  ): Promise<void> {
     callbackError(...arguments);
     let multi: redis.Multi;
     if (this.isMultiClient(givenClient)) {
@@ -1325,12 +1485,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     // remove outstanding relation changes
     this.relationChanges = [];
-    const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
+    const relationKeysKey = `${this.rawPrefix().relationKeys}${
+      this.modelName
+    }:${this.id}`;
 
     const keys = await SMEMBERS(this.client, relationKeysKey);
 
-    debug(`Remvoing links for '%s.%s': %o.`,
-      this.modelName, this.id, keys);
+    debug(`Remvoing links for '%s.%s': %o.`, this.modelName, this.id, keys);
 
     const others: Array<IUnlinkKeyMapItem> = keys.map((key) => {
       const matches = key.match(/:([\w]*):([\w]*):[^:]+$/i);
@@ -1341,14 +1502,21 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       const selfRelationName = matches[1];
       const otherModelName = matches[2];
       const namedMatches = matches[1].match(/^([\w]*)Foreign$/);
-      const otherRelationName = namedMatches ? namedMatches[1] : matches[1] + 'Foreign';
+      const otherRelationName = namedMatches
+        ? namedMatches[1]
+        : matches[1] + 'Foreign';
       return {
-        otherIdsKey: `${this.rawPrefix().relations}${otherModelName}:${otherRelationName}:${this.modelName}:`,
-        ownIdsKey: `${this.prefix('relations')}:${selfRelationName}:${otherModelName}:${this.id}`,
+        otherIdsKey: `${
+          this.rawPrefix().relations
+        }${otherModelName}:${otherRelationName}:${this.modelName}:`,
+        ownIdsKey: `${this.prefix(
+          'relations',
+        )}:${selfRelationName}:${otherModelName}:${this.id}`,
       };
     });
-    const otherRelationIdsPromises = others.map((item) => this.removeIdFromOtherRelations(multi, item));
-
+    const otherRelationIdsPromises = others.map((item) =>
+      this.removeIdFromOtherRelations(multi, item),
+    );
 
     await Promise.all(otherRelationIdsPromises);
 
@@ -1368,7 +1536,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   removing this.id from relations to others.
   Secondly it adds an SREM to the multi redis client.
   */
-  private async removeIdFromOtherRelations(multi: redis.Multi, item: IUnlinkKeyMapItem): Promise<void> {
+  private async removeIdFromOtherRelations(
+    multi: redis.Multi,
+    item: IUnlinkKeyMapItem,
+  ): Promise<void> {
     const ids = await SMEMBERS(this.client, item.ownIdsKey);
     ids.forEach((id) => {
       multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
@@ -1382,12 +1553,21 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @param {string} [relationName='default']
    * @returns {Promise<boolean>}
    */
-  public async belongsTo(obj: NohmModel, relationName = 'default'): Promise<boolean> {
+  public async belongsTo(
+    obj: NohmModel,
+    relationName = 'default',
+  ): Promise<boolean> {
     callbackError(...arguments);
     if (!this.id || !obj.id) {
-      throw new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.');
+      throw new Error(
+        'Calling belongsTo() even though either the object itself or the relation does not have an id.',
+      );
     }
-    return !!await SISMEMBER(this.client, this.getRelationKey(obj.modelName, relationName), obj.id);
+    return !!(await SISMEMBER(
+      this.client,
+      this.getRelationKey(obj.modelName, relationName),
+      obj.id,
+    ));
   }
 
   /**
@@ -1397,9 +1577,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @param {string} [relationName='default']
    * @returns {Promise<Array<any>>}
    */
-  public async getAll(otherModelName: string, relationName = 'default'): Promise<Array<any>> {
+  public async getAll(
+    otherModelName: string,
+    relationName = 'default',
+  ): Promise<Array<any>> {
     if (!this.id) {
-      throw new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`);
+      throw new Error(
+        `Calling getAll() even though this ${
+          this.modelName
+        } has no id. Please load or save it first.`,
+      );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
     const ids = await SMEMBERS(this.client, relationKey);
@@ -1418,10 +1605,17 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @param {string} [relationName='default'] Name of the relation
    * @returns {Promise<number>}
    */
-  public async numLinks(otherModelName: string, relationName = 'default'): Promise<number> {
+  public async numLinks(
+    otherModelName: string,
+    relationName = 'default',
+  ): Promise<number> {
     callbackError(...arguments);
     if (!this.id) {
-      throw new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`);
+      throw new Error(
+        `Calling numLinks() even though this ${
+          this.modelName
+        } has no id. Please load or save it first.`,
+      );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
     return SCARD(this.client, relationKey);
@@ -1433,27 +1627,50 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @param {ISearchOptions} searches
    * @returns {Promise<Array<any>>}
    */
-  public async find(searches: Partial<{
-    [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-  }> = {}): Promise<Array<string>> {
+  public async find(
+    searches: Partial<
+      {
+        [key in keyof TProps]:
+          | string
+          | number
+          | boolean
+          | Partial<ISearchOption>
+      }
+    > = {},
+  ): Promise<Array<string>> {
     const structuredSearches = this.createStructuredSearchOptions(searches);
 
-    const uniqueSearch = structuredSearches.find((search) => search.type === 'unique');
+    const uniqueSearch = structuredSearches.find(
+      (search) => search.type === 'unique',
+    );
     if (uniqueSearch) {
-      debug(`Finding '%s's with uniques:\n%o.`,
-        this.modelName, this.id, uniqueSearch);
+      debug(
+        `Finding '%s's with uniques:\n%o.`,
+        this.modelName,
+        this.id,
+        uniqueSearch,
+      );
       return this.uniqueSearch(uniqueSearch);
     }
 
-    const onlySets = structuredSearches.filter((search) => search.type === 'set');
-    const onlyZSets = structuredSearches.filter((search) => search.type === 'zset');
+    const onlySets = structuredSearches.filter(
+      (search) => search.type === 'set',
+    );
+    const onlyZSets = structuredSearches.filter(
+      (search) => search.type === 'zset',
+    );
 
     if (onlySets.length === 0 && onlyZSets.length === 0) {
       // no valid searches - return all ids
       return SMEMBERS(this.client, `${this.prefix('idsets')}`);
     }
-    debug(`Finding '%s's with these searches (sets, zsets):\n%o,\n%o.`,
-      this.modelName, this.id, onlySets, onlyZSets);
+    debug(
+      `Finding '%s's with these searches (sets, zsets):\n%o,\n%o.`,
+      this.modelName,
+      this.id,
+      onlySets,
+      onlyZSets,
+    );
 
     const setPromises = this.setSearch(onlySets);
     const zSetPromises = this.zSetSearch(onlyZSets);
@@ -1473,9 +1690,17 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private createStructuredSearchOptions(searches: Partial<{
-    [key in keyof TProps]: string | number | boolean | Partial<ISearchOption>;
-  }>): Array<IStructuredSearch<TProps>> {
+  private createStructuredSearchOptions(
+    searches: Partial<
+      {
+        [key in keyof TProps]:
+          | string
+          | number
+          | boolean
+          | Partial<ISearchOption>
+      }
+    >,
+  ): Array<IStructuredSearch<TProps>> {
     return Object.keys(searches).map((key) => {
       const search = searches[key];
       if (typeof search === 'undefined') {
@@ -1491,19 +1716,24 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       };
       if (definition.unique) {
         if (definition.type === 'string') {
-          if (typeof (search) !== 'string') {
-            // tslint:disable-next-line:max-line-length
-            throw new Error('Invalid search parameters: Searching for a unique (type "string") with a non-string value is not supported.');
+          if (typeof search !== 'string') {
+            throw new Error(
+              // tslint:disable-next-line:max-line-length
+              'Invalid search parameters: Searching for a unique (type "string") with a non-string value is not supported.',
+            );
           }
           structuredSearch.value = search.toLowerCase();
         }
         structuredSearch.type = 'unique';
       } else {
         if (!prop.__numericIndex && !definition.index) {
-          throw new Error(`Trying to search for non-indexed and non-unique property '${key}' is not supported.`);
+          throw new Error(
+            `Trying to search for non-indexed and non-unique property '${key}' is not supported.`,
+          );
         }
         const isDirectNumericSearch = !isNaN(parseInt(search as string, 10));
-        const isSimpleIndexSearch = !prop.__numericIndex || isDirectNumericSearch;
+        const isSimpleIndexSearch =
+          !prop.__numericIndex || isDirectNumericSearch;
         if (!isSimpleIndexSearch && prop.__numericIndex) {
           structuredSearch.type = 'zset';
           structuredSearch.options = search as Partial<ISearchOption>;
@@ -1515,7 +1745,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     });
   }
 
-  private async uniqueSearch(options: IStructuredSearch<TProps>): Promise<Array<string>> {
+  private async uniqueSearch(
+    options: IStructuredSearch<TProps>,
+  ): Promise<Array<string>> {
     const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
     const id = await GET(this.client, key);
     if (id) {
@@ -1525,7 +1757,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private async setSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
+  private async setSearch(
+    searches: Array<IStructuredSearch<TProps>>,
+  ): Promise<Array<string>> {
     const keys = searches.map((search) => {
       return `${this.prefix('index')}:${search.key}:${search.value}`;
     });
@@ -1536,12 +1770,18 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return SINTER(this.client, keys);
   }
 
-  private async zSetSearch(searches: Array<IStructuredSearch<TProps>>): Promise<Array<string>> {
-    const singleSearches = await Promise.all(searches.map((search) => this.singleZSetSearch(search)));
+  private async zSetSearch(
+    searches: Array<IStructuredSearch<TProps>>,
+  ): Promise<Array<string>> {
+    const singleSearches = await Promise.all(
+      searches.map((search) => this.singleZSetSearch(search)),
+    );
     return _.intersection(...singleSearches);
   }
 
-  private singleZSetSearch(search: IStructuredSearch<TProps>): Promise<Array<string>> {
+  private singleZSetSearch(
+    search: IStructuredSearch<TProps>,
+  ): Promise<Array<string>> {
     return new Promise((resolve, reject) => {
       const key = `${this.prefix('scoredindex')}:${search.key}`;
       let command: 'ZRANGEBYSCORE' | 'ZREVRANGEBYSCORE' = 'ZRANGEBYSCORE';
@@ -1553,9 +1793,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         offset: 0,
         ...search.options,
       };
-      if ((options.min === '+inf' && options.max !== '+inf') ||
+      if (
+        (options.min === '+inf' && options.max !== '+inf') ||
         (options.max === '-inf' && options.min !== '-inf') ||
-        (parseFloat('' + options.min) > parseFloat('' + options.max))) {
+        parseFloat('' + options.min) > parseFloat('' + options.max)
+      ) {
         command = 'ZREVRANGEBYSCORE';
       }
 
@@ -1564,8 +1806,8 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
 
       const endpoints = [
-        (options.endpoints[0] === '(' ? '(' : ''),
-        (options.endpoints[1] === ')' ? '(' : ''),
+        options.endpoints[0] === '(' ? '(' : '',
+        options.endpoints[1] === ')' ? '(' : '',
       ];
 
       const callback = (err: Error | null, ids: Array<string>) => {
@@ -1576,14 +1818,18 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         }
       };
       if (options.limit) {
-        this.client[command](key,
+        this.client[command](
+          key,
           endpoints[0] + options.min,
           endpoints[1] + options.max,
-          'LIMIT', options.offset, options.limit,
+          'LIMIT',
+          options.offset,
+          options.limit,
           callback,
         );
       } else {
-        this.client[command](key,
+        this.client[command](
+          key,
           endpoints[0] + options.min,
           endpoints[1] + options.max,
           callback,
@@ -1609,20 +1855,27 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     if (!options.field || !this.properties.has(options.field)) {
-      throw new Error(`Invalid field in ${this.modelName}.sort() options: '${options.field}'`);
+      throw new Error(
+        `Invalid field in ${this.modelName}.sort() options: '${options.field}'`,
+      );
     }
 
     const fieldType = this.getDefinitions()[options.field].type;
     const isIndexed = this.getDefinitions()[options.field].index;
 
-    const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : undefined);
+    const alpha =
+      options.alpha || (fieldType === 'string' ? 'ALPHA' : undefined);
     const direction = options.direction ? options.direction : 'ASC';
-    const scored = typeof (fieldType) === 'string' && isIndexed ? indexNumberTypes.includes(fieldType) : false;
+    const scored =
+      typeof fieldType === 'string' && isIndexed
+        ? indexNumberTypes.includes(fieldType)
+        : false;
     let start = 0;
     let stop = 100;
     if (Array.isArray(options.limit) && options.limit.length > 0) {
       start = options.limit[0];
-      if (scored) { // the limit arguments for sets and sorted sets work differently
+      if (scored) {
+        // the limit arguments for sets and sorted sets work differently
         // stop is a 0-based index from the start of all zset members
         stop = options.limit[1] ? start + options.limit[1] : start + stop;
         stop--;
@@ -1636,15 +1889,27 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const client: redis.Multi = this.client.MULTI();
     let tmpKey: string = '';
 
-
-    debug(`Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`,
-      this.modelName, this.id, alpha, direction, scored, start, stop, ids);
+    debug(
+      `Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`,
+      this.modelName,
+      this.id,
+      alpha,
+      direction,
+      scored,
+      start,
+      stop,
+      ids,
+    );
 
     if (ids) {
       // to get the intersection of the given ids and all ids on the server we first
       // temporarily store the given ids either in a set or sorted set and then return the intersection
       if (scored) {
-        tmpKey = zsetKey + ':tmp_sort:' + (+ new Date()) + Math.ceil(Math.random() * 1000);
+        tmpKey =
+          zsetKey +
+          ':tmp_sort:' +
+          +new Date() +
+          Math.ceil(Math.random() * 1000);
         const tempZaddArgs = [tmpKey];
         ids.forEach((id) => {
           tempZaddArgs.push('0', id as string);
@@ -1653,7 +1918,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         client.zinterstore([tmpKey, 2, tmpKey, zsetKey]);
         zsetKey = tmpKey;
       } else {
-        tmpKey = idsetKey + ':tmp_sort:' + (+ new Date()) + Math.ceil(Math.random() * 1000);
+        tmpKey =
+          idsetKey +
+          ':tmp_sort:' +
+          +new Date() +
+          Math.ceil(Math.random() * 1000);
         ids.unshift(tmpKey);
         client.SADD.apply(client, ids as Array<string>); // typecast because rediss doesn't care about numbers/string
         client.SINTERSTORE([tmpKey, tmpKey, idsetKey]);
@@ -1664,9 +1933,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       const method = direction && direction === 'DESC' ? 'ZREVRANGE' : 'ZRANGE';
       client[method](zsetKey, start, stop);
     } else {
-      client.sort(idsetKey,
-        'BY', `${this.prefix('hash')}:*->${options.field}`,
-        'LIMIT', String(start), String(stop),
+      client.sort(
+        idsetKey,
+        'BY',
+        `${this.prefix('hash')}:*->${options.field}`,
+        'LIMIT',
+        String(start),
+        String(stop),
         direction,
         alpha as any, // any casting because passing in an empty string actually results in errors in some cases
       );
@@ -1684,8 +1957,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     replies.forEach((otherReply) => {
       if (otherReply instanceof Error) {
-        const warnMessage = otherReply.stack ? otherReply.stack : otherReply.message;
-        console.warn(`Error during ${this.modelName}.sort() multi.exec(): ${warnMessage}`);
+        const warnMessage = otherReply.stack
+          ? otherReply.stack
+          : otherReply.message;
+        console.warn(
+          `Error during ${this.modelName}.sort() multi.exec(): ${warnMessage}`,
+        );
       }
     });
     if (reply instanceof Error) {
@@ -1702,7 +1979,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   } {
     const definitions = Object.getPrototypeOf(this).definitions;
     if (!definitions) {
-      throw new Error(`Model was not defined with proper static definitions: '${this.modelName}'`);
+      throw new Error(
+        `Model was not defined with proper static definitions: '${
+          this.modelName
+        }'`,
+      );
     }
     return definitions;
   }
@@ -1716,18 +1997,26 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (eventActions.indexOf(event) < 0) {
       const supported = eventActions.join(', ');
       this.nohmClass.logError(
-        'Cannot fire an unsupported action. Was "' + event + '" ' +
-        'and must be one of ' + supported,
+        'Cannot fire an unsupported action. Was "' +
+          event +
+          '" ' +
+          'and must be one of ' +
+          supported,
       );
       return;
     }
 
-    const composer = messageComposers[event] || messageComposers.defaultComposer;
+    const composer =
+      messageComposers[event] || messageComposers.defaultComposer;
     const payload = composer.apply(this, args);
     const message = JSON.stringify(payload);
 
-    debugPubSub(`Firing event '%s' for '%s': %j.`,
-      event, this.modelName, payload);
+    debugPubSub(
+      `Firing event '%s' for '%s': %j.`,
+      event,
+      this.modelName,
+      payload,
+    );
 
     this.client.publish(`${this.prefix('channel')}:${event}`, message);
   }
@@ -1744,26 +2033,39 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     eventName: TAllowedEventNames,
     callback: (payload: any) => void,
   ): Promise<void> {
-    debugPubSub(`Subscribing to event '%s' for '%s'.`,
-      eventName, this.modelName);
-    await this.nohmClass.subscribeEvent(`${this.modelName}:${eventName}`, callback);
+    debugPubSub(
+      `Subscribing to event '%s' for '%s'.`,
+      eventName,
+      this.modelName,
+    );
+    await this.nohmClass.subscribeEvent(
+      `${this.modelName}:${eventName}`,
+      callback,
+    );
   }
 
   public async subscribeOnce(
     eventName: TAllowedEventNames,
     callback: (payload: any) => void,
   ): Promise<void> {
-    debugPubSub(`Subscribing once to event '%s' for '%s'.`,
-      eventName, this.modelName);
-    await this.nohmClass.subscribeEventOnce(`${this.modelName}:${eventName}`, callback);
+    debugPubSub(
+      `Subscribing once to event '%s' for '%s'.`,
+      eventName,
+      this.modelName,
+    );
+    await this.nohmClass.subscribeEventOnce(
+      `${this.modelName}:${eventName}`,
+      callback,
+    );
   }
 
-  public unsubscribeEvent(
-    eventName: string,
-    fn?: any,
-  ): void {
-    debugPubSub(`Unsubscribing from event '%s' for '%s' with fn?: %s.`,
-      eventName, this.modelName, fn);
+  public unsubscribeEvent(eventName: string, fn?: any): void {
+    debugPubSub(
+      `Unsubscribing from event '%s' for '%s' with fn?: %s.`,
+      eventName,
+      this.modelName,
+      fn,
+    );
     this.nohmClass.unsubscribeEvent(eventName, fn);
   }
 
@@ -1796,7 +2098,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @memberof NohmModel
    */
   public stringId(): string {
-    return typeof (this._id) === 'string' ? this._id : '';
+    return typeof this._id === 'string' ? this._id : '';
   }
 
   get isLoaded(): boolean {

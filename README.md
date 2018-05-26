@@ -33,7 +33,7 @@ http://maritz.github.com/nohm/
 
 <summary>Example ES6 code (click to expand)</summary>
 
-~~~~ javascript
+```javascript
 const NohmModule = require('nohm');
 // or if you use babel you can import
 // import { Nohm, NohmModel } from 'nohm';
@@ -46,7 +46,7 @@ nohm.setPrefix('example'); // This prefixes all redis keys. By default the prefi
 // This is a class that you can extend to create nohm models. Not needed when using nohm.model()
 const Model = NohmModule.NohmModel;
 
-const existingCountries = ['Narnia', 'Gondor', 'Tatooine']
+const existingCountries = ['Narnia', 'Gondor', 'Tatooine'];
 
 // Using ES6 classes here, but you could also use the old nohm.model definition
 class UserModel extends Model {
@@ -60,9 +60,7 @@ UserModel.definitions = {
   email: {
     type: 'string',
     unique: true,
-    validations: [
-      'email'
-    ],
+    validations: ['email'],
   },
   country: {
     type: 'string',
@@ -76,7 +74,7 @@ UserModel.definitions = {
       },
       {
         name: 'length',
-        options: { min: 3, },
+        options: { min: 3 },
       },
     ],
   },
@@ -88,7 +86,7 @@ UserModel.definitions = {
     },
     defaultValue: 0,
     index: true,
-  }
+  },
 };
 
 // register our model in nohm and returns the resulting Class, do not use the UserModel directly!
@@ -97,7 +95,6 @@ const UserModelClass = nohm.register(UserModel);
 const redis = require('redis').createClient();
 // wait for redis to connect, otherwise we might try to write to a non-existant redis server
 redis.on('connect', async () => {
-
   nohm.setClient(redis);
 
   // factory returns a promise, resolving to a fresh instance (or a loaded one if id is provided, see below)
@@ -107,7 +104,7 @@ redis.on('connect', async () => {
   user.property({
     email: 'mark13@example.com',
     country: 'Gondor',
-    visits: 1
+    visits: 1,
   });
 
   try {
@@ -116,8 +113,10 @@ redis.on('connect', async () => {
     if (err instanceof NohmModule.ValidationError) {
       // validation failed
       for (const key in err.errors) {
-        const failures = err.errors[key];
-        console.log(`Validation of property '${key}' failed in these validators: '${failures.join(`', '`)}'.`);
+        const failures = err.errors[key].join(`', '`);
+        console.log(
+          `Validation of property '${key}' failed in these validators: '${failures}'.`,
+        );
 
         // in a real app you'd probably do something with the validation errors (like make an object for the client)
         // and then return or rethrow some other error
@@ -143,12 +142,15 @@ redis.on('connect', async () => {
   const gondorians = await UserModelClass.findAndLoad({
     country: 'Gondor',
   });
-  console.log(`Here are all users from Gondor: %j`, gondorians.map((u) => u.property('email')));
+  console.log(
+    `Here are all users from Gondor: %j`,
+    gondorians.map((u) => u.property('email')),
+  );
 
   await loadedUser.remove();
   console.log(`User deleted from database.`);
 });
-~~~~
+```
 
 </details>
 
@@ -156,12 +158,11 @@ redis.on('connect', async () => {
 
 <summary>Example Typescript code (click to expand)</summary>
 
-~~~~ typescript
+```typescript
 import { Nohm, NohmModel, TTypedDefinitions } from 'nohm';
 
 // We're gonna assume the basics are clear and the connection is set up etc. - look at the ES6 example otherwise.
 // This example highlights some of the typing capabilities in nohm.
-
 
 interface IUserProperties {
   email: string;
@@ -169,7 +170,6 @@ interface IUserProperties {
 }
 
 class UserModel extends NohmModel<IUserProperties> {
-
   public static modelName = 'User';
 
   protected static definitions: TTypedDefinitions<IUserProperties> = {
@@ -178,9 +178,7 @@ class UserModel extends NohmModel<IUserProperties> {
     email: {
       type: 'string', // this is currently not checked. If you put a wrong type here, no compile error will appear.
       unique: true,
-      validations: [
-        'email',
-      ],
+      validations: ['email'],
     },
     visits: {
       defaultValue: 0,
@@ -202,9 +200,7 @@ class UserModel extends NohmModel<IUserProperties> {
 
 const userModelStatic = nohm.register(UserModel);
 
-
 async function main() {
-
   // currently you still have to pass the generic if you want typing for class methods
   const user = await userModelStatic.load<UserModel>('some id');
   // you can use the above defined loadTyped method to work around that.
@@ -218,7 +214,7 @@ async function main() {
 }
 
 main();
-~~~~
+```
 
 </details>
 
@@ -273,7 +269,7 @@ This requires a running redis server. (you can configure host/port with the comm
 
     nohmtests:something:something
 
-After the tests have run all keys that match the pattern nohmtests:* are deleted!
+After the tests have run all keys that match the pattern nohmtests:\* are deleted!
 You can prevent this by passing --no-cleanup (which will leave hundreds or thousands of test keys in your database).
 You may also change the prefix ("nohmtests") part doing something like
 
