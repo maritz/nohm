@@ -78,6 +78,8 @@ nohm.model('UniqueIntegerFind', {
   },
 });
 
+const origLogError = nohm.logError;
+
 var createUsers = function(props, modelName, callback) {
   if (typeof modelName === 'function') {
     callback = modelName;
@@ -168,6 +170,7 @@ exports.find = {
     });
   },
   tearDown: function(next) {
+    nohm.logError = origLogError;
     h.cleanUp(redis, args.prefix, next);
   },
 
@@ -1180,7 +1183,7 @@ exports.find = {
   'load hash with extra properties': async (t) => {
     var user = new UserFindMockup(),
       findUser = new UserFindMockup();
-    t.expect(6);
+    t.expect(7);
 
     user.property({
       name: 'hurgelwurz',
@@ -1190,17 +1193,22 @@ exports.find = {
       },
     });
 
+    const badProperty = 'not_a_real_property';
+
     await user.save();
     redis.hset(
       nohm.prefix.hash + findUser.modelName + ':' + user.id,
-      'not_a_real_property',
+      badProperty,
       'something... :-)',
       async (err) => {
         t.ok(!err, 'Unexpected redis error in custom query');
-        console.warn(
-          '\x1b[1m\x1b[34m%s\x1b[0m',
-          'There should be an error in the next line',
-        );
+        nohm.logError = (errMessage) => {
+          t.equals(
+            errMessage,
+            `A hash in the DB contained a key '${badProperty}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`,
+            'The error logged for the wrong property key was wrong.',
+          );
+        };
         await findUser.load(user.id);
         t.equals(
           user.property('name'),

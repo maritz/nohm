@@ -191,7 +191,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           setTimeout(() => {
             // Timeout to make sure we have this.modelName. this function is called in constructor and thus
             //  doesn't always have modelName yet
-            // tslint:disable-next-line:max-line-length
             console.warn(
               '\x1b[31m%s\x1b[0m',
               `WARNING: Overwriting existing property/method '${name}' in '${
@@ -1957,11 +1956,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     replies.forEach((otherReply) => {
       if (otherReply instanceof Error) {
-        const warnMessage = otherReply.stack
+        const errorMessage = otherReply.stack
           ? otherReply.stack
           : otherReply.message;
-        console.warn(
-          `Error during ${this.modelName}.sort() multi.exec(): ${warnMessage}`,
+        this.nohmClass.logError(
+          `Error during ${this.modelName}.sort() multi.exec(): ${errorMessage}`,
         );
       }
     });
