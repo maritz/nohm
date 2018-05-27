@@ -1,4 +1,4 @@
-/*global $, nohmValidations*/
+/*global $, nohmValidations, io, confirm, alert */
 $(function() {
   const $userList = $('#users tbody');
   const updateUserList = function() {
@@ -150,5 +150,11 @@ $(function() {
         });
       }
     });
+  });
+
+  const $eventLog = $('#eventlog');
+  const socket = io();
+  socket.on('nohmEvent', function(msg) {
+    $eventLog.append($('<li>').text(JSON.stringify(msg)));
   });
 });

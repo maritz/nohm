@@ -1,21 +1,41 @@
 const express = require('express');
 const Nohm = require('nohm').Nohm;
-const UserModel = require(__dirname + '/UserModel.js');
+const UserModel = require('./UserModel.js');
 const redis = require('redis');
 const fs = require('fs');
 const bodyParser = require('body-parser');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const redisClient = redis.createClient();
+const pubSubClient = redis.createClient();
 
-redisClient.once('connect', function() {
+redisClient.once('connect', async () => {
   Nohm.setPrefix('rest-user-server-example');
   Nohm.setClient(redisClient);
 
-  const server = express();
+  const app = express();
+  const server = http.Server(app);
 
-  server.use(bodyParser.urlencoded({ extended: false }));
+  const io = socketIo(server);
 
-  server.use(
+  await Nohm.setPubSubClient(pubSubClient);
+  Nohm.setPublish(true);
+
+  const subscriber = async (eventName) => {
+    await new UserModel().subscribe(eventName, (payload) => {
+      console.log('Event', eventName, payload);
+      io.emit('nohmEvent', {
+        eventName,
+        payload,
+      });
+    });
+  };
+  ['update', 'create', 'save', 'remove', 'link', 'unlink'].forEach(subscriber);
+
+  app.use(bodyParser.urlencoded({ extended: false }));
+
+  app.use(
     Nohm.middleware(
       [
         {
@@ -30,7 +50,7 @@ redisClient.once('connect', function() {
     ),
   );
 
-  server.get('/User/list', async function(req, res, next) {
+  app.get('/User/list', async function(req, res, next) {
     try {
       const users = await UserModel.findAndLoad();
       const response = users.map((user) => {
@@ -49,7 +69,7 @@ redisClient.once('connect', function() {
     }
   });
 
-  server.post('/User/', async function(req, res, next) {
+  app.post('/User/', async function(req, res, next) {
     try {
       const data = {
         name: req.body.name,
@@ -64,7 +84,7 @@ redisClient.once('connect', function() {
     }
   });
 
-  server.put('/User/:id', async function(req, res, next) {
+  app.put('/User/:id', async function(req, res, next) {
     try {
       const data = {
         name: req.body.name,
@@ -81,7 +101,7 @@ redisClient.once('connect', function() {
     }
   });
 
-  server.post('/User/login', async function(req, res) {
+  app.post('/User/login', async function(req, res) {
     const user = new UserModel(); // alternatively Nohm.factory('User'); like in post
     const loginSuccess = await user.login(req.body.name, req.body.password);
     if (loginSuccess) {
@@ -92,7 +112,7 @@ redisClient.once('connect', function() {
     }
   });
 
-  server.delete('/User/:id', async function(req, res, next) {
+  app.delete('/User/:id', async function(req, res, next) {
     try {
       await UserModel.remove(req.params.id);
       res.status(204);
@@ -102,15 +122,15 @@ redisClient.once('connect', function() {
     }
   });
 
-  server.get('/', function(req, res) {
+  app.get('/', function(req, res) {
     res.send(fs.readFileSync(__dirname + '/index.html', 'utf-8'));
   });
 
-  server.get('/client.js', function(req, res) {
+  app.get('/client.js', function(req, res) {
     res.sendFile(__dirname + '/client.js');
   });
 
-  server.use(function(err, req, res, _next) {
+  app.use(function(err, req, res, _next) {
     // error handler
     res.status(500);
     let errData = err.message;
@@ -129,6 +149,7 @@ redisClient.once('connect', function() {
     res.send({ result: 'error', data: errData });
   });
 
-  server.listen(3000);
-  console.log('listening on 3000');
+  server.listen(3000, () => {
+    console.log('listening on 3000');
+  });
 });
