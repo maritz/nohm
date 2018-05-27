@@ -10,6 +10,14 @@
   "directories": {
     "lib": "./ts"
   },
+  "keywords": [
+    "redis",
+    "orm",
+    "database",
+    "pubsub",
+    "typescript",
+    "odm"
+  ],
   "types": "./tsOut/index.d.ts",
   "files": [
     "ts/",
