@@ -1,9 +1,22 @@
-Simple example of a basic REST api using nohm. This is in no way secure and has no authentication checks.
+# Simple example of a basic REST api using nohm
 
-Use
+_WARNING_: There are many things in this example that should never be done in a real app.
+For example sending out the passwords, don't do that. It's just for demo purposes here.
 
-  npm install
+## Requirements
 
-in this directory to install the dependencies and then run it with
+To run this example you need a local redis database with the default port open.
 
-  node rest-server.js
+The app will create keys in it with the prefix '`rest-user-server-example:`'!
+
+## Run it
+
+Install dependencies:
+
+    npm install
+
+Then run it with
+
+    node rest-server.js
+
+Go to [http://localhost:3000](http://localhost:3000)

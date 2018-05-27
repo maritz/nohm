@@ -1,10 +1,10 @@
 {
   "name": "nohm-example-usage",
-  "version": "0.1.0",
-  "engines": {
-    "node": ">=0.10"
-  },
+  "version": "2.0.0",
+  "description": "small nohm example app",
   "author": "Moritz Peters",
+  "private": true,
+  "main": "rest-server.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/maritz/nohm.git"
@@ -12,13 +12,10 @@
   "bugs": {
     "url": "https://github.com/maritz/nohm/issues"
   },
-  "directories": {
-    "lib": "./lib"
-  },
-  "description": "small nohm example app",
   "dependencies": {
-    "body-parser": "^1.18.2",
-    "express": "^4.16.2",
-    "nohm": "^1.0.0"
+    "bcrypt": "^2.0.1",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "nohm": "file:../.."
   }
 }

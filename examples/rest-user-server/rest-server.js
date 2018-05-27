@@ -1,30 +1,36 @@
-var express = require('express');
-var Nohm = require(__dirname + '/../../').Nohm;
-var ValidationError = require(__dirname + '/../../').ValidationError;
-var UserModel = require(__dirname + '/UserModel.js');
-var redis = require('redis');
-var fs = require('fs');
-var bodyParser = require('body-parser');
+const express = require('express');
+const Nohm = require('nohm').Nohm;
+const UserModel = require(__dirname + '/UserModel.js');
+const redis = require('redis');
+const fs = require('fs');
+const bodyParser = require('body-parser');
 
-var redisClient = redis.createClient();
+const redisClient = redis.createClient();
 
-redisClient.once('connect', function () {
-
+redisClient.once('connect', function() {
   Nohm.setPrefix('rest-user-server-example');
   Nohm.setClient(redisClient);
 
-  var server = express();
+  const server = express();
 
-  server.use(bodyParser.urlencoded({ extended: false }))
+  server.use(bodyParser.urlencoded({ extended: false }));
 
-  server.use(Nohm.middleware([{
-    model: UserModel,
-    blacklist: ['salt'] // remove the salt property from client validation so that clients don't know we have this field.
-  }], {
-      extraFiles: __dirname + '/custom_validations.js'
-    }));
+  server.use(
+    Nohm.middleware(
+      [
+        {
+          model: UserModel,
+        },
+      ],
+      /*
+      // doesn't work yet in v2.0.0
+      {
+        extraFiles: __dirname + '/custom_validations.js',
+      },*/
+    ),
+  );
 
-  server.get('/User/list', async function (req, res, next) {
+  server.get('/User/list', async function(req, res, next) {
     try {
       const users = await UserModel.findAndLoad();
       const response = users.map((user) => {
@@ -32,7 +38,9 @@ redisClient.once('connect', function () {
           id: user.id,
           name: user.property('name'),
           email: user.property('email'),
-          salt: user.property('salt') // WARNING: obviously in a real application NEVER give this out. This is just to test/demo the fill() method 
+          createdAt: user.property('createdAt'),
+          updatedAt: user.property('updatedAt'),
+          password: user.property('password'), // WARNING: obviously in a real application NEVER give this out. This is just to test/demo the fill() method
         };
       });
       res.json(response);
@@ -41,42 +49,86 @@ redisClient.once('connect', function () {
     }
   });
 
-  server.post('/User/create', async function (req, res, next) {
+  server.post('/User/', async function(req, res, next) {
     try {
-      var data = {
+      const data = {
         name: req.body.name,
         password: req.body.password,
         email: req.body.email,
-        salt: req.body.salt, // WARNING: obviously in a real application NEVER take a salt from a client. This is just to test/demo the fill() method 
       };
-      var user = await Nohm.factory('User'); // alternatively new UserModel();
+      const user = await Nohm.factory('User'); // alternatively new UserModel(); like in put
       await user.store(data);
-      res.json({ result: 'success', data: user.allProperties() });
+      res.json({ result: 'success', data: user.safeAllProperties() });
     } catch (err) {
-      if (err instanceof ValidationError) {
-        res.json({ result: 'error', data: err.errors });
-      } else {
-        next(err);
-      }
+      next(err);
     }
   });
 
-  server.get('/', function (req, res) {
+  server.put('/User/:id', async function(req, res, next) {
+    try {
+      const data = {
+        name: req.body.name,
+        password: req.body.password,
+        email: req.body.email,
+      };
+      const user = new UserModel(); // alternatively Nohm.factory('User'); like in post
+      await user.load(req.params.id);
+      console.log('loaded user', user.property('updatedAt'));
+      await user.store(data);
+      res.json({ result: 'success', data: user.safeAllProperties() });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  server.post('/User/login', async function(req, res) {
+    const user = new UserModel(); // alternatively Nohm.factory('User'); like in post
+    const loginSuccess = await user.login(req.body.name, req.body.password);
+    if (loginSuccess) {
+      res.json({ result: 'success' });
+    } else {
+      res.status(401);
+      res.send('Wrong login');
+    }
+  });
+
+  server.delete('/User/:id', async function(req, res, next) {
+    try {
+      await UserModel.remove(req.params.id);
+      res.status(204);
+      res.end();
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  server.get('/', function(req, res) {
     res.send(fs.readFileSync(__dirname + '/index.html', 'utf-8'));
   });
 
-  server.get('/client.js', function (req, res) {
+  server.get('/client.js', function(req, res) {
     res.sendFile(__dirname + '/client.js');
   });
 
-  server.use(function (err, req, res) {
+  server.use(function(err, req, res, _next) {
+    // error handler
+    res.status(500);
+    let errData = err.message;
     if (err instanceof Error) {
-      err = err.message;
+      if (err.message === 'not found') {
+        res.status(404);
+      }
     }
-    res.json({ result: 'error', data: err });
+    if (err instanceof Nohm.ValidationError) {
+      res.status(400);
+      errData = err.errors;
+    }
+    if (res.statusCode >= 500) {
+      console.error('Server error:', err);
+    }
+    res.send({ result: 'error', data: errData });
   });
 
   server.listen(3000);
   console.log('listening on 3000');
-
 });

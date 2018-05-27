@@ -2,26 +2,99 @@
 
 <head>
   <title>Nohm REST User server example</title>
+
+  <style>
+    #users,
+    form {
+      border-collapse: collapse;
+      width: 90%;
+      margin: 15px;
+    }
+
+    #users td,
+    #users th {
+      border: 1px solid #ddd;
+      padding: 8px;
+      max-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    #users tr:nth-child(even) {
+      background-color: rgb(226, 226, 226)
+    }
+
+    #users tr:hover {
+      background-color: #ddd;
+    }
+
+    #users th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: rgb(76, 175, 175);
+      color: white;
+    }
+  </style>
 </head>
 
 <body>
-  <a id="refreshusers">Refresh user list</a>
-  <ul id="users">
-  </ul>
-  <form novalidate="novalidate">
-    Client-side validation errors (same model definition code as server side):
-    <ul id="errors"></ul>
-    <br/> Name:
-    <input type="text" name="name" />
-    <br/> Email:
-    <input type="email" name="email" />
-    <br/> Password:
-    <input type="password" name="password" />
-    <br/> Salt:
-    <input type="salt" name="salt" /> Changing this should have no effect
+  <h1>nohm example REST server</h1>
+  <p>
+    This is an example app that demonstrates how nohm works and some of the things it can do.
     <br/>
-    <input type="submit" value="Submit" />
+    <b>Warning:</b> This app is not a real app and not secure. Do
+    <b>NOT</b> enter real data.
+  </p>
+  <table id="users">
+    <thead>
+      <th>ID (uuid)</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th title="Password (hashed via bcrypt - do not expose this in real apps!)">Password (hashed)</th>
+      <th>Created at</th>
+      <th>Updated at</th>
+      <th style="width:3em;">Edit</th>
+      <th style="width:4em;">Remove</th>
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
+
+  <form id="edit" novalidate="novalidate">
+    <fieldset>
+      Errors:
+      <ul name="errors"></ul>
+      <legend>Create or edit user</legend>
+      <br/> ID:
+      <input type="text" name="id" /> (fill to change existing)
+      <br/> Name:
+      <input type="text" name="name" />
+      <br/> Email:
+      <input type="email" name="email" /> (optional)
+      <br/> Password:
+      <input type="password" name="password" /> (optional when id set)
+      <br/>
+      <input type="submit" value="Submit" />
+    </fieldset>
   </form>
+
+  <form id="login" novalidate="novalidate">
+    <fieldset>
+      Errors:
+      <ul name="errors"></ul>
+      <legend>Test login</legend>
+      <br/> Name:
+      <input type="text" name="name" />
+      <br/> Password:
+      <input type="password" name="password" />
+      <br/>
+      <input type="submit" value="Login" />
+    </fieldset>
+  </form>
+
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" type="text/javascript"></script>
   <script src="nohmValidations.js" type="text/javascript"></script>
   <script src="client.js" type="text/javascript"></script>
