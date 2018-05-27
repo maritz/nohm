@@ -9,6 +9,10 @@ To run this example you need a local redis database with the default port open.
 
 The app will create keys in it with the prefix '`rest-user-server-example:`'!
 
+## See it live
+
+An online version can be found at [https://nohm-example.maritz.space/](https://nohm-example.maritz.space/).
+
 ## Run it
 
 Install dependencies:
@@ -20,3 +24,9 @@ Then run it with
     node rest-server.js
 
 Go to [http://localhost:3000](http://localhost:3000)
+
+## Run it in docker
+
+Alternatively you can use the docker-compose config to run a contained redis and node app.
+
+    docker-compose up --build

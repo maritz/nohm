@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  nohm-example-redis:
+    image: redis:latest
+
+  nohm-example:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports: 
+      - 3000:3000
+    environment:
+      REDIS_HOST: nohm-example-redis

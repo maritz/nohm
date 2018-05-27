@@ -7,8 +7,13 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const socketIo = require('socket.io');
 
-const redisClient = redis.createClient();
-const pubSubClient = redis.createClient();
+const redisOptions = {
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT,
+};
+
+const redisClient = redis.createClient(redisOptions);
+const pubSubClient = redis.createClient(redisOptions);
 
 redisClient.once('connect', async () => {
   Nohm.setPrefix('rest-user-server-example');
@@ -51,18 +56,19 @@ redisClient.once('connect', async () => {
   );
 
   setInterval(() => {
+    const maxUsers = process.env.MAX_USERS || 5;
     const user = new UserModel();
     redisClient.SCARD(`${user.prefix('idsets')}`, async (err, number) => {
       if (err) {
         console.error('SCARD failed:', err);
         return;
       }
-      if (number > 3) {
+      if (number > maxUsers) {
         const sortedIds = await UserModel.sort({
           field: 'updatedAt',
           direction: 'ASC',
         });
-        sortedIds.splice(-3);
+        sortedIds.splice(-1 * maxUsers);
         console.log('Autoremoving', sortedIds);
         await Promise.all(sortedIds.map((id) => UserModel.remove(id)));
       }

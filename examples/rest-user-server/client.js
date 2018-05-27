@@ -30,13 +30,13 @@ $(function() {
           `).data('raw', item),
         );
       });
-      if (response.length > 3) {
+      if (response.length > 5) {
         setTimeout(() => {
           updateUserList();
         }, 10000);
         refreshTime = Date.now() + 10000;
         $('#users').after(
-          '<span id="refreshNotice">More than 3 users, will refresh userlist in <span>10</span> seconds. You should be able to see a remove event log at the bottom the moment it gets removed.</span>',
+          '<span id="refreshNotice">More than 5 users, will refresh userlist in <span>10</span> seconds. You should be able to see a remove event log at the bottom the moment it gets removed.</span>',
         );
         refreshNoticeInterval = setInterval(() => {
           $('#refreshNotice span').text(

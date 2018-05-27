@@ -15,18 +15,13 @@
     #users th {
       border: 1px solid #ddd;
       padding: 8px;
-      max-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap
     }
 
-    #users tr:nth-child(even) {
-      background-color: rgb(226, 226, 226)
-    }
-
-    #users tr:hover {
-      background-color: #ddd;
+    #users td {
+      max-width: 0;
     }
 
     #users th {
@@ -39,6 +34,14 @@
 
     #users th[data-sortFieldName] {
       cursor: pointer;
+    }
+
+    #users tr:nth-child(even) {
+      background-color: rgb(226, 226, 226)
+    }
+
+    #users tr:hover {
+      background-color: #ddd;
     }
   </style>
 </head>
@@ -54,8 +57,8 @@
   <p>
     You can create, update and remove users as much as you want.
     <br/> You can test the login method by entering the name and original password in the second form.
-    <br/> An interval is running on the server that checks the number of users every 5 seconds. If there are more than 3, the
-    least recently updated are deleted so that only 3 remain.
+    <br/> An interval is running on the server that checks the number of users every 5 seconds. If there are more than 5, the
+    least recently updated are deleted so that only 5 remain.
     <br/> You can also get get the userlist sorted (server-side) by clicking on some of the table head columns.
   </p>
   <table id="users">
@@ -68,8 +71,8 @@
       <th data-sortFieldName="updatedAt">Updated at
         <span id="sortMarker">▼</span>
       </th>
-      <th style="width:3em;">Edit</th>
-      <th style="width:4em;">Remove</th>
+      <th>Edit</th>
+      <th>Remove</th>
     </thead>
     <tbody>
 

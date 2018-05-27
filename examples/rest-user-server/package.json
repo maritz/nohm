@@ -12,11 +12,14 @@
   "bugs": {
     "url": "https://github.com/maritz/nohm/issues"
   },
+  "scripts": {
+    "start": "node rest-server.js"
+  },
   "dependencies": {
     "bcrypt": "^2.0.1",
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "nohm": "file:../..",
+    "nohm": "alpha",
     "socket.io": "^2.1.1"
   }
 }
