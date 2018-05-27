@@ -16,12 +16,6 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
 
 * redis >= 2.4
 
-## Add it to your project
-
-To add the current alpha vor v2 use the alpha tag
-
-    npm install --save nohm@alpha
-
 ## Documentation
 
 [v1 (current stable) documentation](http://maritz.github.com/nohm/)
@@ -29,6 +23,8 @@ To add the current alpha vor v2 use the alpha tag
 [v2 documentation](https://maritz.github.io/nohm/index_v2.html)
 
 ## Example
+
+The example rest-user-server is running as a demo on [https://nohm-example.maritz.space](https://nohm-example.maritz.space).
 
 <details>
 
@@ -225,6 +221,12 @@ main();
 * [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
 
 Do you have code that should/could be listed here? Message me!
+
+## Add it to your project
+
+To add the current alpha vor v2 use the alpha tag
+
+    npm install --save nohm@alpha
 
 ## Debug
 
