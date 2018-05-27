@@ -1,8 +1,16 @@
 /*global $, nohmValidations, io, confirm, alert */
 $(function() {
   const $userList = $('#users tbody');
+  let sortField = 'updatedAt';
+  let sortDirection = 'ASC';
+  let refreshNoticeInterval;
+  let refreshTime = 0;
   const updateUserList = function() {
-    $.get('/User/list', function(response) {
+    clearInterval(refreshNoticeInterval);
+    $('#refreshNotice').remove();
+    $.get(`/User/?sortField=${sortField}&direction=${sortDirection}`, function(
+      response,
+    ) {
       $userList.empty();
       $.each(response, function(index, item) {
         const createdAt = new Date(parseInt(item.createdAt, 10));
@@ -22,6 +30,20 @@ $(function() {
           `).data('raw', item),
         );
       });
+      if (response.length > 3) {
+        setTimeout(() => {
+          updateUserList();
+        }, 10000);
+        refreshTime = Date.now() + 10000;
+        $('#users').after(
+          '<span id="refreshNotice">More than 3 users, will refresh userlist in <span>10</span> seconds. You should be able to see a remove event log at the bottom the moment it gets removed.</span>',
+        );
+        refreshNoticeInterval = setInterval(() => {
+          $('#refreshNotice span').text(
+            ((refreshTime - Date.now()) / 1000).toFixed(0),
+          );
+        }, 500);
+      }
     });
   };
   $userList.on('click', 'tbody a[name="edit-user"]', function(target) {
@@ -48,6 +70,21 @@ $(function() {
         .fail(failHandler)
         .always(finalHandler);
     }
+  });
+  $('#users thead').on('click', 'th[data-sortFieldName]', function(target) {
+    const fieldName = $(target.currentTarget).attr('data-sortFieldName');
+    if (sortField === fieldName) {
+      sortDirection = sortDirection === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+      sortField = fieldName;
+      sortDirection = 'ASC';
+    }
+    const sortCharacter = sortDirection === 'ASC' ? '▼' : '▲';
+    $('#sortMarker')
+      .detach()
+      .text(sortCharacter)
+      .appendTo($(target.currentTarget));
+    updateUserList();
   });
   updateUserList();
 

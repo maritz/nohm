@@ -45,11 +45,13 @@ module.exports = nohm.model('User', {
       defaultValue: () => Date.now(),
       load_pure: true, // make sure the defaultValue is not set on load
       type: (_a, _b, oldValue) => parseInt(oldValue, 10), // never change the value after creation
+      index: true,
     },
     updatedAt: {
       defaultValue: () => Date.now(),
       load_pure: true, // make sure the defaultValue is not set on load
       type: 'timestamp',
+      index: true,
     },
     someRegex: {
       type: 'string',

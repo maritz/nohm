@@ -24,7 +24,7 @@ redisClient.once('connect', async () => {
 
   const subscriber = async (eventName) => {
     await new UserModel().subscribe(eventName, (payload) => {
-      console.log('Event', eventName, payload);
+      console.log('Emitting event "%s"', eventName);
       io.emit('nohmEvent', {
         eventName,
         payload,
@@ -50,9 +50,40 @@ redisClient.once('connect', async () => {
     ),
   );
 
-  app.get('/User/list', async function(req, res, next) {
+  setInterval(() => {
+    const user = new UserModel();
+    redisClient.SCARD(`${user.prefix('idsets')}`, async (err, number) => {
+      if (err) {
+        console.error('SCARD failed:', err);
+        return;
+      }
+      if (number > 3) {
+        const sortedIds = await UserModel.sort({
+          field: 'updatedAt',
+          direction: 'ASC',
+        });
+        sortedIds.splice(-3);
+        console.log('Autoremoving', sortedIds);
+        await Promise.all(sortedIds.map((id) => UserModel.remove(id)));
+      }
+    });
+  }, 5000);
+
+  app.get('/User/', async function(req, res, next) {
     try {
-      const users = await UserModel.findAndLoad();
+      const defaultSortField = 'updatedAt';
+      const allowedSortFields = ['name', 'email', 'createdAt', 'updatedAt'];
+      let sortField = req.query.sortField;
+      if (!sortField || !allowedSortFields.includes(sortField)) {
+        sortField = defaultSortField;
+      }
+      const direction = req.query.direction === 'DESC' ? 'DESC' : 'ASC';
+      // the sorting could easily be done after loading here, but for demo purposes we use nohm functionality
+      const sortedIds = await UserModel.sort({
+        field: sortField,
+        direction,
+      });
+      const users = await UserModel.loadMany(sortedIds);
       const response = users.map((user) => {
         return {
           id: user.id,

@@ -36,6 +36,10 @@
       background-color: rgb(76, 175, 175);
       color: white;
     }
+
+    #users th[data-sortFieldName] {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -47,14 +51,23 @@
     <b>Warning:</b> This app is not a real app and not secure. Do
     <b>NOT</b> enter real data.
   </p>
+  <p>
+    You can create, update and remove users as much as you want.
+    <br/> You can test the login method by entering the name and original password in the second form.
+    <br/> An interval is running on the server that checks the number of users every 5 seconds. If there are more than 3, the
+    least recently updated are deleted so that only 3 remain.
+    <br/> You can also get get the userlist sorted (server-side) by clicking on some of the table head columns.
+  </p>
   <table id="users">
     <thead>
       <th>ID (uuid)</th>
-      <th>Name</th>
-      <th>Email</th>
+      <th data-sortFieldName="name">Name</th>
+      <th data-sortFieldName="email">Email</th>
       <th title="Password (hashed via bcrypt - do not expose this in real apps!)">Password (hashed)</th>
-      <th>Created at</th>
-      <th>Updated at</th>
+      <th data-sortFieldName="createdAt">Created at</th>
+      <th data-sortFieldName="updatedAt">Updated at
+        <span id="sortMarker">▼</span>
+      </th>
       <th style="width:3em;">Edit</th>
       <th style="width:4em;">Remove</th>
     </thead>
@@ -96,7 +109,11 @@
   </form>
 
   <h2>nohm event log</h2>
-  <p>You can also open another tab or window of this page, do some things there and see the same events end up here.</p>
+  <p>
+    These events are redis pubsub, so even if you have multiple instances of the node.js app using nohm, they all get the same
+    events.
+    <br/> You can also open another tab or window of this page, do some things there and see the same events end up here.
+  </p>
   <ul id="eventlog">
 
   </ul>
