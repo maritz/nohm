@@ -594,7 +594,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     let numIdExisting: number = 0;
     if (action !== 'create') {
-      numIdExisting = numIdExisting = await SISMEMBER(
+      numIdExisting = await SISMEMBER(
         this.client,
         this.prefix('idsets'),
         this.id,
