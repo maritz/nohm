@@ -1766,3 +1766,38 @@ exports['manually setting id should allow saving with uniques'] = async (t) => {
 
   t.done();
 };
+
+exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
+  t,
+) => {
+  t.expect(1);
+
+  const checkEqual = require('../tsOut/helpers').checkEqual;
+
+  const test1 = Object.create(null);
+  const test2 = {};
+
+  // checkEqual throws an error here if it's not using Object.hasOwnProperty()
+  t.same(checkEqual(test1, test2), false, 'Something is wrong');
+
+  t.done();
+};
+
+exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
+  t,
+) => {
+  t.expect(1);
+
+  const checkEqual = require('../tsOut/helpers').checkEqual;
+
+  const test1 = new UserMockup();
+  const test2 = new UserMockup();
+
+  t.same(
+    checkEqual(test1, test2),
+    false,
+    "Model instances that don't have an id were identified as equal.",
+  );
+
+  t.done();
+};
