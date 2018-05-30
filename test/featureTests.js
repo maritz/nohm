@@ -1502,7 +1502,7 @@ exports['isLoaded'] = async (t) => {
 };
 
 exports['isDirty'] = async (t) => {
-  t.expect(12);
+  t.expect(13);
 
   let user = await nohm.factory('UserMockup');
   let other = await nohm.factory('NonIncrement');
@@ -1530,6 +1530,10 @@ exports['isDirty'] = async (t) => {
   other.id = 'new_id';
   t.same(other.id, 'new_id', 'other.id change failed.');
   t.same(other.isDirty, true, 'other.isDirty false after id change.');
+
+  const loadUser = await nohm.factory('UserMockup');
+  await loadUser.load(user.id);
+  t.same(loadUser.isDirty, false, 'loadUser.isDirty was true after load()');
 
   t.done();
 };

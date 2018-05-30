@@ -1328,6 +1328,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     });
     this.id = id;
     this.inDb = true;
+    this._isDirty = false;
     this._isLoaded = true;
     return this.allProperties();
   }
