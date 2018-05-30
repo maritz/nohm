@@ -589,7 +589,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           // remove temp id
           this.id = null;
         }
-        throw new ValidationError(this.errors);
+        throw new ValidationError(this.errors, this.modelName);
       }
     }
     let numIdExisting: number = 0;

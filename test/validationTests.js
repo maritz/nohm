@@ -966,3 +966,20 @@ exports['multiple validation failures produce multiple error entries'] = async (
     t.done();
   }
 };
+
+exports['ValidationError has modelName as property'] = async (t) => {
+  var user = new UserMockup();
+  t.expect(1);
+
+  user.property('name', '');
+  try {
+    await user.save();
+  } catch (e) {
+    t.same(
+      e.modelName,
+      user.modelName,
+      "ValidationError didn't have the right modelName set",
+    );
+    t.done();
+  }
+};
