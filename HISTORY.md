@@ -34,6 +34,18 @@ try {
 }
 ```
 
+### Performance
+
+Sadly the performance of Promises in v8 and node is still not on par with callbacks.
+
+Currently in node v9 nohm@1 is almost twice as fast as nohm@2 at the very simple benchmark in extra/stress.js. In my test nohm@1 does ~21-22k ops/s, while nohm@2 does ~12-13k ops/s.
+
+However node v10 brought great improvements for both: nohm@1 does 28-31k ops/s and nohm@2 does 21-22k ops/s.
+
+The improvements in code readability of Promises versus pure callbacks or caolan/async callbacks makes quite a difference though. As such it seems worth it to switch to Promises and hope for even more performance improvements from v8/node and nohm.
+
+The nohm@2.2 milestone is set to be used for some performance optimizations and any help is very welcome!
+
 ### Default IDs
 
 Previously, default ids were a custom random implementation, that wasn't very safe. Now uuid v1 is used by default.
