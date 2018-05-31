@@ -609,9 +609,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         numIdExisting,
       );
       await this.create();
+      this.inDb = false;
+    } else {
+      this.inDb = true; // allows for some optimizations during .update()
     }
     await this.update(options);
     // TODO: maybe implement some kind of locking mechanism so that an object is not being changed during save.
+    this.inDb = true;
     this._isDirty = false;
     this._isLoaded = true;
   }
@@ -639,7 +643,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       );
     }
     if (typeof id === 'string' && id.includes(':')) {
-      // TODO: add documentation for this
       // we need to do stuff with redis keys and we seperate parts of the redis key by :
       // thus the id cannot contain that character.
       throw new Error(
@@ -685,6 +688,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (!this.id) {
       throw new Error('Update was called without having an id set.');
     }
+
     const hmSetArguments = [];
     const client = this.client.MULTI();
     const isCreate = !this.inDb;
@@ -702,7 +706,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       client.HMSET.apply(client, hmSetArguments);
     }
 
-    this.setIndices(client);
+    await this.setIndices(client);
 
     await EXEC(client);
 
@@ -716,8 +720,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (linkFailures.length > 0) {
       throw new LinkError(linkFailures);
     }
-
-    this.inDb = true;
 
     let diff;
     if (this.getPublish()) {
@@ -855,15 +857,29 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private setIndices(multi: redis.Multi | redis.RedisClient) {
+  private async setIndices(
+    multi: redis.Multi | redis.RedisClient,
+  ): Promise<void> {
+    let oldValues: Partial<TProps> = {};
+    try {
+      if (this.inDb) {
+        oldValues = await this.getHashAll(this.id);
+      }
+    } catch (e) {
+      if (e.message !== 'not found') {
+        throw e;
+      } // else { not found just means no oldvalues and it stays {} }
+    }
     for (const [key, prop] of this.properties) {
       const isUnique = !!this.getDefinitions()[key].unique;
       const isIndex = !!this.getDefinitions()[key].index;
-      const isDirty = prop.__updated || !this.inDb;
+      const isInDb = oldValues[key] !== undefined;
+      const isDirty = prop.value !== oldValues[key];
+      const oldValue = oldValues[key];
 
       // free old uniques
-      if (isUnique && prop.__updated && this.inDb) {
-        let oldUniqueValue = prop.__oldValue;
+      if (isUnique && isDirty && isInDb) {
+        let oldUniqueValue = oldValue;
         if (this.getDefinitions()[key].type === 'string') {
           oldUniqueValue = (oldUniqueValue as string).toLowerCase();
         }
@@ -890,17 +906,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
             this.modelName,
             this.id,
             prop.__updated,
-            this.inDb,
           );
           // we use scored sets for things like "get all users older than 5"
           const scoredPrefix = this.prefix('scoredindex');
-          if (this.inDb) {
-            multi.ZREM(
-              `${scoredPrefix}:${key}`,
-              this.stringId(),
-              this.nohmClass.logError,
-            );
-          }
           multi.ZADD(
             `${scoredPrefix}:${key}`,
             prop.value,
@@ -909,17 +917,18 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           );
         }
         debug(
-          `Adding index '%s' to '%s.%s'.`,
+          `Adding index '%s' to '%s.%s'; isInDb: '%s'; newValue: '%s'; oldValue: '%s'.`,
           key,
           this.modelName,
-          this.id,
-          prop.__updated,
-          this.inDb,
+          this.stringId(),
+          isInDb,
+          prop.value,
+          oldValue,
         );
         const prefix = this.prefix('index');
-        if (this.inDb) {
+        if (isInDb) {
           multi.SREM(
-            `${prefix}:${key}:${prop.__oldValue}`,
+            `${prefix}:${key}:${oldValue}`,
             this.stringId(),
             this.nohmClass.logError,
           );

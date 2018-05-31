@@ -22,6 +22,7 @@ var runner = function() {
     'connectTests.js',
     'metaTests.js',
     'pubsubTests.js',
+    'regressions.js',
     '../tsOut/tests.js',
   ]);
 };
