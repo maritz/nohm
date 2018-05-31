@@ -77,7 +77,8 @@
     },
 
     /**
-     * Make sure a value is not empty.
+     * Make sure a value is not empty. Any falsy value is considered empty (including 0).
+     * use minMax for number types instead!
      */
     notEmpty: function notEmpty(value, options) {
       if (typeof (value) === 'string' && options.trim) {
