@@ -13,7 +13,9 @@
     "noUnusedParameters": true,
     "lib": ["es7"],
     "outDir": "./tsOut",
-    "sourceMap": true
+    "sourceMap": true,
+    "keyofStringsOnly": true,
+    "declarationMap": true
   },
   "files": ["./ts/index.ts"],
   "include": ["./ts/tests.ts"],

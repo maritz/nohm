@@ -807,7 +807,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     // Sequentially go through all the changes and store them instead of parallel.
     // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
-    for (const [_key, fn] of changeFns.entries()) {
+    for (const [, fn] of changeFns.entries()) {
       saveResults = saveResults.concat(await fn());
     }
     return saveResults;
@@ -1983,9 +1983,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  public getDefinitions(): {
-    [key: string]: IModelPropertyDefinition;
-  } {
+  public getDefinitions(): { [key in keyof TProps]: IModelPropertyDefinition } {
     const definitions = Object.getPrototypeOf(this).definitions;
     if (!definitions) {
       throw new Error(
