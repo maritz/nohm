@@ -397,8 +397,7 @@ const validatorModel = nohm.model('validatorModel', {
 });
 ```
 
-You can find the documentation of the [built-in validations in the api](api/symbols/validators.html) or look directly [at the source code](https://github.com/maritz/nohm/blob/master/lib/validators.js).
-// TODO: decide what to do with this...
+You can find the documentation of the built-in validations by looking directly [at the source code](https://github.com/maritz/nohm/blob/master/ts/universalValidators.js).
 
 ##### Custom validations in extra files
 
@@ -530,7 +529,11 @@ user.property('email'); // returns 'someMail@example.com'
 
 The convenience short versions .p() and .prop() still exist, but are deprecated and cause a deprecation warning.
 
-There are several other methods for dealing with properties: [allProperties](api/symbols/Nohm.html#.allProperties), [propertyReset](api/symbols/Nohm.html#.propertyReset), [propertyDiff](api/symbols/Nohm.html#.propertyDiff)
+There are several other methods for dealing with properties:
+
+* allProperties() - get an object with all properties plus it's id
+* propertyReset([propertyName]) - Resets a property to its state as it was at last init/load/save (whichever was most recent - so for init it would be defaultValues)
+* propertyDiff() - Returns an array of all the properties that have been changed since init/load/save (whichever was most recent - so for init it would be defaultValues)
 
 ### Validating
 
@@ -931,7 +934,7 @@ try {
       success: boolean;
       child: NohmModel;
       parent: NohmModel;
-      error: null | Error;
+      error: null | Error | LinkError | ValidationError;
       }
     */
   } else if (err instanceof Nohm.ValidationError) {
@@ -955,16 +958,13 @@ This process works infinitely deep. However this process is not atomic, thus it 
 link can take an optional options object or link name as the second argument. If it is a string, it's assumed to be the link name.
 The options object has 2 available options:
 
-// TODO: fix the link options docs
-
 ```typescript
 User1.link(ManagerRole, {
   name: 'hasRole', // otherwise defaults to "default"
-  error: function(error_mesage, validation_errors, object) {
+  error: function(error, linkedInstance) {
     // this is called if there was an error while saving the linked object (ManagerRole in this case)
-    // error_message is the error ManagerRole.save() reported
-    // validation_errors is ManagerRole.errors
-    // object is ManagerRole
+    // error is the error ManagerRole.save() rejected with
+    // linkedInstance is ManagerRole
   },
 });
 ```

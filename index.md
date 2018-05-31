@@ -6,7 +6,6 @@ layout: default
 ## Links
 
 * [Github](https://github.com/maritz/nohm)
-* [API docs](api/index.html)
 * [v2 docs](index_v2.html)
 
 ## How To
@@ -344,7 +343,7 @@ var validatorModel = nohm.model('validatorModel', {
 });
 ```
 
-You can find the documentation of the [built-in validations in the api](api/symbols/validators.html) or look directly [at the source code](https://github.com/maritz/nohm/blob/master/lib/validators.js).
+You can find the documentation of the built-in validations by looking directly [at the source code](https://github.com/maritz/nohm/blob/v1_maintenance/lib/validators.js).
 
 ##### Custom validations in extra files
 
@@ -476,7 +475,11 @@ user.p('name'); // returns 'test2'
 user.p('email'); // returns 'someMail@example.com'
 ```
 
-There are several other methods for dealing with properties: [allProperties](api/symbols/Nohm.html#.allProperties), [propertyReset](api/symbols/Nohm.html#.propertyReset), [propertyDiff](api/symbols/Nohm.html#.propertyDiff)
+There are several other methods for dealing with properties:
+
+* allProperties() - get an object with all properties plus it's id
+* propertyReset([propertyName]) - Resets a property to its state as it was at last init/load/save (whichever was most recent - so for init it would be defaultValues)
+* propertyDiff() - Returns an array of all the properties that have been changed since init/load/save (whichever was most recent - so for init it would be defaultValues)
 
 ### Validating
 
