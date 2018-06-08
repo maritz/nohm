@@ -1,11 +1,17 @@
 # Nohm
 
-[![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
-[![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
+[![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=v1_breaking_maintenance)](https://travis-ci.org/maritz/nohm)
 
 ## Description
 
 Nohm is an object relational mapper (ORM) written for node.js and redis.
+
+## Version v1-breaking
+
+This branch and its tags are a special branch for maintaining some support for v1 where a fix or needed change would be a beaking change.
+Use this branch/tag at your own risk and be very careful when you update it.
+
+The better way would be to migrate to v2+ where semver is followed.
 
 ## Requirements
 
@@ -15,7 +21,7 @@ Nohm is an object relational mapper (ORM) written for node.js and redis.
 
 ### Installing nohm
 
-    npm install nohm
+    npm install nohm@v1-breaking
 
 ## Documentation
 http://maritz.github.com/nohm/
