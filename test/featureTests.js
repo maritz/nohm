@@ -1154,12 +1154,12 @@ exports.defaultAsFunction = async (t) => {
     const test2 = new TestMockup();
 
     t.ok(
-      typeof test1.property('time') === 'number',
-      'time of test1 is not a number',
+      typeof test1.property('time') === 'string',
+      'time of test1 is not a string',
     );
     t.ok(
-      typeof test2.property('time') === 'number',
-      'time of test2 is not a number',
+      typeof test2.property('time') === 'string',
+      'time of test2 is not a string',
     );
     t.ok(
       test1.property('time') < test2.property('time'),

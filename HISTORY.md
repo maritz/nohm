@@ -185,29 +185,30 @@ instance.link(other, {
 
 ### Other breaking changes
 
-* `model.load()` and `instance.load()` now return the same as .allProperties(), meaning the id field is now included in addition to the normal properties
-* `instance.valid()` was renamed to `instance.validate()`.
-* `instance.allProperties()` no longer has a json option (it stringified the return)
-* `instance.propertyReset()` no longer returns anything (previously always true)
-* `nohm.factory()` was previously only async if an id was provided - now it always returns a Promise, regardless of arguments provided
-* `instance.remove()` now sets `instance.id` property to null instead of 0. (this previously potentially caused issues with integer ids starting at 0)
-* The constructor for a model instance can no longer be used to immediately load the model by passing an id+callback. Use `nohm.factory()` instead or constructor and `instance.load()` afterwards.
-* passing invalid search keys (aka. property names that aren't defined as indexed) to `.find()` now throws an error instead of logging an error and returning an empty array.
-* `nohm.connect()` is renamed to `nohm.middleware()`
-* `nohm.middleware()` assumes that you are targeting browsers that have Promise support or that you have a Promise shim.
-* `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behaviour the same in `find()` and `findAndLoad()`.
-* `instance.id` is now a getter/setter that always returns null (no id set) or a string
-* the new `instance.isLoaded` is true when the instance has been loaded or saved at least once and `instance.id` has not been manually changed.
-* the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relationchanges)
-* custom ID generators _must_ resolve with strings that do **not** contain double colons (:)
-* behaviours (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
-* the regexp validator now only takes valid RegExp objects as the .regex option and resolves with an error
+- `model.load()` and `instance.load()` now return the same as .allProperties(), meaning the id field is now included in addition to the normal properties
+- `instance.valid()` was renamed to `instance.validate()`.
+- `instance.allProperties()` no longer has a json option (it stringified the return)
+- `instance.propertyReset()` no longer returns anything (previously always true)
+- `nohm.factory()` was previously only async if an id was provided - now it always returns a Promise, regardless of arguments provided
+- `instance.remove()` now sets `instance.id` property to null instead of 0. (this previously potentially caused issues with integer ids starting at 0)
+- The constructor for a model instance can no longer be used to immediately load the model by passing an id+callback. Use `nohm.factory()` instead or constructor and `instance.load()` afterwards.
+- passing invalid search keys (aka. property names that aren't defined as indexed) to `.find()` now throws an error instead of logging an error and returning an empty array.
+- `nohm.connect()` is renamed to `nohm.middleware()`
+- `nohm.middleware()` assumes that you are targeting browsers that have Promise support or that you have a Promise shim.
+- `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behaviour the same in `find()` and `findAndLoad()`.
+- `instance.id` is now a getter/setter that always returns null (no id set) or a string
+- the new `instance.isLoaded` is true when the instance has been loaded or saved at least once and `instance.id` has not been manually changed.
+- the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relationchanges)
+- custom ID generators _must_ resolve with strings that do **not** contain double colons (:)
+- timestamp/time values now always get cast to string representations of unix time in milliseconds instead of only after loading
+- behaviours (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
+- the regexp validator now only takes valid RegExp objects as the .regex option and resolves with an error
 
 ## Non-breaking changes
 
-* `instance.p()` and `instance.prop()` have been deprecated. `instance.property()` is the only version going forward.
-* some bugs fixed
-* updated dependencies
+- `instance.p()` and `instance.prop()` have been deprecated. `instance.property()` is the only version going forward.
+- some bugs fixed
+- updated dependencies
 
 ### Typescript
 
@@ -223,12 +224,12 @@ There is a branch `v1_breaking_maintenance` that will be used for fixing issues 
 
 v2 and onwards will be the typescript rewrite and has a few breaking changes.
 
-* Fixes unlinkAll() (and thus remove()) not working properly with some id types.
-* Fixes custom validation function name parsing in node v10+
+- Fixes unlinkAll() (and thus remove()) not working properly with some id types.
+- Fixes custom validation function name parsing in node v10+
 
 # v0.9.8 - 2016/02/06
 
-* Add instance context to custom validators. (thanks johngeorgewright)
+- Add instance context to custom validators. (thanks johngeorgewright)
 
   ```javascript
   exports.instanceValidation = function(value, opt, callback) {
@@ -240,13 +241,13 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
   };
   ```
 
-* Update dependencies (thanks brysgo)
-  * redis 2.4.2
-  * (dev) nodeunit 0.9.1
+- Update dependencies (thanks brysgo)
+  - redis 2.4.2
+  - (dev) nodeunit 0.9.1
 
 # v0.9.8 - 06.02.2016
 
-* Add instance context to custom validators. (thanks johngeorgewright)
+- Add instance context to custom validators. (thanks johngeorgewright)
 
   ```javascript
   exports.instanceValidation = function(value, opt, callback) {
@@ -258,135 +259,135 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
   };
   ```
 
-* Update dependencies (thanks brysgo)
-  * redis 2.4.2
-  * (dev) nodeunit 0.9.1
+- Update dependencies (thanks brysgo)
+  - redis 2.4.2
+  - (dev) nodeunit 0.9.1
 
 # v0.9.7 - 09.05.2015
 
-* BREAKS BACKWARDS COMPATIBILITY! (but only slightly and shouldn't really be an issue for most uses)
-* Fix for date parsing - only affects ISO date strings of format that has ' +HH:MM' or ' -HH:MM' at the end) and only on machines that are not set UTC (which servers usually are)
-* Update async & nodeunit dependencies
+- BREAKS BACKWARDS COMPATIBILITY! (but only slightly and shouldn't really be an issue for most uses)
+- Fix for date parsing - only affects ISO date strings of format that has ' +HH:MM' or ' -HH:MM' at the end) and only on machines that are not set UTC (which servers usually are)
+- Update async & nodeunit dependencies
 
 # v0.9.6 - 05.09.2014
 
-* Add save option skip_validation_and_unique_indexes (thanks RoxasShadow)
-* Bug fixes (thanks exortech)
-* Update dependencies
+- Add save option skip_validation_and_unique_indexes (thanks RoxasShadow)
+- Bug fixes (thanks exortech)
+- Update dependencies
 
 # v0.9.3 - 06.07.2013
 
-* Add endpoints option to find() (thanks to interruptz)
-* Add min>max options to find() that trigger descending search (thanks to interruptz)
-* Add return of the instance on shortform functions
-* Remove checking and setting meta.version on every model init
-* Bug fixes
+- Add endpoints option to find() (thanks to interruptz)
+- Add min>max options to find() that trigger descending search (thanks to interruptz)
+- Add return of the instance on shortform functions
+- Remove checking and setting meta.version on every model init
+- Bug fixes
 
 # v0.9.2 - 04.12.2012
 
-* Add findAndLoad as a convenience method
-* Fix a problem with getAll if different idGenerators were used
+- Add findAndLoad as a convenience method
+- Fix a problem with getAll if different idGenerators were used
 
 # v0.9.1 - 21.08.2012
 
-* Fix uniques to now be completely case-insensitive
+- Fix uniques to now be completely case-insensitive
 
 # v0.9.0 - 06.06.2012
 
-* setClient/getClient now issue warnings on unconnected clients
-* Bug fixes
+- setClient/getClient now issue warnings on unconnected clients
+- Bug fixes
 
 # v0.9.0-pre3 - 04.03.2012
 
-* Support for common variants on bool/string/integer/timestamp
-* Bug fixes
+- Support for common variants on bool/string/integer/timestamp
+- Bug fixes
 
 # v0.9.0-pre - 2012-03-14
 
-* BREAKS BACKWARDS COMPATIBILITY! change relation names for clearer handling ("child" is now "default", "xyzParent" is now "xyzForeign")
-* Added error handler to link/unlink
-* Bug fixes
+- BREAKS BACKWARDS COMPATIBILITY! change relation names for clearer handling ("child" is now "default", "xyzParent" is now "xyzForeign")
+- Added error handler to link/unlink
+- Bug fixes
 
 # v0.7.2 - 2012-01-19
 
-* add .sort()
+- add .sort()
 
 # v0.7.1
 
-* Fix unique handling bugs
+- Fix unique handling bugs
 
 # v0.7.0
 
-* BREAKS BACKWARDS COMPATIBILTY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
-* add nohm.connect() connect middleware that delivers browser validation js
-* Fix empty strings being locked on unique properties
-* Fix uniques to be case insensitive
+- BREAKS BACKWARDS COMPATIBILTY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
+- add nohm.connect() connect middleware that delivers browser validation js
+- Fix empty strings being locked on unique properties
+- Fix uniques to be case insensitive
 
 # v0.6.4
 
-* unique values are now case insensitive when validating or searching
-* now compatible with node v0.6.3
-* now uses nodeunit v0.6.4
+- unique values are now case insensitive when validating or searching
+- now compatible with node v0.6.3
+- now uses nodeunit v0.6.4
 
 # v0.6.3
 
-* add Nohm.factory(modelName, [id, callback])
-* update redis dependency to 0.7.1
+- add Nohm.factory(modelName, [id, callback])
+- update redis dependency to 0.7.1
 
 # v0.6.1 & v0.6.2
 
-* bug fixes
+- bug fixes
 
 # v0.6
 
-* changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILTY)
-* added ability to choose from different id generation mechanisms (for example incremental or custom functions)
-* added short forms of functions where you don't need to create a new instance first to save/load/find/remove
-* changed `this` in callbacks to be the instance you manipulated/loaded
-* bug fixes
+- changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILTY)
+- added ability to choose from different id generation mechanisms (for example incremental or custom functions)
+- added short forms of functions where you don't need to create a new instance first to save/load/find/remove
+- changed `this` in callbacks to be the instance you manipulated/loaded
+- bug fixes
 
 # v0.5
 
-* "value" in model properties renamed to "defaultValue"
-* "has()" renamed to "belongsTo()"
-* bug fixes
+- "value" in model properties renamed to "defaultValue"
+- "has()" renamed to "belongsTo()"
+- bug fixes
 
 # v0.4
 
-* documentation
-* added instance.exists(id, callback)
-* added Nohm.setPrefix(prefix) to set the global redis prefix (default "nohm")
-* added Nohm.setClient(client) & Nohm.getClient() to set/get the global redis client (no default!)
-* removed instance.partialSave()
-* removed admin app (now in https://github.com/maritz/nohm-admin)
-* bug fixes and code improvements
+- documentation
+- added instance.exists(id, callback)
+- added Nohm.setPrefix(prefix) to set the global redis prefix (default "nohm")
+- added Nohm.setClient(client) & Nohm.getClient() to set/get the global redis client (no default!)
+- removed instance.partialSave()
+- removed admin app (now in https://github.com/maritz/nohm-admin)
+- bug fixes and code improvements
 
 # v0.3
 
-* refactored a lot of the code
+- refactored a lot of the code
 
 # v0.2
 
-* merged admin branch (this adds an optional and very basic admin web interface)
-* a lot of fixes for find and indexes
+- merged admin branch (this adds an optional and very basic admin web interface)
+- a lot of fixes for find and indexes
 
 # v0.1.4
 
-* three small changes
+- three small changes
 
 # v0.1.3
 
-* added numLinks()
-* lots of bugfixes and some semi-internal changes
+- added numLinks()
+- lots of bugfixes and some semi-internal changes
 
 # v0.1.2
 
-* a few bugfixes in uniques, find() and load()
+- a few bugfixes in uniques, find() and load()
 
 # v0.1.1
 
-* expose redis via nohm.redis
+- expose redis via nohm.redis
 
 # v0.1
 
-* all basic functionality included
+- all basic functionality included

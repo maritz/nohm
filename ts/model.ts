@@ -429,6 +429,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       case 'date':
       case 'time':
       case 'timestamp':
+        let castTimestamp: number;
         // make it a timestamp aka. miliseconds from 1970
         if (isNaN(newValue) && typeof newValue === 'string') {
           let timezoneOffset: number;
@@ -456,9 +457,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
               timezoneOffset = new Date(newValue).getTimezoneOffset();
             }
           }
-          return new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
+          castTimestamp = new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
+        } else {
+          castTimestamp = parseInt(newValue, 10);
         }
-        return parseInt(newValue, 10);
+        return castTimestamp.toString();
       case 'json':
         if (typeof newValue === 'object') {
           return JSON.stringify(newValue);

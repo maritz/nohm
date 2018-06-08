@@ -484,7 +484,7 @@ exports.validation = {
 
   castTimestamp: function(t) {
     var user = new UserMockup(),
-      should = new Date('1988-03-12T00:00:00Z').getTime();
+      should = new Date('1988-03-12T00:00:00Z').getTime().toString();
     t.expect(8);
 
     user.property('castTimestamp', should);
