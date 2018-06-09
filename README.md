@@ -18,7 +18,7 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
   Since it uses redis PUBSUB you can scale your node app and clients can connect to seperate node app instances but will still get the same live updates.
 - **Typescript typings**  
   nohm is written in Typescript and thus provides first-class typings for most things, including the option to type your model properties. This means if you use Typescript you don't have to remember every single property name of each model anymore, your IDE can tell you.
-- **Dynamic relations**
+- **Dynamic relations**  
   This is a double-edged sword. Usually ORMs describe relations statically and you have to do database changes before you can add new relations.  
   In nohm all relations are defined and used at run-time, since there are no schemas stored in the database.
 
@@ -237,8 +237,6 @@ Do you have code that should/could be listed here? Message me!
 
 ## Add it to your project
 
-To add the current alpha vor v2 use the alpha tag
-
     npm install --save nohm
 
 ## Debug
@@ -247,7 +245,7 @@ Nohm uses the [debug](https://github.com/visionmedia/debug) module under the nam
 
     DEBUG="nohm:*" node yourApp.js
 
-Available submodules are `nohm:index`, `nohm:model`, `nohm:middleware`, `nohm:pubSub` and `nohm:idGenerator`.
+Available submodule debug namespaces are `nohm:index`, `nohm:model`, `nohm:middleware`, `nohm:pubSub` and `nohm:idGenerator`.
 
 ## Developing nohm
 
