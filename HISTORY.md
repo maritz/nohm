@@ -1,4 +1,4 @@
-# v2.0.0 (currently in alpha)
+# v2.0.0 - 2018/06/10
 
 ## BREAKING CHANGES
 
