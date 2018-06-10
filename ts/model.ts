@@ -1229,6 +1229,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   /**
    * Used after a failed validation with setDirectly=true to remove the temporary unique keys
    *
+   * @private
    * @param {string} key
    * @param {IProperty} property
    * @returns {Promise<void>}
