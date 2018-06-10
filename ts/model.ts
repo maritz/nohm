@@ -62,7 +62,7 @@ export { NohmModel };
 const debug = Debug('nohm:model');
 const debugPubSub = Debug('nohm:pubSub');
 
-/**
+/*
  * The property types that get indexed in a sorted set.
  * This should not be changed since it can invalidate already existing data.
  */
@@ -84,7 +84,43 @@ const eventActions: Array<TAllowedEventNames> = [
   'link',
 ];
 
+/**
+ * Redis client for this model
+ *
+ * @type {redis.RedisClient}
+ * @name client
+ * @memberof NohmModel#
+ */
+/**
+ * Validation errors that were set during the last call to {@link NohmModel#validate}. (so also during save())
+ *
+ * The type is an object with property names as keys and then an array with validation
+ * names of the validations that failed
+ *
+ * @type { Object.<string, Array<string>> }
+ * @name errors
+ * @memberof NohmModel#
+ */
+/**
+ * Name of the model, used for database keys and relation values
+ *
+ * @type {string}
+ * @name modelName
+ * @memberof NohmModel#
+ */
+
+/**
+ * A nohm model class.
+ *
+ * @abstract
+ * @class NohmModel
+ */
 abstract class NohmModel<TProps extends IDictionary = IDictionary> {
+  /**
+   * Redis client for this model
+   *
+   * @type {redis.RedisClient}
+   */
   public client: redis.RedisClient;
   public errors: { [key in keyof TProps]: Array<string> };
   public meta: {
@@ -296,12 +332,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return hash.digest('hex');
   }
 
-  /**
-   * Alias for .property().
-   * This method is deprecated, use .property() instead.
-   *
-   * @deprecated
-   */
   public p(keyOrValues: any, value?: any): any {
     console.warn(
       '\x1b[31m%s\x1b[0m',
@@ -310,12 +340,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return this.property(keyOrValues, value);
   }
 
-  /**
-   * Alias for .property().
-   * This method is deprecated, use .property() instead.
-   *
-   * @deprecated
-   */
   public prop(keyOrValues: any, value?: any): any {
     console.warn(
       '\x1b[31m%s\x1b[0m',
@@ -329,20 +353,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *
    * @private
    * @param {*} key
-   * @returns {key is keyof TProps}
+   * @returns {string} Name of a property
    */
   private isPropertyKey(key: any): key is keyof TProps {
     return typeof key === 'string';
   }
 
-  /**
-   * Read and write properties to the instance.
-   *
-   * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where
-   * the keys are the names and the values the new values
-   * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
-   * @returns {(any)} Returns the property as set after type casting
-   */
   public property<TProp extends keyof TProps>(key: TProp): TProps[TProp];
   public property<TProp extends keyof TProps>(
     key: TProp,
@@ -351,6 +367,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   public property(
     valuesObject: Partial<{ [key in keyof TProps]: any }>,
   ): Partial<{ [key in keyof TProps]: TProps[key] }>;
+  /**
+   * Read and write properties to the instance.
+   *
+   * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where
+   * the keys are the names and the values the new values
+   * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
+   * @returns {(any)} Returns the property as set after type casting
+   */
   public property<TProp extends keyof TProps>(
     keyOrValues: keyof TProps | Partial<{ [key in keyof TProps]: any }>,
     value?: any,
@@ -457,7 +481,8 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
               timezoneOffset = new Date(newValue).getTimezoneOffset();
             }
           }
-          castTimestamp = new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
+          castTimestamp =
+            new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
         } else {
           castTimestamp = parseInt(newValue, 10);
         }
@@ -522,7 +547,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   /**
    * Resets a property to its state as it was at last init/load/save.
    *
-   * @param {keyof TProps} [key] If given only this key is reset
+   * @param {string} [key] If given only this key is reset
    */
   public propertyReset(key?: keyof TProps): void {
     if (key && !this.properties.has(key)) {
@@ -955,9 +980,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   /**
    * Check if one or all properties are valid and optionally set the unique indices immediately.
-   * If a property is invalid the errors object will be populated with error messages.
+   * If a property is invalid the {@link NohmModel#errors} object will be populated with error messages.
    *
-   * @param {keyof TProps} [property] Property name if you only want to check one property for validity or
+   * @param {string} [property] Property name if you only want to check one property for validity or
    * null for all properties
    * @param {boolean} [setDirectly=false] Set to true to immediately set the unique indices while checking.
    * This prevents race conditions but should probably only be used internally
@@ -1204,7 +1229,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   /**
    * Used after a failed validation with setDirectly=true to remove the temporary unique keys
    *
-   * @param {keyof TProps} key
+   * @param {string} key
    * @param {IProperty} property
    * @returns {Promise<void>}
    */
@@ -1314,6 +1339,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return props;
   }
 
+  /**
+   * Loads the record from the database.
+   *
+   * @param {*} id
+   * @returns {Object} Resolves with the return of {@link NohmModel.allProperties}
+   * of {@link NohmModel.allProperties} after loading
+   * @throws {Error('not found')} If no record exists of the given id,
+   * an error is thrown with the message 'not found'
+   * @memberof NohmModel
+   */
   public async load(id: any): Promise<TProps & { id: any }> {
     callbackError(...arguments);
     if (!id) {
@@ -1345,6 +1380,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return this.allProperties();
   }
 
+  public link<T extends NohmModel>(other: T, callback?: TLinkCallback<T>): void;
+  public link<T extends NohmModel>(
+    other: NohmModel,
+    optionsOrNameOrCallback: string | ILinkOptions,
+    callback?: TLinkCallback<T>,
+  ): void;
   /**
    * Links one object to another.
    * Does not save the link directly but marks it for the next .save() call.
@@ -1369,16 +1410,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  }
    *
    * @param {NohmModel} other The other instance that is being linked
-   * @param {(string | ILinkOptions | (() => any))} [optionsOrNameOrCallback] Either a string for the
+   * @param {(string | ILinkOptions | function)} [optionsOrNameOrCallback] Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
-   * @param {() => any} [callback] Function that is called when the link is saved.
+   * @param {function} [callback] Function that is called when the link is saved.
    */
-  public link<T extends NohmModel>(other: T, callback?: TLinkCallback<T>): void;
-  public link<T extends NohmModel>(
-    other: NohmModel,
-    optionsOrNameOrCallback: string | ILinkOptions,
-    callback?: TLinkCallback<T>,
-  ): void;
   public link<T extends NohmModel>(
     other: NohmModel,
     optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
@@ -1405,6 +1440,15 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     );
   }
 
+  public unlink<T extends NohmModel>(
+    other: T,
+    callback?: TLinkCallback<T>,
+  ): void;
+  public unlink<T extends NohmModel>(
+    other: NohmModel,
+    optionsOrNameOrCallback: string | ILinkOptions,
+    callback?: TLinkCallback<T>,
+  ): void;
   /**
    * Unlinks one object to another.
    * Does not remove the link directly but marks it for the next .save() call.
@@ -1418,19 +1462,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    *  }
    *
    * @param {NohmModel} other The other instance that is being unlinked (needs to have an id)
-   * @param {(string | ILinkOptions | (() => any))} [optionsOrNameOrCallback] Either a string for the
+   * @param {(string | ILinkOptions | function)} [optionsOrNameOrCallback] Either a string for the
    *  relation name (default: 'default') or an options object (see example above) or the callback
-   * @param {() => any} [callback]
+   * @param {function} [callback]
    */
-  public unlink<T extends NohmModel>(
-    other: T,
-    callback?: TLinkCallback<T>,
-  ): void;
-  public unlink<T extends NohmModel>(
-    other: NohmModel,
-    optionsOrNameOrCallback: string | ILinkOptions,
-    callback?: TLinkCallback<T>,
-  ): void;
   public unlink<T extends NohmModel>(
     other: NohmModel,
     optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
@@ -1482,6 +1517,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return client && typeof client.exec === 'function';
   }
 
+  /**
+   * Unlinks all relations a record has to all other models.
+   *
+   * @param {(redis.RedisClient | redis.Multi)} [givenClient]
+   * @returns {Promise<void>}
+   * @memberof NohmModel
+   */
   public async unlinkAll(
     givenClient?: redis.RedisClient | redis.Multi,
   ): Promise<void> {
@@ -1636,6 +1678,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   /**
    * Finds ids of objects by search arguments
    *
+   * @see https://maritz.github.io/nohm/#finding
    * @param {ISearchOptions} searches
    * @returns {Promise<Array<any>>}
    */
@@ -1850,6 +1893,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     });
   }
 
+  /**
+   * Sort records by some criteria and return the sorted ids.
+   *
+   * @see https://maritz.github.io/nohm/#sorting
+   * @param {Object} [options={}]
+   * @param {(Array<string> | false)} [ids=false]
+   * @returns {Promise<Array<string>>}
+   */
   public async sort(
     options: ISortOptions<TProps> = {},
     ids: Array<string | number> | false = false,
@@ -1986,6 +2037,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
+  /**
+   * Returns the property definitions of this model.
+   *
+   * @returns {Object}
+   */
   public getDefinitions(): { [key in keyof TProps]: IModelPropertyDefinition } {
     const definitions = Object.getPrototypeOf(this).definitions;
     if (!definitions) {
@@ -2039,6 +2095,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
+  /**
+   * Subscibe to nohm events for this model.
+   *
+   * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+   * @param {function} callback
+   * @returns {Promise<void>} Resolves after the subscription has been set up.
+   * @memberof NohmModel
+   */
   public async subscribe(
     eventName: TAllowedEventNames,
     callback: (payload: any) => void,
@@ -2054,6 +2118,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     );
   }
 
+  /**
+   * Subscribe to only the next occurance of an event for this model.
+   *
+   * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+   * @param {function} callback
+   * @returns {Promise<void>} Resolves after the subscription has been set up.
+   * @memberof NohmModel
+   */
   public async subscribeOnce(
     eventName: TAllowedEventNames,
     callback: (payload: any) => void,
@@ -2069,6 +2141,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     );
   }
 
+  /**
+   * Unsubscribe from an event.
+   *
+   * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+   * @param {function} [fn] If a function is given, only that function is removed as a listener.
+   * @memberof NohmModel
+   */
   public unsubscribeEvent(eventName: string, fn?: any): void {
     debugPubSub(
       `Unsubscribing from event '%s' for '%s' with fn?: %s.`,
@@ -2083,6 +2162,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     return this._id;
   }
 
+  /**
+   * ID of the record.
+   * You can manually set it, but that doesn't automatically load it.
+   *
+   * @memberof NohmModel
+   */
   set id(id: null | string) {
     if (id === null) {
       this._id = null;
@@ -2100,17 +2185,17 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  /**
-   * Always returns string, even if id is null ('').
-   * Used internally for redis command type safety.
-   *
-   * @returns {string} Id of the model
-   * @memberof NohmModel
-   */
-  public stringId(): string {
+  private stringId(): string {
     return typeof this._id === 'string' ? this._id : '';
   }
 
+  /**
+   * Returns true if the model has been loaded from the database.
+   *
+   * @readonly
+   * @type {boolean}
+   * @memberof NohmModel
+   */
   get isLoaded(): boolean {
     return this._isLoaded;
   }

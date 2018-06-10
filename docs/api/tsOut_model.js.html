@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>tsOut/model.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NohmClass.html">NohmClass</a><ul class='methods'><li data-type='method'><a href="NohmClass.html#factory">factory</a></li><li data-type='method'><a href="NohmClass.html#getModels">getModels</a></li><li data-type='method'><a href="NohmClass.html#middleware">middleware</a></li><li data-type='method'><a href="NohmClass.html#model">model</a></li><li data-type='method'><a href="NohmClass.html#purgeDb">purgeDb</a></li><li data-type='method'><a href="NohmClass.html#register">register</a></li><li data-type='method'><a href="NohmClass.html#setClient">setClient</a></li><li data-type='method'><a href="NohmClass.html#setPrefix">setPrefix</a></li></ul></li><li><a href="NohmErrors.LinkError.html">LinkError</a></li><li><a href="NohmErrors.ValidationError.html">ValidationError</a></li><li><a href="NohmModel.html">NohmModel</a><ul class='methods'><li data-type='method'><a href="NohmModel.html#allProperties">allProperties</a></li><li data-type='method'><a href="NohmModel.html#belongsTo">belongsTo</a></li><li data-type='method'><a href="NohmModel.html#clearTemporaryUniques">clearTemporaryUniques</a></li><li data-type='method'><a href="NohmModel.html#exists">exists</a></li><li data-type='method'><a href="NohmModel.html#find">find</a></li><li data-type='method'><a href="NohmModel.html#getAll">getAll</a></li><li data-type='method'><a href="NohmModel.html#getDefinitions">getDefinitions</a></li><li data-type='method'><a href="NohmModel.html#link">link</a></li><li data-type='method'><a href="NohmModel.html#load">load</a></li><li data-type='method'><a href="NohmModel.html#numLinks">numLinks</a></li><li data-type='method'><a href="NohmModel.html#property">property</a></li><li data-type='method'><a href="NohmModel.html#propertyDiff">propertyDiff</a></li><li data-type='method'><a href="NohmModel.html#propertyReset">propertyReset</a></li><li data-type='method'><a href="NohmModel.html#remove">remove</a></li><li data-type='method'><a href="NohmModel.html#save">save</a></li><li data-type='method'><a href="NohmModel.html#setUniqueIds">setUniqueIds</a></li><li data-type='method'><a href="NohmModel.html#sort">sort</a></li><li data-type='method'><a href="NohmModel.html#subscribe">subscribe</a></li><li data-type='method'><a href="NohmModel.html#subscribeOnce">subscribeOnce</a></li><li data-type='method'><a href="NohmModel.html#unlink">unlink</a></li><li data-type='method'><a href="NohmModel.html#unlinkAll">unlinkAll</a></li><li data-type='method'><a href="NohmModel.html#unsubscribeEvent">unsubscribeEvent</a></li><li data-type='method'><a href="NohmModel.html#validate">validate</a></li></ul></li><li><a href="NohmStaticModel.html">NohmStaticModel</a><ul class='methods'><li data-type='method'><a href="NohmStaticModel.html#.find">find</a></li><li data-type='method'><a href="NohmStaticModel.html#..findAndLoad">.findAndLoad</a></li><li data-type='method'><a href="NohmStaticModel.html#..load">.load</a></li><li data-type='method'><a href="NohmStaticModel.html#..loadMany">.loadMany</a></li><li data-type='method'><a href="NohmStaticModel.html#.remove">remove</a></li><li data-type='method'><a href="NohmStaticModel.html#..sort">.sort</a></li></ul></li></ul><h3>Namespaces</h3><ul><li><a href="Nohm.html">Nohm</a><ul class='methods'><li data-type='method'><a href="Nohm.html#.MiddlewareCallback">MiddlewareCallback</a></li></ul></li><li><a href="NohmErrors.html">NohmErrors</a></li><li><a href="Validators.html">Validators</a><ul class='methods'><li data-type='method'><a href="Validators.html#.alphanumeric">alphanumeric</a></li><li data-type='method'><a href="Validators.html#.date">date</a></li><li data-type='method'><a href="Validators.html#.dateISO">dateISO</a></li><li data-type='method'><a href="Validators.html#.digits">digits</a></li><li data-type='method'><a href="Validators.html#.email">email</a></li><li data-type='method'><a href="Validators.html#.length">length</a></li><li data-type='method'><a href="Validators.html#.minMax">minMax</a></li><li data-type='method'><a href="Validators.html#.notEmpty">notEmpty</a></li><li data-type='method'><a href="Validators.html#.number">number</a></li><li data-type='method'><a href="Validators.html#.numberEU">numberEU</a></li><li data-type='method'><a href="Validators.html#.numberSI">numberSI</a></li><li data-type='method'><a href="Validators.html#.numberUS">numberUS</a></li><li data-type='method'><a href="Validators.html#.regexp">regexp</a></li><li data-type='method'><a href="Validators.html#.url">url</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">tsOut/model.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const crypto_1 = require("crypto");
+const Debug = require("debug");
+const _ = require("lodash");
+const traverse = require("traverse");
+const uuid_1 = require("uuid");
+const LinkError_1 = require("./errors/LinkError");
+const ValidationError_1 = require("./errors/ValidationError");
+const messageComposers = require("./eventComposers");
+const helpers_1 = require("./helpers");
+const idGenerators_1 = require("./idGenerators");
+const typed_redis_helper_1 = require("./typed-redis-helper");
+const validators_1 = require("./validators");
+const debug = Debug('nohm:model');
+const debugPubSub = Debug('nohm:pubSub');
+/*
+ * The property types that get indexed in a sorted set.
+ * This should not be changed since it can invalidate already existing data.
+ */
+const indexNumberTypes = ['integer', 'float', 'timestamp'];
+const eventActions = [
+    'create',
+    'update',
+    'save',
+    'remove',
+    'unlink',
+    'link',
+];
+/**
+ * Redis client for this model
+ *
+ * @type {redis.RedisClient}
+ * @name client
+ * @memberof NohmModel#
+ */
+/**
+ * Validation errors that were set during the last call to {@link NohmModel#validate}. (so also during save())
+ *
+ * The type is an object with property names as keys and then an array with validation
+ * names of the validations that failed
+ *
+ * @type { Object.&lt;string, Array&lt;string>> }
+ * @name errors
+ * @memberof NohmModel#
+ */
+/**
+ * Name of the model, used for database keys and relation values
+ *
+ * @type {string}
+ * @name modelName
+ * @memberof NohmModel#
+ */
+/**
+ * A nohm model class.
+ *
+ * @abstract
+ * @class NohmModel
+ */
+class NohmModel {
+    constructor() {
+        this.publish = null;
+        this._initOptions();
+        if (!this.client) {
+            throw new Error('No redis client defined before initializing models.');
+        }
+        if (!this.meta.inDb) {
+            this.updateMeta(this.options.metaCallback);
+        }
+        this.properties = new Map();
+        this.allPropertiesCache = {
+            id: null,
+        };
+        this.errors = {};
+        const definitions = this.getDefinitions();
+        const propKeys = Object.keys(definitions);
+        debug(`Constructing model with these properties: %j`, propKeys);
+        propKeys.forEach((key) => {
+            const definition = this.getDefinitions()[key];
+            let defaultValue = definition.defaultValue || 0;
+            if (typeof defaultValue === 'function') {
+                defaultValue = defaultValue();
+            }
+            this.properties.set(key, {
+                __numericIndex: false,
+                __oldValue: null,
+                __updated: false,
+                value: undefined,
+            });
+            if (typeof definition.type === 'function') {
+                // behaviours should not be called on initialization - thus leaving it at defaultValue
+                this.setProperty(key, defaultValue, true);
+            }
+            else {
+                this.property(key, defaultValue); // this ensures typecasing
+            }
+            this.__resetProp(key);
+            this.errors[key] = [];
+        });
+        if (this.options.methods) {
+            this.addMethods(this.options.methods);
+        }
+        if (this.options.publish) {
+            this.publish = this.options.publish;
+        }
+        if (!this.options.idGenerator) {
+            this.options.idGenerator = 'default';
+        }
+        this.relationChanges = [];
+        this.tmpUniqueKeys = [];
+        this._id = null;
+        this._isLoaded = false;
+        this._isDirty = false;
+        this.inDb = false;
+    }
+    __resetProp(property) {
+        const tmp = this.getProperty(property);
+        tmp.__updated = false;
+        tmp.__oldValue = tmp.value;
+        let type = this.getDefinitions()[property].type;
+        if (typeof type !== 'string') {
+            type = '__notIndexed__';
+        }
+        tmp.__numericIndex = indexNumberTypes.indexOf(type) > -1;
+    }
+    addMethods(methods) {
+        if (methods) {
+            _.each(methods, (method, name) => {
+                if (typeof this[name] !== 'undefined') {
+                    const errorForStack = new Error('Deprecation warning');
+                    setTimeout(() => {
+                        // Timeout to make sure we have this.modelName. this function is called in constructor and thus
+                        //  doesn't always have modelName yet
+                        console.warn('\x1b[31m%s\x1b[0m', `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`);
+                        console.warn('\x1b[31m%s\x1b[0m', 
+                        // tslint:disable-next-line:max-line-length
+                        `DEPRECATED: Overwriting built-in methods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`, errorForStack.stack);
+                    }, 1);
+                    this['_super_' + name] = this[name].bind(this);
+                }
+                debug(`Adding method to model: %s`, method);
+                this[name] = method;
+            });
+        }
+    }
+    updateMeta(callback = (..._args) => {
+        /* noop */
+    }) {
+        setTimeout(async () => {
+            // setTimeout to defer execution to the next process/browser tick
+            // this means we will have modelName set and meta doesnt take precedence over other operations
+            const versionKey = this.rawPrefix().meta.version + this.modelName;
+            const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
+            const propertiesKey = this.rawPrefix().meta.properties + this.modelName;
+            const properties = traverse(this.meta.properties).map((x) => {
+                if (typeof x === 'function') {
+                    return String(x);
+                }
+                else {
+                    return x;
+                }
+            });
+            try {
+                const dbVersion = await typed_redis_helper_1.GET(this.client, versionKey);
+                if (this.meta.version !== dbVersion) {
+                    const generator = this.options.idGenerator || 'default';
+                    debug(`Setting meta for model '%s' with version '%s' and idGenerator '%s' to %j.`, this.modelName, this.meta.version, generator, properties);
+                    await Promise.all([
+                        typed_redis_helper_1.SET(this.client, idGeneratorKey, generator.toString()),
+                        typed_redis_helper_1.SET(this.client, propertiesKey, JSON.stringify(properties)),
+                        typed_redis_helper_1.SET(this.client, versionKey, this.meta.version),
+                    ]);
+                }
+                this.meta.inDb = true;
+                callback(null, this.meta.version);
+            }
+            catch (err) {
+                this.nohmClass.logError(err);
+                callback(err, this.meta.version);
+            }
+        }, 1);
+    }
+    generateMetaVersion() {
+        const hash = crypto_1.createHash('sha1');
+        const idGenerator = this.options.idGenerator || 'default';
+        // '' + to make sure that when no definition is set, it doesn't cause an exception here.
+        hash.update('' + JSON.stringify(this.getDefinitions()));
+        hash.update('' + JSON.stringify(this.modelName));
+        hash.update(idGenerator.toString());
+        return hash.digest('hex');
+    }
+    p(keyOrValues, value) {
+        console.warn('\x1b[31m%s\x1b[0m', 'DEPRECATED: Usage of NohmModel.p() is deprecated, use NohmModel.property() instead.');
+        return this.property(keyOrValues, value);
+    }
+    prop(keyOrValues, value) {
+        console.warn('\x1b[31m%s\x1b[0m', 'DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.');
+        return this.property(keyOrValues, value);
+    }
+    /**
+     * Checks if key is a string, nothing else. Used as a typeguard
+     *
+     * @private
+     * @param {*} key
+     * @returns {string} Name of a property
+     */
+    isPropertyKey(key) {
+        return typeof key === 'string';
+    }
+    /**
+     * Read and write properties to the instance.
+     *
+     * @param {(string | PropertyObject)} keyOrValues Name of the property as string or an object where
+     * the keys are the names and the values the new values
+     * @param {*} [value] If changing a property and using the .property('string', value) call signature this is the value
+     * @returns {(any)} Returns the property as set after type casting
+     */
+    property(keyOrValues, value) {
+        if (!this.isPropertyKey(keyOrValues)) {
+            const obj = {};
+            Object.keys(keyOrValues).forEach((key) => {
+                obj[key] = this.property(key, keyOrValues[key]);
+            });
+            return obj;
+        }
+        if (typeof value !== 'undefined') {
+            debug(`Setting property '%s' to value %o`, keyOrValues, value);
+            this.setProperty(keyOrValues, value);
+            this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
+        }
+        const prop = this.getProperty(keyOrValues);
+        let returnValue = prop.value;
+        if (this.getDefinitions()[keyOrValues].type === 'json') {
+            returnValue = JSON.parse(returnValue);
+        }
+        debug(`Returning property '%s' with value %o`, keyOrValues, returnValue);
+        return returnValue;
+    }
+    getProperty(key) {
+        const prop = this.properties.get(key);
+        if (!prop) {
+            throw new Error(`Invalid property key '${key}'.`);
+        }
+        return prop;
+    }
+    setProperty(key, value, skipCast = false) {
+        const prop = this.getProperty(key);
+        if (prop.value !== value) {
+            if (skipCast) {
+                prop.value = value;
+                this.allPropertiesCache[key] = value;
+            }
+            else {
+                prop.value = this.castProperty(key, prop, value);
+            }
+            prop.__updated = prop.value !== prop.__oldValue;
+            this.properties.set(key, prop);
+        }
+    }
+    castProperty(key, prop, newValue) {
+        const type = this.getDefinitions()[key].type;
+        if (typeof type === 'undefined') {
+            return newValue;
+        }
+        debug(`Casting property '%s' with type %o`, key, type);
+        if (typeof type === 'function') {
+            return type.call(this, String(newValue), key, String(prop.__oldValue));
+        }
+        switch (type.toLowerCase()) {
+            case 'boolean':
+            case 'bool':
+                return newValue === 'false' ? false : !!newValue;
+            case 'string':
+                return (!(newValue instanceof String) || newValue.toString() === '') &amp;&amp;
+                    typeof newValue !== 'string'
+                    ? ''
+                    : newValue;
+            case 'integer':
+            case 'int':
+                return isNaN(parseInt(newValue, 10)) ? 0 : parseInt(newValue, 10);
+            case 'float':
+            case 'number':
+                return isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
+            case 'date':
+            case 'time':
+            case 'timestamp':
+                let castTimestamp;
+                // make it a timestamp aka. miliseconds from 1970
+                if (isNaN(newValue) &amp;&amp; typeof newValue === 'string') {
+                    let timezoneOffset;
+                    // see if there is a timezone specified in the string
+                    if (newValue.match(/Z$/)) {
+                        // UTC timezone in an ISO string (hopefully)
+                        timezoneOffset = 0;
+                    }
+                    else {
+                        const matches = newValue.match(/(\+|\-)([\d]{1,2})\:([\d]{2})$/);
+                        if (matches) {
+                            // +/- hours:minutes specified.
+                            // calculating offsets in minutes and removing the offset from the string since new Date()
+                            // can't handle those.
+                            const hours = parseInt(matches[2], 10);
+                            const minutes = parseInt(matches[3], 10);
+                            timezoneOffset = hours * 60 + minutes;
+                            if (matches[1] === '-') {
+                                timezoneOffset *= -1;
+                            }
+                            // make sure it is set in UTC here
+                            newValue =
+                                newValue.substring(0, newValue.length - matches[0].length) +
+                                    'Z';
+                        }
+                        else {
+                            timezoneOffset = new Date(newValue).getTimezoneOffset();
+                        }
+                    }
+                    castTimestamp =
+                        new Date(newValue).getTime() - timezoneOffset * 60 * 1000;
+                }
+                else {
+                    castTimestamp = parseInt(newValue, 10);
+                }
+                return castTimestamp.toString();
+            case 'json':
+                if (typeof newValue === 'object') {
+                    return JSON.stringify(newValue);
+                }
+                else {
+                    try {
+                        // already is json, do nothing
+                        JSON.parse(newValue);
+                        return newValue;
+                    }
+                    catch (e) {
+                        return JSON.stringify(newValue);
+                    }
+                }
+            default:
+                return newValue;
+        }
+    }
+    /**
+     * Returns an array of all the properties that have been changed since init/load/save.
+     *
+     * @example
+     *   user.properrtyDiff('country') ===
+     *    [{
+     *      key: 'country',
+     *      before: 'GB',
+     *      after: 'AB'
+     *    }]
+     */
+    propertyDiff(key) {
+        // TODO: determine if returning an array is really the best option
+        if (key) {
+            return [this.onePropertyDiff(key)];
+        }
+        else {
+            const diffResult = [];
+            for (const [iterationKey] of this.properties) {
+                const diff = this.onePropertyDiff(iterationKey);
+                if (diff) {
+                    diffResult.push(diff);
+                }
+            }
+            return diffResult;
+        }
+    }
+    onePropertyDiff(key) {
+        const prop = this.getProperty(key);
+        if (prop.__updated) {
+            return {
+                after: prop.value,
+                before: prop.__oldValue,
+                key,
+            };
+        }
+    }
+    /**
+     * Resets a property to its state as it was at last init/load/save.
+     *
+     * @param {string} [key] If given only this key is reset
+     */
+    propertyReset(key) {
+        if (key &amp;&amp; !this.properties.has(key)) {
+            throw new Error('Invalid key specified for propertyReset');
+        }
+        debug(`Resetting property '%s' (all if empty).`, key);
+        this.properties.forEach((prop, innerKey) => {
+            if (!key || innerKey === key) {
+                prop.__updated = false;
+                prop.value = prop.__oldValue;
+                this.properties.set(innerKey, prop);
+                this.allPropertiesCache[innerKey] = prop.__oldValue;
+            }
+        });
+    }
+    /**
+     *  Get all properties with values either as an array or as json (param true).
+     */
+    allProperties() {
+        // tslint:disable-next-line:prefer-object-spread // ts complains when using spread method here
+        return Object.assign({}, this.allPropertiesCache);
+    }
+    /**
+     * Save an instance to the database. Updating or Creating as needed depending on if the instance already has an id.
+     *
+     * @param {ISaveOptions} [options={
+     *     silent: false,
+     *     skip_validation_and_unique_indexes: false,
+     *   }]
+     * @returns {Promise&lt;void>}
+     */
+    async save(options) {
+        // TODO for v2.1: instead of the old continue_on_link_error behaviour, we should
+        // add a way to deepValidate before saving. Meaning all relationChanges (only link)
+        // get validated and if one of them is not valid, we abort before starting the save
+        helpers_1.callbackError(...arguments);
+        options = Object.assign({ silent: false, skip_validation_and_unique_indexes: false }, options);
+        let action = 'update';
+        if (!this.id) {
+            action = 'create';
+            // create and set a unique temporary id
+            // TODO: determine if this is still needed or can be solved more elegantly.
+            // for example just ditching manual id creation and use uuid everywhere.
+            // that would also make clustered/sharded storage much more straight forward
+            // and remove a bit of code here.
+            this.id = uuid_1.v4();
+        }
+        debug(`Saving instance '%s.%s' with action '%s'.`, this.modelName, this.id, action);
+        let isValid = true;
+        if (options.skip_validation_and_unique_indexes === false) {
+            isValid = await this.validate(undefined, true);
+            if (!isValid) {
+                if (action === 'create') {
+                    // remove temp id
+                    this.id = null;
+                }
+                throw new ValidationError_1.ValidationError(this.errors, this.modelName);
+            }
+        }
+        let numIdExisting = 0;
+        if (action !== 'create') {
+            numIdExisting = await typed_redis_helper_1.SISMEMBER(this.client, this.prefix('idsets'), this.id);
+        }
+        if (action === 'create' &amp;&amp; numIdExisting === 0) {
+            debug(`Creating new instance '%s.%s' because action was '%s' and numIdExisting was %d.`, this.modelName, this.id, action, numIdExisting);
+            await this.create();
+            this.inDb = false;
+        }
+        else {
+            this.inDb = true; // allows for some optimizations during .update()
+        }
+        await this.update(options);
+        // TODO: maybe implement some kind of locking mechanism so that an object is not being changed during save.
+        this.inDb = true;
+        this._isDirty = false;
+        this._isLoaded = true;
+    }
+    async create() {
+        const id = await this.generateId();
+        await typed_redis_helper_1.SADD(this.client, this.prefix('idsets'), id);
+        await this.setUniqueIds(id);
+        this.id = id;
+    }
+    async generateId() {
+        let id = null;
+        let generator = this.options.idGenerator;
+        if (typeof generator === 'function') {
+            id = await generator.call(this);
+        }
+        else {
+            if (!generator || !idGenerators_1.idGenerators[generator]) {
+                generator = 'default';
+            }
+            id = await idGenerators_1.idGenerators[generator].call(idGenerators_1.idGenerators, this.client, this.prefix('incrementalIds'));
+        }
+        if (typeof id === 'string' &amp;&amp; id.includes(':')) {
+            // we need to do stuff with redis keys and we seperate parts of the redis key by :
+            // thus the id cannot contain that character.
+            throw new Error('Nohm IDs cannot contain the character ":". Please change your idGenerator!');
+        }
+        return id;
+    }
+    /**
+     * Sets the unique ids of all unique property values in this instance to the given id.
+     * Warning: Only use this during create() when overwriting temporary ids!
+     */
+    async setUniqueIds(id) {
+        const mSetArguments = [];
+        for (const [key, prop] of this.properties) {
+            const isUnique = !!this.getDefinitions()[key].unique;
+            const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
+            const isDirty = prop.__updated || !this.inDb;
+            if (isUnique &amp;&amp; !isEmptyString &amp;&amp; isDirty) {
+                let value = this.property(key);
+                if (this.getDefinitions()[key].type === 'string') {
+                    value = value.toLowerCase();
+                }
+                const prefix = this.prefix('unique');
+                mSetArguments.push(`${prefix}:${key}:${value}`, id);
+            }
+        }
+        if (mSetArguments.length !== 0) {
+            debug(`Setting all unique indices of model '%s.%s' to new id '%s'.`, this.modelName, this.id, id);
+            return typed_redis_helper_1.MSET(this.client, mSetArguments);
+        }
+    }
+    async update(options) {
+        if (!this.id) {
+            throw new Error('Update was called without having an id set.');
+        }
+        const hmSetArguments = [];
+        const client = this.client.MULTI();
+        const isCreate = !this.inDb;
+        hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
+        for (const [key, prop] of this.properties) {
+            if (isCreate || prop.__updated) {
+                hmSetArguments.push(key, prop.value);
+            }
+        }
+        if (hmSetArguments.length > 1) {
+            hmSetArguments.push('__meta_version', this.meta.version);
+            client.HMSET.apply(client, hmSetArguments);
+        }
+        await this.setIndices(client);
+        await typed_redis_helper_1.EXEC(client);
+        const linkResults = await this.storeLinks(options);
+        this.relationChanges = [];
+        const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
+        if (linkFailures.length > 0) {
+            throw new LinkError_1.LinkError(linkFailures);
+        }
+        let diff;
+        if (this.getPublish()) {
+            // don't need the diff otherwise
+            diff = this.propertyDiff();
+        }
+        for (const [key] of this.properties) {
+            this.__resetProp(key);
+        }
+        if (!options.silent) {
+            if (isCreate) {
+                this.fireEvent('create');
+            }
+            else {
+                this.fireEvent('update', diff);
+            }
+            this.fireEvent('save', diff);
+        }
+        return linkResults;
+    }
+    async storeLinks(options) {
+        const changeFns = this.relationChanges.map((change) => {
+            return async () => {
+                // TODO: decide whether silent should actually be overwritten for all cases
+                change.options.silent = options.silent;
+                let returnArray = [];
+                const saveResult = {
+                    child: change.object,
+                    error: null,
+                    parent: this,
+                    success: true,
+                };
+                try {
+                    if (!change.object.id) {
+                        debug(`Saving %sed '%s' instance from '%s.%s' with relation '%s' because it had no id.`, change.action, change.object.modelName, this.modelName, this.id, change.options.name);
+                        await change.object.save(options);
+                    }
+                    await this.saveLinkRedis(change);
+                    try {
+                        if (typeof change.callback === 'function') {
+                            change.callback.call(this, change.action, this.modelName, change.options.name, change.object);
+                        }
+                    }
+                    catch (e) {
+                        // ignore errors thrown by link callback
+                    }
+                }
+                catch (err) {
+                    const isSubLinkError = err instanceof LinkError_1.LinkError;
+                    if (!isSubLinkError &amp;&amp; typeof change.options.error === 'function') {
+                        try {
+                            change.options.error(err, change.object);
+                        }
+                        catch (e) {
+                            // ignore errors thrown by link callback
+                        }
+                    }
+                    if (isSubLinkError) {
+                        returnArray = returnArray.concat(err.errors);
+                    }
+                    else {
+                        saveResult.success = false;
+                        saveResult.error = err;
+                    }
+                }
+                returnArray.push(saveResult);
+                return returnArray;
+            };
+        });
+        let saveResults = [];
+        // Sequentially go through all the changes and store them instead of parallel.
+        // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
+        // easier and cannot cause race-conditions as easily.
+        for (const [, fn] of changeFns.entries()) {
+            saveResults = saveResults.concat(await fn());
+        }
+        return saveResults;
+    }
+    getRelationKey(otherName, relationName) {
+        return `${this.prefix('relations')}:${relationName}:${otherName}:${this.id}`;
+    }
+    async saveLinkRedis(change) {
+        const foreignName = `${change.options.name}Foreign`;
+        const command = change.action === 'link' ? 'sadd' : 'srem';
+        const relationKeyPrefix = this.rawPrefix().relationKeys;
+        const multi = this.client.MULTI();
+        // relation to other
+        const toKey = this.getRelationKey(change.object.modelName, change.options.name);
+        // first store the information to which other model names the instance has a relation to
+        multi[command](`${relationKeyPrefix}${this.modelName}:${this.id}`, toKey);
+        // second store the information which specific other model id that relation is referring to
+        multi[command](toKey, change.object.stringId());
+        // relation from other - same thing in reverse
+        const fromKey = change.object.getRelationKey(this.modelName, foreignName);
+        multi[command](`${relationKeyPrefix}${change.object.modelName}:${change.object.id}`, fromKey);
+        multi[command](fromKey, this.stringId());
+        try {
+            debug(`Linking in redis.`, this.modelName, change.options.name, command);
+            await typed_redis_helper_1.EXEC(multi);
+            if (!change.options.silent) {
+                this.fireEvent(change.action, change.object, change.options.name);
+            }
+        }
+        catch (err) {
+            if (change.options.error) {
+                change.options.error(err, change.object);
+            }
+            throw err;
+        }
+    }
+    async setIndices(multi) {
+        let oldValues = {};
+        try {
+            if (this.inDb) {
+                oldValues = await this.getHashAll(this.id);
+            }
+        }
+        catch (e) {
+            if (e.message !== 'not found') {
+                throw e;
+            } // else { not found just means no oldvalues and it stays {} }
+        }
+        for (const [key, prop] of this.properties) {
+            const isUnique = !!this.getDefinitions()[key].unique;
+            const isIndex = !!this.getDefinitions()[key].index;
+            const isInDb = oldValues[key] !== undefined;
+            const isDirty = prop.value !== oldValues[key];
+            const oldValue = oldValues[key];
+            // free old uniques
+            if (isUnique &amp;&amp; isDirty &amp;&amp; isInDb) {
+                let oldUniqueValue = oldValue;
+                if (this.getDefinitions()[key].type === 'string') {
+                    oldUniqueValue = oldUniqueValue.toLowerCase();
+                }
+                debug(`Removing old unique '%s' from '%s.%s' because propUpdated: %o &amp;&amp; this.inDb %o.`, key, this.modelName, this.id, prop.__updated, this.inDb);
+                multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
+            }
+            // set new normal index
+            if (isIndex &amp;&amp; isDirty) {
+                if (prop.__numericIndex) {
+                    debug(`Adding numeric index '%s' to '%s.%s'.`, key, this.modelName, this.id, prop.__updated);
+                    // we use scored sets for things like "get all users older than 5"
+                    const scoredPrefix = this.prefix('scoredindex');
+                    multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.stringId(), this.nohmClass.logError);
+                }
+                debug(`Adding index '%s' to '%s.%s'; isInDb: '%s'; newValue: '%s'; oldValue: '%s'.`, key, this.modelName, this.stringId(), isInDb, prop.value, oldValue);
+                const prefix = this.prefix('index');
+                if (isInDb) {
+                    multi.SREM(`${prefix}:${key}:${oldValue}`, this.stringId(), this.nohmClass.logError);
+                }
+                multi.SADD(`${prefix}:${key}:${prop.value}`, this.stringId(), this.nohmClass.logError);
+            }
+        }
+    }
+    valid(property, setDirectly = false) {
+        console.warn('\x1b[31m%s\x1b[0m', 'DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.');
+        return this.validate(property, setDirectly);
+    }
+    /**
+     * Check if one or all properties are valid and optionally set the unique indices immediately.
+     * If a property is invalid the {@link NohmModel#errors} object will be populated with error messages.
+     *
+     * @param {string} [property] Property name if you only want to check one property for validity or
+     * null for all properties
+     * @param {boolean} [setDirectly=false] Set to true to immediately set the unique indices while checking.
+     * This prevents race conditions but should probably only be used internally
+     * @returns {Promise&lt;boolean>} Promise resolves to true if checked properties are valid.
+     */
+    async validate(property, setDirectly = false) {
+        helpers_1.callbackError(...arguments);
+        const nonUniqueValidations = [];
+        for (const [key, prop] of this.properties) {
+            if (!property || property === key) {
+                this.errors[key] = [];
+                nonUniqueValidations.push(this.validateProperty(key, prop));
+            }
+        }
+        let validationResults = await Promise.all(nonUniqueValidations);
+        let valid = validationResults.some((result) => result.valid);
+        if (!valid) {
+            // if nonUniuqeValidations failed, we don't want to set uniques while checking them
+            setDirectly = false;
+        }
+        const uniqueValidations = [];
+        for (const [key, prop] of this.properties) {
+            if (!property || property === key) {
+                uniqueValidations.push(this.checkUniques(setDirectly, key, prop));
+            }
+        }
+        const uniqueValidationResults = await Promise.all(uniqueValidations);
+        validationResults = validationResults.concat(uniqueValidationResults);
+        validationResults.forEach((result) => {
+            if (!this.errors[result.key]) {
+                this.errors[result.key] = [];
+            }
+            if (!result.valid) {
+                valid = false;
+                if (!result.errors || result.errors.length === 0) {
+                    throw new Error(`Validation failed but didn't provide an error message. Property name: ${result.key}.`);
+                }
+                this.errors[result.key] = this.errors[result.key].concat(result.errors);
+            }
+        });
+        if (setDirectly &amp;&amp; valid === false) {
+            await this.clearTemporaryUniques();
+        }
+        return valid;
+    }
+    async validateProperty(key, property) {
+        const result = {
+            key,
+            valid: true,
+        };
+        const validations = this.getDefinitions()[key].validations;
+        if (validations) {
+            const validatorOptions = {
+                old: property.__oldValue,
+                optional: false,
+                trim: true,
+            };
+            const validationObjects = validations.map((validator) => this.getValidationObject(validator, key));
+            const validationPromises = validationObjects.map(async (validationObject) => {
+                if (validationObject.options.optional &amp;&amp; !property.value) {
+                    return;
+                }
+                const valid = await validationObject.validator.call(this, property.value, Object.assign({}, validatorOptions, validationObject.options));
+                if (!valid) {
+                    result.valid = false;
+                    if (!result.errors) {
+                        result.errors = [];
+                    }
+                    result.errors.push(validationObject.name);
+                }
+            });
+            await Promise.all(validationPromises);
+        }
+        return result;
+    }
+    getValidationObject(validator, key) {
+        if (typeof validator === 'function') {
+            const funcName = validator.name || key;
+            return {
+                name: `custom_${funcName}`,
+                options: {},
+                validator,
+            };
+        }
+        else {
+            if (typeof validator === 'string') {
+                // predefined validator method
+                return {
+                    name: validator,
+                    options: {},
+                    validator: validators_1.validators[validator],
+                };
+            }
+            else if (validator &amp;&amp; validator.name) {
+                // predefined validator method with options
+                return {
+                    name: validator.name,
+                    options: validator.options,
+                    validator: validators_1.validators[validator.name],
+                };
+            }
+            else {
+                throw new Error(`Bad validation definition for model '${this.modelName}' for validator '${validator}'.`);
+            }
+        }
+    }
+    isUpdatedUnique(key, property) {
+        const definition = this.getDefinitions()[key];
+        if (!definition || !definition.unique) {
+            return false;
+        }
+        if (property.value === '') {
+            return false; // empty string is not valid unique value
+        }
+        if (!property.__updated &amp;&amp; this.inDb) {
+            // neither updated nor new
+            return false;
+        }
+        return true;
+    }
+    async isUniqueKeyFree(key, setDirectly) {
+        let dbValue;
+        if (setDirectly) {
+            /*
+            * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
+            * when really saving it. (or we free the unique slot if we're not saving)
+            */
+            dbValue = await typed_redis_helper_1.SETNX(this.client, key, this.stringId());
+        }
+        else {
+            dbValue = await typed_redis_helper_1.EXISTS(this.client, key);
+        }
+        let isFreeUnique = false;
+        if (setDirectly &amp;&amp; dbValue === 1) {
+            // setDirectly === true means using setnx which returns 1 if the value did *not* exist
+            isFreeUnique = true;
+            this.tmpUniqueKeys.push(key);
+        }
+        else if (!setDirectly &amp;&amp; dbValue === 0) {
+            // setDirectly === false means using exists which returns 0 if the value did *not* exist
+            isFreeUnique = true;
+        }
+        else if (setDirectly &amp;&amp; dbValue === 0) {
+            // setDirectly === true means using setnx which returns 1 if the value did *not* exist
+            // if it did exist, we check if the unique is the same as the one on this model.
+            // see https://github.com/maritz/nohm/issues/82 for use-case
+            const dbId = await typed_redis_helper_1.GET(this.client, key);
+            if (dbId === this.stringId()) {
+                isFreeUnique = true;
+            }
+        }
+        debug(`Checked unique '%s' for '%s.%s'. Result: '%s' because setDirectly: '%o' &amp;&amp; dbValue: '%d'.`, key, this.modelName, this.id, isFreeUnique, setDirectly, dbValue);
+        return isFreeUnique;
+    }
+    getUniqueKey(key, property) {
+        let uniqueValue = property.value;
+        if (this.getDefinitions()[key].type === 'string') {
+            uniqueValue = String.prototype.toLowerCase.call(property.value);
+        }
+        return `${this.prefix('unique')}:${key}:${uniqueValue}`;
+    }
+    async checkUniques(setDirectly, key, property) {
+        const successReturn = {
+            key,
+            valid: true,
+        };
+        const isUpdatedUnique = this.isUpdatedUnique(key, property);
+        if (!isUpdatedUnique) {
+            return successReturn;
+        }
+        const uniqueKey = this.getUniqueKey(key, property);
+        debug(`Checking unique '%s' for '%s.%s' at '%s'.`, key, this.modelName, this.id, uniqueKey);
+        const isFree = await this.isUniqueKeyFree(uniqueKey, setDirectly);
+        if (!isFree) {
+            return {
+                errors: ['notUnique'],
+                key,
+                valid: false,
+            };
+        }
+        return successReturn;
+    }
+    /**
+     * Used after a failed validation with setDirectly=true to remove the temporary unique keys
+     *
+     * @param {string} key
+     * @param {IProperty} property
+     * @returns {Promise&lt;void>}
+     */
+    async clearTemporaryUniques() {
+        if (this.tmpUniqueKeys.length > 0) {
+            debug(`Clearing temp uniques '%o' for '%s.%s'.`, this.tmpUniqueKeys, this.modelName, this.id);
+            const deletes = this.tmpUniqueKeys.map((key) => {
+                return typed_redis_helper_1.DEL(this.client, key);
+            });
+            await Promise.all(deletes);
+        }
+    }
+    /**
+     *  Remove an objet from the database.
+     *  Note: Does not destroy the js object or its properties itself!
+     *
+     * @param {boolean} [silent=false] Fire PubSub events or not
+     * @returns {Promise&lt;void>}
+     */
+    async remove(silent = false) {
+        helpers_1.callbackError(...arguments);
+        if (!this.id) {
+            throw new Error('The instance you are trying to delete has no id.');
+        }
+        if (!this.inDb) {
+            // make sure we have the db uniques/indices
+            await this.load(this.id);
+        }
+        debug(`Removing '%s.%s'.`, this.modelName, this.id);
+        await this.deleteDbCall();
+        const oldId = this.id;
+        this.id = null;
+        if (!silent) {
+            this.fireEvent('remove', oldId);
+        }
+    }
+    async deleteDbCall() {
+        // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
+        const multi = this.client.MULTI();
+        multi.del(`${this.prefix('hash')}:${this.stringId()}`);
+        multi.srem(this.prefix('idsets'), this.stringId());
+        this.properties.forEach((prop, key) => {
+            if (this.getDefinitions()[key].unique) {
+                let value = prop.__oldValue;
+                if (this.getDefinitions()[key].type === 'string') {
+                    value = String(value).toLowerCase();
+                }
+                multi.del(`${this.prefix('unique')}:${key}:${value}`);
+            }
+            if (this.getDefinitions()[key].index === true) {
+                multi.srem(`${this.prefix('index')}:${key}:${prop.__oldValue}`, this.stringId());
+            }
+            if (prop.__numericIndex === true) {
+                multi.zrem(`${this.prefix('scoredindex')}:${key}`, this.stringId());
+            }
+        });
+        await this.unlinkAll(multi);
+        await typed_redis_helper_1.EXEC(multi);
+    }
+    /**
+     * Returns a Promsie that resolves to true if the given id exists for this model.
+     *
+     * @param {*} id
+     * @returns {Promise&lt;boolean>}
+     */
+    async exists(id) {
+        helpers_1.callbackError(...arguments);
+        return !!(await typed_redis_helper_1.SISMEMBER(this.client, this.prefix('idsets'), id));
+    }
+    async getHashAll(id) {
+        const props = {};
+        const values = await typed_redis_helper_1.HGETALL(this.client, `${this.prefix('hash')}:${id}`);
+        if (values === null) {
+            throw new Error('not found');
+        }
+        Object.keys(values).forEach((key) => {
+            if (key === '__meta_version') {
+                return;
+            }
+            if (!this.getDefinitions()[key]) {
+                this.nohmClass.logError(
+                // tslint:disable-next-line:max-line-length
+                `A hash in the DB contained a key '${key}' that is not in the model definition. This might be because of model changes or database corruption/intrusion.`);
+                return;
+            }
+            props[key] = values[key];
+        });
+        return props;
+    }
+    /**
+     * Loads the record from the database.
+     *
+     * @param {*} id
+     * @returns {Object} Resolves with the return of {@link NohmModel.allProperties}
+     * of {@link NohmModel.allProperties} after loading
+     * @throws {Error('not found')} If no record exists of the given id,
+     * an error is thrown with the message 'not found'
+     * @memberof NohmModel
+     */
+    async load(id) {
+        helpers_1.callbackError(...arguments);
+        if (!id) {
+            throw new Error('No id passed to .load().');
+        }
+        debug(`Loading '%s.%s' at '%s'.`, this.modelName, id);
+        const dbProps = await this.getHashAll(id);
+        const definitions = this.getDefinitions();
+        Object.keys(dbProps).forEach((key) => {
+            if (definitions[key].load_pure) {
+                // prevents type casting/behaviour. especially useful for create-only properties like a createdAt timestamp
+                debug(`Loading property '%s' from '%s.%s' as pure (no type casting).`, key, this.modelName, id);
+                this.setProperty(key, dbProps[key], true);
+            }
+            else {
+                this.property(key, dbProps[key]);
+            }
+            this.__resetProp(key);
+        });
+        this.id = id;
+        this.inDb = true;
+        this._isDirty = false;
+        this._isLoaded = true;
+        return this.allProperties();
+    }
+    /**
+     * Links one object to another.
+     * Does not save the link directly but marks it for the next .save() call.
+     * When linking an instance that has not been saved that instance will then be saved during the .save() call
+     * on this instance.
+     *
+     * Note: link names should not end with 'Foreign' as that is an internally used identifier.
+     *
+     * @example
+     *  const user = new UserModel();
+     *  const comment = new CommentModel();
+     *  await user.load(123);
+     *  user.linK(comment, 'author');
+     *  await user.save(); // this will save the link to the database and also call .save() on comment
+     *
+     * @example
+     *  // options object typing:
+     *  {
+     *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
+     *    name: string;
+     *    silent?: boolean;
+     *  }
+     *
+     * @param {NohmModel} other The other instance that is being linked
+     * @param {(string | ILinkOptions | function)} [optionsOrNameOrCallback] Either a string for the
+     *  relation name (default: 'default') or an options object (see example above) or the callback
+     * @param {function} [callback] Function that is called when the link is saved.
+     */
+    link(other, optionsOrNameOrCallback, callback) {
+        if (typeof optionsOrNameOrCallback === 'function') {
+            callback = optionsOrNameOrCallback;
+            optionsOrNameOrCallback = 'default';
+        }
+        else if (typeof optionsOrNameOrCallback === 'undefined') {
+            optionsOrNameOrCallback = 'default';
+        }
+        const options = this.getLinkOptions(optionsOrNameOrCallback);
+        this.relationChanges.push({
+            action: 'link',
+            callback,
+            object: other,
+            options,
+        });
+        debug(`Set link for '%s.%s': %o`, this.modelName, this.id, this.relationChanges[this.relationChanges.length - 1]);
+    }
+    /**
+     * Unlinks one object to another.
+     * Does not remove the link directly but marks it for the next .save() call.
+     *
+     * @example
+     *  // options object typing:
+     *  {
+     *    error?: (err: Error | string, otherName: string, otherObject: NohmModel) => any;
+     *    name: string;
+     *    silent?: boolean;
+     *  }
+     *
+     * @param {NohmModel} other The other instance that is being unlinked (needs to have an id)
+     * @param {(string | ILinkOptions | function)} [optionsOrNameOrCallback] Either a string for the
+     *  relation name (default: 'default') or an options object (see example above) or the callback
+     * @param {function} [callback]
+     */
+    unlink(other, optionsOrNameOrCallback, callback) {
+        if (typeof optionsOrNameOrCallback === 'function') {
+            callback = optionsOrNameOrCallback;
+            optionsOrNameOrCallback = 'default';
+        }
+        else if (typeof optionsOrNameOrCallback === 'undefined') {
+            optionsOrNameOrCallback = 'default';
+        }
+        const options = this.getLinkOptions(optionsOrNameOrCallback);
+        this.relationChanges.forEach((change, key) => {
+            const sameRelationChange = change.options.name === options.name &amp;&amp;
+                helpers_1.checkEqual(change.object, other);
+            if (sameRelationChange) {
+                this.relationChanges.splice(key, 1);
+            }
+        });
+        this.relationChanges.push({
+            action: 'unlink',
+            callback,
+            object: other,
+            options,
+        });
+        debug(`Set unlink for '%s.%s': %o`, this.modelName, this.id, this.relationChanges[this.relationChanges.length - 1]);
+    }
+    getLinkOptions(optionsOrName) {
+        if (typeof optionsOrName === 'string') {
+            return {
+                name: optionsOrName,
+            };
+        }
+        else {
+            return Object.assign({ name: 'default' }, optionsOrName);
+        }
+    }
+    isMultiClient(client) {
+        return client &amp;&amp; typeof client.exec === 'function';
+    }
+    /**
+     * Unlinks all relations a record has to all other models.
+     *
+     * @param {(redis.RedisClient | redis.Multi)} [givenClient]
+     * @returns {Promise&lt;void>}
+     * @memberof NohmModel
+     */
+    async unlinkAll(givenClient) {
+        helpers_1.callbackError(...arguments);
+        let multi;
+        if (this.isMultiClient(givenClient)) {
+            multi = givenClient;
+        }
+        else if (givenClient) {
+            multi = givenClient.MULTI();
+        }
+        else {
+            multi = this.client.MULTI();
+        }
+        // remove outstanding relation changes
+        this.relationChanges = [];
+        const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
+        const keys = await typed_redis_helper_1.SMEMBERS(this.client, relationKeysKey);
+        debug(`Remvoing links for '%s.%s': %o.`, this.modelName, this.id, keys);
+        const others = keys.map((key) => {
+            const matches = key.match(/:([\w]*):([\w]*):[^:]+$/i);
+            if (!matches) {
+                throw new Error('Malformed relation key found in the database! ' + key);
+            }
+            // selfName is the name of the relation as it is on this instance
+            const selfRelationName = matches[1];
+            const otherModelName = matches[2];
+            const namedMatches = matches[1].match(/^([\w]*)Foreign$/);
+            const otherRelationName = namedMatches
+                ? namedMatches[1]
+                : matches[1] + 'Foreign';
+            return {
+                otherIdsKey: `${this.rawPrefix().relations}${otherModelName}:${otherRelationName}:${this.modelName}:`,
+                ownIdsKey: `${this.prefix('relations')}:${selfRelationName}:${otherModelName}:${this.id}`,
+            };
+        });
+        const otherRelationIdsPromises = others.map((item) => this.removeIdFromOtherRelations(multi, item));
+        await Promise.all(otherRelationIdsPromises);
+        // add multi'ed delete commands for other keys
+        others.forEach((item) => multi.DEL(item.ownIdsKey));
+        multi.del(relationKeysKey);
+        // if we didn't get a multi client from the callee we have to exec() ourselves
+        if (!this.isMultiClient(givenClient)) {
+            await typed_redis_helper_1.EXEC(multi);
+        }
+    }
+    /*
+    This method is doubly asynchronous:
+    First it returns a promise that gets resolved when the ids have been fetched that need to be used as keys for
+    removing this.id from relations to others.
+    Secondly it adds an SREM to the multi redis client.
+    */
+    async removeIdFromOtherRelations(multi, item) {
+        const ids = await typed_redis_helper_1.SMEMBERS(this.client, item.ownIdsKey);
+        ids.forEach((id) => {
+            multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
+        });
+    }
+    /**
+     * Resolves with true if the given object has a relation (optionally with the given relation name) to this.
+     *
+     * @param {NohmModel} obj
+     * @param {string} [relationName='default']
+     * @returns {Promise&lt;boolean>}
+     */
+    async belongsTo(obj, relationName = 'default') {
+        helpers_1.callbackError(...arguments);
+        if (!this.id || !obj.id) {
+            throw new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.');
+        }
+        return !!(await typed_redis_helper_1.SISMEMBER(this.client, this.getRelationKey(obj.modelName, relationName), obj.id));
+    }
+    /**
+     * Returns an array of the ids of all objects that are linked with the given relation.
+     *
+     * @param {string} otherModelName
+     * @param {string} [relationName='default']
+     * @returns {Promise&lt;Array&lt;any>>}
+     */
+    async getAll(otherModelName, relationName = 'default') {
+        if (!this.id) {
+            throw new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`);
+        }
+        const relationKey = this.getRelationKey(otherModelName, relationName);
+        const ids = await typed_redis_helper_1.SMEMBERS(this.client, relationKey);
+        if (!Array.isArray(ids)) {
+            return [];
+        }
+        else {
+            return ids;
+        }
+    }
+    /**
+     * Returns the number of links of a specified relation (or the default) an instance has to
+     * models of a given modelName.
+     *
+     * @param {string} otherModelName Name of the model on the other end of the relation.
+     * @param {string} [relationName='default'] Name of the relation
+     * @returns {Promise&lt;number>}
+     */
+    async numLinks(otherModelName, relationName = 'default') {
+        helpers_1.callbackError(...arguments);
+        if (!this.id) {
+            throw new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`);
+        }
+        const relationKey = this.getRelationKey(otherModelName, relationName);
+        return typed_redis_helper_1.SCARD(this.client, relationKey);
+    }
+    /**
+     * Finds ids of objects by search arguments
+     *
+     * @see https://maritz.github.io/nohm/#finding
+     * @param {ISearchOptions} searches
+     * @returns {Promise&lt;Array&lt;any>>}
+     */
+    async find(searches = {}) {
+        const structuredSearches = this.createStructuredSearchOptions(searches);
+        const uniqueSearch = structuredSearches.find((search) => search.type === 'unique');
+        if (uniqueSearch) {
+            debug(`Finding '%s's with uniques:\n%o.`, this.modelName, this.id, uniqueSearch);
+            return this.uniqueSearch(uniqueSearch);
+        }
+        const onlySets = structuredSearches.filter((search) => search.type === 'set');
+        const onlyZSets = structuredSearches.filter((search) => search.type === 'zset');
+        if (onlySets.length === 0 &amp;&amp; onlyZSets.length === 0) {
+            // no valid searches - return all ids
+            return typed_redis_helper_1.SMEMBERS(this.client, `${this.prefix('idsets')}`);
+        }
+        debug(`Finding '%s's with these searches (sets, zsets):\n%o,\n%o.`, this.modelName, this.id, onlySets, onlyZSets);
+        const setPromises = this.setSearch(onlySets);
+        const zSetPromises = this.zSetSearch(onlyZSets);
+        const searchResults = await Promise.all([setPromises, zSetPromises]);
+        if (onlySets.length !== 0 &amp;&amp; onlyZSets.length !== 0) {
+            // both searches - form intersection of them
+            const intersection = _.intersection(searchResults[0], searchResults[1]);
+            return intersection;
+        }
+        else {
+            // only one form of search
+            if (onlySets.length !== 0) {
+                return searchResults[0];
+            }
+            else {
+                return searchResults[1];
+            }
+        }
+    }
+    createStructuredSearchOptions(searches) {
+        return Object.keys(searches).map((key) => {
+            const search = searches[key];
+            if (typeof search === 'undefined') {
+                throw new Error('Invalid find() options.'); // this shouldn't occur
+            }
+            const prop = this.getProperty(key);
+            const definition = this.getDefinitions()[key];
+            const structuredSearch = {
+                key,
+                options: {},
+                type: 'undefined',
+                value: search,
+            };
+            if (definition.unique) {
+                if (definition.type === 'string') {
+                    if (typeof search !== 'string') {
+                        throw new Error(
+                        // tslint:disable-next-line:max-line-length
+                        'Invalid search parameters: Searching for a unique (type "string") with a non-string value is not supported.');
+                    }
+                    structuredSearch.value = search.toLowerCase();
+                }
+                structuredSearch.type = 'unique';
+            }
+            else {
+                if (!prop.__numericIndex &amp;&amp; !definition.index) {
+                    throw new Error(`Trying to search for non-indexed and non-unique property '${key}' is not supported.`);
+                }
+                const isDirectNumericSearch = !isNaN(parseInt(search, 10));
+                const isSimpleIndexSearch = !prop.__numericIndex || isDirectNumericSearch;
+                if (!isSimpleIndexSearch &amp;&amp; prop.__numericIndex) {
+                    structuredSearch.type = 'zset';
+                    structuredSearch.options = search;
+                }
+                else if (definition.index === true) {
+                    structuredSearch.type = 'set';
+                }
+            }
+            return structuredSearch;
+        });
+    }
+    async uniqueSearch(options) {
+        const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
+        const id = await typed_redis_helper_1.GET(this.client, key);
+        if (id) {
+            return [id];
+        }
+        else {
+            return [];
+        }
+    }
+    async setSearch(searches) {
+        const keys = searches.map((search) => {
+            return `${this.prefix('index')}:${search.key}:${search.value}`;
+        });
+        if (keys.length === 0) {
+            // shortcut
+            return [];
+        }
+        return typed_redis_helper_1.SINTER(this.client, keys);
+    }
+    async zSetSearch(searches) {
+        const singleSearches = await Promise.all(searches.map((search) => this.singleZSetSearch(search)));
+        return _.intersection(...singleSearches);
+    }
+    singleZSetSearch(search) {
+        return new Promise((resolve, reject) => {
+            const key = `${this.prefix('scoredindex')}:${search.key}`;
+            let command = 'ZRANGEBYSCORE';
+            const options = Object.assign({ endpoints: '[]', limit: -1, max: '+inf', min: '-inf', offset: 0 }, search.options);
+            if ((options.min === '+inf' &amp;&amp; options.max !== '+inf') ||
+                (options.max === '-inf' &amp;&amp; options.min !== '-inf') ||
+                parseFloat('' + options.min) > parseFloat('' + options.max)) {
+                command = 'ZREVRANGEBYSCORE';
+            }
+            if (options.endpoints === ')') {
+                options.endpoints = '[)';
+            }
+            const endpoints = [
+                options.endpoints[0] === '(' ? '(' : '',
+                options.endpoints[1] === ')' ? '(' : '',
+            ];
+            const callback = (err, ids) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(ids);
+                }
+            };
+            if (options.limit) {
+                this.client[command](key, endpoints[0] + options.min, endpoints[1] + options.max, 'LIMIT', options.offset, options.limit, callback);
+            }
+            else {
+                this.client[command](key, endpoints[0] + options.min, endpoints[1] + options.max, callback);
+            }
+        });
+    }
+    /**
+     * Sort records by some criteria and return the sorted ids.
+     *
+     * @see https://maritz.github.io/nohm/#sorting
+     * @param {Object} [options={}]
+     * @param {(Array&lt;string> | false)} [ids=false]
+     * @returns {Promise&lt;Array&lt;string>>}
+     */
+    async sort(options = {}, ids = false) {
+        helpers_1.callbackError(...arguments);
+        if (!Array.isArray(ids)) {
+            ids = false;
+        }
+        if (ids &amp;&amp; ids.length === 0) {
+            return [];
+        }
+        if (Array.isArray(ids) &amp;&amp; options === {}) {
+            return ids.map((id) => String(id)).sort();
+        }
+        if (!options.field || !this.properties.has(options.field)) {
+            throw new Error(`Invalid field in ${this.modelName}.sort() options: '${options.field}'`);
+        }
+        const fieldType = this.getDefinitions()[options.field].type;
+        const isIndexed = this.getDefinitions()[options.field].index;
+        const alpha = options.alpha || (fieldType === 'string' ? 'ALPHA' : undefined);
+        const direction = options.direction ? options.direction : 'ASC';
+        const scored = typeof fieldType === 'string' &amp;&amp; isIndexed
+            ? indexNumberTypes.includes(fieldType)
+            : false;
+        let start = 0;
+        let stop = 100;
+        if (Array.isArray(options.limit) &amp;&amp; options.limit.length > 0) {
+            start = options.limit[0];
+            if (scored) {
+                // the limit arguments for sets and sorted sets work differently
+                // stop is a 0-based index from the start of all zset members
+                stop = options.limit[1] ? start + options.limit[1] : start + stop;
+                stop--;
+            }
+            else {
+                // stop is a 1-based index from the defined start limit (the wanted behaviour)
+                stop = options.limit[1] || stop;
+            }
+        }
+        let idsetKey = this.prefix('idsets');
+        let zsetKey = `${this.prefix('scoredindex')}:${options.field}`;
+        const client = this.client.MULTI();
+        let tmpKey = '';
+        debug(`Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`, this.modelName, this.id, alpha, direction, scored, start, stop, ids);
+        if (ids) {
+            // to get the intersection of the given ids and all ids on the server we first
+            // temporarily store the given ids either in a set or sorted set and then return the intersection
+            if (scored) {
+                tmpKey =
+                    zsetKey +
+                        ':tmp_sort:' +
+                        +new Date() +
+                        Math.ceil(Math.random() * 1000);
+                const tempZaddArgs = [tmpKey];
+                ids.forEach((id) => {
+                    tempZaddArgs.push('0', id);
+                }); // typecast because redis doesn't care about numbers/string
+                client.zadd.apply(client, tempZaddArgs);
+                client.zinterstore([tmpKey, 2, tmpKey, zsetKey]);
+                zsetKey = tmpKey;
+            }
+            else {
+                tmpKey =
+                    idsetKey +
+                        ':tmp_sort:' +
+                        +new Date() +
+                        Math.ceil(Math.random() * 1000);
+                ids.unshift(tmpKey);
+                client.SADD.apply(client, ids); // typecast because rediss doesn't care about numbers/string
+                client.SINTERSTORE([tmpKey, tmpKey, idsetKey]);
+                idsetKey = tmpKey;
+            }
+        }
+        if (scored) {
+            const method = direction &amp;&amp; direction === 'DESC' ? 'ZREVRANGE' : 'ZRANGE';
+            client[method](zsetKey, start, stop);
+        }
+        else {
+            client.sort(idsetKey, 'BY', `${this.prefix('hash')}:*->${options.field}`, 'LIMIT', String(start), String(stop), direction, alpha);
+        }
+        if (ids) {
+            client.del(tmpKey);
+        }
+        const replies = await typed_redis_helper_1.EXEC(client);
+        let reply;
+        if (ids) {
+            // 2 redis commands to create the temp keys, then the query
+            reply = replies.splice(2, 1)[0];
+        }
+        else {
+            reply = replies.splice(0, 1)[0];
+        }
+        replies.forEach((otherReply) => {
+            if (otherReply instanceof Error) {
+                const errorMessage = otherReply.stack
+                    ? otherReply.stack
+                    : otherReply.message;
+                this.nohmClass.logError(`Error during ${this.modelName}.sort() multi.exec(): ${errorMessage}`);
+            }
+        });
+        if (reply instanceof Error) {
+            // multi responses are returned as arrays and each item can be an error
+            // if the reply of the sort command that gives us our ids fails, we want to throw
+            throw reply;
+        }
+        else {
+            return reply;
+        }
+    }
+    /**
+     * Returns the property definitions of this model.
+     *
+     * @returns {Object}
+     */
+    getDefinitions() {
+        const definitions = Object.getPrototypeOf(this).definitions;
+        if (!definitions) {
+            throw new Error(`Model was not defined with proper static definitions: '${this.modelName}'`);
+        }
+        return definitions;
+    }
+    fireEvent(event, ...args) {
+        if (!this.getPublish()) {
+            // global or model specific setting for publishing events is false.
+            return;
+        }
+        if (eventActions.indexOf(event) &lt; 0) {
+            const supported = eventActions.join(', ');
+            this.nohmClass.logError('Cannot fire an unsupported action. Was "' +
+                event +
+                '" ' +
+                'and must be one of ' +
+                supported);
+            return;
+        }
+        const composer = messageComposers[event] || messageComposers.defaultComposer;
+        const payload = composer.apply(this, args);
+        const message = JSON.stringify(payload);
+        debugPubSub(`Firing event '%s' for '%s': %j.`, event, this.modelName, payload);
+        this.client.publish(`${this.prefix('channel')}:${event}`, message);
+    }
+    getPublish() {
+        if (this.publish !== null) {
+            return this.publish;
+        }
+        else {
+            return this.nohmClass.getPublish();
+        }
+    }
+    /**
+     * Subscibe to nohm events for this model.
+     *
+     * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+     * @param {function} callback
+     * @returns {Promise&lt;void>} Resolves after the subscription has been set up.
+     * @memberof NohmModel
+     */
+    async subscribe(eventName, callback) {
+        debugPubSub(`Subscribing to event '%s' for '%s'.`, eventName, this.modelName);
+        await this.nohmClass.subscribeEvent(`${this.modelName}:${eventName}`, callback);
+    }
+    /**
+     * Subscribe to only the next occurance of an event for this model.
+     *
+     * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+     * @param {function} callback
+     * @returns {Promise&lt;void>} Resolves after the subscription has been set up.
+     * @memberof NohmModel
+     */
+    async subscribeOnce(eventName, callback) {
+        debugPubSub(`Subscribing once to event '%s' for '%s'.`, eventName, this.modelName);
+        await this.nohmClass.subscribeEventOnce(`${this.modelName}:${eventName}`, callback);
+    }
+    /**
+     * Unsubscribe from an event.
+     *
+     * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
+     * @param {function} [fn] If a function is given, only that function is removed as a listener.
+     * @memberof NohmModel
+     */
+    unsubscribeEvent(eventName, fn) {
+        debugPubSub(`Unsubscribing from event '%s' for '%s' with fn?: %s.`, eventName, this.modelName, fn);
+        this.nohmClass.unsubscribeEvent(eventName, fn);
+    }
+    get id() {
+        return this._id;
+    }
+    /**
+     * ID of the record.
+     * You can manually set it, but that doesn't automatically load it.
+     *
+     * @memberof NohmModel
+     */
+    set id(id) {
+        if (id === null) {
+            this._id = null;
+            this._isLoaded = false;
+            this._isDirty = false;
+            this.allPropertiesCache.id = null;
+            return;
+        }
+        const stringifiedId = String(id);
+        if (this._id !== stringifiedId) {
+            this._id = stringifiedId;
+            this._isLoaded = false;
+            this._isDirty = true;
+            this.allPropertiesCache.id = this._id;
+        }
+    }
+    stringId() {
+        return typeof this._id === 'string' ? this._id : '';
+    }
+    /**
+     * Returns true if the model has been loaded from the database.
+     *
+     * @readonly
+     * @type {boolean}
+     * @memberof NohmModel
+     */
+    get isLoaded() {
+        return this._isLoaded;
+    }
+    /**
+     * True if there are any unsaved changes. This is triggered by changing the id manually,
+     * using .link()/.unlink() and changing properties from their stored state.
+     */
+    get isDirty() {
+        if (this._isDirty) {
+            return true;
+        }
+        if (this.relationChanges.length > 0) {
+            return true;
+        }
+        const propDiffs = this.propertyDiff();
+        if (propDiffs.length > 0) {
+            return true;
+        }
+        return false;
+    }
+}
+NohmModel.definitions = {};
+exports.NohmModel = NohmModel;
+exports.default = NohmModel;
+//# sourceMappingURL=model.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jun 10 2018 15:39:07 GMT+0200 (CEST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

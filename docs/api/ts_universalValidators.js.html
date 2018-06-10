@@ -1,10 +1,49 @@
-// tslint:disable
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ts/universalValidators.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NohmClass.html">NohmClass</a><ul class='methods'><li data-type='method'><a href="NohmClass.html#factory">factory</a></li><li data-type='method'><a href="NohmClass.html#getModels">getModels</a></li><li data-type='method'><a href="NohmClass.html#middleware">middleware</a></li><li data-type='method'><a href="NohmClass.html#model">model</a></li><li data-type='method'><a href="NohmClass.html#purgeDb">purgeDb</a></li><li data-type='method'><a href="NohmClass.html#register">register</a></li><li data-type='method'><a href="NohmClass.html#setClient">setClient</a></li><li data-type='method'><a href="NohmClass.html#setPrefix">setPrefix</a></li></ul></li><li><a href="NohmErrors.LinkError.html">LinkError</a></li><li><a href="NohmErrors.ValidationError.html">ValidationError</a></li><li><a href="NohmModel.html">NohmModel</a><ul class='methods'><li data-type='method'><a href="NohmModel.html#allProperties">allProperties</a></li><li data-type='method'><a href="NohmModel.html#belongsTo">belongsTo</a></li><li data-type='method'><a href="NohmModel.html#clearTemporaryUniques">clearTemporaryUniques</a></li><li data-type='method'><a href="NohmModel.html#exists">exists</a></li><li data-type='method'><a href="NohmModel.html#find">find</a></li><li data-type='method'><a href="NohmModel.html#getAll">getAll</a></li><li data-type='method'><a href="NohmModel.html#getDefinitions">getDefinitions</a></li><li data-type='method'><a href="NohmModel.html#link">link</a></li><li data-type='method'><a href="NohmModel.html#load">load</a></li><li data-type='method'><a href="NohmModel.html#numLinks">numLinks</a></li><li data-type='method'><a href="NohmModel.html#property">property</a></li><li data-type='method'><a href="NohmModel.html#propertyDiff">propertyDiff</a></li><li data-type='method'><a href="NohmModel.html#propertyReset">propertyReset</a></li><li data-type='method'><a href="NohmModel.html#remove">remove</a></li><li data-type='method'><a href="NohmModel.html#save">save</a></li><li data-type='method'><a href="NohmModel.html#setUniqueIds">setUniqueIds</a></li><li data-type='method'><a href="NohmModel.html#sort">sort</a></li><li data-type='method'><a href="NohmModel.html#subscribe">subscribe</a></li><li data-type='method'><a href="NohmModel.html#subscribeOnce">subscribeOnce</a></li><li data-type='method'><a href="NohmModel.html#unlink">unlink</a></li><li data-type='method'><a href="NohmModel.html#unlinkAll">unlinkAll</a></li><li data-type='method'><a href="NohmModel.html#unsubscribeEvent">unsubscribeEvent</a></li><li data-type='method'><a href="NohmModel.html#validate">validate</a></li></ul></li><li><a href="NohmStaticModel.html">NohmStaticModel</a><ul class='methods'><li data-type='method'><a href="NohmStaticModel.html#.find">find</a></li><li data-type='method'><a href="NohmStaticModel.html#..findAndLoad">.findAndLoad</a></li><li data-type='method'><a href="NohmStaticModel.html#..load">.load</a></li><li data-type='method'><a href="NohmStaticModel.html#..loadMany">.loadMany</a></li><li data-type='method'><a href="NohmStaticModel.html#.remove">remove</a></li><li data-type='method'><a href="NohmStaticModel.html#..sort">.sort</a></li></ul></li></ul><h3>Namespaces</h3><ul><li><a href="Nohm.html">Nohm</a><ul class='methods'><li data-type='method'><a href="Nohm.html#.MiddlewareCallback">MiddlewareCallback</a></li></ul></li><li><a href="NohmErrors.html">NohmErrors</a></li><li><a href="Validators.html">Validators</a><ul class='methods'><li data-type='method'><a href="Validators.html#.alphanumeric">alphanumeric</a></li><li data-type='method'><a href="Validators.html#.date">date</a></li><li data-type='method'><a href="Validators.html#.dateISO">dateISO</a></li><li data-type='method'><a href="Validators.html#.digits">digits</a></li><li data-type='method'><a href="Validators.html#.email">email</a></li><li data-type='method'><a href="Validators.html#.length">length</a></li><li data-type='method'><a href="Validators.html#.minMax">minMax</a></li><li data-type='method'><a href="Validators.html#.notEmpty">notEmpty</a></li><li data-type='method'><a href="Validators.html#.number">number</a></li><li data-type='method'><a href="Validators.html#.numberEU">numberEU</a></li><li data-type='method'><a href="Validators.html#.numberSI">numberSI</a></li><li data-type='method'><a href="Validators.html#.numberUS">numberUS</a></li><li data-type='method'><a href="Validators.html#.regexp">regexp</a></li><li data-type='method'><a href="Validators.html#.url">url</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">ts/universalValidators.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// tslint:disable
 ((exports, undefined) => {
 
   const regexps = exports.regexps = {
     email: /^.+@.+\..+/i,
     // eslint-disable-next-line
-    url: /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i,
+    url: /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&amp;'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&amp;'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&amp;'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&amp;'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&amp;'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i,
   };
 
 
@@ -66,8 +105,8 @@
       }
 
       const min = value.length >= (options.min || 0);
-      const max = value.length <= (options.max || Number.POSITIVE_INFINITY);
-      return Promise.resolve(min && max);
+      const max = value.length &lt;= (options.max || Number.POSITIVE_INFINITY);
+      return Promise.resolve(min &amp;&amp; max);
     },
 
     /**
@@ -79,8 +118,8 @@
       value = +value;
 
       const min = value >= (options.min || 0);
-      const max = value <= (options.max || Number.POSITIVE_INFINITY);
-      return Promise.resolve(min && max);
+      const max = value &lt;= (options.max || Number.POSITIVE_INFINITY);
+      return Promise.resolve(min &amp;&amp; max);
     },
 
     /**
@@ -89,7 +128,7 @@
      * @memberof Validators
      */
     notEmpty: function notEmpty(value, options) {
-      if (typeof (value) === 'string' && options.trim) {
+      if (typeof (value) === 'string' &amp;&amp; options.trim) {
         value = value.trim();
       }
       return Promise.resolve(!!value);
@@ -151,7 +190,7 @@
     },
   };
 
-  if (typeof (window) !== 'undefined' && typeof (nohmValidationsNamespaceName) !== 'undefined') {
+  if (typeof (window) !== 'undefined' &amp;&amp; typeof (nohmValidationsNamespaceName) !== 'undefined') {
     // we're in a browser and have a defined namespace
     // eslint-disable-next-line
     const nohm = window[nohmValidationsNamespaceName];
@@ -178,7 +217,7 @@
 
       var wrap = function (func, options, name) {
         funcs.push(function () {
-          if (options.optional && !value) {
+          if (options.optional &amp;&amp; !value) {
             return cb(key, true);
           }
           func(value, options).then((result) => {
@@ -187,7 +226,7 @@
         });
       };
 
-      for (var i = 0, len = validations.length; i < len; i++) {
+      for (var i = 0, len = validations.length; i &lt; len; i++) {
         var val = validations[i];
 
         if (typeof val === 'string') {
@@ -196,7 +235,7 @@
             throw new Error('Trying to access unavailable validator.');
           }
           wrap(validators[val], options, val);
-        } else if (val && typeof (val.name) === 'string') {
+        } else if (val &amp;&amp; typeof (val.name) === 'string') {
           /* 
           Validation object
           { 
@@ -266,9 +305,9 @@
           }
         };
         for (var key in data) {
-          if (data.hasOwnProperty(key) && model.hasOwnProperty(key)) {
+          if (data.hasOwnProperty(key) &amp;&amp; model.hasOwnProperty(key)) {
             var innerFuncs = validateProperty(key, data[key], model[key], validCallback);
-            for (var len = innerFuncs.length, i = 0; i < len; i++) {
+            for (var len = innerFuncs.length, i = 0; i &lt; len; i++) {
               funcs.push(innerFuncs[i]);
             }
           }
@@ -277,7 +316,7 @@
         if (dispatched === 0) {
           return done();
         }
-        for (var n = 0; n < dispatched; n++) {
+        for (var n = 0; n &lt; dispatched; n++) {
           var func = funcs[n];
           if (typeof (func) === 'function') {
             func(); // this makes sure we first know how many funcs we have before we call them, thus not calling done() too early if all validators are instant
@@ -309,11 +348,11 @@
       }
 
       // Handle case when target is a string or something (possible in deep copy)
-      if (typeof target !== "object" && typeof (target) == 'function') {
+      if (typeof target !== "object" &amp;&amp; typeof (target) == 'function') {
         target = {};
       }
 
-      for (; i < length; i++) {
+      for (; i &lt; length; i++) {
         // Only deal with non-null/undefined values
         if ((options = arguments[i]) !== null) {
           // Extend the base object
@@ -328,13 +367,13 @@
               }
 
               // Recurse if we're merging plain objects or arrays
-              if (deep && copy && (isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+              if (deep &amp;&amp; copy &amp;&amp; (isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
                 if (copyIsArray) {
                   copyIsArray = false;
-                  clone = src && Array.isArray(src) ? src : [];
+                  clone = src &amp;&amp; Array.isArray(src) ? src : [];
 
                 } else {
-                  clone = src && isPlainObject(src) ? src : {};
+                  clone = src &amp;&amp; isPlainObject(src) ? src : {};
                 }
 
                 // Never move original objects, clone them
@@ -357,8 +396,8 @@
     var isPlainObject = function (obj) {
 
       // Not own constructor property must be Object
-      if (obj.constructor &&
-        !obj.hasOwnProperty("constructor") &&
+      if (obj.constructor &amp;&amp;
+        !obj.hasOwnProperty("constructor") &amp;&amp;
         !obj.constructor.prototype.hasOwnProperty("isPrototypeOf")) {
         return false;
       }
@@ -374,3 +413,22 @@
   }
 
 })(typeof (exports) === 'undefined' ? {} : exports);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jun 10 2018 15:39:07 GMT+0200 (CEST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

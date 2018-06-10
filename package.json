@@ -24,11 +24,12 @@
     "lint": "tslint --project ./ && eslint test/ ts/universalValidators.js",
     "lint:auto-fix": "tslint--project ./ --fix",
     "prebuild": "rimraf tsOut/",
-    "build": "npm run lint && tsc --project ./",
+    "build": "npm run lint && tsc --project ./ && npm run generateDocs",
     "build:watch": "tsc --project ./ --watch --pretty",
     "predev": "npm run build",
     "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
-    "prepublishOnly": "npm run build && npm run test && pkg-ok"
+    "prepublishOnly": "npm run build && npm run test && pkg-ok",
+    "generateDocs": "rimraf docs/api/ && jsdoc -c jsdoc.json"
   },
   "dependencies": {
     "debug": "^3.1.0",
@@ -48,7 +49,9 @@
     "@types/uuid": "^3.4.3",
     "async": "^1.2.1",
     "concurrently": "^3.5.1",
+    "docdash": "^0.4.0",
     "eslint": "^4.15.0",
+    "jsdoc": "^3.5.5",
     "nodemon": "^1.14.11",
     "nodeunit": "^0.11.2",
     "pkg-ok": "^2.2.0",

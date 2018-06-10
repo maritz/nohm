@@ -116,6 +116,31 @@ function staticImplements<T>() {
   };
 }
 
+/**
+ * Some generic definitions for Nohm
+ *
+ * @namespace Nohm
+ */
+
+/**
+ * Nohm specific Errors
+ *
+ * @namespace NohmErrors
+ */
+
+/**
+ * Main Nohm class.Hholds models, generic configuration and can generate the middleware for client validations.
+ *
+ * Can be instantiated multiple times if you want different configurations, but usually you only need the default
+ * that is exported as `require('nohm').nohm`.
+ *
+ * @example
+ * // To instantiate another you can do this:
+ * const NohmClass = require('nohm').NohmClass;
+ * const myNohm = new NohmClas({ prefix: 'SomePrefix' });
+ *
+ * @class NohmClass
+ */
 export class NohmClass {
   /**
    * The redis prefixed key object.
@@ -219,7 +244,7 @@ export class NohmClass {
    * @param {boolean} temp When true, this model is not added to the internal model cache,
    *                        meaning methods like factory() and getModels() cannot access them.
    *                        This is mostly useful for meta things like migrations.
-   * @returns ModelClass
+   * @returns {NohmStaticModel}
    */
   public model<TAdditionalMethods>(
     modelName: string,
@@ -234,16 +259,40 @@ export class NohmClass {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
 
-    // tslint:disable-next-line:max-classes-per-file
+    /**
+     * The static Model Class, used to get instances or operate on multiple records.
+     *
+     * @class NohmStaticModel
+     */
     @staticImplements<IStaticMethods<CreatedClass>>()
+    // tslint:disable-next-line:max-classes-per-file
     class CreatedClass extends NohmModelExtendable {
+      /**
+       * Redis client that is set for this Model.
+       * Defaults to the NohmClass client it was registered in.
+       *
+       * @memberof NohmStaticModel
+       * @type {RedisClient}
+       */
       public client = self.client;
 
       protected nohmClass = self;
       protected options = options;
 
+      /**
+       * Name of the model, used for database keys and relation values
+       *
+       * @memberof NohmStaticModel
+       * @type {string}
+       */
       public readonly modelName = modelName;
 
+      /**
+       * Creates an instance of CreatedClass.
+       *
+       * @ignore
+       * @memberof NohmStaticModel
+       */
       constructor() {
         super();
         if (self.meta) {
@@ -280,9 +329,14 @@ export class NohmClass {
       }
 
       /**
-       * Loads a NohmModels via the given id.
+       * Creates a new model instance and loads it with the given id.
        *
+       * @static
        * @param {*} id ID of the model to be loaded
+       * @throws {Error('not found')} If no record exists of the given id,
+       * an error is thrown with the message 'not found'
+       * @alias load
+       * @memberof! NohmStaticModel
        * @returns {Promise<NohmModel>}
        */
       public static async load<P extends NohmModel>(id: any): Promise<P> {
@@ -293,8 +347,13 @@ export class NohmClass {
 
       /**
        * Loads an Array of NohmModels via the given ids. Any ids that do not exist will just be ignored.
+       * If any of the ids do not exist in the database, they are left out instead of throwing an error.
+       * Thus if no ids exist an empty error is returned.
        *
+       * @static
        * @param {Array<string>} ids Array of IDs of the models to be loaded
+       * @alias loadMany
+       * @memberof! NohmStaticModel
        * @returns {Promise<NohmModel>}
        */
       public static async loadMany<P extends NohmModel>(
@@ -323,7 +382,10 @@ export class NohmClass {
       /**
        * Finds ids of objects and loads them into full NohmModels.
        *
+       * @static
        * @param {ISearchOptions} searches
+       * @alias findAndLoad
+       * @memberof! NohmStaticModel
        * @returns {Promise<Array<NohmModel>>}
        */
       public static async findAndLoad<
@@ -354,9 +416,11 @@ export class NohmClass {
       /**
        * Sort the given ids or all stored ids by their SortOptions
        *
-       * @see NohmModel.sort
        * @static
+       * @see NohmModel.sort
        * @param {ISortOptions<IDictionary>} [sortOptions={}] Search options
+       * @alias sort
+       * @memberof! NohmStaticModel
        * @returns {Promise<Array<string>>} Array of ids
        */
       public static async sort(
@@ -370,9 +434,11 @@ export class NohmClass {
       /**
        * Search for ids
        *
-       * @see NohmModel.find
        * @static
+       * @see NohmModel.find
        * @param {ISearchOptions} [searches={}] Search options
+       * @alias find
+       * @memberof NohmStaticModel
        * @returns {Promise<Array<string>>} Array of ids
        */
       public static async find<TProps extends IDictionary>(
@@ -393,7 +459,10 @@ export class NohmClass {
       /**
        * Loads a NohmModels via the given id.
        *
+       * @static
        * @param {*} id ID of the model to be loaded
+       * @alias remove
+       * @memberof NohmStaticModel
        * @returns {Promise<NohmModel>}
        */
       public static async remove(id: any, silent?: boolean): Promise<void> {
@@ -418,7 +487,7 @@ export class NohmClass {
    * @param {boolean} temp When true, this model is not added to the internal model cache,
    *                        meaning methods like factory() and getModels() cannot access them.
    *                        This is mostly useful for meta things like migrations.
-   * @returns ModelClass
+   * @returns {NohmStaticModel}
    *
    * @example
    *   // Typescript
@@ -683,12 +752,24 @@ export class NohmClass {
   /**
    * Get all model classes that are registered via .register() or .model()
    *
-   * @returns {Array<NohmModel>}
+   * @returns {Array<NohmModelStatic>}
    */
   public getModels() {
     return this.modelCache;
   }
 
+  /**
+   * Creates a new instance of the model with the given modelName.
+   * When given an id as second parameter it also loads it.
+   *
+   * @param {string} name Name of the model, must match the modelName of one of your defined models.
+   * @param {*} [id] ID of a record you want to load.
+   * @returns {Promise<NohmModel>}
+   * @throws {Error('Model %name not found.')} Rejects when there is no registered model with the given modelName.
+   * @throws {Error('not found')} If no record exists of the given id,
+   * an error is thrown with the message 'not found'
+   * @memberof NohmClass
+   */
   public async factory<T extends NohmModel<any>>(
     name: string,
     id?: any,
@@ -719,7 +800,7 @@ export class NohmClass {
   /**
    * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
    *
-   * Deletes any keys from the db that start with nohm prefixes.
+   * Deletes any keys from the db that start with the set nohm prefixes.
    *
    * DO NOT USE THIS UNLESS YOU ARE ABSOLUTELY SURE ABOUT IT!
    *
@@ -769,9 +850,6 @@ export class NohmClass {
     await Promise.all(deletes);
   }
 
-  /**
-   * Set some extra validator files. These will also be exported to the browser via connect middleware if used.
-   */
   public setExtraValidations(files: string | Array<string>) {
     debug(`Setting extra validation files`, files);
     if (!Array.isArray(files)) {

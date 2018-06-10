@@ -1,6 +1,6 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
-import { ServerRequest, ServerResponse } from 'http';
+import { IncomingMessage, ServerRequest, ServerResponse } from 'http';
 
 import { nohm as instantiatedNohm, NohmClass } from '.';
 import { NohmModel } from './model';
@@ -146,18 +146,9 @@ function wrapExtraFiles(files: Array<string>, namespace: string) {
  * This is useful if you want to save some bandwith by doing the validations
  * in the browser before saving to the server.
  *
- * Options:
- *    - `url`         - Url under which the js file will be available. Default: '/nohmValidations.js'
- *    - `exclusions`  - Object containing exclusions for the validations export - see example for details
- *    - `namespace`   - Namespace to be used by the js file in the browser. Default: 'nohmValidations'
- *    - `extraFiles`  - Extra files containing validations. You should only use this if they are not already set
- *                        via Nohm.setExtraValidations as this automatically includes those.
- *    - `maxAge`      - Cache control (in seconds)
- *    - `uglify`      - Boolean. True to enable minification. Requires uglify-js (not in dependencies of nohm!).
- *                       Default: false
- *
  * Example:
  *
+ * ```
  *    server.use(nohm.middleware(
  *      // options object
  *      {
@@ -179,12 +170,24 @@ function wrapExtraFiles(files: Array<string>, namespace: string) {
  *        }
  *      }
  *    ));
+ * ```
  *
+ * @see https://maritz.github.io/nohm/#browser-validation
  * @param {Object} options Options for the middleware
- * @return {Function}
- * @static
+ * @param {string} [options.url='/nomValidations.js'] Url under which the js file will be available.
+ * @param {object.<string, object | boolean>} [options.exclusions={}] Object containing exclusions for the
+ * validations export - see example for details
+ * @param {string} [options.namespace='nomValidations'] Namespace to be used by the js file in the browser.
+ * @param {string} [options.extraFiles=[]] Extra files containing validations.
+ * You should only use this if they are not already set via Nohm.setExtraValidations
+ * as this automatically includes those.
+ * @param {number} [options.maxAge=3600] Cache control in seconds. (Default is one hour)
+ * @param {boolean} [options.uglify=false] True to enable minification.
+ * Requires uglify-js to be installed in your project!
+ * @return {Middleware~callback}
+ * @instance
+ * @memberof NohmClass
  */
-
 export function middleware(
   options: IMiddlewareOptions,
   nohm: NohmClass = instantiatedNohm,
@@ -260,7 +263,19 @@ export function middleware(
     collectedModels,
   );
 
-  return (req: ServerRequest, res: ServerResponse, next?: any) => {
+  /**
+   * This function is what is returned by {@link NohmClass#middleware}.
+   *
+   * @callback Middleware~callback
+   * @name MiddlewareCallback
+   * @function
+   * @param {Object} req http IncomingMessage
+   * @param {Object} res http ServerResponse
+   * @param {function} [next] Optional next function for express/koa
+   * @memberof Nohm
+   */
+
+  return (req: IncomingMessage, res: ServerResponse, next?: any) => {
     if (req.url === url) {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'text/javascript');

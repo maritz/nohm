@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Nohm - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NohmClass.html">NohmClass</a><ul class='methods'><li data-type='method'><a href="NohmClass.html#factory">factory</a></li><li data-type='method'><a href="NohmClass.html#getModels">getModels</a></li><li data-type='method'><a href="NohmClass.html#middleware">middleware</a></li><li data-type='method'><a href="NohmClass.html#model">model</a></li><li data-type='method'><a href="NohmClass.html#purgeDb">purgeDb</a></li><li data-type='method'><a href="NohmClass.html#register">register</a></li><li data-type='method'><a href="NohmClass.html#setClient">setClient</a></li><li data-type='method'><a href="NohmClass.html#setPrefix">setPrefix</a></li></ul></li><li><a href="NohmErrors.LinkError.html">LinkError</a></li><li><a href="NohmErrors.ValidationError.html">ValidationError</a></li><li><a href="NohmModel.html">NohmModel</a><ul class='methods'><li data-type='method'><a href="NohmModel.html#allProperties">allProperties</a></li><li data-type='method'><a href="NohmModel.html#belongsTo">belongsTo</a></li><li data-type='method'><a href="NohmModel.html#clearTemporaryUniques">clearTemporaryUniques</a></li><li data-type='method'><a href="NohmModel.html#exists">exists</a></li><li data-type='method'><a href="NohmModel.html#find">find</a></li><li data-type='method'><a href="NohmModel.html#getAll">getAll</a></li><li data-type='method'><a href="NohmModel.html#getDefinitions">getDefinitions</a></li><li data-type='method'><a href="NohmModel.html#link">link</a></li><li data-type='method'><a href="NohmModel.html#load">load</a></li><li data-type='method'><a href="NohmModel.html#numLinks">numLinks</a></li><li data-type='method'><a href="NohmModel.html#property">property</a></li><li data-type='method'><a href="NohmModel.html#propertyDiff">propertyDiff</a></li><li data-type='method'><a href="NohmModel.html#propertyReset">propertyReset</a></li><li data-type='method'><a href="NohmModel.html#remove">remove</a></li><li data-type='method'><a href="NohmModel.html#save">save</a></li><li data-type='method'><a href="NohmModel.html#setUniqueIds">setUniqueIds</a></li><li data-type='method'><a href="NohmModel.html#sort">sort</a></li><li data-type='method'><a href="NohmModel.html#subscribe">subscribe</a></li><li data-type='method'><a href="NohmModel.html#subscribeOnce">subscribeOnce</a></li><li data-type='method'><a href="NohmModel.html#unlink">unlink</a></li><li data-type='method'><a href="NohmModel.html#unlinkAll">unlinkAll</a></li><li data-type='method'><a href="NohmModel.html#unsubscribeEvent">unsubscribeEvent</a></li><li data-type='method'><a href="NohmModel.html#validate">validate</a></li></ul></li><li><a href="NohmStaticModel.html">NohmStaticModel</a><ul class='methods'><li data-type='method'><a href="NohmStaticModel.html#.find">find</a></li><li data-type='method'><a href="NohmStaticModel.html#..findAndLoad">.findAndLoad</a></li><li data-type='method'><a href="NohmStaticModel.html#..load">.load</a></li><li data-type='method'><a href="NohmStaticModel.html#..loadMany">.loadMany</a></li><li data-type='method'><a href="NohmStaticModel.html#.remove">remove</a></li><li data-type='method'><a href="NohmStaticModel.html#..sort">.sort</a></li></ul></li></ul><h3>Namespaces</h3><ul><li><a href="Nohm.html">Nohm</a><ul class='methods'><li data-type='method'><a href="Nohm.html#.MiddlewareCallback">MiddlewareCallback</a></li></ul></li><li><a href="NohmErrors.html">NohmErrors</a></li><li><a href="Validators.html">Validators</a><ul class='methods'><li data-type='method'><a href="Validators.html#.alphanumeric">alphanumeric</a></li><li data-type='method'><a href="Validators.html#.date">date</a></li><li data-type='method'><a href="Validators.html#.dateISO">dateISO</a></li><li data-type='method'><a href="Validators.html#.digits">digits</a></li><li data-type='method'><a href="Validators.html#.email">email</a></li><li data-type='method'><a href="Validators.html#.length">length</a></li><li data-type='method'><a href="Validators.html#.minMax">minMax</a></li><li data-type='method'><a href="Validators.html#.notEmpty">notEmpty</a></li><li data-type='method'><a href="Validators.html#.number">number</a></li><li data-type='method'><a href="Validators.html#.numberEU">numberEU</a></li><li data-type='method'><a href="Validators.html#.numberSI">numberSI</a></li><li data-type='method'><a href="Validators.html#.numberUS">numberUS</a></li><li data-type='method'><a href="Validators.html#.regexp">regexp</a></li><li data-type='method'><a href="Validators.html#.url">url</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Nohm</h1>
+    
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        Nohm
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="tsOut_index.js.html">tsOut/index.js</a>, <a href="tsOut_index.js.html#line69">line 69</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+        
+            <div class="description"><p>Some generic definitions for Nohm</p></div>
+        
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".MiddlewareCallback"><span class="type-signature">(static) </span>MiddlewareCallback<span class="signature">(req, res, next<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="tsOut_middleware.js.html">tsOut/middleware.js</a>, <a href="tsOut_middleware.js.html#line207">line 207</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>This function is what is returned by <a href="NohmClass.html#middleware">NohmClass#middleware</a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>req</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>http IncomingMessage</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>res</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>http ServerResponse</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>next</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Optional next function for express/koa</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jun 10 2018 15:39:07 GMT+0200 (CEST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
