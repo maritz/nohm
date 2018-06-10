@@ -14,13 +14,15 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
 
 ## Requirements
 
-* redis >= 2.4
+- redis >= 2.4
 
 ## Documentation
 
-[v1 (current stable) documentation](http://maritz.github.com/nohm/)
+[v1 (current stable) documentation](http://maritz.github.com/nohm/index_v1.html)
 
-[v2 documentation](https://maritz.github.io/nohm/index_v2.html)
+[v2 documentation](https://maritz.github.io/nohm/index.html)
+
+[API docs](https://maritz.github.io/nohm/api/index.html)
 
 ## Example
 
@@ -217,8 +219,8 @@ main();
 
 ### More detailed examples
 
-* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server)
-* [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
+- [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server)
+- [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
 
 Do you have code that should/could be listed here? Message me!
 

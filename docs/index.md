@@ -5,60 +5,61 @@ layout: default
 
 ## Links
 
-* [Github](https://github.com/maritz/nohm)
-* [v0.9 / v1 docs](index.html)
+- [Github](https://github.com/maritz/nohm)
+- [API Docs](https://maritz.github.io/nohm/api/index.html)
+- [v0.9 / v1 docs](index_v1.html)
 
 ## How To
 
 ### Index
 
-* [Overview](#overview)
-* [Basics](#basics)
-  * [Prefix](#prefix)
-  * [Client](#client)
-  * [Logging](#logging)
-* [Models](#models)
-  * [Methods](#methods)
-  * [Client](#client)
-  * [Properties](#properties)
-    * [Types/Behaviours](#typesbehaviours)
-    * [String](#string)
-    * [Integer / Float](#integer--float)
-    * [Boolean](#boolean)
-    * [Timestamp](#timestamp)
-    * [Json](#json)
-    * [Behaviour](#behaviour)
-    * [Validators](#validators)
-  * [ID generation](#id-generation)
-* [Creating an instance](#creating-an-instance)
-* [Setting/Getting properties](#settinggetting-properties)
-* [Validating](#validating)
-  * [Calling valid()](#calling-valid)
-  * [Browser validation](#browser-validation)
-* [Saving](#saving)
-* [Deleting](#deleting)
-* [Loading](#loading)
-* [Finding](#finding)
-  * [Finding all ids of a model](#finding-all-ids-of-a-model-model)
-  * [Finding by Index](#finding-by-index)
-  * [Finding by simple index](#finding-by-simple-index)
-  * [Finding by numeric index](#finding-by-numeric-index)
-  * [Exclusive Intervals](#exclusive-intervals)
-* [Sorting](#sorting)
-  * [Sort all from DB](#sort-all-from-db)
-  * [Sort a subset by given IDs](#sort-a-subset-by-given-ids-ids)
-* [Relations](#relations)
-  * [link](#link)
-  * [unlink](#unlink)
-  * [belongsTo](#belongsto)
-  * [numLinks](#numlinks)
-  * [getAll](#getall)
-* [Publish / Subscribe](#publish--subscribe)
-  * [Configuration](#configuration)
-  * [Usage](#usage)
-* [Extras](#extras)
-  * [Short Forms](#short-forms)
-  * [Find and load in one](#findandload)
+- [Overview](#overview)
+- [Basics](#basics)
+  - [Prefix](#prefix)
+  - [Client](#client)
+  - [Logging](#logging)
+- [Models](#models)
+  - [Methods](#methods)
+  - [Client](#client)
+  - [Properties](#properties)
+    - [Types/Behaviours](#typesbehaviours)
+    - [String](#string)
+    - [Integer / Float](#integer--float)
+    - [Boolean](#boolean)
+    - [Timestamp](#timestamp)
+    - [Json](#json)
+    - [Behaviour](#behaviour)
+    - [Validators](#validators)
+  - [ID generation](#id-generation)
+- [Creating an instance](#creating-an-instance)
+- [Setting/Getting properties](#settinggetting-properties)
+- [Validating](#validating)
+  - [Calling valid()](#calling-valid)
+  - [Browser validation](#browser-validation)
+- [Saving](#saving)
+- [Deleting](#deleting)
+- [Loading](#loading)
+- [Finding](#finding)
+  - [Finding all ids of a model](#finding-all-ids-of-a-model-model)
+  - [Finding by Index](#finding-by-index)
+  - [Finding by simple index](#finding-by-simple-index)
+  - [Finding by numeric index](#finding-by-numeric-index)
+  - [Exclusive Intervals](#exclusive-intervals)
+- [Sorting](#sorting)
+  - [Sort all from DB](#sort-all-from-db)
+  - [Sort a subset by given IDs](#sort-a-subset-by-given-ids-ids)
+- [Relations](#relations)
+  - [link](#link)
+  - [unlink](#unlink)
+  - [belongsTo](#belongsto)
+  - [numLinks](#numlinks)
+  - [getAll](#getall)
+- [Publish / Subscribe](#publish--subscribe)
+  - [Configuration](#configuration)
+  - [Usage](#usage)
+- [Extras](#extras)
+  - [Short Forms](#short-forms)
+  - [Find and load in one](#findandload)
 
 ### Overview
 
@@ -91,9 +92,9 @@ redis.on('connect', () => {
 
 The `nohm` module exports several objects/classes:
 
-* `require('nohm').Nohm` is the default instance of the NohmClass. In normal use, this is the only instance of NohmClass you should use.
-* `require('nohm').NohmClass` There are usecases where you would want multiple NohmClasses, for example if you want different prefixes for different parts of your application or you have multiple different databases, each containing some models. TODO: add more documentation for these special use cases
-* `require('nohm').NohmModel` This is the Extendable Model class you should use for ES6/Typescript class definitions
+- `require('nohm').Nohm` is the default instance of the NohmClass. In normal use, this is the only instance of NohmClass you should use.
+- `require('nohm').NohmClass` There are usecases where you would want multiple NohmClasses, for example if you want different prefixes for different parts of your application or you have multiple different databases, each containing some models. TODO: add more documentation for these special use cases
+- `require('nohm').NohmModel` This is the Extendable Model class you should use for ES6/Typescript class definitions
 
 #### Prefix
 
@@ -304,9 +305,9 @@ Casts to boolean - except 'false' (string) which will be cast to false (boolean)
 Converts a Date(-time) to a timestamp (base 10 integer of miliseconds from 1970).
 This takes two different formats as inputs:
 
-* Numbers result in a direct parseInt
-* ISO string of a date (with timezone)
-* any date string 'new Date()' can handle
+- Numbers result in a direct parseInt
+- ISO string of a date (with timezone)
+- any date string 'new Date()' can handle
 
 ###### Json
 
@@ -531,9 +532,9 @@ The convenience short versions .p() and .prop() still exist, but are deprecated 
 
 There are several other methods for dealing with properties:
 
-* allProperties() - get an object with all properties plus it's id
-* propertyReset([propertyName]) - Resets a property to its state as it was at last init/load/save (whichever was most recent - so for init it would be defaultValues)
-* propertyDiff() - Returns an array of all the properties that have been changed since init/load/save (whichever was most recent - so for init it would be defaultValues)
+- allProperties() - get an object with all properties plus it's id
+- propertyReset([propertyName]) - Resets a property to its state as it was at last init/load/save (whichever was most recent - so for init it would be defaultValues)
+- propertyDiff() - Returns an array of all the properties that have been changed since init/load/save (whichever was most recent - so for init it would be defaultValues)
 
 ### Validating
 
@@ -559,8 +560,8 @@ if (!valid) {
 
 There are a few things to note here:
 
-* The first argument to valid is an optional property name. If set, only that property will be validated.
-* The second argument to valid is to tell the unique check whether it should lock the unique. The unique checks are the last validation and if the model is not valid by the time the uniques are checked, this argument is ignored and no unique is locked. If the unique check of any property results in an error all unique locks that were done in the process of the previous checks are removed (however not the old unique locks of the last valid state).
+- The first argument to valid is an optional property name. If set, only that property will be validated.
+- The second argument to valid is to tell the unique check whether it should lock the unique. The unique checks are the last validation and if the model is not valid by the time the uniques are checked, this argument is ignored and no unique is locked. If the unique check of any property results in an error all unique locks that were done in the process of the previous checks are removed (however not the old unique locks of the last valid state).
   Unless you know exactly what you are doing, this argument should always be left at false.
 
 #### Browser validation
@@ -580,11 +581,11 @@ nohm.middleware(options);
 
 The middleware takes an argument containing the following options:
 
-* `url` - Url under which the js file will be available. Default: '/nohmValidations.js'
-* `exclusions` - Object containing exclusions for the validations export - see example for details
-* `namespace` - Namespace to be used by the js file in the browser. Default: 'nohmValidations'
-* `extraFiles` - Extra files containing validations. You should only use this if they are not already set via Nohm.setExtraValidations as nohm.connect automatically includes those.
-* `maxAge` - Cache control (in seconds)
+- `url` - Url under which the js file will be available. Default: '/nohmValidations.js'
+- `exclusions` - Object containing exclusions for the validations export - see example for details
+- `namespace` - Namespace to be used by the js file in the browser. Default: 'nohmValidations'
+- `extraFiles` - Extra files containing validations. You should only use this if they are not already set via Nohm.setExtraValidations as nohm.connect automatically includes those.
+- `maxAge` - Cache control (in seconds)
 
 ```typescript
 server.use(
@@ -899,10 +900,10 @@ User2.link(UserManagerRole, 'temp');
 
 Now (after saving) these relations exist:
 
-* User1 (default) -> AdminRole (defaultForeign)
-* User1 (default) -> AuthorRole (defaultForeign)
-* User1 (createdBy) -> UserManagerRole (createdByForeign)
-* User2 (temp) -> UserManagerRole (tempForeign)
+- User1 (default) -> AdminRole (defaultForeign)
+- User1 (default) -> AuthorRole (defaultForeign)
+- User1 (createdBy) -> UserManagerRole (createdByForeign)
+- User2 (temp) -> UserManagerRole (tempForeign)
 
 Tip: Be careful with naming and don't overuse it!
 
@@ -947,11 +948,11 @@ try {
 
 There are several things that happen here:
 
-* First User is validated. If User is invalid a Nohm.ValidationError is thrown.
-* If User is valid, User is stored.
-* If Admin has an ID, the relation is stored and the save is successful.
-* Otherwise Admin is validated. If Admin is invalid a Nohm.LinkError is thrown with details in the errors field.
-* If Admin is valid, Admin is stored, the relation is stored and the save is successful.
+- First User is validated. If User is invalid a Nohm.ValidationError is thrown.
+- If User is valid, User is stored.
+- If Admin has an ID, the relation is stored and the save is successful.
+- Otherwise Admin is validated. If Admin is invalid a Nohm.LinkError is thrown with details in the errors field.
+- If Admin is valid, Admin is stored, the relation is stored and the save is successful.
 
 This process works infinitely deep. However this process is not atomic, thus it might be a better idea to save the elements individually and then link them!
 
@@ -1083,12 +1084,12 @@ model.getPublish(); // returns whether the model someModelName will publish
 
 There are 6 events that get published:
 
-* 'create' -- a new instance is getting created.
-* 'update' -- an instance is getting updated with new values.
-* 'save' -- an instance is getting created OR updated (in addition to one of the above).
-* 'remove' -- an instance is getting removed (although you get an id here, the data is not in the db anymore)
-* 'link' -- instances are getting linked
-* 'unlink' -- instances are getting unlinked
+- 'create' -- a new instance is getting created.
+- 'update' -- an instance is getting updated with new values.
+- 'save' -- an instance is getting created OR updated (in addition to one of the above).
+- 'remove' -- an instance is getting removed (although you get an id here, the data is not in the db anymore)
+- 'link' -- instances are getting linked
+- 'unlink' -- instances are getting unlinked
 
 All\* these event callbacks get an object containing these properties:
 

@@ -6,7 +6,7 @@ layout: default
 ## Links
 
 - [Github](https://github.com/maritz/nohm/tree/v1_maintenance)
-- [v2 docs](index_v2.html)
+- [v2 docs](index.html)
 
 ## How To
 
