@@ -22,6 +22,7 @@ var runner = function() {
     'middlewareTests.js',
     'metaTests.js',
     'pubsubTests.js',
+    'redisHelperTests.js',
     'regressions.js',
     '../tsOut/tests.js',
   ]);

@@ -1,6 +1,7 @@
 import { Multi, RedisClient } from 'redis';
 
-const errorMessage = 'Supplied redis client does not have the correct methods.';
+export const errorMessage =
+  'Supplied redis client does not have the correct methods.';
 
 export function GET(client: RedisClient | Multi, key: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
