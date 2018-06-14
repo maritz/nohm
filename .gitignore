@@ -13,3 +13,5 @@ experiments.js
 .c9/
 tsOut/
 .vscode/
+coverage/
+.nyc_output/

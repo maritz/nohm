@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
 [![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 [![Known Vulnerabilities (Snyk)](https://snyk.io/test/github/maritz/nohm/badge.svg)](https://snyk.io/test/github/maritz/nohm)
+[![Coverage Status](https://coveralls.io/repos/github/maritz/nohm/badge.svg?branch=master)](https://coveralls.io/github/maritz/nohm?branch=master)
 
 ## Description
 
