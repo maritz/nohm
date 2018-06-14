@@ -1767,6 +1767,32 @@ exports['manually setting id should allow saving with uniques'] = async (t) => {
   t.done();
 };
 
+exports['helpers.checkEqual generic tests'] = (t) => {
+  const checkEqual = require('../tsOut/helpers').checkEqual;
+
+  t.same(checkEqual(false, true), false, 'false, true');
+  t.same(checkEqual(true, false), false, 'true, false');
+  t.ok(checkEqual(true, true), 'true, true');
+  t.ok(checkEqual(false, false), 'false, false');
+
+  const test1 = new UserMockup();
+  const test2 = new UserMockup();
+
+  t.same(
+    checkEqual(test1, test2),
+    false,
+    `Model instances that don't have an id were identified as equal.`,
+  );
+  test1.id = 'asd';
+  test2.id = test1.id;
+  t.ok(
+    checkEqual(test1, test2),
+    `Model instances that DO have an id were identified as NOT equal.`,
+  );
+
+  t.done();
+};
+
 exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
   t,
 ) => {
@@ -1783,21 +1809,24 @@ exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
   t.done();
 };
 
-exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
-  t,
-) => {
-  t.expect(1);
+exports['helpers.callbackError'] = (t) => {
+  const callbackError = require('../tsOut/helpers').callbackError;
 
-  const checkEqual = require('../tsOut/helpers').checkEqual;
-
-  const test1 = new UserMockup();
-  const test2 = new UserMockup();
-
-  t.same(
-    checkEqual(test1, test2),
-    false,
-    "Model instances that don't have an id were identified as equal.",
-  );
+  t.throws(() => {
+    callbackError(() => {})
+  },
+  /^Callback style has been removed. Use the returned promise\.$/, 'Does not throw when given only function');
+  t.throws(() => {
+    callbackError('foo', 'bar', 'baz', () => {})
+  },
+  /^Callback style has been removed. Use the returned promise\.$/,
+  'Does not throw when last of 4 is function.');
+  t.doesNotThrow(() => {
+    callbackError('foo', 'bar', 'baz')
+  }, 'Error thrown even though arguments contained no function.');
+  t.doesNotThrow(() => {
+    callbackError(() => {}, 'bar', 'baz')
+  }, 'Error thrown even though last argument was not a function.');
 
   t.done();
 };

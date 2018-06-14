@@ -35,12 +35,13 @@ export function getPrefix(prefix: string): INohmPrefixes {
 }
 
 export function checkEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) {
+    return true;
+  }
   if (!obj1 || (obj1 && !obj2)) {
     return false;
   }
-  if (obj1 === obj2) {
-    return true;
-  } else if (
+  if (
     Object.hasOwnProperty.call(obj1, 'modelName') &&
     Object.hasOwnProperty.call(obj2, 'modelName') &&
     obj1.modelName === obj2.modelName
