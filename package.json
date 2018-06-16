@@ -19,10 +19,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node test/tests.js",
+    "test": "nyc node test/tests.js",
     "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
-    "coverage": "nyc npm run test",
-    "coverage:coveralls": "nyc npm run test && nyc report --reporter=text-lcov | coveralls",
+    "coverage:failIfLow": "nyc check-coverage --lines 90 --functions 90 --branches 80",
+    "coverage:coveralls": "nyc report --reporter=text-lcov | coveralls",
     "lint": "tslint --project ./ && eslint test/ ts/universalValidators.js",
     "lint:auto-fix": "tslint--project ./ --fix",
     "prebuild": "rimraf tsOut/",
