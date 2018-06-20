@@ -190,6 +190,11 @@
     },
   };
 
+  // while there are tests for the browser validations, they depend on vm.runInNewContext.
+  // this creates a sandboxed environment that currently cannot be properly analysed for coverage.
+  // see ../test/middlewareTests.js for the tests
+  // see https://github.com/istanbuljs/nyc/issues/371 for details on 
+  /* istanbul ignore if */
   if (typeof (window) !== 'undefined' &amp;&amp; typeof (nohmValidationsNamespaceName) !== 'undefined') {
     // we're in a browser and have a defined namespace
     // eslint-disable-next-line
