@@ -186,9 +186,13 @@
           if (options.optional && !value) {
             return cb(key, true);
           }
-          func(value, options).then((result) => {
-            cb(key, result, name);
-          });
+          try {
+            func(value, options).then((result) => {
+              cb(key, result, name);
+            });
+          } catch (e) {
+            cb(key, false, name);
+          }
         });
       };
 

@@ -263,4 +263,28 @@ exports.middleware = {
       t.done();
     });
   },
+
+  middlewareValidateUndefined: function(t) {
+    setup(t, 2, undefined, async (sandbox) => {
+      var val = sandbox.nohmValidations.validate;
+      try {
+        const result = await val('UserMiddlewareMockup', {
+          name: undefined,
+        });
+        t.same(
+          result.result,
+          false,
+          'Validating with name undefined succeeded',
+        );
+        t.same(
+          result.errors,
+          { name: ['length', 'notEmpty'] },
+          'Validating with name undefined had wrong errors object.',
+        );
+      } catch (e) {
+        t.ok(false, 'Validate threw an error on undefined data.');
+      }
+      t.done();
+    });
+  },
 };
