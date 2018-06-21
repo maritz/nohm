@@ -11,8 +11,8 @@ All notable changes to this project will be documented in this file. See [standa
 * middleware.validate throwing uncaught when data is undefined ([819865b](https://github.com/maritz/nohm/commit/819865b))
 
 
-
-# v2.0.0 - 2018/06/10
+<a name="2.0.0"></a>
+## [2.0.0](https://github.com/maritz/nohm/compare/v1.0.0...v2.0.0) (2018-06-21)
 
 ## BREAKING CHANGES
 
