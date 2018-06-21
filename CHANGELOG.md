@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 
 <a name="2.0.0"></a>
-## [2.0.0](https://github.com/maritz/nohm/compare/v1.0.0...v2.0.0) (2018-06-21)
+## [2.0.0](https://github.com/maritz/nohm/compare/v1.0.0...v2.0.0) (2018-06-10)
 
 ## BREAKING CHANGES
 
