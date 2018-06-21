@@ -12,6 +12,7 @@
   },
   "types": "./tsOut/index.d.ts",
   "files": [
+    "docs/index.md",
     "ts/",
     "tsOut/",
     "CHANGELOG.md",
