@@ -1,3 +1,17 @@
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+<a name="2.0.1"></a>
+## [2.0.1](https://github.com/maritz/nohm/compare/v2.0.0...v2.0.1) (2018-06-21)
+
+
+### Bug Fixes
+
+* middleware.validate throwing uncaught when data is undefined ([819865b](https://github.com/maritz/nohm/commit/819865b))
+
+
+
 # v2.0.0 - 2018/06/10
 
 ## BREAKING CHANGES
