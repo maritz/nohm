@@ -14,7 +14,7 @@
   "files": [
     "ts/",
     "tsOut/",
-    "HISTORY.md",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE"
   ],

@@ -7,7 +7,7 @@ layout: default
 
 - [Github](https://github.com/maritz/nohm/tree/v1_maintenance)
 - [v2 docs](index.html)
-- [v1 to v2 migration docs](https://github.com/maritz/nohm/blob/master/HISTORY.md#v200)
+- [v1 to v2 migration docs](https://github.com/maritz/nohm/blob/master/CHANGELOG.md#v200)
 
 ## How To
 

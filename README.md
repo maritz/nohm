@@ -35,7 +35,7 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
 
 [v1 documentation](http://maritz.github.com/nohm/)
 
-[v1 to v2 migration guide](https://github.com/maritz/nohm/blob/master/HISTORY.md#v200-currently-in-alpha)
+[v1 to v2 migration guide](https://github.com/maritz/nohm/blob/master/CHANGELOG.md#v200-currently-in-alpha)
 
 ## Example
 

@@ -70,7 +70,7 @@ This How-To is intended to give you a good understanding of how nohm works.
 
 To make nohm more modern many breaking changes were introduced. Among them a switch from callbacks to promises, but also many small breaking changes.
 
-For a full list of all breaking changes [see the HISTORY.md](https://github.com/maritz/nohm/blob/master/HISTORY.md#v2)
+For a full list of all breaking changes [see the CHANGELOG.md](https://github.com/maritz/nohm/blob/master/CHANGELOG.md#v2)
 
 ### Basics
 
