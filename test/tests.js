@@ -5,6 +5,7 @@ var run = function(files) {
   nodeunit.reporters['default'].run(files, undefined, function(error) {
     cleanup(function() {
       redis.end();
+      secondaryRedis.end();
       process.exit(error ? 1 : 0);
     });
   });
@@ -21,14 +22,15 @@ var runner = function() {
     'findTests.js',
     'middlewareTests.js',
     'metaTests.js',
+    '../tsOut/tests.js', // needs to be before pubsubtests, so that the pubsub client is still connected
     'pubsubTests.js',
     'redisHelperTests.js',
     'regressions.js',
-    '../tsOut/tests.js',
   ]);
 };
 
 var redis = args.redis,
+  secondaryRedis = args.secondaryClient,
   cleanup = function(cb, force) {
     if (!force && args.noCleanup === true) return cb();
     require('./helper.js').cleanUp(redis, args.prefix, cb);

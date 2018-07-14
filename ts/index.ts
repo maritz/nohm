@@ -20,7 +20,10 @@ import {
   boolProperty,
   dateProperty,
   floatProperty,
+  IChangeEventPayload,
+  IDefaultEventPayload,
   integerProperty,
+  IRelationChangeEventPayload,
   ISearchOption,
   IStaticMethods,
   jsonProperty,
@@ -33,29 +36,33 @@ import {
 import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
 
 export {
+  boolProperty,
+  dateProperty,
+  floatProperty,
+  IChangeEventPayload,
+  IDefaultEventPayload,
   IDictionary,
   ILinkOptions,
   IModelOptions,
   IModelPropertyDefinition,
   IModelPropertyDefinitions,
   INohmPrefixes,
+  integerProperty,
+  IRelationChangeEventPayload,
   ISortOptions,
   IStaticMethods,
+  jsonProperty,
   LinkError,
   NohmModelExtendable as NohmModel,
-  TLinkCallback,
-  TTypedDefinitions,
-  ValidationError,
-  boolProperty,
-  dateProperty,
-  floatProperty,
-  integerProperty,
-  jsonProperty,
   numberProperty,
   stringProperty,
   timeProperty,
   timestampProperty,
+  TLinkCallback,
+  TTypedDefinitions,
+  ValidationError,
 };
+export { nohm, nohm as Nohm };
 
 const debug = Debug('nohm:index');
 const debugPubSub = Debug('nohm:pubSub');
@@ -899,7 +906,7 @@ export class NohmClass {
   }
 
   private async initPubSub(): Promise<void> {
-    if (!this.getPubSubClient) {
+    if (!this.getPubSubClient()) {
       throw new Error(
         'A second redis client must set via nohm.setPubSubClient before using pub/sub methods.',
       );
@@ -1006,5 +1013,4 @@ export class NohmClass {
 
 const nohm = new NohmClass({});
 
-export { nohm, nohm as Nohm };
 export default nohm;

@@ -1,5 +1,5 @@
 import { Nohm, NohmModel, TTypedDefinitions } from '.';
-import { integerProperty, stringProperty } from './model.header';
+import { integerProperty, IPropertyDiff, stringProperty } from './model.header';
 
 const nohm = Nohm;
 
@@ -23,6 +23,7 @@ interface IUserLinkProps {
 }
 class UserMockup extends NohmModel<IUserLinkProps> {
   public static modelName = 'UserMockup';
+  public publish = true;
   protected static idGenerator = 'increment';
   protected static definitions = {
     name: {
@@ -291,5 +292,109 @@ exports.Typescript = {
     }
 
     t.done();
+  },
+
+  'typing in subscribe()': async (t: any) => {
+    await nohm.setPubSubClient(args.secondaryClient);
+
+    const user = await nohm.factory<UserMockup>('UserMockup');
+    const role = await nohm.factory<RoleLinkMockup>('RoleLinkMockup');
+
+    t.expect(17);
+
+    let propertyDiff: Array<void | IPropertyDiff<keyof IUserLinkProps>>;
+    let userId: string;
+
+    try {
+      const initialProps = user.allProperties();
+      await user.subscribe('create', (payload) => {
+        t.ok(payload.target.id === user.id, 'id in create handler was wrong');
+        if (user.id) {
+          userId = user.id; // used in other tests
+        }
+        t.ok(
+          payload.target.modelName === user.modelName,
+          'modelname in create handler was wrong',
+        );
+        t.same(
+          payload.target.properties,
+          {
+            ...initialProps,
+            id: userId,
+          },
+          'properties in create handler were wrong',
+        );
+      });
+      await user.subscribe('link', (payload) => {
+        t.ok(
+          payload.child.id === user.id,
+          'id in link handler CHILD was wrong',
+        );
+        t.ok(
+          payload.child.modelName === user.modelName,
+          'modelname in link handler CHILD was wrong',
+        );
+        t.same(
+          payload.child.properties,
+          user.allProperties(),
+          'properties in link handler CHILD were wrong',
+        );
+        t.ok(
+          payload.parent.id === role.id,
+          'id in link handler PARENT was wrong',
+        );
+        t.ok(
+          payload.parent.modelName === role.modelName,
+          'modelname in link handler PARENT was wrong',
+        );
+        t.same(
+          payload.parent.properties,
+          role.allProperties(),
+          'properties in link handler PARENT were wrong',
+        );
+      });
+      await user.subscribe('update', (payload) => {
+        t.ok(payload.target.id === user.id, 'id in update handler was wrong');
+        t.ok(
+          payload.target.modelName === user.modelName,
+          'modelname in update handler was wrong',
+        );
+        t.same(
+          payload.target.properties,
+          user.allProperties(),
+          'properties in update handler was wrong',
+        );
+        t.same(
+          payload.target.diff,
+          propertyDiff,
+          'properties in update handler were wrong',
+        );
+      });
+      await user.subscribe('remove', (payload) => {
+        t.ok(payload.target.id !== null, 'id in remove handler was null');
+        t.ok(payload.target.id === userId, 'id in remove handler was wrong');
+        t.ok(
+          payload.target.modelName === user.modelName,
+          'modelname in remove handler was wrong',
+        );
+        t.same(
+          payload.target.properties,
+          user.allProperties(),
+          'properties in remove handler were wrong',
+        );
+      });
+
+      await user.save();
+      user.link(role);
+      user.property('name', 'foobar');
+      propertyDiff = user.propertyDiff();
+      await user.save();
+      await user.remove();
+    } catch (e) {
+      console.error('Error:', e);
+      t.ok(false, 'Error thrown');
+    } finally {
+      t.done();
+    }
   },
 };

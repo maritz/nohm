@@ -1,8 +1,15 @@
-import { NohmModel, IDictionary } from './model';
-import { IPropertyDiff } from './model.header';
+import { NohmModel } from './model';
+import {
+  IChangeEventPayload,
+  IDefaultEventPayload,
+  IPropertyDiff,
+  IRelationChangeEventPayload,
+} from './model.header';
 
 // The default (base) message creator
-export function defaultComposer(this: NohmModel) {
+export function defaultComposer<TProps>(
+  this: NohmModel<TProps>,
+): IDefaultEventPayload<TProps> {
   return {
     target: {
       id: this.id,
@@ -15,10 +22,10 @@ export function defaultComposer(this: NohmModel) {
 export { defaultComposer as create };
 
 // This populates the diff property for `save` and `update` events.
-function changeComposer(
-  this: NohmModel,
-  diff: Array<void | IPropertyDiff<IDictionary>>,
-) {
+function changeComposer<TProps>(
+  this: NohmModel<TProps>,
+  diff: Array<void | IPropertyDiff<keyof TProps>>,
+): IChangeEventPayload<TProps> {
   const result = defaultComposer.apply(this);
   result.target.diff = diff;
   return result;
@@ -33,16 +40,20 @@ export function remove(this: NohmModel, id: string) {
   return result;
 }
 
-function relationComposer(
-  this: NohmModel,
-  parent: NohmModel,
+function relationComposer<TProps, TParentProps>(
+  this: NohmModel<TProps>,
+  parent: NohmModel<TParentProps>,
   relationName: string,
-) {
-  const result: any = {};
-  result.child = defaultComposer.call(this).target;
-  result.parent = defaultComposer.call(parent).target;
-  result.relation = relationName;
-  return result;
+): IRelationChangeEventPayload<TProps> {
+  const childPayload: IDefaultEventPayload<TProps> = defaultComposer.call(this);
+  const parentPayload: IDefaultEventPayload<TProps> = defaultComposer.call(
+    parent,
+  );
+  return {
+    child: childPayload.target,
+    parent: parentPayload.target,
+    relation: relationName,
+  };
 }
 
 export { relationComposer as link, relationComposer as unlink };

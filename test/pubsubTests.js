@@ -1,6 +1,6 @@
-var redis = require('redis');
 var nohm = require(__dirname + '/../tsOut/').Nohm;
 var child_process = require('child_process');
+const args = require(__dirname + '/testArgs.js');
 
 require(__dirname + '/pubsub/Model.js');
 
@@ -14,7 +14,7 @@ var after = function(times, fn) {
   };
 };
 
-var secondaryClient = redis.createClient();
+var secondaryClient = args.secondaryClient;
 
 module.exports = {
   'after helper function': function(t) {

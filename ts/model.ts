@@ -12,6 +12,8 @@ import * as messageComposers from './eventComposers';
 import { callbackError, checkEqual } from './helpers';
 import { idGenerators } from './idGenerators';
 import {
+  IChangeEventPayload,
+  IDefaultEventPayload,
   IDictionary,
   ILinkOptions,
   ILinkSaveResult,
@@ -21,6 +23,7 @@ import {
   IProperty,
   IPropertyDiff,
   IRelationChange,
+  IRelationChangeEventPayload,
   ISaveOptions,
   ISearchOption,
   ISortOptions,
@@ -2096,6 +2099,18 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
+  public async subscribe<TPayloadProps extends TProps>(
+    eventName: 'create' | 'remove',
+    callback: (payload: IDefaultEventPayload<TPayloadProps>) => void,
+  ): Promise<void>;
+  public async subscribe<TPayloadProps extends TProps>(
+    eventName: 'save' | 'update',
+    callback: (payload: IChangeEventPayload<TPayloadProps>) => void,
+  ): Promise<void>;
+  public async subscribe<TPayloadProps extends TProps>(
+    eventName: 'link' | 'unlink',
+    callback: (payload: IRelationChangeEventPayload<TPayloadProps>) => void,
+  ): Promise<void>;
   /**
    * Subscibe to nohm events for this model.
    *
@@ -2104,9 +2119,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @returns {Promise<void>} Resolves after the subscription has been set up.
    * @memberof NohmModel
    */
-  public async subscribe(
+  public async subscribe<TPayloadProps extends TProps>(
     eventName: TAllowedEventNames,
-    callback: (payload: any) => void,
+    callback:
+      | ((payload: IDefaultEventPayload<TPayloadProps>) => void)
+      | ((payload: IChangeEventPayload<TPayloadProps>) => void)
+      | ((payload: IRelationChangeEventPayload<TPayloadProps>) => void),
   ): Promise<void> {
     debugPubSub(
       `Subscribing to event '%s' for '%s'.`,

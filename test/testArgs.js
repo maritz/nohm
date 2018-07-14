@@ -31,6 +31,14 @@ exports.redis = require('redis').createClient(
   },
 );
 
+exports.secondaryClient = require('redis').createClient(
+  exports.redis_port,
+  exports.redis_host,
+  {
+    auth_pass: exports.redis_auth,
+  },
+);
+
 /**
  * 
 const Redis = require('ioredis');

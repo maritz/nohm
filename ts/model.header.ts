@@ -22,10 +22,6 @@ export const timeProperty: TPropertyTypeNames = 'time';
 export const timestampProperty: TPropertyTypeNames = 'timestamp';
 export const jsonProperty: TPropertyTypeNames = 'json';
 
-export interface IPropertyObject {
-  [index: string]: any;
-}
-
 export interface IDictionary {
   [index: string]: any;
 }
@@ -198,3 +194,26 @@ export type TLinkCallback<T> = (
   relationName: string,
   other: T,
 ) => void;
+
+export interface IDefaultEventPayload<TProps extends IDictionary> {
+  target: {
+    id: null | string;
+    modelName: string;
+    properties: TProps;
+  };
+}
+
+export interface IChangeEventPayload<TProps extends IDictionary> {
+  target: {
+    id: string;
+    modelName: string;
+    properties: TProps;
+    diff: Array<void | IPropertyDiff<TKey<TProps>>>;
+  };
+}
+
+export interface IRelationChangeEventPayload<TProps extends IDictionary> {
+  child: IDefaultEventPayload<TProps>['target'];
+  parent: IDefaultEventPayload<TProps>['target'];
+  relation: string;
+}
