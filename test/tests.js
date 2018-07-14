@@ -19,9 +19,11 @@ var runner = function() {
     'validationTests.js',
     'relationTests.js',
     'findTests.js',
-    'connectTests.js',
+    'middlewareTests.js',
     'metaTests.js',
     'pubsubTests.js',
+    'redisHelperTests.js',
+    'regressions.js',
     '../tsOut/tests.js',
   ]);
 };

@@ -1,0 +1,109 @@
+html, body, div, span, object, iframe, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  font-size:100%;
+  vertical-align:baseline;
+  background:transparent;
+}                  
+
+
+
+body {
+  background-color: #eee;
+  margin: 20px 80px;
+}
+
+span.additionalInfo {
+  color: grey;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 1em;
+}
+
+h2 {
+  border-bottom: 1px solid #000;
+  font-size: 26px;
+}
+h3 {
+  border-bottom: 1px solid #999;
+  font-size: 25px;
+}
+h4 {
+  font-size: 23px;
+  margin-bottom: 8px;
+}
+h5 {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+h6 {
+  font-size: 17px;
+  margin-bottom: 2px;
+}
+
+p {
+  margin: 8px 10px;
+}
+
+small {
+  font-size: 60%;
+}
+
+strong {
+  font-weight: 700;
+  font-size: 95%;
+}
+
+div.highlight {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  overflow: auto;
+  padding: 5px;
+}
+
+div.highlight .hll { background-color: #ffffcc }
+div.highlight  { background: #ffffff; }
+div.highlight .c { color: #008000 } /* Comment */
+div.highlight .err { border: 1px solid #FF0000 } /* Error */
+div.highlight .k { color: #0000ff } /* Keyword */
+div.highlight .cm { color: #008000 } /* Comment.Multiline */
+div.highlight .cp { color: #0000ff } /* Comment.Preproc */
+div.highlight .c1 { color: #008000 } /* Comment.Single */
+div.highlight .cs { color: #008000 } /* Comment.Special */
+div.highlight .ge { font-style: italic } /* Generic.Emph */
+div.highlight .gh { font-weight: bold } /* Generic.Heading */
+div.highlight .gp { font-weight: bold } /* Generic.Prompt */
+div.highlight .gs { font-weight: bold } /* Generic.Strong */
+div.highlight .gu { font-weight: bold } /* Generic.Subheading */
+div.highlight .kc { color: #0000ff } /* Keyword.Constant */
+div.highlight .kd { color: #0000ff } /* Keyword.Declaration */
+div.highlight .kn { color: #0000ff } /* Keyword.Namespace */
+div.highlight .kp { color: #0000ff } /* Keyword.Pseudo */
+div.highlight .kr { color: #0000ff } /* Keyword.Reserved */
+div.highlight .kt { color: #2b91af } /* Keyword.Type */
+div.highlight .s { color: #a31515 } /* Literal.String */
+div.highlight .nc { color: #2b91af } /* Name.Class */
+div.highlight .ow { color: #0000ff } /* Operator.Word */
+div.highlight .sb { color: #a31515 } /* Literal.String.Backtick */
+div.highlight .sc { color: #a31515 } /* Literal.String.Char */
+div.highlight .sd { color: #a31515 } /* Literal.String.Doc */
+div.highlight .s2 { color: #a31515 } /* Literal.String.Double */
+div.highlight .se { color: #a31515 } /* Literal.String.Escape */
+div.highlight .sh { color: #a31515 } /* Literal.String.Heredoc */
+div.highlight .si { color: #a31515 } /* Literal.String.Interpol */
+div.highlight .sx { color: #a31515 } /* Literal.String.Other */
+div.highlight .sr { color: #a31515 } /* Literal.String.Regex */
+div.highlight .s1 { color: #a31515 } /* Literal.String.Single */
+div.highlight .ss { color: #a31515 } /* Literal.String.Symbol */

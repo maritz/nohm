@@ -3,45 +3,60 @@
 [![Build Status](https://travis-ci.org/maritz/nohm.svg?branch=master)](https://travis-ci.org/maritz/nohm)
 [![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 [![Known Vulnerabilities (Snyk)](https://snyk.io/test/github/maritz/nohm/badge.svg)](https://snyk.io/test/github/maritz/nohm)
-
-## v1 README
-
-This README is for the upcoming v2.0 release which has a lot of breaking changes. For the README of the version that is currently marked as stable in npm [go here](https://github.com/maritz/nohm/tree/v1_maintenance).
+[![Coverage Status](https://coveralls.io/repos/github/maritz/nohm/badge.png?branch=master)](https://coveralls.io/github/maritz/nohm?branch=master)
 
 ## Description
 
 Nohm is an object relational mapper (ORM) written for node.js and redis written in Typescript.
 
+### Features
+
+- **Standard ORM features (validate, store, search, sort, link/unlink, delete)**
+- **Share validations with browser.**  
+  Allows using the same code for clien validations that is used for backend. Includes filtering which validations are shared.
+- **Subscribe to orm events (save, delete, link, unlink)**  
+  With this you can do things like socket connections to get live updates from stored models.  
+  Since it uses redis PUBSUB you can scale your node app and clients can connect to seperate node app instances but will still get the same live updates.
+- **Typescript typings**  
+  nohm is written in Typescript and thus provides first-class typings for most things, including the option to type your model properties. This means if you use Typescript you don't have to remember every single property name of each model anymore, your IDE can tell you.
+- **Dynamic relations**  
+  This is a double-edged sword. Usually ORMs describe relations statically and you have to do database changes before you can add new relations.  
+  In nohm all relations are defined and used at run-time, since there are no schemas stored in the database.
+
 ## Requirements
 
-* redis >= 2.4
+- redis >= 2.4
 
 ## Documentation
 
-[v1 (current stable) documentation](http://maritz.github.com/nohm/)
+[v2 documentation](https://maritz.github.io/nohm/index.html)
 
-[v2 documentation](https://maritz.github.io/nohm/index_v2.html)
+[API docs](https://maritz.github.io/nohm/api/index.html)
+
+[v1 documentation](http://maritz.github.com/nohm/)
+
+[v1 to v2 migration guide](https://github.com/maritz/nohm/blob/master/CHANGELOG.md#v200-currently-in-alpha)
 
 ## Example
 
-The example rest-user-server is running as a demo on [https://nohm-example.maritz.space](https://nohm-example.maritz.space).
+The [examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server) is running as a demo on [https://nohm-example.maritz.space](https://nohm-example.maritz.space). It showcases most features on a basic level, including the shared validation and PubSub.
 
 <details>
 
 <summary>Example ES6 code (click to expand)</summary>
 
 ```javascript
-const NohmModule = require('nohm');
-// or if you use babel you can import
-// import { Nohm, NohmModel } from 'nohm';
+import { Nohm, NohmModel, ValidationError } from 'nohm';
+// or if your environment does not support module import
+// const NohmModule = require('nohm'); // access NohmModule.Nohm, NohmModule.NohmModel and NohmModule.ValidationError
 
 // This is the parent object where you set redis connection, create your models and some other configuration stuff
-const nohm = NohmModule.Nohm;
+const nohm = Nohm;
 
-nohm.setPrefix('example'); // This prefixes all redis keys. By default the prefix is "nohm"
+nohm.setPrefix('example'); // This prefixes all redis keys. By default the prefix is "nohm", you probably want to change it to your applications name or something similar
 
 // This is a class that you can extend to create nohm models. Not needed when using nohm.model()
-const Model = NohmModule.NohmModel;
+const Model = NohmModel;
 
 const existingCountries = ['Narnia', 'Gondor', 'Tatooine'];
 
@@ -77,8 +92,8 @@ UserModel.definitions = {
   },
   visits: {
     type: function incrVisitsBy(value, key, old) {
-      // arguments are always string here since they come from redis
-      // you are responsible for making sure they return in the type you want them to be.
+      // arguments are always string here since they come from redis.
+      // in behaviours (type functions) you are responsible for making sure they return in the type you want them to be.
       return parseInt(old, 10) + parseInt(value, 10);
     },
     defaultValue: 0,
@@ -107,7 +122,7 @@ redis.on('connect', async () => {
   try {
     await user.save();
   } catch (err) {
-    if (err instanceof NohmModule.ValidationError) {
+    if (err instanceof ValidationError) {
       // validation failed
       for (const key in err.errors) {
         const failures = err.errors[key].join(`', '`);
@@ -173,7 +188,7 @@ class UserModel extends NohmModel<IUserProperties> {
     // because of the TTypedDefinitions we can only define properties keys here that match our interface keys
     // the structure of the definitions is also typed
     email: {
-      type: 'string', // this is currently not checked. If you put a wrong type here, no compile error will appear.
+      type: 'string', // the type value is currently not checked. If you put a wrong type here, no compile error will appear.
       unique: true,
       validations: ['email'],
     },
@@ -181,16 +196,17 @@ class UserModel extends NohmModel<IUserProperties> {
       defaultValue: 0,
       index: true,
       type: function incrVisitsBy(value, _key, old): number {
-        return old + value; // Error: arguments are all strings, not assignable to number
+        return old + value; // TS Error: arguments are all strings, not assignable to number
       },
     },
   };
 
   public getVisitsAsString(): string {
-    return this.property('visits'); // Error: visits is number and thus not asignable to string
+    return this.property('visits'); // TS Error: visits is number and thus not asignable to string
   }
 
   public static async loadTyped(id: string): Promise<UserModel> {
+    // see main() below for explanation
     return userModelStatic.load<UserModel>(id);
   }
 }
@@ -206,7 +222,7 @@ async function main() {
   props.email; // string
   props.id; // any
   props.visits; // number
-  props.foo; // Error: Property foo does not exist
+  props.foo; // TS Error: Property foo does not exist
   user.getVisitsAsString(); // string
 }
 
@@ -217,16 +233,14 @@ main();
 
 ### More detailed examples
 
-* [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server)
-* [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
+- [nohm/examples/rest-user-server](https://github.com/maritz/nohm/tree/master/examples/rest-user-server)
+- [Beauvoir](https://github.com/yuchi/Beauvoir) Simple project management app - by yuchi (uses node v0.6 - very old)
 
 Do you have code that should/could be listed here? Message me!
 
 ## Add it to your project
 
-To add the current alpha vor v2 use the alpha tag
-
-    npm install --save nohm@alpha
+    npm install --save nohm
 
 ## Debug
 
@@ -234,7 +248,7 @@ Nohm uses the [debug](https://github.com/visionmedia/debug) module under the nam
 
     DEBUG="nohm:*" node yourApp.js
 
-Available submodules are `nohm:index`, `nohm:model`, `nohm:middleware`, `nohm:pubSub` and `nohm:idGenerator`.
+Available submodule debug namespaces are `nohm:index`, `nohm:model`, `nohm:middleware`, `nohm:pubSub` and `nohm:idGenerator`.
 
 ## Developing nohm
 
@@ -246,17 +260,12 @@ and run the development scripts (compile & watch & tests):
 
     npm run dev
 
-When submitting PRs, please make sure that you run the linter and that everything still builds fine.  
+When submitting PRs, please make sure that you run the linter and that everything still builds fine. The CI will catch these problems, but it's better to check locally first.  
 The easiest way to do that is to run the `prepublishOnly` script:
 
     npm run prepublishOnly
 
-## Running tests
-
-To run the tests you need to have nodeunit v0.6.4. This will be installed if you installed nohm with the --dev argument or when checking out this project and running npm install in there.
-Otherwise you can run:
-
-    npm install nodeunit@0.6.4
+## Running tests seperately
 
 Build the javascript files:
 
@@ -283,3 +292,13 @@ Now the keys will look like this:
     YourNewPrefix:something:something
 
 Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.
+
+## Note about npm audit warnings
+
+Currently npm audit detects 5 minor vulnerabilities in nohm, all of which are under nodeunit -> tap.
+
+nodeunit is only installed when you install the dev dependencies (aka. `npm install` in a checked out version of this repo for example).
+
+In addition to that the tap reporter of nodeunit is not used at all.
+
+Thus these vulnerabilities do not affect nohm. There is however an [open task](https://github.com/maritz/nohm/issues/116) to switch away from nodeunit anyways, so these warnings will hopefully go away soon™.

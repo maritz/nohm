@@ -35,26 +35,19 @@ export function getPrefix(prefix: string): INohmPrefixes {
 }
 
 export function checkEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) {
+    return true;
+  }
   if (!obj1 || (obj1 && !obj2)) {
     return false;
   }
-  if (obj1 === obj2) {
-    return true;
-  } else if (
-    obj1.hasOwnProperty('modelName') &&
-    obj2.hasOwnProperty('modelName') &&
+  if (
+    Object.hasOwnProperty.call(obj1, 'modelName') &&
+    Object.hasOwnProperty.call(obj2, 'modelName') &&
     obj1.modelName === obj2.modelName
   ) {
-    // if both have been saved, both must have the same id.
+    // both must have the same id.
     if (obj1.id && obj2.id && obj1.id === obj2.id) {
-      return true;
-    } else if (obj1.id && obj2.id) {
-      // both have been saved but do not share the same id -> must be different.
-      return false;
-    }
-
-    // if both have exactly the same properties (and at most one has been saved - see above)
-    if (obj1.allProperties(true) === obj2.allProperties(true)) {
       return true;
     }
   }

@@ -7,3 +7,8 @@ services:
   - redis-server
 before_script: 
   - npm run build
+script:
+  - npm run test
+  - npm run coverage:failIfLow
+after_success: 
+  - npm run coverage:coveralls

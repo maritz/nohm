@@ -1,0 +1,29 @@
+{
+  "tags": {
+    "allowUnknownTags": false
+  },
+  "source": {
+    "include": ["./tsOut", "./ts/universalValidators.js", "./README.md"],
+    "includePattern": ".js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "plugins": ["plugins/markdown"],
+  "opts": {
+    "template": "node_modules/docdash/",
+    "encoding": "utf8",
+    "destination": "docs/api/",
+    "recurse": true,
+    "verbose": true
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "includeDate": false
+    }
+  },
+  "docdash": {
+    "static": false,
+    "sort": true
+  }
+}

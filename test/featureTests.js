@@ -1154,12 +1154,12 @@ exports.defaultAsFunction = async (t) => {
     const test2 = new TestMockup();
 
     t.ok(
-      typeof test1.property('time') === 'number',
-      'time of test1 is not a number',
+      typeof test1.property('time') === 'string',
+      'time of test1 is not a string',
     );
     t.ok(
-      typeof test2.property('time') === 'number',
-      'time of test2 is not a number',
+      typeof test2.property('time') === 'string',
+      'time of test2 is not a string',
     );
     t.ok(
       test1.property('time') < test2.property('time'),
@@ -1198,7 +1198,7 @@ exports.defaultIdGeneration = async (t) => {
   */
 
 exports.factory = async (t) => {
-  t.expect(2);
+  t.expect(3);
   const name = 'UserMockup';
   const user = await nohm.factory(name);
   t.same(
@@ -1213,6 +1213,16 @@ exports.factory = async (t) => {
     t.same(
       err.message,
       'not found',
+      'Instantiating a user via factory with an id and callback did not try to load it',
+    );
+  }
+  const nonExistingModelName = 'doesnt exist';
+  try {
+    await nohm.factory(nonExistingModelName, 1234124235);
+  } catch (err) {
+    t.same(
+      err.message,
+      `Model '${nonExistingModelName}' not found.`,
       'Instantiating a user via factory with an id and callback did not try to load it',
     );
     t.done();
@@ -1427,6 +1437,42 @@ exports['register nohm model via ES6 class definition'] = async (t) => {
       'Created model does not have an id after saving.',
     );
 
+    const staticLoad = await ModelCtor.load(instance.id);
+    t.same(
+      staticLoad.allProperties(),
+      instance.allProperties(),
+      'register().load failed.',
+    );
+
+    const staticSort = await ModelCtor.sort({ field: 'name' }, [instance.id]);
+    t.same(staticSort, [instance.id], 'register().sort failed.');
+
+    const staticFind = await ModelCtor.find({
+      name: instance.property('name'),
+    });
+    t.same(staticFind, [instance.id], 'register().find failed.');
+
+    let staticFindAndLoad = await ModelCtor.findAndLoad({
+      name: instance.property('name'),
+    });
+    t.same(
+      staticFindAndLoad[0].allProperties(),
+      instance.allProperties(),
+      'register().findAndLoad failed.',
+    );
+
+    staticFindAndLoad = await ModelCtor.remove(instance.id);
+    t.equal(staticFindAndLoad, undefined, 'register().findAndLoad failed.');
+
+    staticFindAndLoad = await ModelCtor.findAndLoad({
+      name: instance.property('name'),
+    });
+    t.same(
+      staticFindAndLoad,
+      [],
+      'register().findAndLoad after remove failed.',
+    );
+
     t.done();
   } catch (err) {
     console.error(err);
@@ -1502,7 +1548,7 @@ exports['isLoaded'] = async (t) => {
 };
 
 exports['isDirty'] = async (t) => {
-  t.expect(12);
+  t.expect(13);
 
   let user = await nohm.factory('UserMockup');
   let other = await nohm.factory('NonIncrement');
@@ -1530,6 +1576,10 @@ exports['isDirty'] = async (t) => {
   other.id = 'new_id';
   t.same(other.id, 'new_id', 'other.id change failed.');
   t.same(other.isDirty, true, 'other.isDirty false after id change.');
+
+  const loadUser = await nohm.factory('UserMockup');
+  await loadUser.load(user.id);
+  t.same(loadUser.isDirty, false, 'loadUser.isDirty was true after load()');
 
   t.done();
 };
@@ -1759,6 +1809,75 @@ exports['manually setting id should allow saving with uniques'] = async (t) => {
   await instance.save();
   // just getting here means we pass. do a dummy test just to make a test run
   t.same(instance.id, origInstance.id, 'Something went horribly wrong.');
+
+  t.done();
+};
+
+exports['helpers.checkEqual generic tests'] = (t) => {
+  const checkEqual = require('../tsOut/helpers').checkEqual;
+
+  t.same(checkEqual(false, true), false, 'false, true');
+  t.same(checkEqual(true, false), false, 'true, false');
+  t.ok(checkEqual(true, true), 'true, true');
+  t.ok(checkEqual(false, false), 'false, false');
+
+  const test1 = new UserMockup();
+  const test2 = new UserMockup();
+
+  t.same(
+    checkEqual(test1, test2),
+    false,
+    `Model instances that don't have an id were identified as equal.`,
+  );
+  test1.id = 'asd';
+  test2.id = test1.id;
+  t.ok(
+    checkEqual(test1, test2),
+    `Model instances that DO have an id were identified as NOT equal.`,
+  );
+
+  t.done();
+};
+
+exports['helpers.checkEqual uses Object.hasOwnProperty for safety'] = async (
+  t,
+) => {
+  t.expect(1);
+
+  const checkEqual = require('../tsOut/helpers').checkEqual;
+
+  const test1 = Object.create(null);
+  const test2 = {};
+
+  // checkEqual throws an error here if it's not using Object.hasOwnProperty()
+  t.same(checkEqual(test1, test2), false, 'Something is wrong');
+
+  t.done();
+};
+
+exports['helpers.callbackError'] = (t) => {
+  const callbackError = require('../tsOut/helpers').callbackError;
+
+  t.throws(
+    () => {
+      callbackError(() => {});
+    },
+    /^Callback style has been removed. Use the returned promise\.$/,
+    'Does not throw when given only function',
+  );
+  t.throws(
+    () => {
+      callbackError('foo', 'bar', 'baz', () => {});
+    },
+    /^Callback style has been removed. Use the returned promise\.$/,
+    'Does not throw when last of 4 is function.',
+  );
+  t.doesNotThrow(() => {
+    callbackError('foo', 'bar', 'baz');
+  }, 'Error thrown even though arguments contained no function.');
+  t.doesNotThrow(() => {
+    callbackError(() => {}, 'bar', 'baz');
+  }, 'Error thrown even though last argument was not a function.');
 
   t.done();
 };

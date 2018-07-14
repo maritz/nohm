@@ -484,7 +484,7 @@ exports.validation = {
 
   castTimestamp: function(t) {
     var user = new UserMockup(),
-      should = new Date('1988-03-12T00:00:00Z').getTime();
+      should = new Date('1988-03-12T00:00:00Z').getTime().toString();
     t.expect(8);
 
     user.property('castTimestamp', should);
@@ -962,6 +962,23 @@ exports['multiple validation failures produce multiple error entries'] = async (
       ['length', 'email'],
       e.errors.email,
       'ValidationError was not restricted to error keys',
+    );
+    t.done();
+  }
+};
+
+exports['ValidationError has modelName as property'] = async (t) => {
+  var user = new UserMockup();
+  t.expect(1);
+
+  user.property('name', '');
+  try {
+    await user.save();
+  } catch (e) {
+    t.same(
+      e.modelName,
+      user.modelName,
+      "ValidationError didn't have the right modelName set",
     );
     t.done();
   }

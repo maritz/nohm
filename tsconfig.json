@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2017",
     "module": "commonjs",
     "declaration": true,
     "experimentalDecorators": true,
@@ -11,19 +11,13 @@
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "noUnusedParameters": true,
-    "lib": [
-      "es7"
-    ],
+    "lib": ["es7"],
     "outDir": "./tsOut",
-    "sourceMap": true
+    "sourceMap": true,
+    "keyofStringsOnly": true,
+    "declarationMap": true
   },
-  "files": [
-    "./ts/index.ts"
-  ],
-  "include": [
-    "./ts/tests.ts"
-  ],
-  "exclude": [
-    "./lib/*.js"
-  ]
+  "files": ["./ts/index.ts"],
+  "include": ["./ts/tests.ts"],
+  "exclude": ["./lib/*.js"]
 }

@@ -7,10 +7,11 @@ admin/*.sh
 *.log
 .sass-cache
 dump.rdb
-style.css
 experiments.js
 .c9revisions
 .settings
 .c9/
 tsOut/
 .vscode/
+coverage/
+.nyc_output/
