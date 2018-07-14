@@ -1,6 +1,6 @@
 {
   "name": "nohm-example-usage",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "small nohm example app",
   "author": "Moritz Peters",
   "private": true,
@@ -19,7 +19,7 @@
     "bcrypt": "^2.0.1",
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "nohm": "alpha",
+    "nohm": "^2.1.0",
     "socket.io": "^2.1.1"
   }
 }
