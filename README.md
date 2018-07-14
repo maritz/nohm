@@ -292,13 +292,3 @@ Now the keys will look like this:
     YourNewPrefix:something:something
 
 Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.
-
-## Note about npm audit warnings
-
-Currently npm audit detects 5 minor vulnerabilities in nohm, all of which are under nodeunit -> tap.
-
-nodeunit is only installed when you install the dev dependencies (aka. `npm install` in a checked out version of this repo for example).
-
-In addition to that the tap reporter of nodeunit is not used at all.
-
-Thus these vulnerabilities do not affect nohm. There is however an [open task](https://github.com/maritz/nohm/issues/116) to switch away from nodeunit anyways, so these warnings will hopefully go away soon™.
