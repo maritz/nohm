@@ -724,7 +724,7 @@ class NohmClass {
         return this.initPubSub();
     }
     async initPubSub() {
-        if (!this.getPubSubClient) {
+        if (!this.getPubSubClient()) {
             throw new Error('A second redis client must set via nohm.setPubSubClient before using pub/sub methods.');
         }
         else if (this.isPublishSubscribed === true) {

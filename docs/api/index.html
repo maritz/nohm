@@ -272,11 +272,7 @@ main();</code>
 You can prevent this by passing --no-cleanup (which will leave hundreds or thousands of test keys in your database).
 You may also change the prefix (&quot;nohmtests&quot;) part doing something like</p>
 <pre class="prettyprint source"><code>node test/tests.js --nohm-prefix YourNewPrefix</code></pre><p>Now the keys will look like this:</p>
-<pre class="prettyprint source"><code>YourNewPrefix:something:something</code></pre><p>Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.</p>
-<h2>Note about npm audit warnings</h2><p>Currently npm audit detects 5 minor vulnerabilities in nohm, all of which are under nodeunit -&gt; tap.</p>
-<p>nodeunit is only installed when you install the dev dependencies (aka. <code>npm install</code> in a checked out version of this repo for example).</p>
-<p>In addition to that the tap reporter of nodeunit is not used at all.</p>
-<p>Thus these vulnerabilities do not affect nohm. There is however an <a href="https://github.com/maritz/nohm/issues/116">open task</a> to switch away from nodeunit anyways, so these warnings will hopefully go away soon™.</p></article>
+<pre class="prettyprint source"><code>YourNewPrefix:something:something</code></pre><p>Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.</p></article>
     </section>
 
 
