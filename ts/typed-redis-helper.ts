@@ -3,12 +3,12 @@ import { Multi, RedisClient } from 'redis';
 export const errorMessage =
   'Supplied redis client does not have the correct methods.';
 
-export function GET(client: RedisClient | Multi, key: string): Promise<string> {
+export function get(client: RedisClient | Multi, key: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    if (!client.GET) {
+    if (!client.get) {
       return reject(new Error(errorMessage));
     }
-    client.GET(key, (err, value) => {
+    client.get(key, (err, value) => {
       if (err) {
         reject(err);
       } else {
@@ -18,15 +18,15 @@ export function GET(client: RedisClient | Multi, key: string): Promise<string> {
   });
 }
 
-export function EXISTS(
+export function exists(
   client: RedisClient | Multi,
   key: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.EXISTS) {
+    if (!client.exists) {
       return reject(new Error(errorMessage));
     }
-    client.EXISTS(key, (err, reply) => {
+    client.exists(key, (err, reply) => {
       if (err) {
         reject(err);
       } else {
@@ -36,12 +36,12 @@ export function EXISTS(
   });
 }
 
-export function DEL(client: RedisClient | Multi, key: string): Promise<void> {
+export function del(client: RedisClient | Multi, key: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    if (!client.DEL) {
+    if (!client.del) {
       return reject(new Error(errorMessage));
     }
-    client.DEL(key, (err) => {
+    client.del(key, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -51,16 +51,16 @@ export function DEL(client: RedisClient | Multi, key: string): Promise<void> {
   });
 }
 
-export function SET(
+export function set(
   client: RedisClient | Multi,
   key: string,
   value: string,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    if (!client.SET) {
+    if (!client.set) {
       return reject(new Error(errorMessage));
     }
-    client.SET(key, value, (err) => {
+    client.set(key, value, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -70,16 +70,16 @@ export function SET(
   });
 }
 
-export function MSET(
+export function mset(
   client: RedisClient | Multi,
   keyValueArrayOrString: string | Array<string>,
   ...keyValuePairs: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    if (!client.MSET) {
+    if (!client.mset) {
       return reject(new Error(errorMessage));
     }
-    client.MSET.apply(client, [
+    client.mset.apply(client, [
       keyValueArrayOrString,
       ...keyValuePairs,
       (err: Error | null) => {
@@ -93,16 +93,16 @@ export function MSET(
   });
 }
 
-export function SETNX(
+export function setnx(
   client: RedisClient | Multi,
   key: string,
   value: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.SETNX) {
+    if (!client.setnx) {
       return reject(new Error(errorMessage));
     }
-    client.SETNX(key, value, (err, reply) => {
+    client.setnx(key, value, (err, reply) => {
       if (err) {
         reject(err);
       } else {
@@ -112,15 +112,15 @@ export function SETNX(
   });
 }
 
-export function SMEMBERS(
+export function smembers(
   client: RedisClient | Multi,
   key: string,
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
-    if (!client.SMEMBERS) {
+    if (!client.smembers) {
       return reject(new Error(errorMessage));
     }
-    client.SMEMBERS(key, (err, values) => {
+    client.smembers(key, (err, values) => {
       if (err) {
         reject(err);
       } else {
@@ -130,15 +130,15 @@ export function SMEMBERS(
   });
 }
 
-export function SCARD(
+export function scard(
   client: RedisClient | Multi,
   key: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.SCARD) {
+    if (!client.scard) {
       return reject(new Error(errorMessage));
     }
-    client.SCARD(key, (err, value) => {
+    client.scard(key, (err, value) => {
       if (err) {
         reject(err);
       } else {
@@ -148,16 +148,16 @@ export function SCARD(
   });
 }
 
-export function SISMEMBER(
+export function sismember(
   client: RedisClient | Multi,
   key: string,
   value: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.SISMEMBER) {
+    if (!client.sismember) {
       return reject(new Error(errorMessage));
     }
-    client.SISMEMBER(key, value, (err, numFound) => {
+    client.sismember(key, value, (err, numFound) => {
       if (err) {
         reject(err);
       } else {
@@ -167,16 +167,16 @@ export function SISMEMBER(
   });
 }
 
-export function SADD(
+export function sadd(
   client: RedisClient | Multi,
   key: string,
   value: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.SADD) {
+    if (!client.sadd) {
       return reject(new Error(errorMessage));
     }
-    client.SADD(key, value, (err, numInserted) => {
+    client.sadd(key, value, (err, numInserted) => {
       if (err) {
         reject(err);
       } else {
@@ -186,16 +186,16 @@ export function SADD(
   });
 }
 
-export function SINTER(
+export function sinter(
   client: RedisClient | Multi,
   keyArrayOrString: string | Array<string>,
   ...keys: Array<string>
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
-    if (!client.SINTER) {
+    if (!client.sinter) {
       return reject(new Error(errorMessage));
     }
-    client.SINTER.apply(client, [
+    client.sinter.apply(client, [
       keyArrayOrString,
       ...keys,
       (err: Error | null, values: Array<string>) => {
@@ -209,15 +209,15 @@ export function SINTER(
   });
 }
 
-export function HGETALL(
+export function hgetall(
   client: RedisClient | Multi,
   key: string,
 ): Promise<{ [key: string]: string }> {
   return new Promise<{ [key: string]: string }>((resolve, reject) => {
-    if (!client.HGETALL) {
+    if (!client.hgetall) {
       return reject(new Error(errorMessage));
     }
-    client.HGETALL(key, (err, values) => {
+    client.hgetall(key, (err, values) => {
       if (err) {
         reject(err);
       } else {
@@ -227,12 +227,12 @@ export function HGETALL(
   });
 }
 
-export function EXEC<T>(client: Multi): Promise<Array<T>> {
+export function exec<T>(client: Multi): Promise<Array<T>> {
   return new Promise<Array<T>>((resolve, reject) => {
-    if (!client.EXEC) {
+    if (!client.exec) {
       return reject(new Error(errorMessage));
     }
-    client.EXEC((err, results) => {
+    client.exec((err, results) => {
       if (err) {
         return reject(err);
       } else {
@@ -242,16 +242,16 @@ export function EXEC<T>(client: Multi): Promise<Array<T>> {
   });
 }
 
-export function PSUBSCRIBE(
+export function psubscribe(
   client: RedisClient,
   patternOrPatternArray: string | Array<string>,
   ...patterns: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    if (!client.PSUBSCRIBE) {
+    if (!client.psubscribe) {
       return reject(new Error(errorMessage));
     }
-    client.PSUBSCRIBE.apply(client, [
+    client.psubscribe.apply(client, [
       patternOrPatternArray,
       ...patterns,
       (err: Error | null) => {
@@ -265,16 +265,16 @@ export function PSUBSCRIBE(
   });
 }
 
-export function PUNSUBSCRIBE(
+export function punsubscribe(
   client: RedisClient,
   patternOrPatternArray: string | Array<string>,
   ...patterns: Array<string>
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    if (!client.PUNSUBSCRIBE) {
+    if (!client.punsubscribe) {
       return reject(new Error(errorMessage));
     }
-    client.PUNSUBSCRIBE.apply(client, [
+    client.punsubscribe.apply(client, [
       patternOrPatternArray,
       ...patterns,
       (err: Error | null) => {
