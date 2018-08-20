@@ -217,10 +217,10 @@ export class NohmClass {
   public setClient(client?: redis.RedisClient) {
     debug(
       'Setting new redis client. Connected: %s; Address: %s.',
-      client,
+      client && client.connected,
       client && (client as any).address,
     );
-    if (client) {
+    if (client && !client.connected) {
       this
         .logError(`WARNING: setClient() received a redis client that is not connected yet.
       Consider waiting for an established connection before setting it.`);
