@@ -65,6 +65,7 @@
     "coveralls": "^3.0.2",
     "docdash": "^0.4.0",
     "eslint": "^5.1.0",
+    "ioredis": "^4.0.0",
     "jsdoc": "^3.5.5",
     "nodemon": "^1.18.2",
     "nodeunit": "^0.11.3",

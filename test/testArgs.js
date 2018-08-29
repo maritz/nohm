@@ -23,21 +23,40 @@ process.argv.forEach(function(val, index) {
   }
 });
 
-exports.redis = require('redis').createClient(
-  exports.redis_port,
-  exports.redis_host,
-  {
-    auth_pass: exports.redis_auth,
-  },
-);
+if (process.env.NOHM_TEST_IOREDIS=="true"){
+    
+    const Redis = require('ioredis')
 
-exports.secondaryClient = require('redis').createClient(
-  exports.redis_port,
-  exports.redis_host,
-  {
-    auth_pass: exports.redis_auth,
-  },
-);
+    exports.redis = new Redis({
+        port: exports.redis_port,
+        host: exports.redis_host,
+        password: exports.redis_auth
+    });
+
+    exports.secondaryClient = new Redis({
+        port: exports.redis_port,
+        host: exports.redis_host,
+        password: exports.redis_auth
+    });
+}
+else {
+
+    exports.redis = require('redis').createClient(
+    exports.redis_port,
+    exports.redis_host,
+    {
+        auth_pass: exports.redis_auth,
+    },
+    );
+
+    exports.secondaryClient = require('redis').createClient(
+    exports.redis_port,
+    exports.redis_host,
+    {
+        auth_pass: exports.redis_auth,
+    },
+    );
+}
 
 /**
  * 
