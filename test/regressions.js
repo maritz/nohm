@@ -51,7 +51,7 @@ exports['#114 update does not reset index'] = async (t) => {
   });
   await instance2Activated.save();
 
-  const membersTrue = await redisPromise.SMEMBERS(
+  const membersTrue = await redisPromise.smembers(
     redis,
     `${instance2Activated.prefix('index')}:isActive:true`,
   );
@@ -62,14 +62,14 @@ exports['#114 update does not reset index'] = async (t) => {
     'Not all instances were properly indexed as isActive:true',
   );
 
-  const membersFalse = await redisPromise.SMEMBERS(
+  const membersFalse = await redisPromise.smembers(
     redis,
     `${instance2Activated.prefix('index')}:isActive:false`,
   );
 
   t.same(membersFalse, [], 'An index for isActive:false remained.');
 
-  const uniqueExists = await redisPromise.EXISTS(
+  const uniqueExists = await redisPromise.exists(
     redis,
     `${instance2Activated.prefix('unique')}:uniqueDeletion:two`,
   );

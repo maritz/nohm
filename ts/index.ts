@@ -33,7 +33,7 @@ import {
   timestampProperty,
   TTypedDefinitions,
 } from './model.header';
-import { PSUBSCRIBE, PUNSUBSCRIBE } from './typed-redis-helper';
+import { psubscribe, punsubscribe } from './typed-redis-helper';
 
 export {
   boolProperty,
@@ -217,13 +217,14 @@ export class NohmClass {
   public setClient(client?: redis.RedisClient) {
     debug(
       'Setting new redis client. Connected: %s; Address: %s.',
-      client && client.connected,
+      client && (client.connected || client.status === 'ready'),
       client && (client as any).address,
     );
-    if (client && !client.connected) {
+    if (client && !(client.connected || client.status === 'ready')) {
       this
         .logError(`WARNING: setClient() received a redis client that is not connected yet.
-      Consider waiting for an established connection before setting it.`);
+      Consider waiting for an established connection before setting it. Status: ${client.status}
+      , connected: ${client.connected}`);
     } else if (!client) {
       client = redis.createClient();
     }
@@ -919,7 +920,7 @@ export class NohmClass {
     this.publishEventEmitter.setMaxListeners(0); // TODO: check if this is sensible
     this.isPublishSubscribed = true;
 
-    await PSUBSCRIBE(
+    await psubscribe(
       this.publishClient,
       this.prefix.channel + PUBSUB_ALL_PATTERN,
     );
@@ -1002,7 +1003,7 @@ export class NohmClass {
         this.prefix.channel + PUBSUB_ALL_PATTERN,
       );
       this.isPublishSubscribed = false;
-      await PUNSUBSCRIBE(
+      await punsubscribe(
         this.publishClient,
         this.prefix.channel + PUBSUB_ALL_PATTERN,
       );
