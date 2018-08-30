@@ -23,55 +23,36 @@ process.argv.forEach(function(val, index) {
   }
 });
 
-if (process.env.NOHM_TEST_IOREDIS=="true"){
-    
-    const Redis = require('ioredis')
+if (process.env.NOHM_TEST_IOREDIS == 'true') {
+  console.info('Using ioredis for tests');
+  const Redis = require('ioredis');
 
-    exports.redis = new Redis({
-        port: exports.redis_port,
-        host: exports.redis_host,
-        password: exports.redis_auth
-    });
+  exports.redis = new Redis({
+    port: exports.redis_port,
+    host: exports.redis_host,
+    password: exports.redis_auth,
+  });
 
-    exports.secondaryClient = new Redis({
-        port: exports.redis_port,
-        host: exports.redis_host,
-        password: exports.redis_auth
-    });
-}
-else {
-
-    exports.redis = require('redis').createClient(
+  exports.secondaryClient = new Redis({
+    port: exports.redis_port,
+    host: exports.redis_host,
+    password: exports.redis_auth,
+  });
+} else {
+  console.info('Using node_redis for tests');
+  exports.redis = require('redis').createClient(
     exports.redis_port,
     exports.redis_host,
     {
-        auth_pass: exports.redis_auth,
+      auth_pass: exports.redis_auth,
     },
-    );
+  );
 
-    exports.secondaryClient = require('redis').createClient(
+  exports.secondaryClient = require('redis').createClient(
     exports.redis_port,
     exports.redis_host,
     {
-        auth_pass: exports.redis_auth,
+      auth_pass: exports.redis_auth,
     },
-    );
+  );
 }
-
-/**
- * 
-const Redis = require('ioredis');
-const client = exports.redis = new Redis({
-  port: exports.port,
-  host: exports.host,
-  password: exports.redis_auth,
-});
-
-client.connected = false;
-
-setInterval(() => {
-  if (!client.connected && client.status === 'ready') {
-    client.connected = true;
-  }
-})
- */

@@ -937,14 +937,15 @@ exports.deleteNonExistant = async (t) => {
 
   try {
     await user.remove();
+    t.fail('Removing a user that should not exist did not throw an error.');
   } catch (err) {
     t.same(
       err,
       new Error('not found'),
       'Trying to delete an instance that doesn\'t exist did not return "not found".',
     );
-    t.done();
   }
+  t.done();
 };
 
 const MethodOverwrite = nohm.model('methodOverwrite', {

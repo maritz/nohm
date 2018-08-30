@@ -1,4 +1,5 @@
 import { Multi, RedisClient } from 'redis';
+import * as IORedis from 'ioredis';
 
 export const errorMessage =
   'Supplied redis client does not have the correct methods.';
@@ -236,6 +237,23 @@ export function exec<T>(client: Multi): Promise<Array<T>> {
       if (err) {
         return reject(err);
       } else {
+        // detect if it's ioredis, which has a different return structure.
+        // better methods for doing this would be very welcome!
+        if (
+          Array.isArray(results[0]) &&
+          (results[0][0] === null ||
+            // once ioredis has proper typings, this any casting can be changed
+            results[0][0] instanceof (IORedis as any).ReplyError)
+        ) {
+          // transform ioredis format to node_redis format
+          results = results.map((result: Array<any>) => {
+            const error = result[0];
+            if (error instanceof (IORedis as any).ReplyError) {
+              return error.message;
+            }
+            return result[1];
+          });
+        }
         resolve(results);
       }
     });

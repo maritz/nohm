@@ -1324,7 +1324,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private async getHashAll(id: any): Promise<Partial<TProps>> {
     const props: Partial<TProps> = {};
     const values = await hgetall(this.client, `${this.prefix('hash')}:${id}`);
-    if (values === null) {
+    if (values === null || Object.keys(values).length === 0) {
       throw new Error('not found');
     }
     Object.keys(values).forEach((key) => {
@@ -1600,7 +1600,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   ): Promise<void> {
     const ids = await smembers(this.client, item.ownIdsKey);
     ids.forEach((id) => {
-      multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
+      multi.srem(`${item.otherIdsKey}${id}`, this.stringId());
     });
   }
 
@@ -1843,7 +1843,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   ): Promise<Array<string>> {
     return new Promise((resolve, reject) => {
       const key = `${this.prefix('scoredindex')}:${search.key}`;
-      let command: 'ZRANGEBYSCORE' | 'ZREVRANGEBYSCORE' = 'ZRANGEBYSCORE';
+      let command: 'zrangebyscore' | 'zrevrangebyscore' = 'zrangebyscore';
       const options: ISearchOption = {
         endpoints: '[]',
         limit: -1,
@@ -1857,7 +1857,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         (options.max === '-inf' && options.min !== '-inf') ||
         parseFloat('' + options.min) > parseFloat('' + options.max)
       ) {
-        command = 'ZREVRANGEBYSCORE';
+        command = 'zrevrangebyscore';
       }
 
       if (options.endpoints === ')') {
@@ -1957,7 +1957,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     let tmpKey: string = '';
 
     debug(
-      `Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`,
+      `Sorting '%s's with these options (this.id, alpha, direction, scored, start, stop, ids):`,
       this.modelName,
       this.id,
       alpha,
@@ -1997,10 +1997,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       }
     }
     if (scored) {
-      const method = (direction && direction === 'DESC') ? 'zrevrange' : 'zrange';
+      const method = direction && direction === 'DESC' ? 'zrevrange' : 'zrange';
       client[method](zsetKey, start, stop);
     } else {
-      client.sort(
+      const args = [
         idsetKey,
         'BY',
         `${this.prefix('hash')}:*->${options.field}`,
@@ -2008,8 +2008,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         String(start),
         String(stop),
         direction,
-        alpha as any, // any casting because passing in an empty string actually results in errors in some cases
-      );
+      ];
+      if (alpha) {
+        // due to the way ioredis handles input parameters, we have to do this weird apply and append thing.
+        // when just passing in an undefined value it throws syntax errors because it attempts to add that as an actual
+        // parameter
+        args.push(alpha);
+      }
+      client.sort.apply(client, args);
     }
     if (ids) {
       client.del(tmpKey);

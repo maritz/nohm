@@ -116,6 +116,7 @@ exports.find = {
             email: 'numericindextest@hurgel.de',
             gender: 'male',
             number: 3,
+            numberNonIndexed: 4,
           },
           {
             // id: 2
@@ -124,6 +125,7 @@ exports.find = {
             gender: 'male',
             number: 4,
             number2: 33,
+            numberNonIndexed: 4,
           },
           {
             // id: 3
@@ -132,33 +134,39 @@ exports.find = {
             gender: 'female',
             number: 4,
             number2: 1,
+            numberNonIndexed: 1,
           },
           {
             // id: 4
             name: 'uniquefind',
             email: 'uniquefind@hurgel.de',
+            numberNonIndexed: 5,
           },
           {
             // id: 5
             name: 'indextest',
             email: 'indextest@hurgel.de',
+            numberNonIndexed: 8,
           },
           {
             // id: 6
             name: 'indextest',
             email: 'indextest2@hurgel.de',
+            numberNonIndexed: 200,
           },
           {
             // id: 7
             name: 'a_sort_first',
             email: 'a_sort_first@hurgel.de',
             number: 1,
+            numberNonIndexed: 0,
           },
           {
             // id: 8
             name: 'z_sort_last',
             email: 'z_sort_last@hurgel.de',
             number: 100000,
+            numberNonIndexed: 24.5,
           },
         ],
         function(users, ids) {

@@ -35,15 +35,21 @@ module.exports = {
   'set/get pubSub client': async (t) => {
     t.expect(2);
     await nohm.setPubSubClient(secondaryClient);
-    t.same(
-      nohm.getPubSubClient(),
-      secondaryClient,
-      "Second redis client wasn't set properly",
-    );
-    t.ok(
-      nohm.getPubSubClient().subscription_set,
-      "Second redis client isn't subscribed to anything",
-    );
+    const client = nohm.getPubSubClient();
+    t.same(client, secondaryClient, "Second redis client wasn't set properly");
+    const isIoRedis =
+      client.connected === undefined && client.status === 'ready';
+    if (isIoRedis) {
+      t.ok(
+        client.condition.subscriber !== false,
+        "Second redis client isn't subscribed to anything",
+      );
+    } else {
+      t.ok(
+        client.subscription_set,
+        "Second redis client isn't subscribed to anything",
+      );
+    }
     t.done();
   },
 
