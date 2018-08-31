@@ -165,11 +165,13 @@ class NohmClass {
      * Note: this will not affect models that have a client set on their own.
      */
     setClient(client) {
-        debug('Setting new redis client. Connected: %s; Address: %s.', client &amp;&amp; client.connected, client &amp;&amp; client.address);
-        if (client &amp;&amp; !client.connected) {
+        debug('Setting new redis client. Connected: %s; Address: %s.', client &amp;&amp; (client.connected || client.status === 'ready'), client &amp;&amp; client.address);
+        // ioredis uses .status string instead of .connected boolean
+        if (client &amp;&amp; !(client.connected || client.status === 'ready')) {
             this
                 .logError(`WARNING: setClient() received a redis client that is not connected yet.
-      Consider waiting for an established connection before setting it.`);
+      Consider waiting for an established connection before setting it. Status (if ioredis): ${client.status}
+      , connected (if node_redis): ${client.connected}`);
         }
         else if (!client) {
             client = redis.createClient();
@@ -650,7 +652,7 @@ class NohmClass {
     async purgeDb(client = this.client) {
         function delKeys(prefix) {
             return new Promise((resolve, reject) => {
-                client.KEYS(prefix + '*', (err, keys) => {
+                client.keys(prefix + '*', (err, keys) => {
                     if (err) {
                         reject(err);
                     }
@@ -658,7 +660,7 @@ class NohmClass {
                         resolve();
                     }
                     else {
-                        client.DEL(keys, (innerErr) => {
+                        client.del(keys, (innerErr) => {
                             if (innerErr) {
                                 reject(innerErr);
                             }
@@ -734,7 +736,7 @@ class NohmClass {
         this.publishEventEmitter = new events_1.EventEmitter();
         this.publishEventEmitter.setMaxListeners(0); // TODO: check if this is sensible
         this.isPublishSubscribed = true;
-        await typed_redis_helper_1.PSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+        await typed_redis_helper_1.psubscribe(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
         debugPubSub(`Redis PSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
         this.publishClient.on('pmessage', (_pattern, channel, message) => {
             const suffix = channel.slice(this.prefix.channel.length);
@@ -782,7 +784,7 @@ class NohmClass {
         if (this.isPublishSubscribed === true) {
             debugPubSub(`Redis PUNSUBSCRIBE for '%s'.`, this.prefix.channel + PUBSUB_ALL_PATTERN);
             this.isPublishSubscribed = false;
-            await typed_redis_helper_1.PUNSUBSCRIBE(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
+            await typed_redis_helper_1.punsubscribe(this.publishClient, this.prefix.channel + PUBSUB_ALL_PATTERN);
         }
         return this.publishClient;
     }
