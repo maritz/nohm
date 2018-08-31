@@ -1,14 +1,71 @@
-var nohm = require(__dirname + '/../').Nohm,
-  iterations = 10000;
+const nohm = require(__dirname + '/../').Nohm;
+let iterations = 10000;
 
-const redisClient = require('redis').createClient();
+let redisOptions = {};
 
-redisClient.once('connect', async () => {
+process.argv.forEach(function(val, index) {
+  if (val === '--nohm-prefix') {
+    redisOptions.prefix = process.argv[index + 1];
+  }
+  if (val === '--redis-host') {
+    redisOptions.redis_host = process.argv[index + 1];
+  }
+  if (val === '--redis-port') {
+    redisOptions.redis_port = process.argv[index + 1];
+  }
+  if (val === '--redis-auth') {
+    redisOptions.redis_auth = process.argv[index + 1];
+  }
+  if (val === '--iterations') {
+    iterations = parseInt(process.argv[index + 1], 10);
+    if (isNaN(iterations)) {
+      throw new Error(
+        `Invalid iterations argument: ${
+          process.argv[index + 1]
+        }. Must be a number.`,
+      );
+    }
+  }
+});
+
+let redisClient;
+
+const main = () => {
+  console.info('Connected to redis.');
+  stress().catch((error) => {
+    console.error('An error occured during benchmarking:', error);
+    process.exit(1);
+  });
+};
+
+if (process.env.NOHM_TEST_IOREDIS == 'true') {
+  console.info('Using ioredis for stress test');
+  const Redis = require('ioredis');
+
+  redisClient = new Redis({
+    port: redisOptions.redis_port,
+    host: redisOptions.redis_host,
+    password: redisOptions.redis_auth,
+  });
+  redisClient.once('ready', main);
+} else {
+  console.info('Using node_redis for stress test');
+  redisClient = require('redis').createClient(
+    redisOptions.redis_port,
+    redisOptions.redis_host,
+    {
+      auth_pass: redisOptions.redis_auth,
+    },
+  );
+  redisClient.once('connect', main);
+}
+
+const stress = async () => {
   console.log(
     `Starting stress test - saving and then updating ${iterations} models in parallel.`,
   );
 
-  nohm.setPrefix('nohm-stress-test');
+  nohm.setPrefix(redisOptions.prefix || 'nohm-stress-test');
   nohm.setClient(redisClient);
 
   var models = require(__dirname + '/models');
@@ -30,7 +87,7 @@ redisClient.once('connect', async () => {
     counter++;
     if (counter >= iterations) {
       const updateTime = Date.now() - startUpdates;
-      const timePerUpdate = iterations / updateTime * 1000;
+      const timePerUpdate = (iterations / updateTime) * 1000;
       console.log(
         `${updateTime}ms for ${counter} parallel User updates, ${timePerUpdate.toFixed(
           2,
@@ -38,7 +95,7 @@ redisClient.once('connect', async () => {
       );
       console.log(`Total time: ${Date.now() - start}ms`);
       console.log('Memory usage after', process.memoryUsage());
-      redisClient.SCARD(
+      redisClient.scard(
         `${nohm.prefix.idsets}${new UserModel().modelName}`,
         async (err, numUsers) => {
           if (err) {
@@ -96,7 +153,7 @@ redisClient.once('connect', async () => {
     if (counter >= iterations) {
       saveCallback = null;
       const saveTime = Date.now() - start;
-      const timePerSave = iterations / saveTime * 1000;
+      const timePerSave = (iterations / saveTime) * 1000;
       console.log(
         `${saveTime}ms for ${counter} parallel User saves, ${timePerSave.toFixed(
           2,
@@ -115,4 +172,4 @@ redisClient.once('connect', async () => {
       .catch(errorCallback);
     users.push(user);
   }
-});
+};
