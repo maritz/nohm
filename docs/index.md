@@ -109,13 +109,38 @@ nohm.setPrefix('yourAppPrefixForRedis');
 
 You need to set a redis client for nohm. You should connect and select the appropriate database before you set it.
 
+##### node_redis
+
+The standard method would be to use node_redis:
+
 ```javascript
-const redisClient = require('redis').createClient();
+const redis = require('redis');
+const redisClient = redis.createClient();
 // wait for redis to connect, to make sure everything will work as expected
 redis.on('connect', () => {
   nohm.setClient(redisClient);
 });
 ```
+
+##### ioredis
+
+_(available in v2.2.0 onwards)_
+You can also use ioredis instead of node_redis.
+
+```javascript
+const Redis = require('ioredis');
+const redisClient = new Redis();
+// wait for ioredis to be ready, to make sure everything will work as expected
+redis.on('ready', () => {
+  nohm.setClient(redisClient);
+});
+```
+
+In the [simple stress tests](https://github.com/maritz/nohm/blob/master/extra/stress.js) using ioredis shows [more than a 20% decrease in performance](https://github.com/maritz/nohm/pull/138#issuecomment-417621930).
+
+If you require ioredis for other parts of your application and performance is important to you, the best option is probably to use ioredis for that and node\*redis for nohm. There _should_ be no conflicts when using both in the same application. Tread with caution though and test and benchmark it yourself for your use-cases.
+
+_Note: Clustering and sharding is not yet tested or officially supported by nohm._
 
 #### Logging
 

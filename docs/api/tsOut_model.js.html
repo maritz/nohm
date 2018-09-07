@@ -200,14 +200,14 @@ class NohmModel {
                 }
             });
             try {
-                const dbVersion = await typed_redis_helper_1.GET(this.client, versionKey);
+                const dbVersion = await typed_redis_helper_1.get(this.client, versionKey);
                 if (this.meta.version !== dbVersion) {
                     const generator = this.options.idGenerator || 'default';
                     debug(`Setting meta for model '%s' with version '%s' and idGenerator '%s' to %j.`, this.modelName, this.meta.version, generator, properties);
                     await Promise.all([
-                        typed_redis_helper_1.SET(this.client, idGeneratorKey, generator.toString()),
-                        typed_redis_helper_1.SET(this.client, propertiesKey, JSON.stringify(properties)),
-                        typed_redis_helper_1.SET(this.client, versionKey, this.meta.version),
+                        typed_redis_helper_1.set(this.client, idGeneratorKey, generator.toString()),
+                        typed_redis_helper_1.set(this.client, propertiesKey, JSON.stringify(properties)),
+                        typed_redis_helper_1.set(this.client, versionKey, this.meta.version),
                     ]);
                 }
                 this.meta.inDb = true;
@@ -480,7 +480,7 @@ class NohmModel {
         }
         let numIdExisting = 0;
         if (action !== 'create') {
-            numIdExisting = await typed_redis_helper_1.SISMEMBER(this.client, this.prefix('idsets'), this.id);
+            numIdExisting = await typed_redis_helper_1.sismember(this.client, this.prefix('idsets'), this.id);
         }
         if (action === 'create' &amp;&amp; numIdExisting === 0) {
             debug(`Creating new instance '%s.%s' because action was '%s' and numIdExisting was %d.`, this.modelName, this.id, action, numIdExisting);
@@ -498,7 +498,7 @@ class NohmModel {
     }
     async create() {
         const id = await this.generateId();
-        await typed_redis_helper_1.SADD(this.client, this.prefix('idsets'), id);
+        await typed_redis_helper_1.sadd(this.client, this.prefix('idsets'), id);
         await this.setUniqueIds(id);
         this.id = id;
     }
@@ -542,7 +542,7 @@ class NohmModel {
         }
         if (mSetArguments.length !== 0) {
             debug(`Setting all unique indices of model '%s.%s' to new id '%s'.`, this.modelName, this.id, id);
-            return typed_redis_helper_1.MSET(this.client, mSetArguments);
+            return typed_redis_helper_1.mset(this.client, mSetArguments);
         }
     }
     async update(options) {
@@ -550,7 +550,7 @@ class NohmModel {
             throw new Error('Update was called without having an id set.');
         }
         const hmSetArguments = [];
-        const client = this.client.MULTI();
+        const client = this.client.multi();
         const isCreate = !this.inDb;
         hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
         for (const [key, prop] of this.properties) {
@@ -560,10 +560,10 @@ class NohmModel {
         }
         if (hmSetArguments.length > 1) {
             hmSetArguments.push('__meta_version', this.meta.version);
-            client.HMSET.apply(client, hmSetArguments);
+            client.hmset.apply(client, hmSetArguments);
         }
         await this.setIndices(client);
-        await typed_redis_helper_1.EXEC(client);
+        await typed_redis_helper_1.exec(client);
         const linkResults = await this.storeLinks(options);
         this.relationChanges = [];
         const linkFailures = linkResults.filter((linkResult) => !linkResult.success);
@@ -654,7 +654,7 @@ class NohmModel {
         const foreignName = `${change.options.name}Foreign`;
         const command = change.action === 'link' ? 'sadd' : 'srem';
         const relationKeyPrefix = this.rawPrefix().relationKeys;
-        const multi = this.client.MULTI();
+        const multi = this.client.multi();
         // relation to other
         const toKey = this.getRelationKey(change.object.modelName, change.options.name);
         // first store the information to which other model names the instance has a relation to
@@ -667,7 +667,7 @@ class NohmModel {
         multi[command](fromKey, this.stringId());
         try {
             debug(`Linking in redis.`, this.modelName, change.options.name, command);
-            await typed_redis_helper_1.EXEC(multi);
+            await typed_redis_helper_1.exec(multi);
             if (!change.options.silent) {
                 this.fireEvent(change.action, change.object, change.options.name);
             }
@@ -704,7 +704,7 @@ class NohmModel {
                     oldUniqueValue = oldUniqueValue.toLowerCase();
                 }
                 debug(`Removing old unique '%s' from '%s.%s' because propUpdated: %o &amp;&amp; this.inDb %o.`, key, this.modelName, this.id, prop.__updated, this.inDb);
-                multi.DEL(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
+                multi.del(`${this.prefix('unique')}:${key}:${oldUniqueValue}`, this.nohmClass.logError);
             }
             // set new normal index
             if (isIndex &amp;&amp; isDirty) {
@@ -712,14 +712,14 @@ class NohmModel {
                     debug(`Adding numeric index '%s' to '%s.%s'.`, key, this.modelName, this.id, prop.__updated);
                     // we use scored sets for things like "get all users older than 5"
                     const scoredPrefix = this.prefix('scoredindex');
-                    multi.ZADD(`${scoredPrefix}:${key}`, prop.value, this.stringId(), this.nohmClass.logError);
+                    multi.zadd(`${scoredPrefix}:${key}`, prop.value, this.stringId(), this.nohmClass.logError);
                 }
                 debug(`Adding index '%s' to '%s.%s'; isInDb: '%s'; newValue: '%s'; oldValue: '%s'.`, key, this.modelName, this.stringId(), isInDb, prop.value, oldValue);
                 const prefix = this.prefix('index');
                 if (isInDb) {
-                    multi.SREM(`${prefix}:${key}:${oldValue}`, this.stringId(), this.nohmClass.logError);
+                    multi.srem(`${prefix}:${key}:${oldValue}`, this.stringId(), this.nohmClass.logError);
                 }
-                multi.SADD(`${prefix}:${key}:${prop.value}`, this.stringId(), this.nohmClass.logError);
+                multi.sadd(`${prefix}:${key}:${prop.value}`, this.stringId(), this.nohmClass.logError);
             }
         }
     }
@@ -859,10 +859,10 @@ class NohmModel {
             * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
             * when really saving it. (or we free the unique slot if we're not saving)
             */
-            dbValue = await typed_redis_helper_1.SETNX(this.client, key, this.stringId());
+            dbValue = await typed_redis_helper_1.setnx(this.client, key, this.stringId());
         }
         else {
-            dbValue = await typed_redis_helper_1.EXISTS(this.client, key);
+            dbValue = await typed_redis_helper_1.exists(this.client, key);
         }
         let isFreeUnique = false;
         if (setDirectly &amp;&amp; dbValue === 1) {
@@ -878,7 +878,7 @@ class NohmModel {
             // setDirectly === true means using setnx which returns 1 if the value did *not* exist
             // if it did exist, we check if the unique is the same as the one on this model.
             // see https://github.com/maritz/nohm/issues/82 for use-case
-            const dbId = await typed_redis_helper_1.GET(this.client, key);
+            const dbId = await typed_redis_helper_1.get(this.client, key);
             if (dbId === this.stringId()) {
                 isFreeUnique = true;
             }
@@ -926,7 +926,7 @@ class NohmModel {
         if (this.tmpUniqueKeys.length > 0) {
             debug(`Clearing temp uniques '%o' for '%s.%s'.`, this.tmpUniqueKeys, this.modelName, this.id);
             const deletes = this.tmpUniqueKeys.map((key) => {
-                return typed_redis_helper_1.DEL(this.client, key);
+                return typed_redis_helper_1.del(this.client, key);
             });
             await Promise.all(deletes);
         }
@@ -957,7 +957,7 @@ class NohmModel {
     }
     async deleteDbCall() {
         // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
-        const multi = this.client.MULTI();
+        const multi = this.client.multi();
         multi.del(`${this.prefix('hash')}:${this.stringId()}`);
         multi.srem(this.prefix('idsets'), this.stringId());
         this.properties.forEach((prop, key) => {
@@ -976,7 +976,7 @@ class NohmModel {
             }
         });
         await this.unlinkAll(multi);
-        await typed_redis_helper_1.EXEC(multi);
+        await typed_redis_helper_1.exec(multi);
     }
     /**
      * Returns a Promsie that resolves to true if the given id exists for this model.
@@ -986,12 +986,12 @@ class NohmModel {
      */
     async exists(id) {
         helpers_1.callbackError(...arguments);
-        return !!(await typed_redis_helper_1.SISMEMBER(this.client, this.prefix('idsets'), id));
+        return !!(await typed_redis_helper_1.sismember(this.client, this.prefix('idsets'), id));
     }
     async getHashAll(id) {
         const props = {};
-        const values = await typed_redis_helper_1.HGETALL(this.client, `${this.prefix('hash')}:${id}`);
-        if (values === null) {
+        const values = await typed_redis_helper_1.hgetall(this.client, `${this.prefix('hash')}:${id}`);
+        if (values === null || Object.keys(values).length === 0) {
             throw new Error('not found');
         }
         Object.keys(values).forEach((key) => {
@@ -1156,15 +1156,15 @@ class NohmModel {
             multi = givenClient;
         }
         else if (givenClient) {
-            multi = givenClient.MULTI();
+            multi = givenClient.multi();
         }
         else {
-            multi = this.client.MULTI();
+            multi = this.client.multi();
         }
         // remove outstanding relation changes
         this.relationChanges = [];
         const relationKeysKey = `${this.rawPrefix().relationKeys}${this.modelName}:${this.id}`;
-        const keys = await typed_redis_helper_1.SMEMBERS(this.client, relationKeysKey);
+        const keys = await typed_redis_helper_1.smembers(this.client, relationKeysKey);
         debug(`Remvoing links for '%s.%s': %o.`, this.modelName, this.id, keys);
         const others = keys.map((key) => {
             const matches = key.match(/:([\w]*):([\w]*):[^:]+$/i);
@@ -1186,11 +1186,11 @@ class NohmModel {
         const otherRelationIdsPromises = others.map((item) => this.removeIdFromOtherRelations(multi, item));
         await Promise.all(otherRelationIdsPromises);
         // add multi'ed delete commands for other keys
-        others.forEach((item) => multi.DEL(item.ownIdsKey));
+        others.forEach((item) => multi.del(item.ownIdsKey));
         multi.del(relationKeysKey);
         // if we didn't get a multi client from the callee we have to exec() ourselves
         if (!this.isMultiClient(givenClient)) {
-            await typed_redis_helper_1.EXEC(multi);
+            await typed_redis_helper_1.exec(multi);
         }
     }
     /*
@@ -1200,9 +1200,9 @@ class NohmModel {
     Secondly it adds an SREM to the multi redis client.
     */
     async removeIdFromOtherRelations(multi, item) {
-        const ids = await typed_redis_helper_1.SMEMBERS(this.client, item.ownIdsKey);
+        const ids = await typed_redis_helper_1.smembers(this.client, item.ownIdsKey);
         ids.forEach((id) => {
-            multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
+            multi.srem(`${item.otherIdsKey}${id}`, this.stringId());
         });
     }
     /**
@@ -1217,7 +1217,7 @@ class NohmModel {
         if (!this.id || !obj.id) {
             throw new Error('Calling belongsTo() even though either the object itself or the relation does not have an id.');
         }
-        return !!(await typed_redis_helper_1.SISMEMBER(this.client, this.getRelationKey(obj.modelName, relationName), obj.id));
+        return !!(await typed_redis_helper_1.sismember(this.client, this.getRelationKey(obj.modelName, relationName), obj.id));
     }
     /**
      * Returns an array of the ids of all objects that are linked with the given relation.
@@ -1231,7 +1231,7 @@ class NohmModel {
             throw new Error(`Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`);
         }
         const relationKey = this.getRelationKey(otherModelName, relationName);
-        const ids = await typed_redis_helper_1.SMEMBERS(this.client, relationKey);
+        const ids = await typed_redis_helper_1.smembers(this.client, relationKey);
         if (!Array.isArray(ids)) {
             return [];
         }
@@ -1253,7 +1253,7 @@ class NohmModel {
             throw new Error(`Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`);
         }
         const relationKey = this.getRelationKey(otherModelName, relationName);
-        return typed_redis_helper_1.SCARD(this.client, relationKey);
+        return typed_redis_helper_1.scard(this.client, relationKey);
     }
     /**
      * Finds ids of objects by search arguments
@@ -1273,7 +1273,7 @@ class NohmModel {
         const onlyZSets = structuredSearches.filter((search) => search.type === 'zset');
         if (onlySets.length === 0 &amp;&amp; onlyZSets.length === 0) {
             // no valid searches - return all ids
-            return typed_redis_helper_1.SMEMBERS(this.client, `${this.prefix('idsets')}`);
+            return typed_redis_helper_1.smembers(this.client, `${this.prefix('idsets')}`);
         }
         debug(`Finding '%s's with these searches (sets, zsets):\n%o,\n%o.`, this.modelName, this.id, onlySets, onlyZSets);
         const setPromises = this.setSearch(onlySets);
@@ -1338,7 +1338,7 @@ class NohmModel {
     }
     async uniqueSearch(options) {
         const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
-        const id = await typed_redis_helper_1.GET(this.client, key);
+        const id = await typed_redis_helper_1.get(this.client, key);
         if (id) {
             return [id];
         }
@@ -1354,7 +1354,7 @@ class NohmModel {
             // shortcut
             return [];
         }
-        return typed_redis_helper_1.SINTER(this.client, keys);
+        return typed_redis_helper_1.sinter(this.client, keys);
     }
     async zSetSearch(searches) {
         const singleSearches = await Promise.all(searches.map((search) => this.singleZSetSearch(search)));
@@ -1363,12 +1363,12 @@ class NohmModel {
     singleZSetSearch(search) {
         return new Promise((resolve, reject) => {
             const key = `${this.prefix('scoredindex')}:${search.key}`;
-            let command = 'ZRANGEBYSCORE';
+            let command = 'zrangebyscore';
             const options = Object.assign({ endpoints: '[]', limit: -1, max: '+inf', min: '-inf', offset: 0 }, search.options);
             if ((options.min === '+inf' &amp;&amp; options.max !== '+inf') ||
                 (options.max === '-inf' &amp;&amp; options.min !== '-inf') ||
                 parseFloat('' + options.min) > parseFloat('' + options.max)) {
-                command = 'ZREVRANGEBYSCORE';
+                command = 'zrevrangebyscore';
             }
             if (options.endpoints === ')') {
                 options.endpoints = '[)';
@@ -1439,9 +1439,9 @@ class NohmModel {
         }
         let idsetKey = this.prefix('idsets');
         let zsetKey = `${this.prefix('scoredindex')}:${options.field}`;
-        const client = this.client.MULTI();
+        const client = this.client.multi();
         let tmpKey = '';
-        debug(`Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`, this.modelName, this.id, alpha, direction, scored, start, stop, ids);
+        debug(`Sorting '%s's with these options (this.id, alpha, direction, scored, start, stop, ids):`, this.modelName, this.id, alpha, direction, scored, start, stop, ids);
         if (ids) {
             // to get the intersection of the given ids and all ids on the server we first
             // temporarily store the given ids either in a set or sorted set and then return the intersection
@@ -1466,22 +1466,37 @@ class NohmModel {
                         +new Date() +
                         Math.ceil(Math.random() * 1000);
                 ids.unshift(tmpKey);
-                client.SADD.apply(client, ids); // typecast because rediss doesn't care about numbers/string
-                client.SINTERSTORE([tmpKey, tmpKey, idsetKey]);
+                client.sadd.apply(client, ids); // typecast because rediss doesn't care about numbers/string
+                client.sinterstore([tmpKey, tmpKey, idsetKey]);
                 idsetKey = tmpKey;
             }
         }
         if (scored) {
-            const method = direction &amp;&amp; direction === 'DESC' ? 'ZREVRANGE' : 'ZRANGE';
+            const method = direction &amp;&amp; direction === 'DESC' ? 'zrevrange' : 'zrange';
             client[method](zsetKey, start, stop);
         }
         else {
-            client.sort(idsetKey, 'BY', `${this.prefix('hash')}:*->${options.field}`, 'LIMIT', String(start), String(stop), direction, alpha);
+            const args = [
+                idsetKey,
+                'BY',
+                `${this.prefix('hash')}:*->${options.field}`,
+                'LIMIT',
+                String(start),
+                String(stop),
+                direction,
+            ];
+            if (alpha) {
+                // due to the way ioredis handles input parameters, we have to do this weird apply and append thing.
+                // when just passing in an undefined value it throws syntax errors because it attempts to add that as an actual
+                // parameter
+                args.push(alpha);
+            }
+            client.sort.apply(client, args);
         }
         if (ids) {
             client.del(tmpKey);
         }
-        const replies = await typed_redis_helper_1.EXEC(client);
+        const replies = await typed_redis_helper_1.exec(client);
         let reply;
         if (ids) {
             // 2 redis commands to create the temp keys, then the query

@@ -35,19 +35,19 @@ import {
   TValidationDefinition,
 } from './model.header';
 import {
-  DEL,
-  EXEC,
-  EXISTS,
-  GET,
-  HGETALL,
-  MSET,
-  SADD,
-  SCARD,
-  SET,
-  SETNX,
-  SINTER,
-  SISMEMBER,
-  SMEMBERS,
+  del,
+  exec,
+  exists,
+  get,
+  hgetall,
+  mset,
+  sadd,
+  scard,
+  set,
+  setnx,
+  sinter,
+  sismember,
+  smembers,
 } from './typed-redis-helper';
 import { validators } from './validators';
 
@@ -274,7 +274,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       });
 
       try {
-        const dbVersion = await GET(this.client, versionKey);
+        const dbVersion = await get(this.client, versionKey);
         if (this.meta.version !== dbVersion) {
           const generator = this.options.idGenerator || 'default';
           debug(
@@ -285,9 +285,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
             properties,
           );
           await Promise.all([
-            SET(this.client, idGeneratorKey, generator.toString()),
-            SET(this.client, propertiesKey, JSON.stringify(properties)),
-            SET(this.client, versionKey, this.meta.version),
+            set(this.client, idGeneratorKey, generator.toString()),
+            set(this.client, propertiesKey, JSON.stringify(properties)),
+            set(this.client, versionKey, this.meta.version),
           ]);
         }
         this.meta.inDb = true;
@@ -625,7 +625,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     let numIdExisting: number = 0;
     if (action !== 'create') {
-      numIdExisting = await SISMEMBER(
+      numIdExisting = await sismember(
         this.client,
         this.prefix('idsets'),
         this.id,
@@ -653,7 +653,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private async create() {
     const id = await this.generateId();
-    await SADD(this.client, this.prefix('idsets'), id);
+    await sadd(this.client, this.prefix('idsets'), id);
     await this.setUniqueIds(id);
     this.id = id;
   }
@@ -709,7 +709,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         this.id,
         id,
       );
-      return MSET(this.client, mSetArguments);
+      return mset(this.client, mSetArguments);
     }
   }
 
@@ -721,7 +721,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
 
     const hmSetArguments = [];
-    const client = this.client.MULTI();
+    const client = this.client.multi();
     const isCreate = !this.inDb;
 
     hmSetArguments.push(`${this.prefix('hash')}:${this.id}`);
@@ -734,12 +734,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     if (hmSetArguments.length > 1) {
       hmSetArguments.push('__meta_version', this.meta.version);
-      client.HMSET.apply(client, hmSetArguments);
+      client.hmset.apply(client, hmSetArguments);
     }
 
     await this.setIndices(client);
 
-    await EXEC(client);
+    await exec(client);
 
     const linkResults = await this.storeLinks(options);
     this.relationChanges = [];
@@ -855,7 +855,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const command = change.action === 'link' ? 'sadd' : 'srem';
     const relationKeyPrefix = this.rawPrefix().relationKeys;
 
-    const multi = this.client.MULTI();
+    const multi = this.client.multi();
     // relation to other
     const toKey = this.getRelationKey(
       change.object.modelName,
@@ -876,7 +876,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     try {
       debug(`Linking in redis.`, this.modelName, change.options.name, command);
-      await EXEC(multi);
+      await exec(multi);
       if (!change.options.silent) {
         this.fireEvent(change.action, change.object, change.options.name);
       }
@@ -922,7 +922,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           prop.__updated,
           this.inDb,
         );
-        multi.DEL(
+        multi.del(
           `${this.prefix('unique')}:${key}:${oldUniqueValue}`,
           this.nohmClass.logError,
         );
@@ -940,7 +940,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           );
           // we use scored sets for things like "get all users older than 5"
           const scoredPrefix = this.prefix('scoredindex');
-          multi.ZADD(
+          multi.zadd(
             `${scoredPrefix}:${key}`,
             prop.value,
             this.stringId(),
@@ -958,13 +958,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         );
         const prefix = this.prefix('index');
         if (isInDb) {
-          multi.SREM(
+          multi.srem(
             `${prefix}:${key}:${oldValue}`,
             this.stringId(),
             this.nohmClass.logError,
           );
         }
-        multi.SADD(
+        multi.sadd(
           `${prefix}:${key}:${prop.value}`,
           this.stringId(),
           this.nohmClass.logError,
@@ -1155,9 +1155,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
       * when really saving it. (or we free the unique slot if we're not saving)
       */
-      dbValue = await SETNX(this.client, key, this.stringId());
+      dbValue = await setnx(this.client, key, this.stringId());
     } else {
-      dbValue = await EXISTS(this.client, key);
+      dbValue = await exists(this.client, key);
     }
     let isFreeUnique = false;
     if (setDirectly && dbValue === 1) {
@@ -1171,7 +1171,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       // setDirectly === true means using setnx which returns 1 if the value did *not* exist
       // if it did exist, we check if the unique is the same as the one on this model.
       // see https://github.com/maritz/nohm/issues/82 for use-case
-      const dbId = await GET(this.client, key);
+      const dbId = await get(this.client, key);
       if (dbId === this.stringId()) {
         isFreeUnique = true;
       }
@@ -1246,7 +1246,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         this.id,
       );
       const deletes: Array<Promise<void>> = this.tmpUniqueKeys.map((key) => {
-        return DEL(this.client, key);
+        return del(this.client, key);
       });
       await Promise.all(deletes);
     }
@@ -1281,7 +1281,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   private async deleteDbCall(): Promise<void> {
     // TODO: write test for removal of relationKeys - purgeDb kinda tests it already, but not enough
 
-    const multi = this.client.MULTI();
+    const multi = this.client.multi();
 
     multi.del(`${this.prefix('hash')}:${this.stringId()}`);
     multi.srem(this.prefix('idsets'), this.stringId());
@@ -1307,7 +1307,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     await this.unlinkAll(multi);
 
-    await EXEC(multi);
+    await exec(multi);
   }
 
   /**
@@ -1318,13 +1318,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public async exists(id: any): Promise<boolean> {
     callbackError(...arguments);
-    return !!(await SISMEMBER(this.client, this.prefix('idsets'), id));
+    return !!(await sismember(this.client, this.prefix('idsets'), id));
   }
 
   private async getHashAll(id: any): Promise<Partial<TProps>> {
     const props: Partial<TProps> = {};
-    const values = await HGETALL(this.client, `${this.prefix('hash')}:${id}`);
-    if (values === null) {
+    const values = await hgetall(this.client, `${this.prefix('hash')}:${id}`);
+    if (values === null || Object.keys(values).length === 0) {
       throw new Error('not found');
     }
     Object.keys(values).forEach((key) => {
@@ -1536,9 +1536,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (this.isMultiClient(givenClient)) {
       multi = givenClient;
     } else if (givenClient) {
-      multi = givenClient.MULTI();
+      multi = givenClient.multi();
     } else {
-      multi = this.client.MULTI();
+      multi = this.client.multi();
     }
 
     // remove outstanding relation changes
@@ -1547,7 +1547,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       this.modelName
     }:${this.id}`;
 
-    const keys = await SMEMBERS(this.client, relationKeysKey);
+    const keys = await smembers(this.client, relationKeysKey);
 
     debug(`Remvoing links for '%s.%s': %o.`, this.modelName, this.id, keys);
 
@@ -1579,12 +1579,12 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     await Promise.all(otherRelationIdsPromises);
 
     // add multi'ed delete commands for other keys
-    others.forEach((item) => multi.DEL(item.ownIdsKey));
+    others.forEach((item) => multi.del(item.ownIdsKey));
     multi.del(relationKeysKey);
 
     // if we didn't get a multi client from the callee we have to exec() ourselves
     if (!this.isMultiClient(givenClient)) {
-      await EXEC(multi);
+      await exec(multi);
     }
   }
 
@@ -1598,9 +1598,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     multi: redis.Multi,
     item: IUnlinkKeyMapItem,
   ): Promise<void> {
-    const ids = await SMEMBERS(this.client, item.ownIdsKey);
+    const ids = await smembers(this.client, item.ownIdsKey);
     ids.forEach((id) => {
-      multi.SREM(`${item.otherIdsKey}${id}`, this.stringId());
+      multi.srem(`${item.otherIdsKey}${id}`, this.stringId());
     });
   }
 
@@ -1621,7 +1621,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         'Calling belongsTo() even though either the object itself or the relation does not have an id.',
       );
     }
-    return !!(await SISMEMBER(
+    return !!(await sismember(
       this.client,
       this.getRelationKey(obj.modelName, relationName),
       obj.id,
@@ -1647,7 +1647,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
-    const ids = await SMEMBERS(this.client, relationKey);
+    const ids = await smembers(this.client, relationKey);
     if (!Array.isArray(ids)) {
       return [];
     } else {
@@ -1676,7 +1676,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
-    return SCARD(this.client, relationKey);
+    return scard(this.client, relationKey);
   }
 
   /**
@@ -1721,7 +1721,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     if (onlySets.length === 0 && onlyZSets.length === 0) {
       // no valid searches - return all ids
-      return SMEMBERS(this.client, `${this.prefix('idsets')}`);
+      return smembers(this.client, `${this.prefix('idsets')}`);
     }
     debug(
       `Finding '%s's with these searches (sets, zsets):\n%o,\n%o.`,
@@ -1808,7 +1808,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     options: IStructuredSearch<TProps>,
   ): Promise<Array<string>> {
     const key = `${this.prefix('unique')}:${options.key}:${options.value}`;
-    const id = await GET(this.client, key);
+    const id = await get(this.client, key);
     if (id) {
       return [id];
     } else {
@@ -1826,7 +1826,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       // shortcut
       return [];
     }
-    return SINTER(this.client, keys);
+    return sinter(this.client, keys);
   }
 
   private async zSetSearch(
@@ -1843,7 +1843,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   ): Promise<Array<string>> {
     return new Promise((resolve, reject) => {
       const key = `${this.prefix('scoredindex')}:${search.key}`;
-      let command: 'ZRANGEBYSCORE' | 'ZREVRANGEBYSCORE' = 'ZRANGEBYSCORE';
+      let command: 'zrangebyscore' | 'zrevrangebyscore' = 'zrangebyscore';
       const options: ISearchOption = {
         endpoints: '[]',
         limit: -1,
@@ -1857,7 +1857,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         (options.max === '-inf' && options.min !== '-inf') ||
         parseFloat('' + options.min) > parseFloat('' + options.max)
       ) {
-        command = 'ZREVRANGEBYSCORE';
+        command = 'zrevrangebyscore';
       }
 
       if (options.endpoints === ')') {
@@ -1953,11 +1953,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
     let idsetKey = this.prefix('idsets');
     let zsetKey = `${this.prefix('scoredindex')}:${options.field}`;
-    const client: redis.Multi = this.client.MULTI();
+    const client: redis.Multi = this.client.multi();
     let tmpKey: string = '';
 
     debug(
-      `Sorting '%s's with these options (alpha, direction, scored, start, stop, ids):`,
+      `Sorting '%s's with these options (this.id, alpha, direction, scored, start, stop, ids):`,
       this.modelName,
       this.id,
       alpha,
@@ -1991,16 +1991,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           +new Date() +
           Math.ceil(Math.random() * 1000);
         ids.unshift(tmpKey);
-        client.SADD.apply(client, ids as Array<string>); // typecast because rediss doesn't care about numbers/string
-        client.SINTERSTORE([tmpKey, tmpKey, idsetKey]);
+        client.sadd.apply(client, ids as Array<string>); // typecast because rediss doesn't care about numbers/string
+        client.sinterstore([tmpKey, tmpKey, idsetKey]);
         idsetKey = tmpKey;
       }
     }
     if (scored) {
-      const method = direction && direction === 'DESC' ? 'ZREVRANGE' : 'ZRANGE';
+      const method = direction && direction === 'DESC' ? 'zrevrange' : 'zrange';
       client[method](zsetKey, start, stop);
     } else {
-      client.sort(
+      const args = [
         idsetKey,
         'BY',
         `${this.prefix('hash')}:*->${options.field}`,
@@ -2008,13 +2008,19 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         String(start),
         String(stop),
         direction,
-        alpha as any, // any casting because passing in an empty string actually results in errors in some cases
-      );
+      ];
+      if (alpha) {
+        // due to the way ioredis handles input parameters, we have to do this weird apply and append thing.
+        // when just passing in an undefined value it throws syntax errors because it attempts to add that as an actual
+        // parameter
+        args.push(alpha);
+      }
+      client.sort.apply(client, args);
     }
     if (ids) {
       client.del(tmpKey);
     }
-    const replies = await EXEC<any>(client);
+    const replies = await exec<any>(client);
     let reply: Array<Error | any>;
     if (ids) {
       // 2 redis commands to create the temp keys, then the query

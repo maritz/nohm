@@ -57,25 +57,25 @@ const testCommand = (name, firstArg, secondArg, resolveExpect) => {
   };
 };
 
-exports['GET'] = testCommand('GET', 'foo', undefined, 'bar');
-exports['EXISTS'] = testCommand('EXISTS', 'foo', undefined, true);
-exports['DEL'] = testCommand('DEL', 'foo');
-exports['SET'] = testCommand('SET', 'foo', 'bar');
-exports['MSET'] = testCommand('MSET', 'foo', ['foo', 'bar']);
-exports['SETNX'] = testCommand('SETNX', 'foo', 'bar', true);
-exports['SMEMBERS'] = testCommand('SMEMBERS', 'foo', undefined, ['bar']);
-exports['SISMEMBER'] = testCommand('SISMEMBER', 'foo', 'bar', 1);
-exports['SADD'] = testCommand('SADD', 'foo', 'bar', 1);
-exports['SINTER'] = testCommand('SINTER', 'foo', 'bar', ['bar', 'baz']);
-exports['HGETALL'] = testCommand('HGETALL', 'foo', undefined, ['bar', 'baz']);
-exports['PSUBSCRIBE'] = testCommand('PSUBSCRIBE', 'foo', ['bar', 'baz']);
-exports['PUNSUBSCRIBE'] = testCommand('PUNSUBSCRIBE', 'foo', ['bar', 'baz']);
+exports['get'] = testCommand('get', 'foo', undefined, 'bar');
+exports['exists'] = testCommand('exists', 'foo', undefined, true);
+exports['del'] = testCommand('del', 'foo');
+exports['set'] = testCommand('set', 'foo', 'bar');
+exports['mset'] = testCommand('mset', 'foo', ['foo', 'bar']);
+exports['setnx'] = testCommand('setnx', 'foo', 'bar', true);
+exports['smembers'] = testCommand('smembers', 'foo', undefined, ['bar']);
+exports['sismember'] = testCommand('sismember', 'foo', 'bar', 1);
+exports['sadd'] = testCommand('sadd', 'foo', 'bar', 1);
+exports['sinter'] = testCommand('sinter', 'foo', 'bar', ['bar', 'baz']);
+exports['hgetall'] = testCommand('hgetall', 'foo', undefined, ['bar', 'baz']);
+exports['psubscribe'] = testCommand('psubscribe', 'foo', ['bar', 'baz']);
+exports['punsubscribe'] = testCommand('punsubscribe', 'foo', ['bar', 'baz']);
 
-exports['EXEC'] = async (t) => {
+exports['exec'] = async (t) => {
   t.expect(4);
 
-  // EXEC has no firstArg. it's easier to duplicate the test here instead of changing testCommand
-  const name = 'EXEC';
+  // exec has no firstArg. it's easier to duplicate the test here instead of changing testCommand
+  const name = 'exec';
   const resolveExpect = ['foo', 'baz'];
   const testMethod = redisHelper[name];
 

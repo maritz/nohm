@@ -15,3 +15,4 @@ tsOut/
 .vscode/
 coverage/
 .nyc_output/
+.DS_Store
