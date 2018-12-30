@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="utf-8">
     <title>Validators - Documentation</title>
-
+    
+    
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
     <!--[if lt IE 9]>
@@ -11,6 +13,7 @@
     <![endif]-->
     <link type="text/css" rel="stylesheet" href="styles/prettify.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -22,6 +25,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
+    
     <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NohmClass.html">NohmClass</a><ul class='methods'><li data-type='method'><a href="NohmClass.html#factory">factory</a></li><li data-type='method'><a href="NohmClass.html#getModels">getModels</a></li><li data-type='method'><a href="NohmClass.html#middleware">middleware</a></li><li data-type='method'><a href="NohmClass.html#model">model</a></li><li data-type='method'><a href="NohmClass.html#purgeDb">purgeDb</a></li><li data-type='method'><a href="NohmClass.html#register">register</a></li><li data-type='method'><a href="NohmClass.html#setClient">setClient</a></li><li data-type='method'><a href="NohmClass.html#setPrefix">setPrefix</a></li></ul></li><li><a href="NohmErrors.LinkError.html">LinkError</a></li><li><a href="NohmErrors.ValidationError.html">ValidationError</a></li><li><a href="NohmModel.html">NohmModel</a><ul class='methods'><li data-type='method'><a href="NohmModel.html#allProperties">allProperties</a></li><li data-type='method'><a href="NohmModel.html#belongsTo">belongsTo</a></li><li data-type='method'><a href="NohmModel.html#exists">exists</a></li><li data-type='method'><a href="NohmModel.html#find">find</a></li><li data-type='method'><a href="NohmModel.html#getAll">getAll</a></li><li data-type='method'><a href="NohmModel.html#getDefinitions">getDefinitions</a></li><li data-type='method'><a href="NohmModel.html#link">link</a></li><li data-type='method'><a href="NohmModel.html#load">load</a></li><li data-type='method'><a href="NohmModel.html#numLinks">numLinks</a></li><li data-type='method'><a href="NohmModel.html#property">property</a></li><li data-type='method'><a href="NohmModel.html#propertyDiff">propertyDiff</a></li><li data-type='method'><a href="NohmModel.html#propertyReset">propertyReset</a></li><li data-type='method'><a href="NohmModel.html#remove">remove</a></li><li data-type='method'><a href="NohmModel.html#save">save</a></li><li data-type='method'><a href="NohmModel.html#setUniqueIds">setUniqueIds</a></li><li data-type='method'><a href="NohmModel.html#sort">sort</a></li><li data-type='method'><a href="NohmModel.html#subscribe">subscribe</a></li><li data-type='method'><a href="NohmModel.html#subscribeOnce">subscribeOnce</a></li><li data-type='method'><a href="NohmModel.html#unlink">unlink</a></li><li data-type='method'><a href="NohmModel.html#unlinkAll">unlinkAll</a></li><li data-type='method'><a href="NohmModel.html#unsubscribeEvent">unsubscribeEvent</a></li><li data-type='method'><a href="NohmModel.html#validate">validate</a></li></ul></li><li><a href="NohmStaticModel.html">NohmStaticModel</a><ul class='methods'><li data-type='method'><a href="NohmStaticModel.html#.find">find</a></li><li data-type='method'><a href="NohmStaticModel.html#..findAndLoad">.findAndLoad</a></li><li data-type='method'><a href="NohmStaticModel.html#..load">.load</a></li><li data-type='method'><a href="NohmStaticModel.html#..loadMany">.loadMany</a></li><li data-type='method'><a href="NohmStaticModel.html#.remove">remove</a></li><li data-type='method'><a href="NohmStaticModel.html#..sort">.sort</a></li></ul></li></ul><h3>Namespaces</h3><ul><li><a href="Nohm.html">Nohm</a><ul class='methods'><li data-type='method'><a href="Nohm.html#.MiddlewareCallback">MiddlewareCallback</a></li></ul></li><li><a href="NohmErrors.html">NohmErrors</a></li><li><a href="Validators.html">Validators</a><ul class='methods'><li data-type='method'><a href="Validators.html#.alphanumeric">alphanumeric</a></li><li data-type='method'><a href="Validators.html#.date">date</a></li><li data-type='method'><a href="Validators.html#.dateISO">dateISO</a></li><li data-type='method'><a href="Validators.html#.digits">digits</a></li><li data-type='method'><a href="Validators.html#.email">email</a></li><li data-type='method'><a href="Validators.html#.length">length</a></li><li data-type='method'><a href="Validators.html#.minMax">minMax</a></li><li data-type='method'><a href="Validators.html#.notEmpty">notEmpty</a></li><li data-type='method'><a href="Validators.html#.number">number</a></li><li data-type='method'><a href="Validators.html#.numberEU">numberEU</a></li><li data-type='method'><a href="Validators.html#.numberSI">numberSI</a></li><li data-type='method'><a href="Validators.html#.numberUS">numberUS</a></li><li data-type='method'><a href="Validators.html#.regexp">regexp</a></li><li data-type='method'><a href="Validators.html#.url">url</a></li></ul></li></ul>
 </nav>
 
@@ -47,1287 +51,10 @@
 </header>
 
 <article>
-    <div class="container-overview">
     
-        
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line11">line 11</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-        
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-
-     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
+        <div class="container-overview">
         
             
-
-    
-
-    <h4 class="name" id=".alphanumeric"><span class="type-signature">(static) </span>alphanumeric<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line22">line 22</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Test if the value is alphanumeric or optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".date"><span class="type-signature">(static) </span>date<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line31">line 31</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a date that the Date object can parse.
-Can be optional.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".dateISO"><span class="type-signature">(static) </span>dateISO<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line39">line 39</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid ISO Date (YYYY-MM-DD) or is optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".digits"><span class="type-signature">(static) </span>digits<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line47">line 47</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Makes sure a string consists of only numeric digits.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".email"><span class="type-signature">(static) </span>email<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line55">line 55</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid email adress.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".length"><span class="type-signature">(static) </span>length<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line63">line 63</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>String length must be between options.min (default 0) and options.max (default positive infinity).</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".minMax"><span class="type-signature">(static) </span>minMax<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line78">line 78</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a number value is between (inclusive) options.min (default: 0)
-and options.max (default: POSITIVE_INFINITY)</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".notEmpty"><span class="type-signature">(static) </span>notEmpty<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line91">line 91</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is not empty. Any falsy value is considered empty (including 0).
-use minMax for number types instead!</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".number"><span class="type-signature">(static) </span>number<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line102">line 102</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid (SI, US or EU) number string or is optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".numberEU"><span class="type-signature">(static) </span>numberEU<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line111">line 111</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid EU number (thousands seperator point, decimal seperator comma)
-string or is optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".numberSI"><span class="type-signature">(static) </span>numberSI<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line120">line 120</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid SI number (thousands seperator space, decimal seperator point or comma)
-string or is optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".numberUS"><span class="type-signature">(static) </span>numberUS<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line129">line 129</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid US number (thousands seperator comma, decimal seperator point)
-string or is optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".regexp"><span class="type-signature">(static) </span>regexp<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line137">line 137</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Test if the value matches the provided regexp or optional (params[0]) and empty</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".url"><span class="type-signature">(static) </span>url<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line149">line 149</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Make sure a value is a valid url.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-    
-
-    
-
-    
-</article>
-
-</section>
-
-
-
-
-
-
-
-<section>
-
-<header>
-    
-        <h2>
-        Validators
-        </h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
 
 <dl class="details">
 
@@ -1372,11 +99,12 @@ string or is optional (params[0]) and empty</p>
 
 
 
-        
+            
 
+            
         
+        </div>
     
-    </div>
 
     
 
@@ -2588,6 +1316,1288 @@ string or is optional (params[0]) and empty</p>
 
 
 
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        Validators
+        </h2>
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line11">line 11</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+            
+
+            
+        
+        </div>
+    
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".alphanumeric"><span class="type-signature">(static) </span>alphanumeric<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line22">line 22</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Test if the value is alphanumeric or optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".date"><span class="type-signature">(static) </span>date<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line31">line 31</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a date that the Date object can parse.
+Can be optional.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".dateISO"><span class="type-signature">(static) </span>dateISO<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line39">line 39</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid ISO Date (YYYY-MM-DD) or is optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".digits"><span class="type-signature">(static) </span>digits<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line47">line 47</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Makes sure a string consists of only numeric digits.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".email"><span class="type-signature">(static) </span>email<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid email adress.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".length"><span class="type-signature">(static) </span>length<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line63">line 63</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>String length must be between options.min (default 0) and options.max (default positive infinity).</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".minMax"><span class="type-signature">(static) </span>minMax<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line78">line 78</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a number value is between (inclusive) options.min (default: 0)
+and options.max (default: POSITIVE_INFINITY)</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".notEmpty"><span class="type-signature">(static) </span>notEmpty<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line91">line 91</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is not empty. Any falsy value is considered empty (including 0).
+use minMax for number types instead!</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".number"><span class="type-signature">(static) </span>number<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line102">line 102</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid (SI, US or EU) number string or is optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".numberEU"><span class="type-signature">(static) </span>numberEU<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line111">line 111</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid EU number (thousands seperator point, decimal seperator comma)
+string or is optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".numberSI"><span class="type-signature">(static) </span>numberSI<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line120">line 120</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid SI number (thousands seperator space, decimal seperator point or comma)
+string or is optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".numberUS"><span class="type-signature">(static) </span>numberUS<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line129">line 129</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid US number (thousands seperator comma, decimal seperator point)
+string or is optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".regexp"><span class="type-signature">(static) </span>regexp<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line137">line 137</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Test if the value matches the provided regexp or optional (params[0]) and empty</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".url"><span class="type-signature">(static) </span>url<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ts_universalValidators.js.html">ts/universalValidators.js</a>, <a href="ts_universalValidators.js.html#line149">line 149</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Make sure a value is a valid url.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+    
+    
 </div>
 
 <br class="clear">
@@ -2598,5 +2608,7 @@ string or is optional (params[0]) and empty</p>
 
 <script>prettyPrint();</script>
 <script src="scripts/linenumber.js"></script>
+
+
 </body>
 </html>
