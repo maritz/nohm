@@ -1,6 +1,6 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
-import { IncomingMessage, ServerRequest, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 
 import { nohm as instantiatedNohm, NohmClass } from '.';
 import { NohmModel } from './model';
@@ -11,7 +11,7 @@ export interface IExclusionsOption {
 }
 
 export type TRequestHandler = (
-  req: ServerRequest,
+  req: IncomingMessage,
   res: ServerResponse,
   next?: any,
 ) => void;

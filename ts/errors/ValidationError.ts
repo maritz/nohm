@@ -2,7 +2,7 @@ import { IDictionary } from '../model.header';
 
 export interface IValidationError<TProps extends IDictionary> extends Error {
   modelName: string;
-  errors: Partial<{ [key in keyof TProps]: Array<string> }>;
+  errors: { [key in keyof TProps]?: Array<string> };
 }
 
 // tslint:disable:max-line-length

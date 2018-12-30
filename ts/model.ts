@@ -696,7 +696,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       if (isUnique && !isEmptyString && isDirty) {
         let value = this.property(key);
         if (this.getDefinitions()[key].type === 'string') {
-          value = (value as string).toLowerCase();
+          value = value.toLowerCase();
         }
         const prefix = this.prefix('unique');
         mSetArguments.push(`${prefix}:${key}:${value}`, id);
@@ -912,7 +912,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       if (isUnique && isDirty && isInDb) {
         let oldUniqueValue = oldValue;
         if (this.getDefinitions()[key].type === 'string') {
-          oldUniqueValue = (oldUniqueValue as string).toLowerCase();
+          oldUniqueValue = oldUniqueValue.toLowerCase();
         }
         debug(
           `Removing old unique '%s' from '%s.%s' because propUpdated: %o && this.inDb %o.`,
@@ -1152,9 +1152,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     let dbValue: number;
     if (setDirectly) {
       /*
-      * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
-      * when really saving it. (or we free the unique slot if we're not saving)
-      */
+       * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
+       * when really saving it. (or we free the unique slot if we're not saving)
+       */
       dbValue = await setnx(this.client, key, this.stringId());
     } else {
       dbValue = await exists(this.client, key);

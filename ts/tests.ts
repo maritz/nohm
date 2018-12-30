@@ -1,4 +1,4 @@
-import { Nohm, NohmModel, TTypedDefinitions } from '.';
+import { Nohm, NohmModel, TTypedDefinitions, ValidationError } from '.';
 import { integerProperty, IPropertyDiff, stringProperty } from './model.header';
 
 const nohm = Nohm;
@@ -393,6 +393,27 @@ exports.Typescript = {
     } catch (e) {
       console.error('Error:', e);
       t.ok(false, 'Error thrown');
+    } finally {
+      t.done();
+    }
+  },
+
+  'validation errors': async (t: any) => {
+    t.expect(1);
+    // see above for their different ways of setup/definition
+    const user = await nohm.factory<UserMockup>('UserMockup');
+    user.property('name', '');
+    try {
+      await user.save();
+      t.ok(false, 'No error thrown thrown');
+    } catch (err) {
+      if (err instanceof ValidationError && err.modelName === 'UserMockup') {
+        t.same((err as ValidationError<IUserLinkProps>).errors.name, [
+          'notEmpty',
+        ]);
+      } else {
+        t.ok(false, 'Wrong kind of error thrown.');
+      }
     } finally {
       t.done();
     }
