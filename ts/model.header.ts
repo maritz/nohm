@@ -26,7 +26,7 @@ export interface IDictionary {
   [index: string]: any;
 }
 
-export type PropertyBehaviour = <TModel>(
+export type PropertyBehavior = <TModel>(
   this: TModel,
   newValue: string,
   key: string,
@@ -90,7 +90,7 @@ export interface IModelPropertyDefinition {
   index?: boolean;
   defaultValue?: any;
   load_pure?: boolean;
-  type: TPropertyTypeNames | PropertyBehaviour;
+  type: TPropertyTypeNames | PropertyBehavior;
   unique?: boolean;
   validations?: Array<TValidationDefinition>;
 }

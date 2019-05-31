@@ -22,13 +22,13 @@ layout: default
   - [Methods](#methods)
   - [Client](#client)
   - [Properties](#properties)
-    - [Types/Behaviours](#typesbehaviours)
+    - [Types/Behaviors](#typesbehaviors)
     - [String](#string)
     - [Integer / Float](#integer--float)
     - [Boolean](#boolean)
     - [Timestamp](#timestamp)
     - [Json](#json)
-    - [Behaviour](#behaviour)
+    - [Behavior](#behavior)
     - [Validators](#validators)
   - [ID generation](#id-generation)
 - [Creating an instance](#creating-an-instance)
@@ -156,10 +156,10 @@ A property can have the following options: (explained in more detail later)
     <b>type</b> <span class="additionalInfo">String/Function</span>
   </dt>
   <dd>
-    The variable type/behaviour of the property. All values will be cast to this value.<br/>
+    The variable type/behavior of the property. All values will be cast to this value.<br/>
     There are a few built-in types:<br/>
       <code>string, integer, float, boolean, timestamp and json</code><br/>
-    You can also define a behaviour. This is a function that type-casts the value in whatever way you want.
+    You can also define a behavior. This is a function that type-casts the value in whatever way you want.
   </dd>
   <dt>
     defaultValue <span class="additionalInfo">Any value</span>
@@ -193,7 +193,7 @@ A property can have the following options: (explained in more detail later)
     load_pure <span class="additionalInfo">Boolean</span>
   </dt>
   <dd>
-    Per default this is false and values loaded are put through the type casting/behaviours. If you want to prevent this you can set this to true and it will not be altered from the data that redis delivers.
+    Per default this is false and values loaded are put through the type casting/behaviors. If you want to prevent this you can set this to true and it will not be altered from the data that redis delivers.
   </dd>
 </dl>
 <p><small><bold>bold</bold> = mandatory</small></p>
@@ -235,7 +235,7 @@ var User = nohm.model('User', {
 });
 ```
 
-##### Types/Behaviours
+##### Types/Behaviors
 
 ###### String
 
@@ -263,7 +263,7 @@ This takes two different formats as inputs:
 If a valid JSON string is entered nothing is done, anything else will get put through JSON.stringify.
 Note that properties with the type of JSON will be returned as parsed objects!
 
-###### Behaviour
+###### Behavior
 
 This can be any function you want.
 Its `this` keyword is the instance of the model and it receives the arguments new_value, name and old_value.
@@ -668,7 +668,7 @@ To limit/filter/sort the overall result you have to manually edit the returned a
 
 ##### Finding by simple index
 
-Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behaviour).
+Simple indexes are created for all properties that have `index` set to true and are of the type 'string', 'boolean', 'json' or custom (behavior).
 
 Example:
 

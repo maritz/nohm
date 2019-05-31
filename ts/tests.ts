@@ -188,7 +188,7 @@ exports.Typescript = {
     } catch (err) {
       t.same(
         err.message,
-        'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+        'Class is not extended properly. Use the return Nohm.register() instead of your class directly.',
         'Directly constructing a class did not throw the correct error.',
       );
     }

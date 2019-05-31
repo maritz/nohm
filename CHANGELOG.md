@@ -83,7 +83,7 @@ However node v10 brought great improvements for both: nohm@1 does 28-31k ops/s a
 
 The improvements in code readability of Promises versus pure callbacks or caolan/async callbacks makes quite a difference though. As such it seems worth it to switch to Promises and hope for even more performance improvements from v8/node and nohm.
 
-The nohm@2.2 milestone is set to be used for some performance optimizations and any help is very welcome!
+More nohm performance optimizations are planned and any help is very welcome!
 
 ### Default IDs
 
@@ -133,11 +133,11 @@ someProperty: {
 },
 ```
 
-### Errorhandling
+### Error handling
 
 Previously there were cases where an error without a callback would just log out something about it and then continue on.
 
-Now with Promises the behaviour will be similar (built-in unhandled rejection log) until Node.js starts to treat unhandled rejection by terminating the process.
+Now with Promises the behavior will be similar (built-in unhandled rejection log) until Node.js starts to treat unhandled rejection by terminating the process.
 
 #### Validation
 
@@ -183,9 +183,9 @@ Previously linking errors had 2 different ways to be handled, controlled via the
 
 This meant that either all linked objects were attempted to be stored, regardless of a failure in any linked object saving and success callback was called _or_ as soon as one failed, no more links were stored during that save call and an immediate error callback would be issued.
 
-The new behaviour is that it always attempts to save all linked objects in series (not parllel), but if any of them fail a rejection is issued _at the end of the saving process_. The reason it is done in series is that it makes saves more predictable (and thus testable) and it reduces the risk of race-conditions in the link chain.
+The new behavior is that it always attempts to save all linked objects in series (not parallel), but if any of them fail a rejection is issued _at the end of the saving process_. The reason it is done in series is that it makes saves more predictable (and thus testable) and it reduces the risk of race-conditions in the link chain.
 
-This makes it abundandly clear that you are in an error state while at the same time allowing for recovery by inspecting the failures and acting accordingly.
+This makes it abundantly clear that you are in an error state while at the same time allowing for recovery by inspecting the failures and acting accordingly.
 
 A LinkError object is an extension of Error and additionally contains an "errors" array:
 
@@ -195,7 +195,7 @@ linkError.errors ==
     {
       parent: NohmModel, // the instance on which .link() was performed
       child: NohmModel, // the instance that was given to .link() as argument
-      error: Error | ValidationError | LinkError, // the error that occured while saving child.
+      error: Error | ValidationError | LinkError, // the error that occurred while saving child.
     },
   ];
 ```
@@ -234,13 +234,13 @@ instance.link(other, {
 - passing invalid search keys (aka. property names that aren't defined as indexed) to `.find()` now throws an error instead of logging an error and returning an empty array.
 - `nohm.connect()` is renamed to `nohm.middleware()`
 - `nohm.middleware()` assumes that you are targeting browsers that have Promise support or that you have a Promise shim.
-- `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behaviour the same in `find()` and `findAndLoad()`.
+- `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behavior the same in `find()` and `findAndLoad()`.
 - `instance.id` is now a getter/setter that always returns null (no id set) or a string
 - the new `instance.isLoaded` is true when the instance has been loaded or saved at least once and `instance.id` has not been manually changed.
 - the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relationchanges)
 - custom ID generators _must_ resolve with strings that do **not** contain double colons (:)
 - timestamp/time values now always get cast to string representations of unix time in milliseconds instead of only after loading
-- behaviours (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
+- behaviors (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
 - the regexp validator now only takes valid RegExp objects as the .regex option and resolves with an error
 
 ## Non-breaking changes

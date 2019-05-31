@@ -4,7 +4,6 @@ import * as _ from 'lodash';
 import * as redis from 'redis';
 import * as traverse from 'traverse';
 import { v4 as uuid } from 'uuid';
-
 import { INohmPrefixes, NohmClass } from '.';
 import { LinkError } from './errors/LinkError';
 import { ValidationError } from './errors/ValidationError';
@@ -86,6 +85,8 @@ const eventActions: Array<TAllowedEventNames> = [
   'unlink',
   'link',
 ];
+
+const metaUpdating: Array<string> = [];
 
 /**
  * Redis client for this model
@@ -180,10 +181,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         value: undefined,
       });
       if (typeof definition.type === 'function') {
-        // behaviours should not be called on initialization - thus leaving it at defaultValue
+        // behaviors should not be called on initialization - thus leaving it at defaultValue
         this.setProperty(key, defaultValue, true);
       } else {
-        this.property(key, defaultValue); // this ensures typecasing
+        this.property(key, defaultValue); // this ensures typecasting
       }
       this.__resetProp(key);
       this.errors[key] = [];
@@ -258,24 +259,39 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       /* noop */
     },
   ) {
+    // Check if we're already updating the meta version before setting the timeout.
+    // Doing it multiple times is costly. This has the downside of potentially not updating the meta version
+    // sometimes when the same model is registered in several nohm instances with different redis databases.
+    // However that is a trade-off that seems okay for now. Statistically each redis database should receive the correct
+    // meta version over some time.
+    // TODO: investigate whether acquiring a lock in the db has enough merit in this case
+    if (metaUpdating.includes(this.meta.version)) {
+      return;
+    }
     setTimeout(async () => {
       // setTimeout to defer execution to the next process/browser tick
-      // this means we will have modelName set and meta doesnt take precedence over other operations
+      // this means we will have modelName set and meta doesn't take precedence over other operations
+
+      // Check if we're already updating the meta version again to make sure it didn't happen in the meantime
+      if (metaUpdating.includes(this.meta.version)) {
+        return;
+      }
+      metaUpdating.push(this.meta.version);
 
       const versionKey = this.rawPrefix().meta.version + this.modelName;
       const idGeneratorKey = this.rawPrefix().meta.idGenerator + this.modelName;
       const propertiesKey = this.rawPrefix().meta.properties + this.modelName;
-      const properties = traverse(this.meta.properties).map((x) => {
-        if (typeof x === 'function') {
-          return String(x);
-        } else {
-          return x;
-        }
-      });
 
       try {
         const dbVersion = await get(this.client, versionKey);
         if (this.meta.version !== dbVersion) {
+          const properties = traverse(this.meta.properties).map((x) => {
+            if (typeof x === 'function') {
+              return String(x);
+            } else {
+              return x;
+            }
+          });
           const generator = this.options.idGenerator || 'default';
           debug(
             `Setting meta for model '%s' with version '%s' and idGenerator '%s' to %j.`,
@@ -291,6 +307,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           ]);
         }
         this.meta.inDb = true;
+        const updatingIndex = metaUpdating.indexOf(this.meta.version);
+        if (updatingIndex !== -1) {
+          metaUpdating.splice(updatingIndex, 1);
+        }
         callback(null, this.meta.version);
       } catch (err) {
         this.nohmClass.logError(err);
@@ -457,7 +477,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       case 'time':
       case 'timestamp':
         let castTimestamp: number;
-        // make it a timestamp aka. miliseconds from 1970
+        // make it a timestamp aka. milliseconds from 1970
         if (isNaN(newValue) && typeof newValue === 'string') {
           let timezoneOffset: number;
           // see if there is a timezone specified in the string
@@ -511,7 +531,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * Returns an array of all the properties that have been changed since init/load/save.
    *
    * @example
-   *   user.properrtyDiff('country') ===
+   *   user.propertyDiff('country') ===
    *    [{
    *      key: 'country',
    *      before: 'GB',
@@ -586,7 +606,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * @returns {Promise<void>}
    */
   public async save(options?: ISaveOptions): Promise<void> {
-    // TODO for v2.1: instead of the old continue_on_link_error behaviour, we should
+    // TODO for v2.1: instead of the old continue_on_link_error behavior, we should
     // add a way to deepValidate before saving. Meaning all relationChanges (only link)
     // get validated and if one of them is not valid, we abort before starting the save
     callbackError(...arguments);
@@ -674,7 +694,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       );
     }
     if (typeof id === 'string' && id.includes(':')) {
-      // we need to do stuff with redis keys and we seperate parts of the redis key by :
+      // we need to do stuff with redis keys and we separate parts of the redis key by :
       // thus the id cannot contain that character.
       throw new Error(
         'Nohm IDs cannot contain the character ":". Please change your idGenerator!',
@@ -836,7 +856,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     });
     let saveResults: Array<ILinkSaveResult> = [];
     // Sequentially go through all the changes and store them instead of parallel.
-    // The reason for this behaviour is that it makes saving other objects when they don't have an id yet
+    // The reason for this behavior is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
     for (const [, fn] of changeFns.entries()) {
       saveResults = saveResults.concat(await fn());
@@ -899,7 +919,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     } catch (e) {
       if (e.message !== 'not found') {
         throw e;
-      } // else { not found just means no oldvalues and it stays {} }
+      } // else { not found just means no old values and it stays {} }
     }
     for (const [key, prop] of this.properties) {
       const isUnique = !!this.getDefinitions()[key].unique;
@@ -1010,7 +1030,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     let valid = validationResults.some((result) => result.valid);
 
     if (!valid) {
-      // if nonUniuqeValidations failed, we don't want to set uniques while checking them
+      // if nonUniqueValidations failed, we don't want to set uniques while checking them
       setDirectly = false;
     }
 
@@ -1152,7 +1172,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     let dbValue: number;
     if (setDirectly) {
       /*
-       * We lock the unique value here if it's not locked yet, then later remove the old uniquelock
+       * We lock the unique value here if it's not locked yet, then later remove the old unique lock
        * when really saving it. (or we free the unique slot if we're not saving)
        */
       dbValue = await setnx(this.client, key, this.stringId());
@@ -1253,7 +1273,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   /**
-   *  Remove an objet from the database.
+   *  Remove an object from the database.
    *  Note: Does not destroy the js object or its properties itself!
    *
    * @param {boolean} [silent=false] Fire PubSub events or not
@@ -1311,7 +1331,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   /**
-   * Returns a Promsie that resolves to true if the given id exists for this model.
+   * Returns a Promise that resolves to true if the given id exists for this model.
    *
    * @param {*} id
    * @returns {Promise<boolean>}
@@ -1364,7 +1384,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     Object.keys(dbProps).forEach((key) => {
       if (definitions[key].load_pure) {
-        // prevents type casting/behaviour. especially useful for create-only properties like a createdAt timestamp
+        // prevents type casting/behavior. especially useful for create-only properties like a createdAt timestamp
         debug(
           `Loading property '%s' from '%s.%s' as pure (no type casting).`,
           key,
@@ -1549,7 +1569,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
     const keys = await smembers(this.client, relationKeysKey);
 
-    debug(`Remvoing links for '%s.%s': %o.`, this.modelName, this.id, keys);
+    debug(`Removing links for '%s.%s': %o.`, this.modelName, this.id, keys);
 
     const others: Array<IUnlinkKeyMapItem> = keys.map((key) => {
       const matches = key.match(/:([\w]*):([\w]*):[^:]+$/i);
@@ -1947,7 +1967,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         stop = options.limit[1] ? start + options.limit[1] : start + stop;
         stop--;
       } else {
-        // stop is a 1-based index from the defined start limit (the wanted behaviour)
+        // stop is a 1-based index from the defined start limit (the wanted behavior)
         stop = options.limit[1] || stop;
       }
     }
@@ -1991,7 +2011,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           +new Date() +
           Math.ceil(Math.random() * 1000);
         ids.unshift(tmpKey);
-        client.sadd.apply(client, ids as Array<string>); // typecast because rediss doesn't care about numbers/string
+        client.sadd.apply(client, ids as Array<string>); // typecast because redis doesn't care about numbers/string
         client.sinterstore([tmpKey, tmpKey, idsetKey]);
         idsetKey = tmpKey;
       }
@@ -2118,7 +2138,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     callback: (payload: IRelationChangeEventPayload<TPayloadProps>) => void,
   ): Promise<void>;
   /**
-   * Subscibe to nohm events for this model.
+   * Subscribe to nohm events for this model.
    *
    * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
    * @param {function} callback
@@ -2144,7 +2164,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   /**
-   * Subscribe to only the next occurance of an event for this model.
+   * Subscribe to only the next occurrence of an event for this model.
    *
    * @param {string} eventName One of 'create', 'update', 'save', 'remove', 'unlink', 'link'
    * @param {function} callback

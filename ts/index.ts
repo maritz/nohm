@@ -1,7 +1,6 @@
 import * as Debug from 'debug';
 import { EventEmitter } from 'events';
 import * as redis from 'redis';
-
 import { LinkError } from './errors/LinkError';
 import { ValidationError } from './errors/ValidationError';
 import { getPrefix, INohmPrefixes } from './helpers';
@@ -81,7 +80,7 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
   protected _initOptions() {
     // overwritten in NohmClass.model/register
     throw new Error(
-      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+      'Class is not extended properly. Use the return Nohm.register() instead of your class directly.',
     );
   }
   /**
@@ -92,7 +91,7 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
   protected prefix(_prefix: keyof INohmPrefixes): string {
     // overwritten in NohmClass.model/register
     throw new Error(
-      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+      'Class is not extended properly. Use the return Nohm.register() instead of your class directly.',
     );
   }
   /**
@@ -103,7 +102,7 @@ abstract class NohmModelExtendable<TProps = any> extends NohmModel<TProps> {
   protected rawPrefix(): INohmPrefixes {
     // overwritten in NohmClass.model/register
     throw new Error(
-      'Class is not extended proplery. Use the return Nohm.register() instead of your class directly.',
+      'Class is not extended properly. Use the return Nohm.register() instead of your class directly.',
     );
   }
 }
@@ -136,7 +135,7 @@ function staticImplements<T>() {
  */
 
 /**
- * Main Nohm class.Hholds models, generic configuration and can generate the middleware for client validations.
+ * Main Nohm class. Holds models, generic configuration and can generate the middleware for client validations.
  *
  * Can be instantiated multiple times if you want different configurations, but usually you only need the default
  * that is exported as `require('nohm').nohm`.
@@ -144,7 +143,7 @@ function staticImplements<T>() {
  * @example
  * // To instantiate another you can do this:
  * const NohmClass = require('nohm').NohmClass;
- * const myNohm = new NohmClas({ prefix: 'SomePrefix' });
+ * const myNohm = new NohmClass({ prefix: 'SomePrefix' });
  *
  * @class NohmClass
  */
@@ -270,6 +269,8 @@ export class NohmClass {
     // tslint:disable-next-line:no-this-assignment
     const self = this; // well then...
 
+    let metaVersion = '';
+
     /**
      * The static Model Class, used to get instances or operate on multiple records.
      *
@@ -307,10 +308,14 @@ export class NohmClass {
       constructor() {
         super();
         if (self.meta) {
+          if (!metaVersion) {
+            // cache it to prevent constant regeneration
+            metaVersion = this.generateMetaVersion();
+          }
           this.meta = {
             inDb: false,
             properties: this.options.properties,
-            version: this.generateMetaVersion(),
+            version: metaVersion,
           };
         }
       }
@@ -516,7 +521,7 @@ export class NohmClass {
    *     // defined in our property interface.
    *     // If you don't want to use the generic, you have to use the exported {type}Property types
    *     // to get around the tsc throwing an error.
-   *     // TODO: look into the error thrown by tsc when leaving out TTYpedDefinitions and using 'sometype' as type
+   *     // TODO: look into the error thrown by tsc when leaving out TTypedDefinitions and using 'sometype' as type
    *     protected static definitions: TTypedDefinitions<IUserModelProps> = {
    *       name: {
    *         defaultValue: 'testName',
@@ -570,6 +575,8 @@ export class NohmClass {
       temp,
     );
 
+    let metaVersion = '';
+
     // tslint:disable-next-line:max-classes-per-file
     @staticImplements<IStaticMethods<CreatedClass>>()
     class CreatedClass extends subClass {
@@ -580,10 +587,14 @@ export class NohmClass {
       constructor(...args: Array<any>) {
         super(...args);
         if (self.meta) {
+          if (!metaVersion) {
+            // cache it to prevent constant regeneration
+            metaVersion = this.generateMetaVersion();
+          }
           this.meta = {
             inDb: false,
             properties: this.options.properties,
-            version: this.generateMetaVersion(),
+            version: metaVersion,
           };
         }
       }
@@ -790,7 +801,7 @@ export class NohmClass {
       typeof arguments[2] === 'function'
     ) {
       throw new Error(
-        'Not implmented: factory does not support callback method anymore.',
+        'Not implemented: factory does not support callback method anymore.',
       );
     } else {
       debug(`Factory is creating a new instance of '%s' with id %s.`, name, id);

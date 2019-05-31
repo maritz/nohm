@@ -1604,7 +1604,7 @@ exports['create-only failure attempt without load_pure'] = async (t) => {
   t.same(
     loadPure.property('createdAt'),
     initialValue,
-    'Behaviour failed to prevent property change',
+    'Behavior failed to prevent property change',
   );
 
   await loadPure.save();
@@ -1656,7 +1656,7 @@ exports['loadPure'] = async (t) => {
   t.same(
     loadPure.property('createdAt'),
     initialCreatedAt,
-    'Behaviour failed to prevent property change',
+    'Behavior failed to prevent property change',
   );
 
   await loadPure.save();

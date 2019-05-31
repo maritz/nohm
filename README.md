@@ -13,10 +13,10 @@ Nohm is an object relational mapper (ORM) written for node.js and redis written 
 
 - **Standard ORM features (validate, store, search, sort, link/unlink, delete)**
 - **Share validations with browser.**  
-  Allows using the same code for clien validations that is used for backend. Includes filtering which validations are shared.
+  Allows using the same code for client validations that is used for backend. Includes filtering which validations are shared.
 - **Subscribe to orm events (save, delete, link, unlink)**  
   With this you can do things like socket connections to get live updates from stored models.  
-  Since it uses redis PUBSUB you can scale your node app and clients can connect to seperate node app instances but will still get the same live updates.
+  Since it uses redis PUBSUB you can scale your node app and clients can connect to separate node app instances but will still get the same live updates.
 - **Typescript typings**  
   nohm is written in Typescript and thus provides first-class typings for most things, including the option to type your model properties. This means if you use Typescript you don't have to remember every single property name of each model anymore, your IDE can tell you.
 - **Dynamic relations**  
@@ -93,7 +93,7 @@ UserModel.definitions = {
   visits: {
     type: function incrVisitsBy(value, key, old) {
       // arguments are always string here since they come from redis.
-      // in behaviours (type functions) you are responsible for making sure they return in the type you want them to be.
+      // in behaviors (type functions) you are responsible for making sure they return in the type you want them to be.
       return parseInt(old, 10) + parseInt(value, 10);
     },
     defaultValue: 0,
@@ -105,7 +105,7 @@ UserModel.definitions = {
 const UserModelClass = nohm.register(UserModel);
 
 const redis = require('redis').createClient();
-// wait for redis to connect, otherwise we might try to write to a non-existant redis server
+// wait for redis to connect, otherwise we might try to write to a non-existent redis server
 redis.on('connect', async () => {
   nohm.setClient(redis);
 
@@ -148,7 +148,7 @@ redis.on('connect', async () => {
 
   console.log(`User loaded. His properties are %j`, loadedUser.allProperties());
   const newVisits = loadedUser.property('visits', 20);
-  console.log(`User vists set to ${newVisits}.`); // Spoiler: it's 21
+  console.log(`User visits set to ${newVisits}.`); // Spoiler: it's 21
 
   // or find users by country
   const gondorians = await UserModelClass.findAndLoad({
@@ -202,7 +202,7 @@ class UserModel extends NohmModel<IUserProperties> {
   };
 
   public getVisitsAsString(): string {
-    return this.property('visits'); // TS Error: visits is number and thus not asignable to string
+    return this.property('visits'); // TS Error: visits is number and thus not assignable to string
   }
 
   public static async loadTyped(id: string): Promise<UserModel> {
@@ -265,7 +265,7 @@ The easiest way to do that is to run the `prepublishOnly` script:
 
     npm run prepublishOnly
 
-## Running tests seperately
+## Running tests separately
 
 Build the javascript files:
 

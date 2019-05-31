@@ -27,10 +27,10 @@ var UserMockup = nohm.model('UserMockup', {
       type: 'timestamp',
       defaultValue: 100000,
     },
-    behaviour: {
+    behavior: {
       type: function incrby(value, key, old) {
         if (typeof value !== 'string' || typeof old !== 'string') {
-          throw new Error('Behaviour arguments were not strings!');
+          throw new Error('Behavior arguments were not strings!');
         }
         return parseInt(old, 10) + parseInt(value, 10);
       },
@@ -544,15 +544,15 @@ exports.validation = {
     t.done();
   },
 
-  behaviours: function(t) {
+  behaviors: function(t) {
     var user = new UserMockup();
     t.expect(1);
 
-    user.property('behaviour', 5);
+    user.property('behavior', 5);
     t.equals(
-      user.property('behaviour'),
+      user.property('behavior'),
       6,
-      'Using the behaviour did not work correctly',
+      'Using the behavior did not work correctly',
     );
 
     t.done();

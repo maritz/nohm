@@ -33,7 +33,7 @@ let redisClient;
 const main = () => {
   console.info('Connected to redis.');
   stress().catch((error) => {
-    console.error('An error occured during benchmarking:', error);
+    console.error('An error occurred during benchmarking:', error);
     process.exit(1);
   });
 };
