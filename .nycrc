@@ -1,0 +1,20 @@
+{
+    "include": [
+        "tsOut/**/*.js",
+        "ts/**/*.ts",
+        "ts/universalValidators.js"
+    ],
+    "extension": [
+        ".js",
+        ".ts"
+    ],
+    "exclude": [
+        "test/",
+        "tsOut/test.ts"
+    ],
+    "reporter": [
+        "text",
+        "html"
+    ],
+    "sourceMap": true
+}
