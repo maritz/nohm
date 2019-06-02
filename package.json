@@ -1,6 +1,6 @@
 {
   "name": "nohm",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "redis ORM (Object relational mapper)",
   "lisense": "MIT",
   "engines": {
@@ -91,5 +91,41 @@
       "name": "Pier Paolo Ramon",
       "url": "https://github.com/yuchi"
     }
-  ]
+  ],
+  "standard-version": {
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "chore",
+        "section": "Other"
+      },
+      {
+        "type": "docs",
+        "hidden": true
+      },
+      {
+        "type": "style",
+        "hidden": true
+      },
+      {
+        "type": "refactor",
+        "hidden": true
+      },
+      {
+        "type": "perf",
+        "section": "Other"
+      },
+      {
+        "type": "test",
+        "hidden": true
+      }
+    ]
+  }
 }

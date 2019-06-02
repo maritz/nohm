@@ -1,43 +1,38 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-<a name="2.2.1"></a>
+### [2.2.2](https://github.com/maritz/nohm/compare/v2.2.1...v2.2.2) (2019-06-02)
+
+
+### Other
+
+* reduce meta update performance impact ([58535d1](https://github.com/maritz/nohm/commit/58535d1))
+* update dependencies ([594c786](https://github.com/maritz/nohm/commit/594c786))
+
 ## [2.2.1](https://github.com/maritz/nohm/compare/v2.2.0...v2.2.1) (2018-12-30)
 
-
-
-<a name="2.2.0"></a>
-# [2.2.0](https://github.com/maritz/nohm/compare/v2.1.0...v2.2.0) (2018-09-07)
+## [2.2.0](https://github.com/maritz/nohm/compare/v2.1.0...v2.2.0) (2018-09-07)
 
 
 ### Features
 
 * add ioredis support ([f4fa805](https://github.com/maritz/nohm/commit/f4fa805))
 
-
-
-<a name="2.1.0"></a>
-# [2.1.0](https://github.com/maritz/nohm/compare/v2.0.1...v2.1.0) (2018-07-14)
-
+## [2.1.0](https://github.com/maritz/nohm/compare/v2.0.1...v2.1.0) (2018-07-14)
 
 ### Features
 
 * add typings for subscribe callback payloads ([1069059](https://github.com/maritz/nohm/commit/1069059))
 
-
-
-<a name="2.0.1"></a>
-## [2.0.1](https://github.com/maritz/nohm/compare/v2.0.0...v2.0.1) (2018-06-21)
+### [2.0.1](https://github.com/maritz/nohm/compare/v2.0.0...v2.0.1) (2018-06-21)
 
 
 ### Bug Fixes
 
 * middleware.validate throwing uncaught when data is undefined ([819865b](https://github.com/maritz/nohm/commit/819865b))
 
-
-<a name="2.0.0"></a>
-## [2.0.0](https://github.com/maritz/nohm/compare/v1.0.0...v2.0.0) (2018-06-10)
+# [2.0.0](https://github.com/maritz/nohm/compare/v1.0.0...v2.0.0) (2018-06-10)
 
 ## BREAKING CHANGES
 
