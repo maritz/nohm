@@ -213,8 +213,8 @@ class SomeModel extends NohmModel {
   }
 }
 
-ClassModel.modelName = 'SomeModelName';
-ClassModel.definitions = {
+SomeModel.modelName = 'SomeModelName';
+SomeModel.definitions = {
   name: {
     type: 'string',
     unique: true
