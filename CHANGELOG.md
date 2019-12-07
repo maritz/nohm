@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.3](https://github.com/maritz/nohm/compare/v2.2.2...v2.2.3) (2019-12-07)
+
+
+### Other
+
+* update dependencies ([9e28398](https://github.com/maritz/nohm/commit/9e28398))
+* **deps:** bump lodash from 4.17.11 to 4.17.13 ([466713a](https://github.com/maritz/nohm/commit/466713a))
+* **deps:** bump lodash in /examples/rest-user-server ([9d082a3](https://github.com/maritz/nohm/commit/9d082a3))
+* **deps:** bump lodash.template from 4.4.0 to 4.5.0 ([c0a17ce](https://github.com/maritz/nohm/commit/c0a17ce))
+
+
+
 ### [2.2.2](https://github.com/maritz/nohm/compare/v2.2.1...v2.2.2) (2019-06-02)
 
 
