@@ -4,9 +4,9 @@ import test from 'ava';
 import { nohm } from '../ts';
 import * as args from './testArgs.js';
 
-nohm.setClient(args.redis);
-
-// TODO: add custom prefixes per test file
+test.before(async () => {
+  await args.setClient(nohm, args.redis);
+});
 
 const normalModel = nohm.model('normalModel', {
   properties: {
