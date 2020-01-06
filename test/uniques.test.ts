@@ -1,5 +1,3 @@
-// tslint:disable
-
 import test from 'ava';
 
 import { Nohm, nohm } from '../ts';
@@ -10,6 +8,7 @@ import { exists, get, keys } from '../ts/typed-redis-helper';
 
 const redis = args.redis;
 
+// tslint:disable-next-line:variable-name
 const Model = Nohm.model('UniqueTests', {
   properties: {
     name: {

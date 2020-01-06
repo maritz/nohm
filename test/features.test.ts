@@ -1,16 +1,16 @@
-// tslint:disable
-
+// tslint:disable-next-line:no-implicit-dependencies
 import test from 'ava';
 
 import * as _ from 'lodash';
+// tslint:disable-next-line:no-implicit-dependencies
 import * as async from 'async';
 
 import * as args from './testArgs.js';
-import { cleanUp, cleanUpPromise } from './helper';
+import { cleanUpPromise } from './helper';
 
 import { hgetall, keys, sismember, zscore } from '../ts/typed-redis-helper';
 
-// to make prefixes per-file seperate we add the filename
+// to make prefixes per-file separate we add the filename
 const prefix = args.prefix + 'feature';
 
 import { Nohm, NohmModel } from '../ts';
@@ -28,7 +28,8 @@ test.afterEach(async (t) => {
   await cleanUpPromise(redis, prefix);
 });
 
-var UserMockup = Nohm.model('UserMockup', {
+// tslint:disable-next-line:variable-name
+const UserMockup = Nohm.model('UserMockup', {
   properties: {
     name: {
       type: 'string',
@@ -87,6 +88,7 @@ test.serial(
     nohm.client = null;
     t.throws(
       () => {
+        // tslint:disable-next-line:no-unused-expression
         new UserMockup();
       },
       /No redis client/,
@@ -95,6 +97,7 @@ test.serial(
     await args.setClient(nohm, redis); // this waits until the connection is ready before setting the client
 
     t.notThrows(() => {
+      // tslint:disable-next-line:no-unused-expression
       new UserMockup();
     }, 'Creating a model with a redis client set threw an error.');
   },
@@ -141,8 +144,8 @@ test.serial('remove', async (t) => {
   const user = new UserMockup();
   let testExists;
 
-  testExists = function(what, key, callback) {
-    redis.exists(key, function(err, value) {
+  testExists = (what, key, callback) => {
+    redis.exists(key, (err, value) => {
       t.true(!err, 'There was a redis error in the remove test check.');
       t.true(
         value === 0,
@@ -167,14 +170,14 @@ test.serial('remove', async (t) => {
   return new Promise<void>((resolve, reject) => {
     async.series(
       [
-        function(callback) {
+        (callback) => {
           testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
         },
-        function(callback) {
+        (callback) => {
           redis.sismember(
             prefix + ':index:UserMockup:name:' + user.property('name'),
             id,
-            function(err, value) {
+            (err, value) => {
               t.true(
                 err === null && value === 0,
                 'Deleting a model did not properly delete the normal index.',
@@ -183,19 +186,20 @@ test.serial('remove', async (t) => {
             },
           );
         },
-        function(callback) {
-          redis.zscore(prefix + ':scoredindex:UserMockup:visits', id, function(
-            err,
-            value,
-          ) {
-            t.true(
-              err === null && value === null,
-              'Deleting a model did not properly delete the scored index.',
-            );
-            callback();
-          });
+        (callback) => {
+          redis.zscore(
+            prefix + ':scoredindex:UserMockup:visits',
+            id,
+            (err, value) => {
+              t.true(
+                err === null && value === null,
+                'Deleting a model did not properly delete the scored index.',
+              );
+              callback();
+            },
+          );
         },
-        function(callback) {
+        (callback) => {
           testExists(
             'uniques',
             prefix + ':uniques:UserMockup:name:' + user.property('name'),
@@ -406,18 +410,19 @@ test.serial('thisInCallbacks', async (t) => {
 */
 
 test.serial.cb('defaultAsFunction', (t) => {
-  var TestMockup = nohm.model('TestMockup', {
+  // tslint:disable-next-line:variable-name
+  const TestMockup = nohm.model('TestMockup', {
     properties: {
       time: {
         type: 'timestamp',
-        defaultValue: function() {
+        defaultValue: () => {
           return +new Date();
         },
       },
     },
   });
   const test1 = new TestMockup();
-  setTimeout(function() {
+  setTimeout(() => {
     const test2 = new TestMockup();
 
     t.true(
@@ -437,7 +442,8 @@ test.serial.cb('defaultAsFunction', (t) => {
 });
 
 test.serial('defaultIdGeneration', async (t) => {
-  var TestMockup = nohm.model('TestMockup', {
+  // tslint:disable-next-line:variable-name
+  const TestMockup = nohm.model('TestMockup', {
     properties: {
       name: {
         type: 'string',
@@ -498,7 +504,7 @@ test.serial('factory with non-integer id', async (t) => {
   obj.property('name', 'factory_non_integer_load');
   await obj.save();
 
-  var obj2 = await nohm.factory(name, obj.id);
+  const obj2 = await nohm.factory(name, obj.id);
   t.deepEqual(
     obj2.allProperties(),
     obj.allProperties(),
@@ -508,17 +514,19 @@ test.serial('factory with non-integer id', async (t) => {
 
 test.serial.cb('purgeDB', (t) => {
   t.plan(4);
-  var countKeys = (
-    prefix: string,
+
+  // TODO: refactor this mess
+  const countKeys = (
+    countPrefix: string,
     callback: (err: Error, count: number) => void,
   ) => {
-    redis.keys(prefix + '*', function(err, orig_num) {
-      callback(err, orig_num.length);
+    redis.keys(countPrefix + '*', (err, keysFound) => {
+      callback(err, keysFound.length);
     });
   };
 
   const tests = [];
-  Object.keys(nohm.prefix).forEach(function(key) {
+  Object.keys(nohm.prefix).forEach((key) => {
     if (typeof nohm.prefix[key] === 'object') {
       Object.keys(nohm.prefix[key]).forEach((innerKey) => {
         tests.push(async.apply(countKeys, nohm.prefix[key][innerKey]));
@@ -532,19 +540,25 @@ test.serial.cb('purgeDB', (t) => {
   const user = new UserMockup();
   user.save().then(
     () => {
-      async.series(tests, (err, num_arr) => {
+      async.series(tests, (err, numArr) => {
         t.true(!err, 'Unexpected redis error');
-        const count = num_arr.reduce(function(num: number, add: number) {
+        const countBefore = numArr.reduce((num: number, add: number) => {
           return num + add;
         }, 0);
-        t.true(count > 0, 'Database did not have any keys before purgeDb call');
+        t.true(
+          countBefore > 0,
+          'Database did not have any keys before purgeDb call',
+        );
         nohm.purgeDb().then(() => {
-          async.series(tests, function(err, num_arr) {
-            t.true(!err, 'Unexpected redis error');
-            const count = num_arr.reduce(function(num: number, add: number) {
-              return num + add;
-            }, 0);
-            t.is(count, 0, 'Database did have keys left after purging.');
+          async.series(tests, (errInner, numArrInner) => {
+            t.true(!errInner, 'Unexpected redis error');
+            const countAfter = numArrInner.reduce(
+              (num: number, add: number) => {
+                return num + add;
+              },
+              0,
+            );
+            t.is(countAfter, 0, 'Database did have keys left after purging.');
             t.end();
           });
         }, t.fail);
@@ -570,13 +584,17 @@ test.serial('no key left behind', async (t) => {
 
   await cleanUpPromise(redis, args.prefix);
   const remainingKeys = await keys(redis, prefix + ':*');
-  t.is(remainingKeys.length, 0, 'Not all keys were removed before tests'); // at this point only meta info should be stored
+
+  // at this point only meta info should be stored
+  t.is(remainingKeys.length, 0, 'Not all keys were removed before tests');
+
   await user.save();
   await user2.save();
   user.unlink(user2);
   await user2.save();
   await user2.remove();
   await user.remove();
+
   const remainingKeys2 = await keys(redis, prefix + ':*');
   // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
   t.is(remainingKeys2.length, 4, 'Not all keys were removed from the database');
@@ -586,7 +604,8 @@ test.serial('temporary model definitions', async (t) => {
   const user = await nohm.factory('UserMockup');
 
   // new temporary model definition with same name
-  var TempUserMockup = nohm.model(
+  // tslint:disable-next-line:variable-name
+  const TempUserMockup = nohm.model(
     'UserMockup',
     {
       properties: {
@@ -597,12 +616,12 @@ test.serial('temporary model definitions', async (t) => {
     },
     true,
   );
-  const new_user = new TempUserMockup();
+  const newUser = new TempUserMockup();
 
   const user2 = await nohm.factory('UserMockup');
 
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
-  t.notDeepEqual(user.allProperties(), new_user.allProperties(), 'HURASDASF');
+  t.notDeepEqual(user.allProperties(), newUser.allProperties(), 'HURASDASF');
 });
 
 test.serial(
@@ -626,7 +645,7 @@ test.serial(
     obj2.property('name', old);
     try {
       obj2.save();
-      // test something, so we at least have the resemblence of normal testing here........
+      // test something, so we at least have the resemblance of normal testing here........
       // the way it actually tests whether the uniques are freed is by not throwing errors during save
       t.is(obj2.id, obj3.id, 'Something went wrong');
     } catch (err) {
@@ -651,6 +670,7 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
   };
 
   // @ts-ignore
+  // tslint:disable-next-line:variable-name
   const ModelCtor = nohm.register(ClassModel);
   const instance = new ModelCtor();
   const factoryInstance = await nohm.factory('ClassModel');
@@ -777,8 +797,8 @@ test.serial('isLoaded', async (t) => {
 });
 
 test.serial('isDirty', async (t) => {
-  let user = await nohm.factory('UserMockup');
-  let other = await nohm.factory('NonIncrement');
+  const user = await nohm.factory('UserMockup');
+  const other = await nohm.factory('NonIncrement');
 
   t.is(user.isDirty, false, 'user.isDirty true in base state.');
   t.is(other.isDirty, false, 'other.isDirty true in base state.');
@@ -819,7 +839,7 @@ test.serial('create-only failure attempt without load_pure', async (t) => {
     },
   });
 
-  let loadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
+  const loadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
   const initialValue = loadPure.property('createdAt');
   loadPure.property('createdAt', 'asdasd');
 
@@ -830,7 +850,7 @@ test.serial('create-only failure attempt without load_pure', async (t) => {
   );
 
   await loadPure.save();
-  let controlLoadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
+  const controlLoadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
   await controlLoadPure.load(loadPure.id);
 
   t.not(
@@ -846,7 +866,7 @@ test.serial('loadPure', async (t) => {
       incrementOnChange: {
         defaultValue: 0,
         load_pure: true,
-        type: function() {
+        type() {
           return (
             1 + parseInt(this.property('incrementOnChange'), 10)
           ).toString();
@@ -860,7 +880,7 @@ test.serial('loadPure', async (t) => {
     },
   });
 
-  let loadPure = await nohm.factory('loadPureModel');
+  const loadPure = await nohm.factory('loadPureModel');
   const initialCreatedAt = loadPure.property('createdAt');
   loadPure.property('createdAt', 'asdasd');
   loadPure.property('incrementOnChange', 'asdasd');
@@ -879,7 +899,7 @@ test.serial('loadPure', async (t) => {
   );
 
   await loadPure.save();
-  let controlLoadPure = await nohm.factory('loadPureModel');
+  const controlLoadPure = await nohm.factory('loadPureModel');
   await controlLoadPure.load(loadPure.id);
   t.is(
     controlLoadPure.property('incrementOnChange'),
@@ -894,21 +914,25 @@ test.serial('loadPure', async (t) => {
 });
 
 test.serial('allProperties() cache is reset on propertyReset()', async (t) => {
-  let user = await nohm.factory('UserMockup');
+  const user = await nohm.factory('UserMockup');
   const name = 'allPropertyCacheEmpty';
   const email = 'allPropertyCacheEmpty@test.de';
   user.property({
     name,
     email,
   });
-  const test = user.allProperties();
+  const allProps = user.allProperties();
   user.propertyReset();
 
   t.not(user.property('name'), name, 'Name was not reset.');
-  t.is(test.name, name, 'Name was reset in  test object.');
+  t.is(allProps.name, name, 'Name was reset in  test object.');
 
-  const control = user.allProperties();
-  t.notDeepEqual(test, control, 'allProperties cache was not reset properly');
+  const controlAllProps = user.allProperties();
+  t.notDeepEqual(
+    allProps,
+    controlAllProps,
+    'allProperties cache was not reset properly',
+  );
 });
 
 test.serial('id with : should fail', async (t) => {
@@ -927,7 +951,7 @@ test.serial('id with : should fail', async (t) => {
     true,
   );
 
-  let instance = new wrongIdModel();
+  const instance = new wrongIdModel();
 
   try {
     await instance.save();
@@ -950,11 +974,11 @@ test.serial(
       email: 'manualIdWithuniques@example.com',
     };
 
-    let origInstance = new UserMockup();
+    const origInstance = new UserMockup();
     origInstance.property(props);
     await origInstance.save();
 
-    let instance = new UserMockup();
+    const instance = new UserMockup();
     instance.id = origInstance.id;
     instance.property(props);
 
@@ -1006,6 +1030,7 @@ test.serial('helpers.callbackError', (t) => {
 
   t.throws(
     () => {
+      // tslint:disable-next-line:no-empty
       callbackError(() => {});
     },
     /^Callback style has been removed. Use the returned promise\.$/,
@@ -1013,6 +1038,7 @@ test.serial('helpers.callbackError', (t) => {
   );
   t.throws(
     () => {
+      // tslint:disable-next-line:no-empty
       callbackError('foo', 'bar', 'baz', () => {});
     },
     /^Callback style has been removed. Use the returned promise\.$/,
@@ -1022,6 +1048,7 @@ test.serial('helpers.callbackError', (t) => {
     callbackError('foo', 'bar', 'baz');
   }, 'Error thrown even though arguments contained no function.');
   t.notThrows(() => {
+    // tslint:disable-next-line:no-empty
     callbackError(() => {}, 'bar', 'baz');
   }, 'Error thrown even though last argument was not a function.');
 });

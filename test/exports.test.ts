@@ -1,12 +1,10 @@
-// tslint:disable
-
+// tslint:disable-next-line:no-implicit-dependencies
 import test from 'ava';
 
 import * as NohmAll from '../ts';
 
-import NohmDefault from '../ts';
-
-import {
+// tslint:disable-next-line:no-duplicate-imports
+import NohmDefault, {
   Nohm,
   NohmClass,
   NohmModel,

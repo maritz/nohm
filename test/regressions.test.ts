@@ -1,5 +1,3 @@
-// tslint:disable
-
 import test from 'ava';
 
 import { nohm } from '../ts';
@@ -47,17 +45,17 @@ test.serial('#114 update does not reset index', async (t) => {
     idGenerator: 'increment',
   });
 
-  var instance = await nohm.factory(modelName);
+  const instance = await nohm.factory(modelName);
   instance.property({ uniqueDeletion: 'one' });
 
-  var instance2 = await nohm.factory(modelName);
+  const instance2 = await nohm.factory(modelName);
   instance2.property({
     uniqueDeletion: 'two',
     isActive: false,
     scoredIndex: 123,
   });
 
-  var instance3 = await nohm.factory(modelName);
+  const instance3 = await nohm.factory(modelName);
   instance3.property({ uniqueDeletion: 'three' });
   await Promise.all([instance.save(), instance2.save(), instance3.save()]);
 
@@ -68,7 +66,7 @@ test.serial('#114 update does not reset index', async (t) => {
 
   t.is(uniqueExistsCheck, 1, 'A unique key of a changed property remained.');
 
-  var instance2Activated = await nohm.factory(modelName);
+  const instance2Activated = await nohm.factory(modelName);
   instance2Activated.id = instance2.id;
   instance2Activated.property({
     uniqueDeletion: 'twoDelete',
