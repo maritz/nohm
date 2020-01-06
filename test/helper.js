@@ -16,3 +16,9 @@ exports.cleanUp = function(redis, prefix, cb) {
     }
   });
 };
+
+exports.cleanUpPromise = (redis, prefix) => {
+  return new Promise((resolve) => {
+    exports.cleanUp(redis, prefix, resolve);
+  });
+};

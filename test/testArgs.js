@@ -45,6 +45,14 @@ if (process.env.NOHM_TEST_IOREDIS == 'true') {
     exports.redis_host,
     {
       auth_pass: exports.redis_auth,
+      retry_strategy: function(options) {
+        console.error(
+          '\nFailed to connect to primary redis:',
+          options.error,
+          '\n',
+        );
+        return null;
+      },
     },
   );
 
@@ -53,6 +61,26 @@ if (process.env.NOHM_TEST_IOREDIS == 'true') {
     exports.redis_host,
     {
       auth_pass: exports.redis_auth,
+      retry_strategy: function(options) {
+        console.error(
+          '\nFailed to connect to secondary redis:',
+          options.error,
+          '\n',
+        );
+        return null;
+      },
     },
   );
 }
+
+exports.setClient = (nohm, client) => {
+  return new Promise((resolve) => {
+    if (!client) {
+      client = exports.redis;
+    }
+    client.on('ready', () => {
+      nohm.setClient(client);
+      resolve(true);
+    });
+  });
+};

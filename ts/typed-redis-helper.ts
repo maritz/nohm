@@ -190,7 +190,7 @@ export function sadd(
 export function sinter(
   client: RedisClient | Multi,
   keyArrayOrString: string | Array<string>,
-  ...keys: Array<string>
+  ...intersectKeys: Array<string>
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
     if (!client.sinter) {
@@ -198,7 +198,7 @@ export function sinter(
     }
     client.sinter.apply(client, [
       keyArrayOrString,
-      ...keys,
+      ...intersectKeys,
       (err: Error | null, values: Array<string>) => {
         if (err) {
           reject(err);
@@ -303,5 +303,42 @@ export function punsubscribe(
         }
       },
     ]);
+  });
+}
+
+export function keys(
+  client: RedisClient | Multi,
+  searchString: string,
+): Promise<Array<string>> {
+  return new Promise<Array<string>>((resolve, reject) => {
+    if (!client.get) {
+      return reject(new Error(errorMessage));
+    }
+    client.keys(searchString, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(value);
+      }
+    });
+  });
+}
+
+export function zscore(
+  client: RedisClient | Multi,
+  key: string,
+  member: string,
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    if (!client.get) {
+      return reject(new Error(errorMessage));
+    }
+    client.zscore(key, member, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(parseFloat(value));
+      }
+    });
   });
 }

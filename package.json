@@ -63,6 +63,7 @@
     "@types/traverse": "^0.6.32",
     "@types/uuid": "^3.4.4",
     "async": "^1.2.1",
+    "ava": "^2.4.0",
     "concurrently": "^4.1.0",
     "coveralls": "^3.0.3",
     "docdash": "^1.1.1",
@@ -75,6 +76,7 @@
     "rimraf": "^2.6.3",
     "standard-version": "^6.0.1",
     "testdouble": "^3.11.0",
+    "ts-node": "^8.5.4",
     "tslint": "^5.17.0",
     "typescript": "3.4.5"
   },
@@ -92,6 +94,22 @@
       "url": "https://github.com/yuchi"
     }
   ],
+  "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
+    "timeout": "3s",
+    "files": [
+      "test/*.test.ts"
+    ],
+    "helpers": [
+      "test/helper.js"
+    ],
+    "require": [
+      "ts-node/register/transpile-only"
+    ]
+  },
   "standard-version": {
     "types": [
       {
