@@ -1,6 +1,7 @@
 {
   "extends": "../tslint.json",
   "rules": {
-    "object-literal-sort-keys": [true, "match-declaration-order-only"]
+    "object-literal-sort-keys": [true, "match-declaration-order-only"],
+    "no-implicit-dependencies": [true, "dev"]
   }
 }

@@ -116,8 +116,8 @@ export interface IModelOptions {
 }
 
 export interface ISaveOptions {
-  silent: boolean;
-  skip_validation_and_unique_indexes: boolean;
+  silent?: boolean;
+  skip_validation_and_unique_indexes?: boolean;
 }
 
 export interface IProperty {
