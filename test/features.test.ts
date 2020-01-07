@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import test from 'ava';
 
 import * as _ from 'lodash';

@@ -22,9 +22,9 @@ test.afterEach.cb((t) => {
 
 nohm.setExtraValidations(__dirname + '/custom_validations.js');
 
-// !!! this mockup must be defined valid from the start for most tests !!!
 // tslint:disable-next-line:variable-name
 const UserMockup = nohm.model('UserMockup', {
+  // !!! this mockup must be defined with valid default values !!!
   properties: {
     name: {
       type: 'string',
