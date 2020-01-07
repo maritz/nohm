@@ -4,20 +4,20 @@ import * as util from 'util';
 import { nohm } from '../ts';
 
 import * as args from './testArgs.js';
-import { cleanUp, cleanUpPromise } from './helper';
+import { cleanUpPromise } from './helper';
 
 const redis = args.redis;
 
 const prefix = args.prefix + 'validationTests';
 
-test.before(async (t) => {
+test.before(async () => {
   nohm.setPrefix(prefix);
   await args.setClient(nohm, redis);
   await cleanUpPromise(redis, prefix);
 });
 
-test.afterEach.cb((t) => {
-  cleanUp(redis, prefix, t.end);
+test.after(async () => {
+  await cleanUpPromise(redis, prefix);
 });
 
 nohm.setExtraValidations(__dirname + '/custom_validations.js');
@@ -838,11 +838,7 @@ test('skipValidation', async (t) => {
       'The id of an invalid user with skip_validation was reset.',
     );
   } catch (err) {
-    t.is(
-      false,
-      true,
-      'The validation has been run even though skip_validation was true.',
-    );
+    t.fail('The validation has been run even though skip_validation was true.');
   }
 });
 
@@ -887,6 +883,7 @@ test('ValidationError only has objects for properties with errors', async (t) =>
   user.property('name', '');
   try {
     await user.save();
+    t.fail('Succeeded where it should not have.');
   } catch (e) {
     t.true(e instanceof nohm.ValidationError, 'Unexpected error.');
     const errorKeys = Object.keys(e.errors);
@@ -904,6 +901,7 @@ test('multiple validation failures produce multiple error entries', async (t) =>
   user.property('email', 'a');
   try {
     await user.save();
+    t.fail('Succeeded where it should not have.');
   } catch (e) {
     t.deepEqual(
       ['length', 'email'],
@@ -919,6 +917,7 @@ test('ValidationError has modelName as property', async (t) => {
   user.property('name', '');
   try {
     await user.save();
+    t.fail('Succeeded where it should not have.');
   } catch (e) {
     t.deepEqual(
       e.modelName,
