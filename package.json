@@ -28,8 +28,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "nyc node test/tests.js",
-    "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
+    "test": "nyc ava --tap",
+    "test:watch": "ava --watch",
     "coverage:failIfLow": "nyc check-coverage --lines 90 --functions 90 --branches 80",
     "coverage:coveralls": "nyc report --reporter=text-lcov | coveralls",
     "lint": "tslint --project ./ && eslint test/ ts/universalValidators.js",
