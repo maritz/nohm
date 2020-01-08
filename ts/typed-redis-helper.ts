@@ -311,7 +311,7 @@ export function keys(
   searchString: string,
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
-    if (!client.get) {
+    if (!client.keys) {
       return reject(new Error(errorMessage));
     }
     client.keys(searchString, (err, value) => {
@@ -330,7 +330,7 @@ export function zscore(
   member: string,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    if (!client.get) {
+    if (!client.zscore) {
       return reject(new Error(errorMessage));
     }
     client.zscore(key, member, (err, value) => {

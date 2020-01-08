@@ -35,7 +35,6 @@ const MethodOverwrite = nohm.model('methodOverwrite', {
 
 test('methods', async (t) => {
   const methodOverwrite = new MethodOverwrite();
-  t.plan(2);
 
   t.is(
     // @ts-ignore _super_prop is dynamically added
@@ -49,6 +48,7 @@ test('methods', async (t) => {
     methodOverwrite.property('name'),
     "The test method did not work properly. (probably doesn't have the correct `this`.",
   );
+  // TODO add proper test for this, testdoubling the warnings or something like that.
   console.warn(
     '\n\x1b[1m\x1b[34m%s\x1b[0m',
     'There should be 2 warnings in the next few lines somewhere.\n',
