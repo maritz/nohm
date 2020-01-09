@@ -207,7 +207,7 @@ linkError.errors ==
   ];
 ```
 
-In addition the callbacks that can be provided to the .link() call options object receive different arguments now. The errors array from the linked object is not passed seperately as the second argument anymore, instead it is just the thrown Error object as first argument and the linked object instance as second.
+In addition the callbacks that can be provided to the .link() call options object receive different arguments now. The errors array from the linked object is not passed separately as the second argument anymore, instead it is just the thrown Error object as first argument and the linked object instance as second.
 
 Old:
 
@@ -244,7 +244,7 @@ instance.link(other, {
 - `.findAndLoad()` now returns an empty array if no instances are found instead of producing an error. This makes the behavior the same in `find()` and `findAndLoad()`.
 - `instance.id` is now a getter/setter that always returns null (no id set) or a string
 - the new `instance.isLoaded` is true when the instance has been loaded or saved at least once and `instance.id` has not been manually changed.
-- the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relationchanges)
+- the new `instance.isDirty` is true when anything was done on the model that would require a .save() to persist it (changing .id, properties, pending relation changes)
 - custom ID generators _must_ resolve with strings that do **not** contain double colons (:)
 - timestamp/time values now always get cast to string representations of unix time in milliseconds instead of only after loading
 - behaviors (type functions) now always get strings as arguments, even if defaultValue or initialization would cast it differently
@@ -364,7 +364,7 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 
 # v0.7.0
 
-- BREAKS BACKWARDS COMPATIBILTY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
+- BREAKS BACKWARDS COMPATIBILITY! change validate() to be async only (validations all need to be async now), also changed validation usage syntax (see docs)
 - add nohm.connect() connect middleware that delivers browser validation js
 - Fix empty strings being locked on unique properties
 - Fix uniques to be case insensitive
@@ -386,7 +386,7 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 
 # v0.6
 
-- changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILTY)
+- changed id generation to unique strings by default (BREAKS BACKWARDS COMPATIBILITY)
 - added ability to choose from different id generation mechanisms (for example incremental or custom functions)
 - added short forms of functions where you don't need to create a new instance first to save/load/find/remove
 - changed `this` in callbacks to be the instance you manipulated/loaded
@@ -424,11 +424,11 @@ v2 and onwards will be the typescript rewrite and has a few breaking changes.
 # v0.1.3
 
 - added numLinks()
-- lots of bugfixes and some semi-internal changes
+- lots of bug fixes and some semi-internal changes
 
 # v0.1.2
 
-- a few bugfixes in uniques, find() and load()
+- a few bug fixes in uniques, find() and load()
 
 # v0.1.1
 
