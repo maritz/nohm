@@ -143,13 +143,17 @@ export interface IRelationChange {
   action: 'link' | 'unlink';
   callback?: (...args: Array<any>) => any;
   object: NohmModel;
-  options: ILinkOptions;
+  options: ILinkOptionsWithName;
 }
 
 export interface ILinkOptions {
   error?: (err: Error | string, otherObject: NohmModel) => any;
   name?: string;
   silent?: boolean;
+}
+
+export interface ILinkOptionsWithName extends ILinkOptions {
+  name: string;
 }
 
 export interface ILinkSaveResult {
