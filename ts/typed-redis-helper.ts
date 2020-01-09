@@ -342,3 +342,23 @@ export function zscore(
     });
   });
 }
+
+export function hset(
+  client: RedisClient | Multi,
+  key: string,
+  field: string,
+  value: string,
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    if (!client.hset) {
+      return reject(new Error(errorMessage));
+    }
+    client.hset(key, field, value, (err, numAdded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(numAdded);
+      }
+    });
+  });
+}
