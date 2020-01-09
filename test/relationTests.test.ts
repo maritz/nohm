@@ -453,8 +453,7 @@ test.serial('deppLinkErrorCallback', async (t) => {
   role.link(user, {
     error: (err, obj) => {
       console.log(err, obj.errors, obj.allProperties());
-      t.true(
-        false,
+      t.fail(
         'Error callback for role.link(user) called even though user is valid.',
       );
     },
@@ -503,8 +502,7 @@ test.serial('continueOnError', async (t) => {
   role.link(user, {
     error: (err, obj) => {
       console.log(err, obj.errors, obj.allProperties());
-      t.true(
-        false,
+      t.fail(
         'Error callback for role.link(user) called even though user is valid.',
       );
     },
@@ -521,8 +519,7 @@ test.serial('continueOnError', async (t) => {
   user.link(comment2, {
     error: (err, obj) => {
       console.log(err, obj.errors, obj.allProperties());
-      t.true(
-        false,
+      t.fail(
         'Error callback for comment2.link(user) called even though user is valid.',
       );
     },
@@ -530,8 +527,7 @@ test.serial('continueOnError', async (t) => {
   user.link(comment3, {
     error: (err, obj) => {
       console.log(err, obj.errors, obj.allProperties());
-      t.true(
-        false,
+      t.fail(
         'Error callback for comment3.link(user) called even though user is valid.',
       );
     },
