@@ -127,7 +127,7 @@ const stringifyFunctions = (obj) => {
   });
 };
 
-test.serial('version', async (t) => {
+test('version', async (t) => {
   const user = await nohm.factory('UserMetaMockup');
 
   const hash = createHash('sha1');
@@ -141,7 +141,7 @@ test.serial('version', async (t) => {
   t.is(hash.digest('hex'), version, 'Version of the metadata did not match.');
 });
 
-test.serial('version in instance', async (t) => {
+test('version in instance', async (t) => {
   const user = await nohm.factory('UserMetaMockup');
 
   const version = await hget(
@@ -156,7 +156,7 @@ test.serial('version in instance', async (t) => {
   );
 });
 
-test.serial.cb('meta callback and setting meta.inDb', (t) => {
+test.cb('meta callback and setting meta.inDb', (t) => {
   const testModel = nohm.model('TestVersionMetaMockup', {
     properties: {
       name: {
@@ -179,27 +179,7 @@ test.serial.cb('meta callback and setting meta.inDb', (t) => {
   );
 });
 
-test.serial.cb('meta set inDb when version is correct', (t) => {
-  const testModel = nohm.model('TestVersionMetaMockup', {
-    properties: {
-      name: {
-        type: 'string',
-        defaultValue: 'testProperty',
-      },
-    },
-    metaCallback(err, version) {
-      t.is(err, null, 'Meta version callback had an error.');
-      t.true(testInstance.meta.inDb, 'Meta version inDb was not false.');
-      t.truthy(version, 'No version in meta.inDb callback');
-      t.end();
-    },
-  });
-
-  const testInstance = new testModel();
-  t.false(testInstance.meta.inDb, 'Meta version inDb was not false.');
-});
-
-test.serial('idGenerator', async (t) => {
+test('idGenerator', async (t) => {
   const user = await nohm.factory('UserMetaMockup');
   const comment = await nohm.factory('CommentMetaMockup');
 
@@ -226,7 +206,7 @@ test.serial('idGenerator', async (t) => {
   );
 });
 
-test.serial('properties', async (t) => {
+test('properties', async (t) => {
   const user = await nohm.factory('UserMetaMockup');
   const comment = await nohm.factory('CommentMetaMockup');
 
