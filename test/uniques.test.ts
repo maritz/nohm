@@ -3,7 +3,7 @@ import test from 'ava';
 import { Nohm, nohm } from '../ts';
 
 import * as args from './testArgs.js';
-import { cleanUp, cleanUpPromise } from './helper';
+import { cleanUpPromise } from './helper';
 import { exists, get, keys } from '../ts/typed-redis-helper';
 
 const redis = args.redis;
@@ -58,8 +58,8 @@ test.before(async (t) => {
   await cleanUpPromise(redis, prefix);
 });
 
-test.afterEach.cb((t) => {
-  cleanUp(redis, prefix, t.end);
+test.afterEach(async (t) => {
+  await cleanUpPromise(redis, prefix);
 });
 
 test.serial('unique', async (t) => {

@@ -24,7 +24,6 @@ process.argv.forEach(function(val, index) {
 });
 
 if (process.env.NOHM_TEST_IOREDIS == 'true') {
-  console.info('Using ioredis for tests');
   const Redis = require('ioredis');
 
   exports.redis = new Redis({
@@ -39,7 +38,6 @@ if (process.env.NOHM_TEST_IOREDIS == 'true') {
     password: exports.redis_auth,
   });
 } else {
-  console.info('Using node_redis for tests');
   exports.redis = require('redis').createClient(
     exports.redis_port,
     exports.redis_host,

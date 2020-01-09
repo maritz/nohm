@@ -362,3 +362,22 @@ export function hset(
     });
   });
 }
+
+export function hget(
+  client: RedisClient | Multi,
+  key: string,
+  field: string,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    if (!client.hget) {
+      return reject(new Error(errorMessage));
+    }
+    client.hget(key, field, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(value);
+      }
+    });
+  });
+}

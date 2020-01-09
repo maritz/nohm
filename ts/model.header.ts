@@ -106,7 +106,7 @@ export interface IModelPropertyDefinitions {
 export type TIdGenerators = 'default' | 'increment';
 
 export interface IModelOptions {
-  metaCallback?: () => any;
+  metaCallback?: (error: string | Error | null, version?: string) => any;
   methods?: {
     [name: string]: (this: NohmModel, ...args: Array<any>) => any;
   };

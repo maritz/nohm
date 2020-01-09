@@ -64,6 +64,7 @@ test('punsubscribe', testCommand('punsubscribe', ['foo', ['bar', 'baz']]));
 test('keys', testCommand('keys', ['foo'], ['bar', 'baz']));
 test('zscore', testCommand('zscore', ['foo', 'bar'], 2));
 test('hset', testCommand('hset', ['foo', 'bar', 'baz'], 2));
+test('hget', testCommand('hget', ['foo', 'bar'], 'baz'));
 
 test.serial('exec', async (t) => {
   // exec has no firstArg. it's easier to duplicate the test here instead of changing testCommand

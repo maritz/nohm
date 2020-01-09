@@ -252,9 +252,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private updateMeta(
-    callback: (error: string | Error | null, version?: string) => any = (
-      ..._args: Array<any>
-    ) => {
+    callback: IModelOptions['metaCallback'] = (..._args: Array<any>) => {
       /* noop */
     },
   ) {
