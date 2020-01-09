@@ -26,7 +26,7 @@ export interface IDictionary {
   [index: string]: any;
 }
 
-export type PropertyBehavior = <TModel>(
+export type PropertyBehavior = <TModel extends NohmModel>(
   this: TModel,
   newValue: string,
   key: string,
@@ -38,19 +38,19 @@ export interface IStaticMethods<T extends NohmModel> {
   load<P extends NohmModel>(id: any): Promise<P>;
   loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
   findAndLoad<P extends NohmModel, TProps extends IDictionary = {}>(
-    searches: Partial<
+    searches?: Partial<
       {
         [key in keyof TProps]:
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     >,
   ): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
-    ids: Array<string | number> | false,
+    ids?: Array<string | number> | false,
   ): Promise<Array<string>>;
   find<TProps extends IDictionary = {}>(
     searches: Partial<
@@ -59,7 +59,7 @@ export interface IStaticMethods<T extends NohmModel> {
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     >,
   ): Promise<Array<string>>;
@@ -96,7 +96,7 @@ export interface IModelPropertyDefinition {
 }
 
 export type TTypedDefinitions<TProps extends IDictionary> = {
-  [props in keyof TProps]: IModelPropertyDefinition
+  [props in keyof TProps]: IModelPropertyDefinition;
 };
 
 export interface IModelPropertyDefinitions {
@@ -148,7 +148,7 @@ export interface IRelationChange {
 
 export interface ILinkOptions {
   error?: (err: Error | string, otherObject: NohmModel) => any;
-  name: string;
+  name?: string;
   silent?: boolean;
 }
 

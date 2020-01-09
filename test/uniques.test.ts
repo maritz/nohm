@@ -365,3 +365,36 @@ test.serial('removing unique frees unique with uppercase values', async (t) => {
     return instance2.save();
   });
 });
+
+test.serial(
+  'changing unique frees old unique with uppercase values',
+  async (t) => {
+    const obj = new Model();
+    const obj2 = new Model();
+    const obj3 = new Model();
+    const old = 'Changing Unique Property Frees The Value';
+    obj.property('name', old);
+    obj.property('email', 'change_frees@unique.de');
+
+    await obj.save();
+    await obj2.load(obj.id);
+    obj2.property(
+      'name',
+      'changing unique property frees the value to something else',
+    );
+    await obj2.save();
+    await obj3.load(obj.id);
+    obj2.property('name', old);
+    try {
+      obj2.save();
+      // test something, so we at least have the resemblance of normal testing here........
+      // the way it actually tests whether the uniques are freed is by not throwing errors during save
+      t.is(obj2.id, obj3.id, 'Something went wrong');
+    } catch (err) {
+      t.true(
+        !err,
+        'Unexpected saving error. (May be because old uniques are not freed properly on change.',
+      );
+    }
+  },
+);

@@ -581,7 +581,7 @@ test.serial('no key left behind', async (t) => {
   user.link(user2);
   user2.link(user, 'father');
 
-  await cleanUpPromise(redis, args.prefix);
+  await cleanUpPromise(redis, prefix);
   const remainingKeys = await keys(redis, prefix + ':*');
 
   // at this point only meta info should be stored
@@ -595,8 +595,10 @@ test.serial('no key left behind', async (t) => {
   await user.remove();
 
   const remainingKeys2 = await keys(redis, prefix + ':*');
-  // we keep the idsets and meta keys (version, idgenerator and properties), so it should be 4 here.
-  t.is(remainingKeys2.length, 4, 'Not all keys were removed from the database');
+  t.snapshot(
+    remainingKeys2.sort(),
+    'Not all keys were removed from the database',
+  );
 });
 
 test.serial('temporary model definitions', async (t) => {
@@ -622,39 +624,6 @@ test.serial('temporary model definitions', async (t) => {
   t.deepEqual(user.allProperties(), user2.allProperties(), 'HURASDASF');
   t.notDeepEqual(user.allProperties(), newUser.allProperties(), 'HURASDASF');
 });
-
-test.serial(
-  'changing unique frees old unique with uppercase values',
-  async (t) => {
-    const obj = await nohm.factory('UserMockup');
-    const obj2 = await nohm.factory('UserMockup');
-    const obj3 = await nohm.factory('UserMockup');
-    const old = 'Changing Unique Property Frees The Value';
-    obj.property('name', old);
-    obj.property('email', 'change_frees@unique.de');
-
-    await obj.save();
-    await obj2.load(obj.id);
-    obj2.property(
-      'name',
-      'changing unique property frees the value to something else',
-    );
-    await obj2.save();
-    await obj3.load(obj.id);
-    obj2.property('name', old);
-    try {
-      obj2.save();
-      // test something, so we at least have the resemblance of normal testing here........
-      // the way it actually tests whether the uniques are freed is by not throwing errors during save
-      t.is(obj2.id, obj3.id, 'Something went wrong');
-    } catch (err) {
-      t.true(
-        !err,
-        'Unexpected saving error. (May be because old uniques are not freed properly on change.',
-      );
-    }
-  },
-);
 
 test.serial('register nohm model via ES6 class definition', async (t) => {
   class ClassModel extends NohmModel {}
