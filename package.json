@@ -98,7 +98,7 @@
     "extensions": [
       "ts"
     ],
-    "timeout": "20s",
+    "timeout": "30s",
     "files": [
       "test/*.test.ts",
       "ts/typescript.test.ts"
