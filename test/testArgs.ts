@@ -68,12 +68,17 @@ if (process.env.NOHM_TEST_IOREDIS === 'true') {
   });
 }
 
+let readyChecksAdded = 0;
+
 export const setClient = (nohm: NohmClass, client: NodeRedis.RedisClient) => {
   return new Promise((resolve) => {
     if (!client) {
       client = redis;
     }
-    client.on('ready', () => {
+    // since we potentially set a client for each test, this could be called a lot and is not indicative of a leak.
+    // thus we set max listeners higher to prevent warnings
+    client.setMaxListeners(10 + ++readyChecksAdded);
+    client.once('ready', () => {
       nohm.setClient(client);
       resolve(true);
     });
