@@ -3,9 +3,6 @@ import * as redis from 'redis';
 import nohm from '../../ts/';
 import * as args from '../testArgs';
 
-const prefix = args.prefix + 'pubsub';
-
-nohm.setPrefix(prefix);
 args.redis.on('ready', () => {
   nohm.setClient(args.redis);
 });
@@ -29,6 +26,11 @@ process.on('message', async (msg) => {
 
     case 'initialize':
       try {
+        if (!msg.args.prefix) {
+          console.error('No prefix passed in initialize function.');
+          process.exit(1);
+        }
+        nohm.setPrefix(msg.args.prefix);
         await nohm.setPubSubClient(
           redis.createClient(args.redisPort, args.redisHost),
         );

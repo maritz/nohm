@@ -1,10 +1,12 @@
 import anyTest, { TestInterface } from 'ava';
 
-import { nohm } from '../ts';
+import { NohmClass } from '../ts';
 import * as child_process from 'child_process';
 
 import * as testArgs from './testArgs';
 import { cleanUpPromise, sleep } from './helper';
+import { IPropertyDiff } from '../ts/model.header';
+import { register } from './pubsub/Model';
 
 interface IChildProcessWithAsk extends child_process.ChildProcess {
   ask(...args: Array<any>): Promise<void>;
@@ -12,121 +14,20 @@ interface IChildProcessWithAsk extends child_process.ChildProcess {
 
 const test = anyTest as TestInterface<{
   child: IChildProcessWithAsk;
+  nohm: NohmClass;
+  prefix: string;
 }>;
 
 const prefix = testArgs.prefix + 'pubsub';
 
-test.before(async () => {
-  nohm.setPrefix(prefix);
-  await testArgs.setClient(nohm, testArgs.redis);
-  await cleanUpPromise(testArgs.redis, prefix);
-});
+let testCounter = 0;
 
-test.afterEach(async () => {
-  await cleanUpPromise(testArgs.redis, prefix);
-});
-
-// tslint:disable-next-line:no-var-requires
-require('./pubsub/Model');
-
-const childPath = __dirname + '/pubsub/child_wrapper.js';
-
-const after = (times: number, fn: () => void) => {
-  return (...args: Array<any>) => {
-    if (--times <= 0) {
-      fn.apply(this, args);
-    }
-  };
-};
-
-const secondaryClient = testArgs.secondaryClient;
-
-test('after helper function', async (t) => {
-  let counter = 0;
-
-  const _test = after(3, () => {
-    counter += 1;
-  });
-
-  _test();
-  _test();
-  _test();
-
-  t.is(counter, 1, 'Function has been called a wrong number of times');
-});
-
-test.serial('set/get pubSub client', async (t) => {
-  await nohm.setPubSubClient(secondaryClient);
-  const client = nohm.getPubSubClient();
-  t.is(client, secondaryClient, "Second redis client wasn't set properly");
-  const isIoRedis =
-    client.connected === undefined && (client as any).status === 'ready';
-  if (isIoRedis) {
-    t.true(
-      (client as any).condition.subscriber !== false,
-      "Second redis client isn't subscribed to anything",
-    );
-  } else {
-    t.snapshot(
-      (client as any).subscription_set,
-      "Second redis client isn't subscribed to anything",
-    );
-  }
-});
-
-test.serial('close pubSub client', async (t) => {
-  const client = await nohm.closePubSub();
-  t.is(client, secondaryClient, 'closePubSub returned a wrong redis client');
-  client.end(true);
-});
-
-test.serial('set/get publish bool', async (t) => {
-  const noPublish = await nohm.factory('no_publish');
-  t.false(
-    // @ts-ignore
-    noPublish.getPublish(),
-    'model without publish returned true',
-  );
-
-  const publish = await nohm.factory('Tester');
-  // @ts-ignore
-  t.true(publish.getPublish(), 'model with publish returned false');
-
-  nohm.setPublish(true);
-  t.true(
-    // @ts-ignore
-    noPublish.getPublish(),
-    'model without publish but global publish returned false',
-  );
-
-  nohm.setPublish(false);
-  t.true(
-    // @ts-ignore
-    publish.getPublish(),
-    'model with publish and global publish false returned false',
-  );
-});
-
-test.serial.cb("nohm in child process doesn't have pubsub yet", (t) => {
-  t.plan(1);
-  const question = 'does nohm have pubsub?';
-  const child = child_process.fork(childPath);
-  const checkNohmPubSubNotInitialized = (msg) => {
-    if (msg.question === question) {
-      t.is(
-        msg.answer,
-        undefined,
-        'PubSub in the child process was already initialized.',
-      );
-      child.kill();
-      t.end();
-    }
-  };
-  child.on('message', checkNohmPubSubNotInitialized);
-  child.send({ question });
-});
-
-const initializeChild = () => {
+// We create a child process with a question/answer protocol to ./pubsub/child.ts .
+// The returned object has a "child" node which is a normal child_process.fork but with an added .ask() method that
+// resolves once the question has been acknowledged (e.g. the child.ts process was asked to subscribe and sends ACK
+// after it has done so) and receives a callback argument that is called for each answer it has (e.g. for a subscribe
+// it is called every time the subscription yields a published event)
+const initializeChild = (childPrefix) => {
   return new Promise<IChildProcessWithAsk>((resolve, reject) => {
     const child = child_process.fork(childPath, process.argv);
     child.on('message', (msg) => {
@@ -159,24 +60,139 @@ const initializeChild = () => {
         child.send(request);
       });
     };
-    child.send({ question: 'initialize' });
+    child.send({ question: 'initialize', args: { prefix: childPrefix } });
   });
 };
 
-test.serial.beforeEach(async (t) => {
-  t.context.child = await initializeChild();
+test.beforeEach(async (t) => {
+  // setup a local nohm for each test with a separate prefix, so that they can run concurrently
+  const localPrefix = `${prefix}/t${++testCounter}/`;
+  const localNohm = new NohmClass({
+    prefix: localPrefix,
+  });
+  await testArgs.setClient(localNohm, testArgs.redis);
+  await cleanUpPromise(testArgs.redis, localPrefix);
+
+  register(localNohm);
+
+  t.context.child = await initializeChild(localPrefix);
+
+  t.context.nohm = localNohm;
+  t.context.prefix = localPrefix;
 });
 
-test.serial.afterEach.cb((t) => {
+test.afterEach(async (t) => {
+  await cleanUpPromise(testArgs.redis, t.context.prefix);
+});
+
+const childPath = __dirname + '/pubsub/child_wrapper.js';
+
+const after = (times: number, fn: () => void) => {
+  return (...args: Array<any>) => {
+    if (--times <= 0) {
+      fn.apply(this, args);
+    }
+  };
+};
+
+const secondaryClient = testArgs.secondaryClient;
+
+test('after helper function', async (t) => {
+  let counter = 0;
+
+  const _test = after(3, () => {
+    counter += 1;
+  });
+
+  _test();
+  _test();
+  _test();
+
+  t.is(counter, 1, 'Function has been called a wrong number of times');
+});
+
+test('set/get pubSub client', async (t) => {
+  await t.context.nohm.setPubSubClient(secondaryClient);
+  const client = t.context.nohm.getPubSubClient();
+  t.is(client, secondaryClient, "Second redis client wasn't set properly");
+  const isIoRedis =
+    client.connected === undefined && (client as any).status === 'ready';
+  if (isIoRedis) {
+    t.true(
+      (client as any).condition.subscriber !== false,
+      "Second redis client isn't subscribed to anything",
+    );
+  } else {
+    t.truthy(
+      (client as any).subscription_set,
+      "Second redis client isn't subscribed to to any channels",
+    );
+  }
+});
+
+test('close pubSub client', async (t) => {
+  await t.context.nohm.setPubSubClient(secondaryClient);
+
+  const client = await t.context.nohm.closePubSub();
+  t.is(client, secondaryClient, 'closePubSub returned a wrong redis client');
+});
+
+test('set/get publish bool', async (t) => {
+  const noPublish = await t.context.nohm.factory('no_publish');
+  t.false(
+    // @ts-ignore
+    noPublish.getPublish(),
+    'model without publish returned true',
+  );
+
+  const publish = await t.context.nohm.factory('Tester');
+  // @ts-ignore
+  t.true(publish.getPublish(), 'model with publish returned false');
+
+  t.context.nohm.setPublish(true);
+  t.true(
+    // @ts-ignore
+    noPublish.getPublish(),
+    'model without publish but global publish returned false',
+  );
+
+  t.context.nohm.setPublish(false);
+  t.true(
+    // @ts-ignore
+    publish.getPublish(),
+    'model with publish and global publish false returned false',
+  );
+});
+
+test.cb("nohm in child process doesn't have pubsub yet", (t) => {
+  t.plan(1);
+  const question = 'does nohm have pubsub?';
+  const child = child_process.fork(childPath);
+  const checkNohmPubSubNotInitialized = (msg) => {
+    if (msg.question === question) {
+      t.is(
+        msg.answer,
+        undefined,
+        'PubSub in the child process was already initialized.',
+      );
+      child.kill();
+      t.end();
+    }
+  };
+  child.on('message', checkNohmPubSubNotInitialized);
+  child.send({ question });
+});
+
+test.afterEach.cb((t) => {
   t.context.child.on('exit', () => {
     t.end();
   });
   t.context.child.kill();
 });
 
-test.serial('create', async (t) => {
+test('create', async (t) => {
   t.plan(4);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'create');
 
   const childResponded = new Promise(async (resolve) => {
@@ -208,21 +224,17 @@ test.serial('create', async (t) => {
         resolve();
       },
     );
+    await instance.save();
   });
 
-  try {
-    await instance.save();
-  } catch (err) {
-    t.is(err, null, 'Async actions failed');
-  }
   await childResponded;
 });
 
-test.serial('update', async (t) => {
+test('update', async (t) => {
   t.plan(5);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'update');
-  let diff;
+  let diff: Array<void | IPropertyDiff<string | number | symbol>>;
 
   const childResponded = new Promise(async (resolve) => {
     await t.context.child.ask(
@@ -263,9 +275,9 @@ test.serial('update', async (t) => {
   await childResponded;
 });
 
-test.serial('save', async (t) => {
+test('save', async (t) => {
   t.plan(8);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'save');
 
   let counter = 0;
@@ -313,9 +325,9 @@ test.serial('save', async (t) => {
   await childResponded;
 });
 
-test.serial('remove', async (t) => {
+test('remove', async (t) => {
   t.plan(4);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'remove');
   let oldId;
 
@@ -357,10 +369,10 @@ test.serial('remove', async (t) => {
   await childResponded;
 });
 
-test.serial('link', async (t) => {
+test('link', async (t) => {
   t.plan(8);
-  const instanceChild = await nohm.factory('Tester');
-  const instanceParent = await nohm.factory('Tester');
+  const instanceChild = await t.context.nohm.factory('Tester');
+  const instanceParent = await t.context.nohm.factory('Tester');
   instanceChild.property('dummy', 'link_child');
   instanceParent.property('dummy', 'link_parent');
   instanceChild.link(instanceParent);
@@ -416,10 +428,10 @@ test.serial('link', async (t) => {
   await childResponded;
 });
 
-test.serial('unlink', async (t) => {
+test('unlink', async (t) => {
   t.plan(8);
-  const instanceChild = await nohm.factory('Tester');
-  const instanceParent = await nohm.factory('Tester');
+  const instanceChild = await t.context.nohm.factory('Tester');
+  const instanceParent = await t.context.nohm.factory('Tester');
   instanceChild.property('dummy', 'unlink_child');
   instanceParent.property('dummy', 'unlink_parent');
   instanceChild.link(instanceParent);
@@ -477,11 +489,11 @@ test.serial('unlink', async (t) => {
   await childResponded;
 });
 
-test.serial('createOnce', async (t) => {
+test('createOnce', async (t) => {
   // because testing a once event is a pain in the ass and really doesn't have many ways it can fail
   // if the on method on the same event works, we only do on once test.
   t.plan(5);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'create_once');
   let answerCount = 0;
 
@@ -513,7 +525,7 @@ test.serial('createOnce', async (t) => {
           'Properties from createOnce event wrong',
         );
 
-        const instanceInner = await nohm.factory('Tester');
+        const instanceInner = await t.context.nohm.factory('Tester');
         instanceInner.property('dummy', 'create_once_again');
         instanceInner.save();
 
@@ -533,9 +545,9 @@ test.serial('createOnce', async (t) => {
   await childResponded;
 });
 
-test.serial('silenced', async (t) => {
+test('silenced', async (t) => {
   t.plan(1);
-  const instance = await nohm.factory('Tester');
+  const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'silenced');
   let answered = false;
 
@@ -562,7 +574,7 @@ test.serial('silenced', async (t) => {
   await instance.save({ silent: true });
   instance.property('dummy', 'updated');
   await instance.save({ silent: true });
-  const second = await nohm.factory('Tester');
+  const second = await t.context.nohm.factory('Tester');
   instance.link(second);
   await instance.save({ silent: true });
   instance.unlink(second);

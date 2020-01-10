@@ -1,18 +1,22 @@
 import nohm from '../../ts/';
 
-nohm.model('Tester', {
-  properties: {
-    dummy: {
-      type: 'string',
+export const register = (passedNohm) => {
+  passedNohm.model('Tester', {
+    properties: {
+      dummy: {
+        type: 'string',
+      },
     },
-  },
-  publish: true,
-});
+    publish: true,
+  });
 
-nohm.model('no_publish', {
-  properties: {
-    dummy: {
-      type: 'string',
+  passedNohm.model('no_publish', {
+    properties: {
+      dummy: {
+        type: 'string',
+      },
     },
-  },
-});
+  });
+};
+
+register(nohm);

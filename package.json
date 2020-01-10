@@ -28,8 +28,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "nyc ava --timeout=2m",
-    "test:watch": "ava --watch",
+    "test": "nyc ava --timeout=20s",
+    "test:watch": "ava --watch --timeout=5s",
     "coverage:failIfLow": "nyc check-coverage --lines 90 --functions 90 --branches 80",
     "coverage:coveralls": "nyc report --reporter=text-lcov | coveralls",
     "lint": "tslint --project ./ && eslint test/ ts/universalValidators.js",
