@@ -266,12 +266,12 @@ test('update', async (t) => {
         resolve();
       },
     );
+    await instance.save();
+    instance.property('dummy', 'updatededed');
+    diff = instance.propertyDiff();
+    await instance.save();
   });
 
-  await instance.save();
-  instance.property('dummy', 'updatededed');
-  diff = instance.propertyDiff();
-  await instance.save();
   await childResponded;
 });
 
@@ -315,13 +315,13 @@ test('save', async (t) => {
         }
       },
     );
+    await instance.save();
+    props.push(instance.allProperties());
+    instance.property('dummy', 'save_the_second');
+    props.push(instance.allProperties());
+    await instance.save();
   });
 
-  await instance.save();
-  props.push(instance.allProperties());
-  instance.property('dummy', 'save_the_second');
-  props.push(instance.allProperties());
-  await instance.save();
   await childResponded;
 });
 
@@ -361,11 +361,11 @@ test('remove', async (t) => {
         resolve();
       },
     );
+    await instance.save();
+    oldId = instance.id;
+    await instance.remove();
   });
 
-  await instance.save();
-  oldId = instance.id;
-  await instance.remove();
   await childResponded;
 });
 
@@ -422,9 +422,9 @@ test('link', async (t) => {
         resolve();
       },
     );
+    await instanceChild.save();
   });
 
-  await instanceChild.save();
   await childResponded;
 });
 
@@ -481,11 +481,11 @@ test('unlink', async (t) => {
         resolve();
       },
     );
+    await instanceChild.save();
+    instanceChild.unlink(instanceParent);
+    await instanceChild.save();
   });
 
-  await instanceChild.save();
-  instanceChild.unlink(instanceParent);
-  await instanceChild.save();
   await childResponded;
 });
 
@@ -539,9 +539,9 @@ test('createOnce', async (t) => {
         }, 150); // this is fucked up :(
       },
     );
+    await instance.save();
   });
 
-  await instance.save();
   await childResponded;
 });
 
@@ -553,23 +553,25 @@ test('silenced', async (t) => {
 
   const events = ['create', 'update', 'save', 'remove', 'link', 'unlink'];
 
-  events.forEach((event) => {
-    t.context.child.ask(
-      {
-        question: 'subscribe',
-        args: {
-          event,
-          modelName: 'Tester',
+  await Promise.all(
+    events.map((event) => {
+      return t.context.child.ask(
+        {
+          question: 'subscribe',
+          args: {
+            event,
+            modelName: 'Tester',
+          },
         },
-      },
-      (msg) => {
-        if (msg.event === event) {
-          console.log('Received message from child:', msg);
-          answered = true;
-        }
-      },
-    );
-  });
+        (msg) => {
+          if (msg.event === event) {
+            console.log('Received message from child:', msg);
+            answered = true;
+          }
+        },
+      );
+    }),
+  );
 
   await instance.save({ silent: true });
   instance.property('dummy', 'updated');
