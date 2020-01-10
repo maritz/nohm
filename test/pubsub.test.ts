@@ -109,7 +109,7 @@ test.serial('set/get publish bool', async (t) => {
 
 // These tests take quite a bit of time due to the forked child processes that have to transpile via ts-node as well.
 // To make sure they pass in CI envs as well, we set a high timeout for them.
-const forkTestTimeout = 40000; // 40 seconds
+const forkTestTimeout = 60000; // 60 seconds... TravisCI appears to be reeeeaaaallly slow sometimes
 
 test.serial.cb("nohm in child process doesn't have pubsub yet", (t) => {
   t.plan(1);
