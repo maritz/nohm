@@ -107,8 +107,13 @@ test.serial('set/get publish bool', async (t) => {
   );
 });
 
+// These tests take quite a bit of time due to the forked child processes that have to transpile via ts-node as well.
+// To make sure they pass in CI envs as well, we set a high timeout for them.
+const forkTestTimeout = 30000; // 30 seconds
+
 test.cb("nohm in child process doesn't have pubsub yet", (t) => {
   t.plan(1);
+  t.timeout(forkTestTimeout);
   const question = 'does nohm have pubsub?';
   const child = child_process.fork(childPath);
   const checkNohmPubSubNotInitialized = (msg) => {
@@ -173,10 +178,6 @@ test.serial.afterEach.cb((t) => {
   });
   t.context.child.kill();
 });
-
-// These tests take quite a bit of time due to the forked child processes that have to transpile via ts-node as well.
-// To make sure they pass in CI envs as well, we set a high timeout for them.
-const forkTestTimeout = 30000; // 30 seconds
 
 test.serial('create', async (t) => {
   t.plan(4);
