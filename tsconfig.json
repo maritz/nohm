@@ -18,6 +18,6 @@
     "declarationMap": true
   },
   "files": ["./ts/index.ts"],
-  "include": ["./test/typescript.test.ts"],
+  "include": ["./ts/typescript.test.ts"],
   "exclude": ["./lib/*.js"]
 }

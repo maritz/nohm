@@ -100,7 +100,8 @@
     ],
     "timeout": "10s",
     "files": [
-      "test/*.test.ts"
+      "test/*.test.ts",
+      "ts/typescript.test.ts"
     ],
     "helpers": [
       "test/helper.js"

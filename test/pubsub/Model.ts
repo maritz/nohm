@@ -1,4 +1,4 @@
-var nohm = require(__dirname + '/../../tsOut/').Nohm;
+import nohm from '../../ts/';
 
 nohm.model('Tester', {
   properties: {

@@ -1,15 +1,23 @@
-var redis = require('redis');
-var nohm = require(__dirname + '/../../tsOut/').Nohm;
-var args = require(__dirname + '/../testArgs');
+import * as redis from 'redis';
 
-nohm.setPrefix(args.prefix);
-args.redis.on('ready', function() {
+import nohm from '../../ts/';
+import * as args from '../testArgs';
+
+const prefix = args.prefix + 'pubsub';
+
+nohm.setPrefix(prefix);
+args.redis.on('ready', () => {
   nohm.setClient(args.redis);
 });
-require(__dirname + '/Model.js');
+
+// tslint:disable-next-line:no-var-requires
+require('./Model');
 
 process.on('message', async (msg) => {
-  let event, modelName, instance, fn;
+  let event: any;
+  let modelName: string;
+  let instance: any;
+  let fn: any;
 
   switch (msg.question) {
     case 'does nohm have pubsub?':
@@ -42,11 +50,11 @@ process.on('message', async (msg) => {
       event = msg.args.event;
       modelName = msg.args.modelName;
       instance = await nohm.factory(modelName);
-      await instance.subscribe(event, function(change) {
+      await instance.subscribe(event, (change) => {
         process.send({
           question: 'subscribe',
           answer: change,
-          event: event,
+          event,
         });
       });
       process.send({
@@ -59,7 +67,7 @@ process.on('message', async (msg) => {
       event = msg.args.event;
       modelName = msg.args.modelName;
       instance = await nohm.factory(modelName);
-      await instance.subscribeOnce(event, function(change) {
+      await instance.subscribeOnce(event, (change) => {
         process.send({
           question: 'subscribeOnce',
           answer: change,

@@ -52,13 +52,13 @@ const Model = Nohm.model('UniqueTests', {
 
 const prefix = args.prefix + 'unique';
 
-test.before(async (t) => {
+test.before(async () => {
   nohm.setPrefix(prefix);
   await args.setClient(nohm, redis);
   await cleanUpPromise(redis, prefix);
 });
 
-test.afterEach(async (t) => {
+test.afterEach(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
