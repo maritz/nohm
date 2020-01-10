@@ -176,7 +176,7 @@ test.serial.afterEach.cb((t) => {
 
 // These tests take quite a bit of time due to the forked child processes that have to transpile via ts-node as well.
 // To make sure they pass in CI envs as well, we set a high timeout for them.
-const forkTestTimeout = 20000; // 20 seconds
+const forkTestTimeout = 30000; // 30 seconds
 
 test.serial('create', async (t) => {
   t.plan(4);
