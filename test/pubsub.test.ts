@@ -169,6 +169,7 @@ const initializeChild = () => {
 };
 
 test.serial.beforeEach(async (t) => {
+  t.timeout(forkTestTimeout);
   t.context.child = await initializeChild();
 });
 
@@ -181,7 +182,6 @@ test.serial.afterEach.cb((t) => {
 
 test.serial('create', async (t) => {
   t.plan(4);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'create');
 
@@ -226,7 +226,6 @@ test.serial('create', async (t) => {
 
 test.serial('update', async (t) => {
   t.plan(5);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'update');
   let diff;
@@ -272,7 +271,6 @@ test.serial('update', async (t) => {
 
 test.serial('save', async (t) => {
   t.plan(8);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'save');
 
@@ -323,7 +321,6 @@ test.serial('save', async (t) => {
 
 test.serial('remove', async (t) => {
   t.plan(4);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'remove');
   let oldId;
@@ -368,7 +365,6 @@ test.serial('remove', async (t) => {
 
 test.serial('link', async (t) => {
   t.plan(8);
-  t.timeout(forkTestTimeout);
   const instanceChild = await nohm.factory('Tester');
   const instanceParent = await nohm.factory('Tester');
   instanceChild.property('dummy', 'link_child');
@@ -428,7 +424,6 @@ test.serial('link', async (t) => {
 
 test.serial('unlink', async (t) => {
   t.plan(8);
-  t.timeout(forkTestTimeout);
   const instanceChild = await nohm.factory('Tester');
   const instanceParent = await nohm.factory('Tester');
   instanceChild.property('dummy', 'unlink_child');
@@ -492,7 +487,6 @@ test.serial('createOnce', async (t) => {
   // because testing a once event is a pain in the ass and really doesn't have many ways it can fail
   // if the on method on the same event works, we only do on once test.
   t.plan(5);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'create_once');
   let answerCount = 0;
@@ -547,7 +541,6 @@ test.serial('createOnce', async (t) => {
 
 test.serial('silenced', async (t) => {
   t.plan(1);
-  t.timeout(forkTestTimeout);
   const instance = await nohm.factory('Tester');
   instance.property('dummy', 'silenced');
   let answered = false;
