@@ -1192,15 +1192,17 @@ test.serial(
       });
       t.fail('Succeeded where it should not have.');
     } catch (err) {
-      td.verify(
-        warnDouble,
-        warnDouble(
-          'node_redis:',
-          `Deprecated: The ZRANGEBYSCORE command contains a argument of type Array.
+      if (process.env.NOHM_TEST_IOREDIS !== 'true') {
+        td.verify(
+          warnDouble,
+          warnDouble(
+            'node_redis:',
+            `Deprecated: The ZRANGEBYSCORE command contains a argument of type Array.
 This is converted to "1" by using .toString() now and will return an error from v.3.0 on.
 Please handle this in your code to make sure everything works as you intended it to.`,
-        ),
-      );
+          ),
+        );
+      }
       t.is(
         err.message,
         'ERR min or max is not a float',
