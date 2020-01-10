@@ -28,7 +28,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "nyc ava",
+    "test": "nyc ava --timeout=2m",
     "test:watch": "ava --watch",
     "coverage:failIfLow": "nyc check-coverage --lines 90 --functions 90 --branches 80",
     "coverage:coveralls": "nyc report --reporter=text-lcov | coveralls",
@@ -98,7 +98,6 @@
     "extensions": [
       "ts"
     ],
-    "timeout": "30s",
     "files": [
       "test/*.test.ts",
       "ts/typescript.test.ts"
