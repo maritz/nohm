@@ -4,7 +4,7 @@ import * as traverse from 'traverse';
 
 import { nohm } from '../ts';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
 import NohmModel from '../ts/model';
 import { get, hget } from '../ts/typed-redis-helper';

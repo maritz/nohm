@@ -1,6 +1,6 @@
 var nohm = require(__dirname + '/../tsOut/').Nohm;
 var child_process = require('child_process');
-const args = require(__dirname + '/testArgs.js');
+const args = require(__dirname + '/testArgs');
 
 require(__dirname + '/pubsub/Model.js');
 

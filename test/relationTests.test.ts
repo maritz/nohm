@@ -2,7 +2,7 @@ import test from 'ava';
 
 import { nohm } from '../ts';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
 import { keys, smembers, exists, sismember } from '../ts/typed-redis-helper';
 

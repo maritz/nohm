@@ -2,7 +2,7 @@ import test from 'ava';
 import * as td from 'testdouble';
 
 import { nohm } from '../ts';
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { sleep } from './helper';
 
 test.before(async () => {

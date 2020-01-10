@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 // tslint:disable-next-line:no-implicit-dependencies
 import * as async from 'async';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
 
 import { hgetall, keys, sismember, zscore } from '../ts/typed-redis-helper';
@@ -957,7 +957,7 @@ test.serial(
 );
 
 test.serial('helpers.checkEqual generic tests', (t) => {
-  const checkEqual = require('../tsOut/helpers').checkEqual;
+  const checkEqual = require('../ts/helpers').checkEqual;
 
   t.is(checkEqual(false, true), false, 'false, true');
   t.is(checkEqual(true, false), false, 'true, false');
@@ -983,7 +983,7 @@ test.serial('helpers.checkEqual generic tests', (t) => {
 test.serial(
   'helpers.checkEqual uses Object.hasOwnProperty for safety',
   async (t) => {
-    const checkEqual = require('../tsOut/helpers').checkEqual;
+    const checkEqual = require('../ts/helpers').checkEqual;
 
     const test1 = Object.create(null);
     const test2 = {};
@@ -994,7 +994,7 @@ test.serial(
 );
 
 test.serial('helpers.callbackError', (t) => {
-  const callbackError = require('../tsOut/helpers').callbackError;
+  const callbackError = require('../ts/helpers').callbackError;
 
   t.throws(
     () => {

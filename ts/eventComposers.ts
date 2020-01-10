@@ -4,6 +4,7 @@ import {
   IDefaultEventPayload,
   IPropertyDiff,
   IRelationChangeEventPayload,
+  IDictionary,
 } from './model.header';
 
 // The default (base) message creator
@@ -46,7 +47,7 @@ function relationComposer<TProps, TParentProps>(
   relationName: string,
 ): IRelationChangeEventPayload<TProps> {
   const childPayload: IDefaultEventPayload<TProps> = defaultComposer.call(this);
-  const parentPayload: IDefaultEventPayload<TProps> = defaultComposer.call(
+  const parentPayload: IDefaultEventPayload<IDictionary> = defaultComposer.call(
     parent,
   );
   return {

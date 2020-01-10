@@ -2,10 +2,10 @@
 import test from 'ava';
 
 import { nohm } from '../ts';
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 
 test.before(async () => {
-  await args.setClient(nohm);
+  await args.setClient(nohm, args.redis);
 });
 
 const userMockup = nohm.model('UserMockup', {

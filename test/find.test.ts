@@ -3,7 +3,7 @@ import * as td from 'testdouble';
 
 import { nohm, NohmModel } from '../ts';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
 import { hset } from '../ts/typed-redis-helper';
 import * as _ from 'lodash';

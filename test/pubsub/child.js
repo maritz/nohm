@@ -1,6 +1,6 @@
 var redis = require('redis');
 var nohm = require(__dirname + '/../../tsOut/').Nohm;
-var args = require(__dirname + '/../testArgs.js');
+var args = require(__dirname + '/../testArgs');
 
 nohm.setPrefix(args.prefix);
 args.redis.on('ready', function() {
@@ -22,7 +22,7 @@ process.on('message', async (msg) => {
     case 'initialize':
       try {
         await nohm.setPubSubClient(
-          redis.createClient(args.redis_port, args.redis_host),
+          redis.createClient(args.redisPort, args.redisHost),
         );
         process.send({
           question: msg.question,

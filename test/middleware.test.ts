@@ -2,7 +2,7 @@ import test, { ExecutionContext } from 'ava';
 
 import { nohm } from '../ts';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 
 import * as vm from 'vm';
 import { ServerResponse } from 'http';

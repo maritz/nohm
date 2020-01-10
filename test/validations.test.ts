@@ -3,7 +3,7 @@ import * as util from 'util';
 
 import { nohm } from '../ts';
 
-import * as args from './testArgs.js';
+import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
 
 const redis = args.redis;

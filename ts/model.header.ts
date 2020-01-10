@@ -203,7 +203,7 @@ export interface IDefaultEventPayload<TProps extends IDictionary> {
   target: {
     id: null | string;
     modelName: string;
-    properties: TProps;
+    properties: TProps & { id: string };
   };
 }
 
@@ -218,6 +218,6 @@ export interface IChangeEventPayload<TProps extends IDictionary> {
 
 export interface IRelationChangeEventPayload<TProps extends IDictionary> {
   child: IDefaultEventPayload<TProps>['target'];
-  parent: IDefaultEventPayload<TProps>['target'];
+  parent: IDefaultEventPayload<IDictionary>['target'];
   relation: string;
 }
