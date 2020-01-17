@@ -265,9 +265,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (metaUpdating.includes(this.meta.version)) {
       return;
     }
-    setTimeout(async () => {
-      // setTimeout to defer execution to the next process/browser tick
-      // this means we will have modelName set and meta doesn't take precedence over other operations
+    process.nextTick(async () => {
+      // Defer execution to the next process tick.
+      // Since we don't have the modelName in some cases in immediate execution this is required.
+      // However it also has the added benefit of making meta updates decoupled from the calling operation.
 
       // Check if we're already updating the meta version again to make sure it didn't happen in the meantime
       if (metaUpdating.includes(this.meta.version)) {
@@ -313,7 +314,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         this.nohmClass.logError(err);
         callback(err, this.meta.version);
       }
-    }, 1);
+    });
   }
 
   /**

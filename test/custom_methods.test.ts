@@ -55,33 +55,27 @@ test('methods', async (t) => {
 test('methodsSuper', async (t) => {
   const warnDouble = td.replace(global.console, 'warn');
 
-  const methodOverwriteSuperMethod = nohm.model(
-    'methodOverwriteSuperMethod',
-    {
-      properties: {
-        name: {
-          type: 'string',
-          defaultValue: 'test',
-          unique: true,
-          validations: ['notEmpty'],
-        },
-      },
-      methods: {
-        prop: function prop(name) {
-          if (name === 'super') {
-            // @ts-ignore _super_prop is dynamically added, not elegant but the only way this works right now
-            return this._super_prop('name');
-          } else {
-            // @ts-ignore _super_prop is dynamically added
-            return this._super_prop.apply(this, arguments, 0);
-          }
-        },
+  const methodOverwriteSuperMethod = nohm.model('methodOverwriteSuperMethod', {
+    properties: {
+      name: {
+        defaultValue: 'test',
+        type: 'string',
+        unique: true,
+        validations: ['notEmpty'],
       },
     },
-    // temporary model definition to prevent connectMiddleware later from throwing a bunch of deprecation warnings
-    // TODO: since ava runs tests as isolated processes, this could be removed, right?!
-    true,
-  );
+    methods: {
+      prop: function prop(name) {
+        if (name === 'super') {
+          // @ts-ignore _super_prop is dynamically added, not elegant but the only way this works right now
+          return this._super_prop('name');
+        } else {
+          // @ts-ignore _super_prop is dynamically added
+          return this._super_prop.apply(this, arguments, 0);
+        }
+      },
+    },
+  });
 
   const methodOverwrite = new methodOverwriteSuperMethod();
 
