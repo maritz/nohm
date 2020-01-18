@@ -87,29 +87,7 @@ test.afterEach(async (t) => {
 
 const childPath = __dirname + '/pubsub/child_wrapper.js';
 
-const after = (times: number, fn: () => void) => {
-  return (...args: Array<any>) => {
-    if (--times <= 0) {
-      fn.apply(this, args);
-    }
-  };
-};
-
 const secondaryClient = testArgs.secondaryClient;
-
-test('after helper function', async (t) => {
-  let counter = 0;
-
-  const _test = after(3, () => {
-    counter += 1;
-  });
-
-  _test();
-  _test();
-  _test();
-
-  t.is(counter, 1, 'Function has been called a wrong number of times');
-});
 
 test('set/get pubSub client', async (t) => {
   await t.context.nohm.setPubSubClient(secondaryClient);
@@ -207,7 +185,7 @@ test('create', async (t) => {
       (msg) => {
         const target = msg.answer.target;
         t.true(
-          instance.id.length > 0,
+          (instance.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instance.id, target.id, 'Id from create event wrong');
@@ -248,7 +226,7 @@ test('update', async (t) => {
       (msg) => {
         const answer = msg.answer;
         t.true(
-          instance.id.length > 0,
+          (instance.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instance.id, answer.target.id, 'Id from update event wrong');
@@ -281,7 +259,7 @@ test('save', async (t) => {
   instance.property('dummy', 'save');
 
   let counter = 0;
-  const props = [];
+  const props: Array<any> = [];
 
   const childResponded = new Promise(async (resolve) => {
     await t.context.child.ask(
@@ -295,7 +273,7 @@ test('save', async (t) => {
       (msg) => {
         const answer = msg.answer;
         t.true(
-          instance.id.length > 0,
+          (instance.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instance.id, answer.target.id, 'Id from save event wrong');
@@ -389,7 +367,7 @@ test('link', async (t) => {
       (msg) => {
         const answer = msg.answer;
         t.true(
-          instanceChild.id.length > 0,
+          (instanceChild.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instanceChild.id, answer.child.id, 'Id from link event wrong');
@@ -405,7 +383,7 @@ test('link', async (t) => {
         );
 
         t.true(
-          instanceParent.id.length > 0,
+          (instanceParent.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instanceParent.id, answer.parent.id, 'Id from link event wrong');
@@ -448,7 +426,7 @@ test('unlink', async (t) => {
       (msg) => {
         const answer = msg.answer;
         t.true(
-          instanceChild.id.length > 0,
+          (instanceChild.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instanceChild.id, answer.child.id, 'Id from unlink event wrong');
@@ -464,7 +442,7 @@ test('unlink', async (t) => {
         );
 
         t.true(
-          instanceParent.id.length > 0,
+          (instanceParent.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instanceParent.id, answer.parent.id, 'Id from unlink event wrong');
@@ -510,7 +488,7 @@ test('createOnce', async (t) => {
         const answer = msg.answer;
         answerCount++;
         t.true(
-          instance.id.length > 0,
+          (instance.id as any).length > 0,
           'ID was not set properly before the child returned the event.',
         );
         t.is(instance.id, answer.target.id, 'Id from createOnce event wrong');
