@@ -1,7 +1,6 @@
 import test from 'ava';
 
 import * as _ from 'lodash';
-// tslint:disable-next-line:no-implicit-dependencies
 import * as async from 'async';
 
 import * as args from './testArgs';
