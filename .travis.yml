@@ -16,3 +16,5 @@ after_success:
 env:
   - NOHM_TEST_IOREDIS="false"
   - NOHM_TEST_IOREDIS="true"
+branches:
+  only: master
