@@ -37,7 +37,10 @@ export function exists(
   });
 }
 
-export function del(client: RedisClient | Multi, key: string): Promise<void> {
+export function del(
+  client: RedisClient | Multi,
+  key: string | Array<string>,
+): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!client.del) {
       return reject(new Error(errorMessage));

@@ -32,7 +32,7 @@ import {
   timestampProperty,
   TTypedDefinitions,
 } from './model.header';
-import { psubscribe, punsubscribe } from './typed-redis-helper';
+import { psubscribe, punsubscribe, keys, del } from './typed-redis-helper';
 
 export {
   boolProperty,
@@ -831,25 +831,14 @@ Consider waiting for an established connection before setting it. Status (if ior
    * @param {Object} [client] You can specify the redis client to use. Default: Nohm.client
    */
   public async purgeDb(client: redis.RedisClient = this.client): Promise<void> {
-    function delKeys(prefix: string) {
-      return new Promise<void>((resolve, reject) => {
-        client.keys(prefix + '*', (err, keys) => {
-          if (err) {
-            reject(err);
-          } else if (keys.length === 0) {
-            resolve();
-          } else {
-            client.del(keys, (innerErr) => {
-              if (innerErr) {
-                reject(innerErr);
-              } else {
-                resolve();
-              }
-            });
-          }
-        });
-      });
+    async function delKeys(prefix: string) {
+      const foundKeys = await keys(client, prefix + '*');
+      if (foundKeys.length === 0) {
+        return;
+      }
+      await del(client, foundKeys);
     }
+
     const deletes: Array<Promise<void>> = [];
 
     debug(
