@@ -223,11 +223,13 @@ export class NohmClass {
     if (client && !(client.connected || (client as any).status === 'ready')) {
       this
         .logError(`WARNING: setClient() received a redis client that is not connected yet.
-      Consider waiting for an established connection before setting it. Status (if ioredis): ${
+Consider waiting for an established connection before setting it. Status (if ioredis): ${
         (client as any).status
       }
-      , connected (if node_redis): ${client.connected}`);
+, connected (if node_redis): ${client.connected}`);
     } else if (!client) {
+      // TODO: maybe remove this, since it is also creating an unconnected client and is the only reason
+      // why we have the hard dependency on the "redis" package.
       client = redis.createClient();
     }
     this.client = client;
@@ -414,7 +416,7 @@ export class NohmClass {
               | string
               | number
               | boolean
-              | Partial<ISearchOption>
+              | Partial<ISearchOption>;
           }
         >,
       ): Promise<Array<P>> {
@@ -464,7 +466,7 @@ export class NohmClass {
               | string
               | number
               | boolean
-              | Partial<ISearchOption>
+              | Partial<ISearchOption>;
           }
         > = {},
       ): Promise<Array<string>> {
@@ -697,7 +699,7 @@ export class NohmClass {
               | string
               | number
               | boolean
-              | Partial<ISearchOption>
+              | Partial<ISearchOption>;
           }
         >,
       ): Promise<Array<P>> {
@@ -743,7 +745,7 @@ export class NohmClass {
               | string
               | number
               | boolean
-              | Partial<ISearchOption>
+              | Partial<ISearchOption>;
           }
         > = {},
       ): Promise<Array<string>> {

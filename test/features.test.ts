@@ -2,6 +2,7 @@ import test from 'ava';
 
 import * as _ from 'lodash';
 import * as async from 'async';
+import * as td from 'testdouble';
 
 import * as args from './testArgs';
 import { cleanUpPromise } from './helper';
@@ -11,7 +12,7 @@ import { hgetall, keys, sismember, zscore } from '../ts/typed-redis-helper';
 // to make prefixes per-file separate we add the filename
 const prefix = args.prefix + 'feature';
 
-import { Nohm, NohmModel } from '../ts';
+import { Nohm, NohmModel, NohmClass } from '../ts';
 
 const nohm = Nohm;
 
@@ -1004,4 +1005,91 @@ test.serial('helpers.callbackError', (t) => {
     // tslint:disable-next-line:no-empty
     callbackError(() => {}, 'bar', 'baz');
   }, 'Error thrown even though last argument was not a function.');
+});
+
+test('nohm class constructors', (t) => {
+  const mockRedis = td.object(redis);
+  const withClient = new NohmClass({ client: mockRedis });
+  t.is(withClient.client, mockRedis);
+
+  t.true(new NohmClass({ publish: true }).getPublish());
+
+  t.false(new NohmClass({ publish: false }).getPublish());
+
+  const mockPublishRedis = td.object(redis);
+  const withPublishClient = new NohmClass({ publish: mockPublishRedis });
+  t.true(withPublishClient.getPublish());
+  t.is(withPublishClient.getPubSubClient(), mockPublishRedis);
+});
+
+test('setClient with different client connection states', (t) => {
+  const subject = new NohmClass({});
+  t.is(subject.client, undefined);
+
+  subject.setClient();
+  t.false(
+    subject.client.connected,
+    'Redis client is immediately connected when not passing a client.',
+  );
+
+  // node_redis
+  // not connected yet
+  const mockRedis = {
+    connected: false,
+  };
+  td.replace(subject, 'logError');
+  subject.setClient(mockRedis as any);
+  t.is(subject.client, mockRedis);
+  td.verify(
+    subject.logError(`WARNING: setClient() received a redis client that is not connected yet.
+Consider waiting for an established connection before setting it. Status (if ioredis): undefined
+, connected (if node_redis): false`),
+  );
+
+  // connected
+  mockRedis.connected = true;
+  td.replace(subject, 'logError', () => {
+    throw new Error('Should not be called');
+  });
+  subject.setClient(mockRedis as any);
+  t.is(subject.client, mockRedis);
+
+  // ioredis
+  // not connected yet
+  const mockIORedis = {
+    status: 'close',
+  };
+  td.replace(subject, 'logError');
+  subject.setClient(mockIORedis as any);
+  t.is(subject.client, mockIORedis as any);
+  td.verify(
+    subject.logError(`WARNING: setClient() received a redis client that is not connected yet.
+Consider waiting for an established connection before setting it. Status (if ioredis): close
+, connected (if node_redis): undefined`),
+  );
+
+  // connected
+  mockIORedis.status = 'ready';
+  td.replace(subject, 'logError', () => {
+    throw new Error('Should not be called');
+  });
+  subject.setClient(mockRedis as any);
+  t.is(subject.client, mockRedis);
+});
+
+test.serial('logError', (t) => {
+  t.notThrows(() => {
+    td.replace(console, 'error', () => {
+      throw new Error('Should not be called');
+    });
+
+    nohm.logError(null);
+    (nohm.logError as any)();
+
+    const logStubThrows = td.replace(console, 'error');
+    nohm.logError('foo');
+    td.verify(logStubThrows({ message: 'foo', name: 'Nohm Error' }));
+    nohm.logError(new Error('foo'));
+    td.verify(logStubThrows({ message: new Error('foo'), name: 'Nohm Error' }));
+  });
 });

@@ -1282,3 +1282,35 @@ test.serial('sort() - find bool with false', async (t) => {
   });
   t.deepEqual(ids, t.context.userIds, 'The found ids were incorrect.');
 });
+
+test.serial('static loadMany method', async (t) => {
+  t.deepEqual(await UserFindMockup.loadMany([]), []);
+
+  t.deepEqual(
+    await UserFindMockup.loadMany(['1234', '5678']),
+    [],
+    'Non-existant ids did not produce empty array',
+  );
+
+  let loaded = await UserFindMockup.loadMany(['1', '5']);
+  t.deepEqual(
+    [loaded[0].id, loaded[1].id],
+    [t.context.users[0].id, t.context.users[4].id],
+  );
+
+  loaded = await UserFindMockup.loadMany(['1', 'foo', '1234', '5']);
+  t.deepEqual(
+    [loaded[0].id, loaded[1].id],
+    [t.context.users[0].id, t.context.users[4].id],
+  );
+});
+
+test.serial('static loadMany method - fails on error', async (t) => {
+  td.replace(nohm, 'factory', () => {
+    throw new Error('Fail');
+  });
+
+  await t.throwsAsync(async () => {
+    await UserFindMockup.loadMany(['1', '5']);
+  });
+});
