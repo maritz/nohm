@@ -190,7 +190,7 @@ export function sadd(
 export function sinter(
   client: RedisClient | Multi,
   keyArrayOrString: string | Array<string>,
-  ...keys: Array<string>
+  ...intersectKeys: Array<string>
 ): Promise<Array<string>> {
   return new Promise<Array<string>>((resolve, reject) => {
     if (!client.sinter) {
@@ -198,7 +198,7 @@ export function sinter(
     }
     client.sinter.apply(client, [
       keyArrayOrString,
-      ...keys,
+      ...intersectKeys,
       (err: Error | null, values: Array<string>) => {
         if (err) {
           reject(err);
@@ -303,5 +303,81 @@ export function punsubscribe(
         }
       },
     ]);
+  });
+}
+
+export function keys(
+  client: RedisClient | Multi,
+  searchString: string,
+): Promise<Array<string>> {
+  return new Promise<Array<string>>((resolve, reject) => {
+    if (!client.keys) {
+      return reject(new Error(errorMessage));
+    }
+    client.keys(searchString, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(value);
+      }
+    });
+  });
+}
+
+export function zscore(
+  client: RedisClient | Multi,
+  key: string,
+  member: string,
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    if (!client.zscore) {
+      return reject(new Error(errorMessage));
+    }
+    client.zscore(key, member, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(parseFloat(value));
+      }
+    });
+  });
+}
+
+export function hset(
+  client: RedisClient | Multi,
+  key: string,
+  field: string,
+  value: string,
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    if (!client.hset) {
+      return reject(new Error(errorMessage));
+    }
+    client.hset(key, field, value, (err, numAdded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(numAdded);
+      }
+    });
+  });
+}
+
+export function hget(
+  client: RedisClient | Multi,
+  key: string,
+  field: string,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    if (!client.hget) {
+      return reject(new Error(errorMessage));
+    }
+    client.hget(key, field, (err, value) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(value);
+      }
+    });
   });
 }

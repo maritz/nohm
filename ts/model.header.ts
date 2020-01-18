@@ -26,7 +26,7 @@ export interface IDictionary {
   [index: string]: any;
 }
 
-export type PropertyBehavior = <TModel>(
+export type PropertyBehavior = <TModel extends NohmModel>(
   this: TModel,
   newValue: string,
   key: string,
@@ -38,19 +38,19 @@ export interface IStaticMethods<T extends NohmModel> {
   load<P extends NohmModel>(id: any): Promise<P>;
   loadMany<P extends NohmModel>(id: Array<string>): Promise<Array<P>>;
   findAndLoad<P extends NohmModel, TProps extends IDictionary = {}>(
-    searches: Partial<
+    searches?: Partial<
       {
         [key in keyof TProps]:
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     >,
   ): Promise<Array<P>>;
   sort(
     sortOptions: ISortOptions<IDictionary>,
-    ids: Array<string | number> | false,
+    ids?: Array<string | number> | false,
   ): Promise<Array<string>>;
   find<TProps extends IDictionary = {}>(
     searches: Partial<
@@ -59,7 +59,7 @@ export interface IStaticMethods<T extends NohmModel> {
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     >,
   ): Promise<Array<string>>;
@@ -96,7 +96,7 @@ export interface IModelPropertyDefinition {
 }
 
 export type TTypedDefinitions<TProps extends IDictionary> = {
-  [props in keyof TProps]: IModelPropertyDefinition
+  [props in keyof TProps]: IModelPropertyDefinition;
 };
 
 export interface IModelPropertyDefinitions {
@@ -106,7 +106,7 @@ export interface IModelPropertyDefinitions {
 export type TIdGenerators = 'default' | 'increment';
 
 export interface IModelOptions {
-  metaCallback?: () => any;
+  metaCallback?: (error: string | Error | null, version?: string) => any;
   methods?: {
     [name: string]: (this: NohmModel, ...args: Array<any>) => any;
   };
@@ -116,8 +116,8 @@ export interface IModelOptions {
 }
 
 export interface ISaveOptions {
-  silent: boolean;
-  skip_validation_and_unique_indexes: boolean;
+  silent?: boolean;
+  skip_validation_and_unique_indexes?: boolean;
 }
 
 export interface IProperty {
@@ -143,13 +143,17 @@ export interface IRelationChange {
   action: 'link' | 'unlink';
   callback?: (...args: Array<any>) => any;
   object: NohmModel;
-  options: ILinkOptions;
+  options: ILinkOptionsWithName;
 }
 
 export interface ILinkOptions {
   error?: (err: Error | string, otherObject: NohmModel) => any;
-  name: string;
+  name?: string;
   silent?: boolean;
+}
+
+export interface ILinkOptionsWithName extends ILinkOptions {
+  name: string;
 }
 
 export interface ILinkSaveResult {
@@ -199,7 +203,7 @@ export interface IDefaultEventPayload<TProps extends IDictionary> {
   target: {
     id: null | string;
     modelName: string;
-    properties: TProps;
+    properties: TProps & { id: string };
   };
 }
 
@@ -214,6 +218,6 @@ export interface IChangeEventPayload<TProps extends IDictionary> {
 
 export interface IRelationChangeEventPayload<TProps extends IDictionary> {
   child: IDefaultEventPayload<TProps>['target'];
-  parent: IDefaultEventPayload<TProps>['target'];
+  parent: IDefaultEventPayload<IDictionary>['target'];
   relation: string;
 }

@@ -1,0 +1,8 @@
+{
+  "extends": "../tslint.json",
+  "rules": {
+    "object-literal-sort-keys": [true, "match-declaration-order-only"],
+    "no-implicit-dependencies": [true, "dev"],
+    "variable-name": [true, "allow-pascal-case", "allow-leading-underscore"]
+  }
+}

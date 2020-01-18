@@ -32,6 +32,7 @@ import {
   IValidationResult,
   TLinkCallback,
   TValidationDefinition,
+  ILinkOptionsWithName,
 } from './model.header';
 import {
   del,
@@ -233,9 +234,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
             //  doesn't always have modelName yet
             console.warn(
               '\x1b[31m%s\x1b[0m',
-              `WARNING: Overwriting existing property/method '${name}' in '${
-                this.modelName
-              }' because of method definition.`,
+              `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`,
             );
             console.warn(
               '\x1b[31m%s\x1b[0m',
@@ -252,13 +251,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private updateMeta(
-    callback: (error: string | Error | null, version?: string) => any = (
-      ..._args: Array<any>
-    ) => {
-      /* noop */
-    },
-  ) {
+  private updateMeta(callback?: IModelOptions['metaCallback']) {
     // Check if we're already updating the meta version before setting the timeout.
     // Doing it multiple times is costly. This has the downside of potentially not updating the meta version
     // sometimes when the same model is registered in several nohm instances with different redis databases.
@@ -268,9 +261,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (metaUpdating.includes(this.meta.version)) {
       return;
     }
-    setTimeout(async () => {
-      // setTimeout to defer execution to the next process/browser tick
-      // this means we will have modelName set and meta doesn't take precedence over other operations
+    process.nextTick(async () => {
+      // Defer execution to the next process tick.
+      // Since we don't have the modelName in some cases in immediate execution this is required.
+      // However it also has the added benefit of making meta updates decoupled from the calling operation.
 
       // Check if we're already updating the meta version again to make sure it didn't happen in the meantime
       if (metaUpdating.includes(this.meta.version)) {
@@ -311,12 +305,16 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         if (updatingIndex !== -1) {
           metaUpdating.splice(updatingIndex, 1);
         }
-        callback(null, this.meta.version);
+        if (typeof callback === 'function') {
+          callback(null, this.meta.version);
+        }
       } catch (err) {
         this.nohmClass.logError(err);
-        callback(err, this.meta.version);
+        if (typeof callback === 'function') {
+          callback(err, this.meta.version);
+        }
       }
-    }, 1);
+    });
   }
 
   /**
@@ -372,7 +370,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   /**
-   * Checks if key is a string, nothing else. Used as a typeguard
+   * Checks if key is a string, nothing else. Used as a type guard
    *
    * @private
    * @param {*} key
@@ -679,7 +677,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private async generateId(): Promise<string> {
-    let id = null;
+    let id: null | string = null;
     let generator = this.options.idGenerator;
     if (typeof generator === 'function') {
       id = await generator.call(this);
@@ -693,7 +691,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         this.prefix('incrementalIds'),
       );
     }
-    if (typeof id === 'string' && id.includes(':')) {
+    if (typeof id !== 'string') {
+      id = String(id);
+    }
+    if (id.includes(':')) {
       // we need to do stuff with redis keys and we separate parts of the redis key by :
       // thus the id cannot contain that character.
       throw new Error(
@@ -708,7 +709,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * Warning: Only use this during create() when overwriting temporary ids!
    */
   private async setUniqueIds(id: string): Promise<void> {
-    const mSetArguments = [];
+    const mSetArguments: Array<string> = [];
     for (const [key, prop] of this.properties) {
       const isUnique = !!this.getDefinitions()[key].unique;
       const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
@@ -740,7 +741,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       throw new Error('Update was called without having an id set.');
     }
 
-    const hmSetArguments = [];
+    const hmSetArguments: Array<string> = [];
     const client = this.client.multi();
     const isCreate = !this.inDb;
 
@@ -1053,9 +1054,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         valid = false;
         if (!result.errors || result.errors.length === 0) {
           throw new Error(
-            `Validation failed but didn't provide an error message. Property name: ${
-              result.key
-            }.`,
+            `Validation failed but didn't provide an error message. Property name: ${result.key}.`,
           );
         }
         this.errors[result.key] = this.errors[result.key].concat(result.errors);
@@ -1142,9 +1141,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         };
       } else {
         throw new Error(
-          `Bad validation definition for model '${
-            this.modelName
-          }' for validator '${validator}'.`,
+          `Bad validation definition for model '${this.modelName}' for validator '${validator}'.`,
         );
       }
     }
@@ -1440,7 +1437,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public link<T extends NohmModel>(
     other: NohmModel,
-    optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
+    optionsOrNameOrCallback?: string | ILinkOptions | TLinkCallback<T>,
     callback?: TLinkCallback<T>,
   ): void {
     if (typeof optionsOrNameOrCallback === 'function') {
@@ -1449,7 +1446,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     } else if (typeof optionsOrNameOrCallback === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
-    const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
+    const options = this.getLinkOptions(optionsOrNameOrCallback);
     this.relationChanges.push({
       action: 'link',
       callback,
@@ -1492,7 +1489,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public unlink<T extends NohmModel>(
     other: NohmModel,
-    optionsOrNameOrCallback?: string | ILinkOptions | (TLinkCallback<T>),
+    optionsOrNameOrCallback?: string | ILinkOptions | TLinkCallback<T>,
     callback?: TLinkCallback<T>,
   ): void {
     if (typeof optionsOrNameOrCallback === 'function') {
@@ -1501,7 +1498,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     } else if (typeof optionsOrNameOrCallback === 'undefined') {
       optionsOrNameOrCallback = 'default';
     }
-    const options: ILinkOptions = this.getLinkOptions(optionsOrNameOrCallback);
+    const options = this.getLinkOptions(optionsOrNameOrCallback);
     this.relationChanges.forEach((change, key) => {
       const sameRelationChange =
         change.options.name === options.name &&
@@ -1524,7 +1521,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     );
   }
 
-  private getLinkOptions(optionsOrName: string | ILinkOptions): ILinkOptions {
+  private getLinkOptions(
+    optionsOrName: string | ILinkOptions,
+  ): ILinkOptionsWithName {
     if (typeof optionsOrName === 'string') {
       return {
         name: optionsOrName,
@@ -1661,9 +1660,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   ): Promise<Array<any>> {
     if (!this.id) {
       throw new Error(
-        `Calling getAll() even though this ${
-          this.modelName
-        } has no id. Please load or save it first.`,
+        `Calling getAll() even though this ${this.modelName} has no id. Please load or save it first.`,
       );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
@@ -1690,9 +1687,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     callbackError(...arguments);
     if (!this.id) {
       throw new Error(
-        `Calling numLinks() even though this ${
-          this.modelName
-        } has no id. Please load or save it first.`,
+        `Calling numLinks() even though this ${this.modelName} has no id. Please load or save it first.`,
       );
     }
     const relationKey = this.getRelationKey(otherModelName, relationName);
@@ -1713,7 +1708,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     > = {},
   ): Promise<Array<string>> {
@@ -1776,7 +1771,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
           | string
           | number
           | boolean
-          | Partial<ISearchOption>
+          | Partial<ISearchOption>;
       }
     >,
   ): Array<IStructuredSearch<TProps>> {
@@ -2076,9 +2071,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     const definitions = Object.getPrototypeOf(this).definitions;
     if (!definitions) {
       throw new Error(
-        `Model was not defined with proper static definitions: '${
-          this.modelName
-        }'`,
+        `Model was not defined with proper static definitions: '${this.modelName}'`,
       );
     }
     return definitions;

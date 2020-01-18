@@ -260,12 +260,12 @@ and run the development scripts (compile & watch & tests):
 
     npm run dev
 
-When submitting PRs, please make sure that you run the linter and that everything still builds fine. The CI will catch these problems, but it's better to check locally first.  
+When submitting PRs, please make sure that you run the linter and that everything still builds fine.
 The easiest way to do that is to run the `prepublishOnly` script:
 
     npm run prepublishOnly
 
-## Running tests separately
+## Running tests
 
 Build the javascript files:
 
@@ -274,21 +274,21 @@ Build the javascript files:
 Then run the tests:
 
     npm run test
+    # or
+    npm run test:watch
 
 This requires a running redis server. (you can configure host/port with the command line arguments --redis-host 1.1.1.1 --redis-port 1234)
 
-**WARNING**: The tests also create a lot of keys in your database that look something like this:
+**WARNING**: The tests also create a lot of temporary keys in your database that look something like this:
 
-    nohmtests:something:something
+    nohmtestsuniques:something:something
 
-After the tests have run all keys that match the pattern nohmtests:\* are deleted!
-You can prevent this by passing --no-cleanup (which will leave hundreds or thousands of test keys in your database).
-You may also change the prefix ("nohmtests") part doing something like
+After the tests have run all keys that match the pattern nohmtests\* are deleted!
+
+You can change the prefix ("nohmtests") part doing something like
 
     node test/tests.js --nohm-prefix YourNewPrefix
 
 Now the keys will look like this:
 
-    YourNewPrefix:something:something
-
-Do note that the tests intentionally log out some warnings and errors. However these have (blue) log lines before them, announcing them. Any warnings/errors that do not have these announcements are actual problems.
+    YourNewPrefixuniques:something:something

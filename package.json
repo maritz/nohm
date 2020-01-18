@@ -2,7 +2,7 @@
   "name": "nohm",
   "version": "2.2.3",
   "description": "redis ORM (Object relational mapper)",
-  "lisense": "MIT",
+  "license": "MIT",
   "engines": {
     "node": ">=8"
   },
@@ -28,8 +28,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "nyc node test/tests.js",
-    "test:watch": "nodemon -w test/ -w tsOut/ test/tests.js",
+    "test": "nyc ava --timeout=20s",
+    "test:watch": "ava --watch --timeout=5s",
     "coverage:failIfLow": "nyc check-coverage --lines 90 --functions 90 --branches 80",
     "coverage:coveralls": "nyc report --reporter=text-lcov | coveralls",
     "lint": "tslint --project ./ && eslint test/ ts/universalValidators.js",
@@ -38,7 +38,7 @@
     "build": "npm run lint && tsc --project ./",
     "build:watch": "tsc --project ./ --watch --pretty",
     "predev": "npm run build",
-    "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
+    "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue --handle-input",
     "prepublishOnly": "npm run build && npm run test && pkg-ok",
     "generateDocs": "rimraf docs/api/ && jsdoc -c jsdoc.json",
     "prerelease": "npm run generateDocs",
@@ -63,18 +63,19 @@
     "@types/traverse": "^0.6.32",
     "@types/uuid": "^3.4.4",
     "async": "^1.2.1",
+    "ava": "^2.4.0",
     "concurrently": "^4.1.0",
     "coveralls": "^3.0.3",
     "docdash": "^1.1.1",
     "eslint": "^5.16.0",
     "jsdoc": "^3.6.2",
     "nodemon": "^1.19.1",
-    "nodeunit": "^0.11.3",
     "nyc": "^14.1.1",
     "pkg-ok": "^2.3.1",
     "rimraf": "^2.6.3",
     "standard-version": "^6.0.1",
     "testdouble": "^3.11.0",
+    "ts-node": "^8.5.4",
     "tslint": "^5.17.0",
     "typescript": "3.4.5"
   },
@@ -92,6 +93,22 @@
       "url": "https://github.com/yuchi"
     }
   ],
+  "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
+    "files": [
+      "test/*.test.ts",
+      "ts/typescript.test.ts"
+    ],
+    "helpers": [
+      "test/helper.js"
+    ],
+    "require": [
+      "ts-node/register/transpile-only"
+    ]
+  },
   "standard-version": {
     "types": [
       {
