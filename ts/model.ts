@@ -251,11 +251,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  private updateMeta(
-    callback: IModelOptions['metaCallback'] = (..._args: Array<any>) => {
-      /* noop */
-    },
-  ) {
+  private updateMeta(callback?: IModelOptions['metaCallback']) {
     // Check if we're already updating the meta version before setting the timeout.
     // Doing it multiple times is costly. This has the downside of potentially not updating the meta version
     // sometimes when the same model is registered in several nohm instances with different redis databases.
@@ -309,10 +305,14 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         if (updatingIndex !== -1) {
           metaUpdating.splice(updatingIndex, 1);
         }
-        callback(null, this.meta.version);
+        if (typeof callback === 'function') {
+          callback(null, this.meta.version);
+        }
       } catch (err) {
         this.nohmClass.logError(err);
-        callback(err, this.meta.version);
+        if (typeof callback === 'function') {
+          callback(err, this.meta.version);
+        }
       }
     });
   }
@@ -370,7 +370,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   /**
-   * Checks if key is a string, nothing else. Used as a typeguard
+   * Checks if key is a string, nothing else. Used as a type guard
    *
    * @private
    * @param {*} key
