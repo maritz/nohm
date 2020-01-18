@@ -677,7 +677,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   }
 
   private async generateId(): Promise<string> {
-    let id = null;
+    let id: null | string = null;
     let generator = this.options.idGenerator;
     if (typeof generator === 'function') {
       id = await generator.call(this);
@@ -691,7 +691,10 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         this.prefix('incrementalIds'),
       );
     }
-    if (typeof id === 'string' && id.includes(':')) {
+    if (typeof id !== 'string') {
+      id = String(id);
+    }
+    if (id.includes(':')) {
       // we need to do stuff with redis keys and we separate parts of the redis key by :
       // thus the id cannot contain that character.
       throw new Error(
@@ -706,7 +709,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    * Warning: Only use this during create() when overwriting temporary ids!
    */
   private async setUniqueIds(id: string): Promise<void> {
-    const mSetArguments = [];
+    const mSetArguments: Array<string> = [];
     for (const [key, prop] of this.properties) {
       const isUnique = !!this.getDefinitions()[key].unique;
       const isEmptyString = prop.value === ''; // marking an empty string as unique is probably never wanted
@@ -738,7 +741,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
       throw new Error('Update was called without having an id set.');
     }
 
-    const hmSetArguments = [];
+    const hmSetArguments: Array<string> = [];
     const client = this.client.multi();
     const isCreate = !this.inDb;
 

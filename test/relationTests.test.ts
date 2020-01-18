@@ -254,6 +254,10 @@ test.serial('removeUnlinks', async (t) => {
   await role2.save();
   const tmpId = user.id;
 
+  if (typeof tmpId !== 'string') {
+    throw new Error('Saving failed to save relation.');
+  }
+
   await user.remove();
 
   const foreignRoleLinkExists = await exists(
@@ -545,6 +549,9 @@ test.serial('continueOnError', async (t) => {
       e.errors[0].error instanceof nohm.ValidationError,
       'LinkError contained error was not ValidationError.',
     );
+    if (typeof user.id !== 'string') {
+      throw new Error('Saving failed to save relation.');
+    }
     const commentForeignUserIds = await sismember(
       redis,
       relationsPrefix +

@@ -15,14 +15,13 @@ import { Nohm, NohmModel } from '../ts';
 
 const nohm = Nohm;
 
-// real tests start in 3.. 2.. 1.. NOW!
 const redis = args.redis;
 
-test.before((t) => {
+test.before(() => {
   nohm.setPrefix(prefix);
 });
 
-test.afterEach(async (t) => {
+test.afterEach(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
@@ -82,7 +81,7 @@ nohm.model('NonIncrement', {
 test.serial(
   'creating models with and without a redis client set',
   async (t) => {
-    nohm.client = null;
+    nohm.client = null as any;
     t.throws(
       () => {
         // tslint:disable-next-line:no-unused-expression
@@ -221,7 +220,7 @@ test.serial('idSets', async (t) => {
   user.property('name', 'idSetTest');
 
   await user.save();
-  tempId = user.id;
+  tempId = user.id as string;
   const value = await sismember(
     user.client,
     prefix + ':idsets:' + user.modelName,
@@ -272,7 +271,7 @@ test.serial('indexes', async (t) => {
   const countryIndex = await sismember(
     redis,
     prefix + ':index:UserMockup:country:indexTestCountry',
-    user.id,
+    user.id as string,
   );
   t.is(
     countryIndex.toString(),
@@ -283,7 +282,7 @@ test.serial('indexes', async (t) => {
   const visitsScore = await zscore(
     redis,
     prefix + ':scoredindex:UserMockup:visits',
-    user.id,
+    user.id as string,
   );
   t.is(
     visitsScore,
@@ -294,7 +293,7 @@ test.serial('indexes', async (t) => {
   const visitsIndex = await sismember(
     redis,
     prefix + ':index:UserMockup:visits:' + user.property('visits'),
-    user.id,
+    user.id as string,
   );
   t.is(
     visitsIndex.toString(),
@@ -451,17 +450,6 @@ test.serial('defaultIdGeneration', async (t) => {
   t.is(typeof test1.id, 'string', 'The generated id was not a string');
 });
 
-/*
- * TODO: Check if this is reasonably possible. Problem is awaiting the constructor is not supported.
- test.serial('instanceLoad', async (t) => {
-   t.plan(1);
-   new UserMockup(1123123, function (err) {
-     t.is(err, 'not found', 'Instantiating a user with an id and callback did not try to load it');
-     t.end();
-    });
-  };
-  */
-
 test.serial('factory', async (t) => {
   t.plan(3);
   const name = 'UserMockup';
@@ -520,7 +508,7 @@ test.serial.cb('purgeDB', (t) => {
     });
   };
 
-  const tests = [];
+  const tests: Array<any> = [];
   Object.keys(nohm.prefix).forEach((key) => {
     if (typeof nohm.prefix[key] === 'object') {
       Object.keys(nohm.prefix[key]).forEach((innerKey) => {
@@ -535,7 +523,7 @@ test.serial.cb('purgeDB', (t) => {
   const user = new UserMockup();
   user.save().then(
     () => {
-      async.series(tests, (err, numArr) => {
+      async.series(tests, (err, numArr: Array<{}>) => {
         t.true(!err, 'Unexpected redis error');
         const countBefore = numArr.reduce((num: number, add: number) => {
           return num + add;
@@ -545,7 +533,7 @@ test.serial.cb('purgeDB', (t) => {
           'Database did not have any keys before purgeDb call',
         );
         nohm.purgeDb().then(() => {
-          async.series(tests, (errInner, numArrInner) => {
+          async.series(tests, (errInner, numArrInner: Array<{}>) => {
             t.true(!errInner, 'Unexpected redis error');
             const countAfter = numArrInner.reduce(
               (num: number, add: number) => {
@@ -670,7 +658,9 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
     'register().load failed.',
   );
 
-  const staticSort = await ModelCtor.sort({ field: 'name' }, [instance.id]);
+  const staticSort = await ModelCtor.sort({ field: 'name' }, [
+    instance.id as string,
+  ]);
   t.deepEqual(staticSort, [instance.id], 'register().sort failed.');
 
   const staticFind = await ModelCtor.find({
@@ -678,7 +668,7 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
   });
   t.deepEqual(staticFind, [instance.id], 'register().find failed.');
 
-  let staticFindAndLoad = await ModelCtor.findAndLoad({
+  const staticFindAndLoad = await ModelCtor.findAndLoad({
     name: instance.property('name'),
   });
   t.deepEqual(
@@ -687,14 +677,16 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
     'register().findAndLoad failed.',
   );
 
-  staticFindAndLoad = await ModelCtor.remove(instance.id);
-  t.is(staticFindAndLoad, undefined, 'register().findAndLoad failed.');
+  t.is(
+    await ModelCtor.remove(instance.id),
+    undefined,
+    'register().findAndLoad failed.',
+  );
 
-  staticFindAndLoad = await ModelCtor.findAndLoad({
-    name: instance.property('name'),
-  });
   t.deepEqual(
-    staticFindAndLoad,
+    await ModelCtor.findAndLoad({
+      name: instance.property('name'),
+    }),
     [],
     'register().findAndLoad after remove failed.',
   );
@@ -735,7 +727,7 @@ test.serial('id always stringified', async (t) => {
 });
 
 test.serial('isLoaded', async (t) => {
-  let user = await nohm.factory('NonIncrement');
+  const user = await nohm.factory('NonIncrement');
   user.property('name', 'isLoadedUser');
 
   t.is(user.isLoaded, false, 'isLoaded true in base state.');
@@ -744,7 +736,6 @@ test.serial('isLoaded', async (t) => {
   await user.save();
   t.is(user.isLoaded, true, 'isLoaded true after setting manual id');
   const id = user.id;
-  user = null;
 
   const loadUser = await nohm.factory('NonIncrement');
   t.is(loadUser.isLoaded, false, 'isLoaded true in base state on loadUser.');

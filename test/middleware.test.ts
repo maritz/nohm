@@ -10,7 +10,7 @@ import { IMiddlewareOptions } from '../ts/middleware';
 
 const redis = args.redis;
 
-test.before(async (t) => {
+test.before(async () => {
   nohm.setPrefix(args.prefix);
   await args.setClient(nohm, redis);
 });
@@ -75,7 +75,7 @@ nohm.model('ExcludedMiddlewareMockup', {
 const setup = (
   t: ExecutionContext<unknown>,
   expected: number,
-  options: IMiddlewareOptions,
+  options: IMiddlewareOptions = {},
 ): Promise<{ sandbox: any; str: string }> => {
   return new Promise((resolve) => {
     t.plan(3 + expected);
@@ -136,7 +136,7 @@ const setup = (
 };
 
 test('no options passed', async (t) => {
-  const { sandbox } = await setup(t, 2, undefined);
+  const { sandbox } = await setup(t, 2);
   const val = sandbox.nohmValidations.models.UserMiddlewareMockup;
   t.is(
     val.name.indexOf('notEmpty'),
@@ -156,7 +156,7 @@ test('no options passed', async (t) => {
 });
 
 test('validation', async (t) => {
-  const { sandbox } = await setup(t, 3, undefined);
+  const { sandbox } = await setup(t, 3);
   const val = sandbox.nohmValidations.validate;
   const validation = await val('UserMiddlewareMockup', {
     name: 'asd',
@@ -246,7 +246,7 @@ test('exceptions', async (t) => {
 });
 
 test('validate empty', async (t) => {
-  const { sandbox } = await setup(t, 1, undefined);
+  const { sandbox } = await setup(t, 1);
   const val = sandbox.nohmValidations.validate;
   const validation = await val('UserMiddlewareMockup', {
     excludedProperty: 'asd',
@@ -256,7 +256,7 @@ test('validate empty', async (t) => {
 });
 
 test('validate undefined', async (t) => {
-  const { sandbox } = await setup(t, 2, undefined);
+  const { sandbox } = await setup(t, 2);
   const val = sandbox.nohmValidations.validate;
   try {
     const result = await val('UserMiddlewareMockup', {

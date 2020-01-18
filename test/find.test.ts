@@ -100,7 +100,7 @@ const createUsers = async <TProps, TModel extends NohmModel<TProps>>(
 
   const users = await Promise.all(promises);
   const ids = users.map((user) => {
-    return user.id;
+    return user.id as string;
   });
   return [users, ids];
 };
@@ -110,7 +110,7 @@ const test = anyTest as TestInterface<{
   userIds: Array<string>;
 }>;
 
-test.before(async (t) => {
+test.before(async () => {
   nohm.setPrefix(prefix);
   await args.setClient(nohm, redis);
 });
@@ -671,7 +671,10 @@ test.serial('uuidLoadFind', async (t) => {
   uuidInstance2.property('name', 'uuid2');
 
   await uuidInstance1.save();
-  t.true(uuidInstance1.id.length > 0, 'There was no proper id generated');
+  t.true(
+    (uuidInstance1.id as string).length > 0,
+    'There was no proper id generated',
+  );
   await uuidInstance2.save();
   t.true(uuidInstance1.id !== uuidInstance2.id, 'The uuids were the same.... ');
   const loader = new uuidMockup();
@@ -799,7 +802,7 @@ test.serial('sort() - all by number', async (t) => {
 test.serial('sort() - all by number DESC', async (t) => {
   const sortedIds = t.context.users
     .sort((a, b) => {
-      const idSort = a.id < b.id ? 1 : -1;
+      const idSort = (a.id as string) < (b.id as string) ? 1 : -1;
       a = a.property('number');
       b = b.property('number');
       return a < b ? 1 : a > b ? -1 : idSort;
@@ -920,7 +923,7 @@ test.serial('sort() - provided by number', async (t) => {
 test.serial('sort() - provided by number DESC', async (t) => {
   const sortedIds = t.context.users
     .sort((a, b) => {
-      const idSort = a.id < b.id ? 1 : -1;
+      const idSort = (a.id as string) < (b.id as string) ? 1 : -1;
       a = a.property('number');
       b = b.property('number');
       return a < b ? 1 : a > b ? -1 : idSort;

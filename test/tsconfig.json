@@ -1,10 +1,10 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
-    "declaration": true,
     "experimentalDecorators": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
@@ -12,11 +12,9 @@
     "strictNullChecks": true,
     "noUnusedParameters": true,
     "lib": ["es7"],
-    "outDir": "./tsOut",
-    "sourceMap": true,
-    "keyofStringsOnly": true,
+    "noEmit": true,
+    "sourceMap": false,
     "declarationMap": true
   },
-  "files": ["./ts/index.ts"],
-  "exclude": ["./lib/*.js"]
+  "include": ["./**/*.ts"]
 }

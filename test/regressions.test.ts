@@ -10,7 +10,7 @@ const redis = args.redis;
 
 const prefix = args.prefix + 'regressions';
 
-test.before(async (t) => {
+test.before(async () => {
   nohm.setPrefix(prefix);
   await args.setClient(nohm, redis);
   await cleanUpPromise(redis, prefix);

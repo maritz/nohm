@@ -278,7 +278,7 @@ function testSimpleProps(t, props) {
 }
 
 function testValidateProp(t, objectName, propName) {
-  const tests = [];
+  const tests: Array<() => void> = [];
   return {
     push: (expected, setValue) => {
       tests.push(() => {

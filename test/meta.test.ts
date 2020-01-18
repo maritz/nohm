@@ -83,7 +83,7 @@ const createUsers = async <TProps, TModel extends NohmModel<TProps>>(
 
   const users = await Promise.all(promises);
   const ids = users.map((user) => {
-    return user.id;
+    return user.id as string;
   });
   return [users, ids];
 };
@@ -113,7 +113,7 @@ test.before(async (t) => {
   t.context.userIds = userIds;
 });
 
-test.after(async (t) => {
+test.after(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
