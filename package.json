@@ -38,7 +38,7 @@
     "build": "npm run lint && tsc --project ./",
     "build:watch": "tsc --project ./ --watch --pretty",
     "predev": "npm run build",
-    "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue",
+    "dev": "concurrently --names build,test -k \"npm run build:watch\" \"npm run test:watch\" -c cyan,blue --handle-input",
     "prepublishOnly": "npm run build && npm run test && pkg-ok",
     "generateDocs": "rimraf docs/api/ && jsdoc -c jsdoc.json",
     "prerelease": "npm run generateDocs",

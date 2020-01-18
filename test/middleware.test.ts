@@ -20,8 +20,8 @@ nohm.setExtraValidations(__dirname + '/custom_validations.js');
 nohm.model('UserMiddlewareMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'testName',
+      type: 'string',
       validations: [
         'notEmpty',
         {
@@ -33,23 +33,23 @@ nohm.model('UserMiddlewareMockup', {
       ],
     },
     customValidationFile: {
-      type: 'string',
       defaultValue: 'customValidationFile',
+      type: 'string',
       validations: ['customValidationFile'],
     },
     customValidationFileTimesTwo: {
-      type: 'string',
       defaultValue: 'customValidationFileTimesTwo',
+      type: 'string',
       validations: ['customValidationFileTimesTwo'],
     },
     excludedProperty: {
-      type: 'string',
       defaultValue: 'asd',
+      type: 'string',
       validations: ['notEmpty'],
     },
     excludedValidation: {
-      type: 'string',
       defaultValue: 'asd',
+      type: 'string',
       validations: [
         'notEmpty',
         {
@@ -65,8 +65,8 @@ nohm.model('UserMiddlewareMockup', {
 nohm.model('ExcludedMiddlewareMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: '',
+      type: 'string',
       validations: ['notEmpty'],
     },
   },

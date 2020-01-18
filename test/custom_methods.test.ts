@@ -17,12 +17,11 @@ const normalModel = nohm.model('normalModel', {
   },
 });
 
-// tslint:disable-next-line:variable-name
 const MethodOverwrite = nohm.model('methodOverwrite', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'test',
+      type: 'string',
       unique: true,
       validations: ['notEmpty'],
     },

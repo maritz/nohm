@@ -32,14 +32,14 @@ test.serial('#114 update does not reset index', async (t) => {
         unique: true,
       },
       isActive: {
-        type: 'boolean',
         index: true,
         defaultValue: true,
+        type: 'boolean',
       },
       scoredIndex: {
-        type: 'number',
         index: true,
         defaultValue: 1,
+        type: 'number',
       },
     },
     idGenerator: 'increment',

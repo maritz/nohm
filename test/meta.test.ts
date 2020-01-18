@@ -21,14 +21,14 @@ const prefix = args.prefix + 'meta';
 nohm.model('UserMetaMockup', {
   properties: {
     name: {
-      type: 'string',
-      defaultValue: 'testName',
       index: true,
+      defaultValue: 'testName',
+      type: 'string',
       validations: ['notEmpty'],
     },
     email: {
-      type: 'string',
       defaultValue: 'testMail@test.de',
+      type: 'string',
       unique: true,
       validations: [
         'email',
@@ -41,17 +41,17 @@ nohm.model('UserMetaMockup', {
       type: 'string',
     },
     json: {
-      type: 'json',
       defaultValue: '{}',
+      type: 'json',
     },
     number: {
-      type: 'integer',
-      defaultValue: 1,
       index: true,
+      defaultValue: 1,
+      type: 'integer',
     },
     bool: {
-      type: 'bool',
       defaultValue: false,
+      type: 'bool',
     },
   },
   idGenerator: 'increment',
@@ -60,9 +60,9 @@ nohm.model('UserMetaMockup', {
 nohm.model('CommentMetaMockup', {
   properties: {
     name: {
-      type: 'string',
-      defaultValue: 'testName',
       index: true,
+      defaultValue: 'testName',
+      type: 'string',
       validations: ['notEmpty'],
     },
   },
@@ -160,8 +160,8 @@ test.cb('meta callback and setting meta.inDb', (t) => {
   const testModel = nohm.model('TestVersionMetaMockup', {
     properties: {
       name: {
-        type: 'string',
         defaultValue: 'testProperty',
+        type: 'string',
       },
     },
     metaCallback(err, version) {

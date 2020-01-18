@@ -11,25 +11,25 @@ test.before(async () => {
 const userMockup = nohm.model('UserMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'test',
+      type: 'string',
       unique: true,
       validations: ['notEmpty'],
     },
     visits: {
-      type: 'integer',
       index: true,
+      type: 'integer',
     },
     email: {
+      defaultValue: 'email@email.de',
       type: 'string',
       unique: true,
-      defaultValue: 'email@email.de',
       validations: ['email'],
     },
     emailOptional: {
+      defaultValue: '',
       type: 'string',
       unique: true,
-      defaultValue: '',
       validations: [
         {
           name: 'email',
@@ -40,14 +40,14 @@ const userMockup = nohm.model('UserMockup', {
       ],
     },
     country: {
-      type: 'string',
-      defaultValue: 'Tibet',
       index: true,
+      defaultValue: 'Tibet',
+      type: 'string',
       validations: ['notEmpty'],
     },
     json: {
-      type: 'json',
       defaultValue: '{}',
+      type: 'json',
     },
   },
   idGenerator: 'increment',

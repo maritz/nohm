@@ -23,32 +23,29 @@ test.afterEach(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
-// tslint:disable-next-line:variable-name
 const UserLinkMockup = nohm.model('UserLinkMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'testName',
+      type: 'string',
       validations: ['notEmpty'],
     },
   },
 });
-// tslint:disable-next-line:variable-name
 const CommentLinkMockup = nohm.model('CommentLinkMockup', {
   properties: {
     text: {
-      type: 'string',
       defaultValue: 'this is a comment! REALLY!',
+      type: 'string',
       validations: ['notEmpty'],
     },
   },
 });
-// tslint:disable-next-line:variable-name
 const RoleLinkMockup = nohm.model('RoleLinkMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'user',
+      type: 'string',
     },
   },
 });

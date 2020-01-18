@@ -27,29 +27,28 @@ test.afterEach(async (t) => {
   await cleanUpPromise(redis, prefix);
 });
 
-// tslint:disable-next-line:variable-name
 const UserMockup = Nohm.model('UserMockup', {
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'test',
+      type: 'string',
       unique: true,
       validations: ['notEmpty'],
     },
     visits: {
-      type: 'integer',
       index: true,
+      type: 'integer',
     },
     email: {
+      defaultValue: 'email@email.de',
       type: 'string',
       unique: true,
-      defaultValue: 'email@email.de',
       validations: ['email'],
     },
     emailOptional: {
+      defaultValue: '',
       type: 'string',
       unique: true,
-      defaultValue: '',
       validations: [
         {
           name: 'email',
@@ -60,14 +59,14 @@ const UserMockup = Nohm.model('UserMockup', {
       ],
     },
     country: {
-      type: 'string',
-      defaultValue: 'Tibet',
       index: true,
+      defaultValue: 'Tibet',
+      type: 'string',
       validations: ['notEmpty'],
     },
     json: {
-      type: 'json',
       defaultValue: '{}',
+      type: 'json',
     },
   },
   idGenerator: 'increment',
@@ -409,14 +408,13 @@ test.serial('thisInCallbacks', async (t) => {
 */
 
 test.serial.cb('defaultAsFunction', (t) => {
-  // tslint:disable-next-line:variable-name
   const TestMockup = nohm.model('TestMockup', {
     properties: {
       time: {
-        type: 'timestamp',
         defaultValue: () => {
           return +new Date();
         },
+        type: 'timestamp',
       },
     },
   });
@@ -441,12 +439,11 @@ test.serial.cb('defaultAsFunction', (t) => {
 });
 
 test.serial('defaultIdGeneration', async (t) => {
-  // tslint:disable-next-line:variable-name
   const TestMockup = nohm.model('TestMockup', {
     properties: {
       name: {
-        type: 'string',
         defaultValue: 'defaultIdGeneration',
+        type: 'string',
       },
     },
   });
@@ -605,7 +602,6 @@ test.serial('temporary model definitions', async (t) => {
   const user = await nohm.factory('UserMockup');
 
   // new temporary model definition with same name
-  // tslint:disable-next-line:variable-name
   const TempUserMockup = nohm.model(
     'UserMockup',
     {
@@ -638,7 +634,6 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
   };
 
   // @ts-ignore
-  // tslint:disable-next-line:variable-name
   const ModelCtor = nohm.register(ClassModel);
   const instance = new ModelCtor();
   const factoryInstance = await nohm.factory('ClassModel');

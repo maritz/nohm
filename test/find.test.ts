@@ -12,41 +12,40 @@ const redis = args.redis;
 
 const prefix = args.prefix + 'find';
 
-// tslint:disable-next-line:variable-name
 const UserFindMockup = nohm.model('UserFindMockup', {
   properties: {
     name: {
-      type: 'string',
-      defaultValue: 'testName',
       index: true,
+      defaultValue: 'testName',
+      type: 'string',
       validations: ['notEmpty'],
     },
     email: {
-      type: 'string',
       defaultValue: 'testMail@test.de',
+      type: 'string',
       unique: true,
     },
     gender: {
       type: 'string',
     },
     json: {
-      type: 'json',
       defaultValue: '{}',
+      type: 'json',
     },
     number: {
-      type: 'integer',
-      defaultValue: 1,
       index: true,
+      defaultValue: 1,
+      type: 'integer',
     },
     number2: {
-      type: 'integer',
-      defaultValue: 200,
       index: true,
+      defaultValue: 200,
+      type: 'integer',
     },
     bool: {
-      type: 'bool',
-      defaultValue: false,
       index: true,
+      defaultValue: false,
+      type: 'bool',
     },
     numberNonIndexed: {
       type: 'integer',
@@ -61,19 +60,18 @@ const UserFindMockup = nohm.model('UserFindMockup', {
   idGenerator: 'increment',
 });
 
-// tslint:disable-next-line:variable-name
 const UserFindNoIncrementMockup = nohm.model('UserFindNoIncrementMockup', {
   properties: {
     name: {
-      type: 'string',
-      defaultValue: 'testName',
       index: true,
+      defaultValue: 'testName',
+      type: 'string',
       validations: ['notEmpty'],
     },
     number: {
-      type: 'integer',
-      defaultValue: 1,
       index: true,
+      defaultValue: 1,
+      type: 'integer',
     },
   },
 });
@@ -619,9 +617,9 @@ test.serial('shortForms', async (t) => {
   const shortFormMockup = nohm.model('shortFormMockup', {
     properties: {
       name: {
-        type: 'string',
-        defaultValue: 'testName',
         index: true,
+        defaultValue: 'testName',
+        type: 'string',
         validations: ['notEmpty'],
       },
     },
@@ -658,9 +656,9 @@ test.serial('uuidLoadFind', async (t) => {
   const uuidMockup = nohm.model('uuidMockup', {
     properties: {
       name: {
-        type: 'string',
-        defaultValue: 'testName',
         index: true,
+        defaultValue: 'testName',
+        type: 'string',
         validations: ['notEmpty'],
       },
     },
@@ -756,8 +754,8 @@ test.serial('sort() - all by name DESC', async (t) => {
     });
 
   const ids = await UserFindMockup.sort({
-    field: 'name',
     direction: 'DESC',
+    field: 'name',
   });
   t.deepEqual(sortedIds, ids, 'Sorting went wrong.');
 });
@@ -811,8 +809,8 @@ test.serial('sort() - all by number DESC', async (t) => {
     });
 
   const ids = await UserFindMockup.sort({
-    field: 'number',
     direction: 'DESC',
+    field: 'number',
   });
   t.deepEqual(sortedIds, ids, 'Sorting went wrong.');
 });
@@ -869,8 +867,8 @@ test.serial('sort() - provided by name DESC', async (t) => {
 
   const ids = await UserFindMockup.sort(
     {
-      field: 'name',
       direction: 'DESC',
+      field: 'name',
     },
     t.context.userIds,
   );
@@ -933,8 +931,8 @@ test.serial('sort() - provided by number DESC', async (t) => {
 
   const ids = await UserFindMockup.sort(
     {
-      field: 'number',
       direction: 'DESC',
+      field: 'number',
     },
     t.context.userIds,
   );

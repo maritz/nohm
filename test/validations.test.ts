@@ -22,43 +22,42 @@ test.after(async () => {
 
 nohm.setExtraValidations(__dirname + '/custom_validations.js');
 
-// tslint:disable-next-line:variable-name
 const UserMockup = nohm.model('UserMockup', {
   // !!! this mockup must be defined with valid default values !!!
   properties: {
     name: {
-      type: 'string',
       defaultValue: 'test',
+      type: 'string',
       validations: ['notEmpty'],
     },
     castInteger: {
-      type: 'integer',
       defaultValue: 2,
+      type: 'integer',
     },
     castFloat: {
-      type: 'float',
       defaultValue: 2.5,
+      type: 'float',
     },
     castNumber: {
-      type: 'number',
       defaultValue: 2.5,
+      type: 'number',
     },
     castTimestamp: {
-      type: 'timestamp',
       defaultValue: 100000,
+      type: 'timestamp',
     },
     behavior: {
+      defaultValue: 1,
       type: function incrementBy(value, _key, old) {
         if (typeof value !== 'string' || typeof old !== 'string') {
           throw new Error('Behavior arguments were not strings!');
         }
         return parseInt(old, 10) + parseInt(value, 10);
       },
-      defaultValue: 1,
     },
     minMax: {
-      type: 'integer',
       defaultValue: 5,
+      type: 'integer',
       validations: [
         {
           name: 'minMax',
@@ -70,8 +69,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     minOptional: {
-      type: 'integer',
       defaultValue: 0,
+      type: 'integer',
       validations: [
         {
           name: 'minMax',
@@ -83,8 +82,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     email: {
-      type: 'string',
       defaultValue: 'blub@bla.de',
+      type: 'string',
       validations: [
         {
           name: 'length', // not needed for a normal email validation, using this to test multiple validations
@@ -96,8 +95,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     optionalEmail: {
-      type: 'string',
       defaultValue: '',
+      type: 'string',
       validations: [
         {
           name: 'email',
@@ -108,8 +107,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     minLength: {
-      type: 'string',
       defaultValue: 'asd',
+      type: 'string',
       validations: [
         {
           name: 'length',
@@ -120,8 +119,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     minLength2: {
-      type: 'string',
       defaultValue: '',
+      type: 'string',
       validations: [
         {
           name: 'length',
@@ -133,8 +132,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     maxLength: {
-      type: 'string',
       defaultValue: 'asd',
+      type: 'string',
       validations: [
         {
           name: 'length',
@@ -145,33 +144,33 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     number: {
-      type: 'string',
       defaultValue: '1,000.5623',
+      type: 'string',
       validations: ['number'],
     },
     numberUS: {
-      type: 'string',
       defaultValue: '2,000.5623',
+      type: 'string',
       validations: ['numberUS'],
     },
     numberEU: {
-      type: 'string',
       defaultValue: '3.000,5623',
+      type: 'string',
       validations: ['numberEU'],
     },
     numberSI: {
-      type: 'string',
       defaultValue: '4 000,5623',
+      type: 'string',
       validations: ['numberSI'],
     },
     url: {
-      type: 'string',
       defaultValue: 'http://test.de',
+      type: 'string',
       validations: ['url'],
     },
     custom: {
-      type: 'string',
       defaultValue: 'valid',
+      type: 'string',
       validations: [
         (value) => {
           return Promise.resolve(value === 'valid');
@@ -179,8 +178,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     custom2: {
-      type: 'string',
       defaultValue: 'valid2',
+      type: 'string',
       validations: [
         (value) => {
           return Promise.resolve(value === 'valid2');
@@ -188,8 +187,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     customNamed: {
-      type: 'string',
       defaultValue: 'validNamed',
+      type: 'string',
       validations: [
         function /*test*/ customNamedFunc(value) {
           return Promise.resolve(value === 'validNamed');
@@ -197,8 +196,8 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     customNamedAsync: {
-      type: 'string',
       defaultValue: 'validNamedAsync',
+      type: 'string',
       validations: [
         async function customNamedAsyncFunc(value) {
           return Promise.resolve(value === 'validNamedAsync');
@@ -206,13 +205,13 @@ const UserMockup = nohm.model('UserMockup', {
       ],
     },
     alphanumeric: {
-      type: 'string',
       defaultValue: 'hurgel1234',
+      type: 'string',
       validations: ['alphanumeric'],
     },
     regexp: {
-      type: 'string',
       defaultValue: 'asd1',
+      type: 'string',
       validations: [
         {
           name: 'regexp',
@@ -848,8 +847,8 @@ test('invalid regexp option', async (t) => {
     {
       properties: {
         noRegexp: {
-          type: 'string',
           defaultValue: 'hurgel1234',
+          type: 'string',
           validations: [
             {
               name: 'regexp',
