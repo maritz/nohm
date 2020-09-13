@@ -736,7 +736,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private async update(
     options: ISaveOptions,
-  ): Promise<Array<ILinkSaveResult> | LinkError> {
+  ): Promise<Array<ILinkSaveResult<TProps>> | LinkError<TProps>> {
     if (!this.id) {
       throw new Error('Update was called without having an id set.');
     }
@@ -797,13 +797,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private async storeLinks(
     options: ISaveOptions,
-  ): Promise<Array<ILinkSaveResult>> {
+  ): Promise<Array<ILinkSaveResult<TProps>>> {
     const changeFns = this.relationChanges.map((change) => {
       return async () => {
         // TODO: decide whether silent should actually be overwritten for all cases
         change.options.silent = options.silent;
-        let returnArray: Array<ILinkSaveResult> = [];
-        const saveResult: ILinkSaveResult = {
+        let returnArray: Array<ILinkSaveResult<TProps>> = [];
+        const saveResult: ILinkSaveResult<TProps> = {
           child: change.object,
           error: null,
           parent: this,
@@ -855,7 +855,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         return returnArray;
       };
     });
-    let saveResults: Array<ILinkSaveResult> = [];
+    let saveResults: Array<ILinkSaveResult<TProps>> = [];
     // Sequentially go through all the changes and store them instead of parallel.
     // The reason for this behavior is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.

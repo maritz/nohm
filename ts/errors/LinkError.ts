@@ -1,7 +1,7 @@
 import { ILinkSaveResult } from '../model.header';
 
-export interface ILinkError extends Error {
-  errors: Array<ILinkSaveResult>;
+export interface ILinkError<TProps> extends Error {
+  errors: Array<ILinkSaveResult<TProps>>;
 }
 
 // tslint:disable:max-line-length
@@ -21,9 +21,9 @@ export interface ILinkError extends Error {
  * @memberof NohmErrors
  * @extends {Error}
  */
-export class LinkError extends Error implements ILinkError {
+export class LinkError<TProps> extends Error implements ILinkError<TProps> {
   constructor(
-    public errors: Array<ILinkSaveResult>,
+    public errors: Array<ILinkSaveResult<TProps>>,
     errorMessage = 'Linking failed. See .errors on this Error object for an Array of failures.',
   ) {
     super(errorMessage);

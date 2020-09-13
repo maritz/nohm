@@ -4,7 +4,13 @@ import * as args from './testArgs';
 
 import { cleanUpPromise } from './helper';
 
-import { Nohm, NohmModel, TTypedDefinitions, ValidationError } from '../ts';
+import {
+  Nohm,
+  NohmModel,
+  TTypedDefinitions,
+  ValidationError,
+  LinkError,
+} from '../ts';
 import {
   integerProperty,
   IPropertyDiff,
@@ -380,12 +386,43 @@ test.serial('validation errors', async (t) => {
   user.property('name', '');
   try {
     await user.save();
-    t.fail('No error thrown thrown');
+    t.fail('No error thrown.');
   } catch (err) {
     if (err instanceof ValidationError && err.modelName === 'UserMockup') {
       t.deepEqual((err as ValidationError<IUserLinkProps>).errors.name, [
         'notEmpty',
       ]);
+    } else {
+      t.fail('Wrong kind of error thrown.');
+    }
+  }
+});
+
+test.serial('link errors', async (t) => {
+  const user = await nohm.factory<UserMockup>('UserMockup');
+  const comment = new commentMockup();
+  comment.property('text', ''); // fails validation
+  user.link(comment, {
+    error: (_err, other) => {
+      t.deepEqual(other.modelName, comment.modelName);
+    },
+  });
+  try {
+    await user.save();
+    t.fail('No error thrown.');
+  } catch (err) {
+    if (err instanceof LinkError) {
+      const childError = err.errors[0].error;
+      if (
+        childError instanceof ValidationError &&
+        childError.modelName === 'CommentMockup'
+      ) {
+        t.deepEqual(childError.errors.text, ['notEmpty']);
+        t.deepEqual(err.errors[0].parent, user);
+        t.deepEqual(err.errors[0].child, comment); // would fail with properly typed comment class with TProps TODO
+      } else {
+        t.fail('Wrong kind of child error thrown.');
+      }
     } else {
       t.fail('Wrong kind of error thrown.');
     }

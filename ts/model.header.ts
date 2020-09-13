@@ -156,10 +156,10 @@ export interface ILinkOptionsWithName extends ILinkOptions {
   name: string;
 }
 
-export interface ILinkSaveResult {
+export interface ILinkSaveResult<TProps> {
   success: boolean;
   child: NohmModel;
-  parent: NohmModel;
+  parent: NohmModel<TProps>;
   error: null | Error;
 }
 
