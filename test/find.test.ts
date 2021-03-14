@@ -1204,9 +1204,10 @@ Please handle this in your code to make sure everything works as you intended it
           ),
         );
       }
-      t.is(
-        err.message,
-        'ERR min or max is not a float',
+      t.true(
+        // the error message from redis itself was changed, so we test for both old and new version.
+        err.message === 'ERR min or max is not a float' ||
+          err.message === 'ERR value is not an integer or out of range',
         "Invalid or parseAble find options didn't throw an error.",
       );
     }
