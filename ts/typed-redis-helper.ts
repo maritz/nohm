@@ -13,7 +13,7 @@ export function get(client: RedisClient | Multi, key: string): Promise<string> {
       if (err) {
         reject(err);
       } else {
-        resolve(value);
+        resolve(String(value));
       }
     });
   });

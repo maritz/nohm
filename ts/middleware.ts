@@ -212,7 +212,7 @@ export function middleware(
     if (exclusion === true) {
       return; // exception set, but no fields
     } else {
-      if (exclusion === true || exclusion === false) {
+      if (exclusion === false) {
         exclusion = {};
       }
       collectedModels.push(validationsFlatten(model, exclusion));

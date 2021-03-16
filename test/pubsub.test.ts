@@ -30,7 +30,7 @@ let testCounter = 0;
 const initializeChild = (childPrefix) => {
   return new Promise<IChildProcessWithAsk>((resolve, reject) => {
     const child = child_process.fork(childPath, process.argv);
-    child.on('message', (msg) => {
+    child.on('message', (msg: any) => {
       if (msg.question === 'initialize' && msg.answer === true) {
         resolve(child as IChildProcessWithAsk);
       }
@@ -45,8 +45,8 @@ const initializeChild = (childPrefix) => {
     });
 
     (child as any).ask = (request, callback) => {
-      return new Promise((resolveInner) => {
-        child.on('message', (msg) => {
+      return new Promise<void>((resolveInner) => {
+        child.on('message', (msg: any) => {
           if (msg.question === request.question) {
             if (msg.answer === 'ACK') {
               // this happens on things like subscribe where it acknowledges the subscribe has happened
@@ -173,7 +173,7 @@ test('create', async (t) => {
   const instance = await t.context.nohm.factory('Tester');
   instance.property('dummy', 'create');
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -214,7 +214,7 @@ test('update', async (t) => {
   instance.property('dummy', 'update');
   let diff: Array<void | IPropertyDiff<string | number | symbol>>;
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -261,7 +261,7 @@ test('save', async (t) => {
   let counter = 0;
   const props: Array<any> = [];
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -309,7 +309,7 @@ test('remove', async (t) => {
   instance.property('dummy', 'remove');
   let oldId;
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -355,7 +355,7 @@ test('link', async (t) => {
   instanceParent.property('dummy', 'link_parent');
   instanceChild.link(instanceParent);
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -414,7 +414,7 @@ test('unlink', async (t) => {
   instanceParent.property('dummy', 'unlink_parent');
   instanceChild.link(instanceParent);
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribe',
@@ -475,7 +475,7 @@ test('createOnce', async (t) => {
   instance.property('dummy', 'create_once');
   let answerCount = 0;
 
-  const childResponded = new Promise(async (resolve) => {
+  const childResponded = new Promise<void>(async (resolve) => {
     await t.context.child.ask(
       {
         question: 'subscribeOnce',

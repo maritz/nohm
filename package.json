@@ -58,7 +58,7 @@
     "@types/express": "^4.16.1",
     "@types/ioredis": "^4.0.11",
     "@types/lodash": "^4.14.133",
-    "@types/node": "^12.0.4",
+    "@types/node": "^14.14.34",
     "@types/redis": "^2.8.13",
     "@types/traverse": "^0.6.32",
     "@types/uuid": "^3.4.4",
@@ -75,9 +75,9 @@
     "rimraf": "^2.6.3",
     "standard-version": "^8.0.1",
     "testdouble": "^3.11.0",
-    "ts-node": "^8.5.4",
-    "tslint": "^5.17.0",
-    "typescript": "3.4.5"
+    "ts-node": "^9.1.1",
+    "tslint": "^6.1.3",
+    "typescript": "^4.2.3"
   },
   "author": "Moritz Peters",
   "repository": {

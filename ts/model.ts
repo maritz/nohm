@@ -402,15 +402,20 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
   ): TProps[TProp] | Partial<{ [key in keyof TProps]: any }> {
     if (!this.isPropertyKey(keyOrValues)) {
       const obj: Partial<{ [key in keyof TProps]: any }> = {};
-      Object.keys(keyOrValues).forEach((key) => {
-        obj[key] = this.property(key, keyOrValues[key]);
+      Object.keys(keyOrValues).forEach((key: keyof TProps) => {
+        const test = this.property(key, keyOrValues[key]);
+        obj[key] = test;
       });
       return obj;
     }
     if (typeof value !== 'undefined') {
       debug(`Setting property '%s' to value %o`, keyOrValues, value);
+      if (keyOrValues === 'id') {
+        throw new Error('Cannot set id via .properties()');
+      }
       this.setProperty(keyOrValues, value);
-      this.allPropertiesCache[keyOrValues] = this.property(keyOrValues);
+      const newProperty = this.property(keyOrValues);
+      this.allPropertiesCache[keyOrValues] = newProperty;
     }
     const prop = this.getProperty(keyOrValues);
     let returnValue = prop.value;
@@ -736,7 +741,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private async update(
     options: ISaveOptions,
-  ): Promise<Array<ILinkSaveResult<TProps>> | LinkError<TProps>> {
+  ): Promise<Array<ILinkSaveResult> | LinkError> {
     if (!this.id) {
       throw new Error('Update was called without having an id set.');
     }
@@ -797,13 +802,13 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
 
   private async storeLinks(
     options: ISaveOptions,
-  ): Promise<Array<ILinkSaveResult<TProps>>> {
+  ): Promise<Array<ILinkSaveResult>> {
     const changeFns = this.relationChanges.map((change) => {
       return async () => {
         // TODO: decide whether silent should actually be overwritten for all cases
         change.options.silent = options.silent;
-        let returnArray: Array<ILinkSaveResult<TProps>> = [];
-        const saveResult: ILinkSaveResult<TProps> = {
+        let returnArray: Array<ILinkSaveResult> = [];
+        const saveResult: ILinkSaveResult = {
           child: change.object,
           error: null,
           parent: this,
@@ -855,7 +860,7 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         return returnArray;
       };
     });
-    let saveResults: Array<ILinkSaveResult<TProps>> = [];
+    let saveResults: Array<ILinkSaveResult> = [];
     // Sequentially go through all the changes and store them instead of parallel.
     // The reason for this behavior is that it makes saving other objects when they don't have an id yet
     // easier and cannot cause race-conditions as easily.
@@ -1024,9 +1029,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
-    let validationResults: Array<IValidationResult> = await Promise.all<
-      IValidationResult
-    >(nonUniqueValidations);
+    let validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(
+      nonUniqueValidations,
+    );
 
     let valid = validationResults.some((result) => result.valid);
 

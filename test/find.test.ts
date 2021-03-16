@@ -1180,11 +1180,14 @@ test.serial(
     const warnDouble = td.replace(global.console, 'warn');
     try {
       await UserFindMockup.find({
-        // @ts-ignore - intentionally calling it with wrong parameters
         number: {
+          // @ts-ignore - intentionally calling it with wrong parameters
           min: '1',
+          // @ts-ignore - intentionally calling it with wrong parameters
           max: 'not a number',
+          // @ts-ignore - intentionally calling it with wrong parameters
           offset: [1],
+          // @ts-ignore - intentionally calling it with wrong parameters
           limit() {
             return 'Nope, not a number either.';
           },

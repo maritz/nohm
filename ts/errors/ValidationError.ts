@@ -25,7 +25,8 @@ export interface IValidationError<TProps extends IDictionary> extends Error {
  * @memberof NohmErrors
  * @extends {Error}
  */
-export class ValidationError<TProps extends IDictionary> extends Error
+export class ValidationError<TProps extends IDictionary>
+  extends Error
   implements IValidationError<TProps> {
   public readonly errors: IValidationError<TProps>['errors'];
   public readonly modelName: string;
@@ -38,14 +39,16 @@ export class ValidationError<TProps extends IDictionary> extends Error
     super(errorMessage);
     const emptyErrors: IValidationError<TProps>['errors'] = {};
     this.modelName = modelName;
-    this.errors = Object.keys(errors).reduce<
-      IValidationError<TProps>['errors']
-    >((obj, key) => {
-      const error = errors[key];
-      if (error && error.length > 0) {
-        obj[key] = error;
-      }
-      return obj;
-    }, emptyErrors);
+    const keys: Array<keyof TProps> = Object.keys(errors);
+    this.errors = keys.reduce<IValidationError<TProps>['errors']>(
+      (obj, key) => {
+        const error = errors[key];
+        if (error && error.length > 0) {
+          obj[key] = error;
+        }
+        return obj;
+      },
+      emptyErrors,
+    );
   }
 }
