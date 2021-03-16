@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-shadow-restricted-names
 ((exports, undefined) => {
 
   const regexps = exports.regexps = {
@@ -21,7 +22,7 @@
     alphanumeric: function alphanumeric(value) {
       return Promise.resolve(/^[\w]+$/.test(value));
     },
-    
+
     /**
      * Make sure a value is a date that the Date object can parse.
      * Can be optional.
@@ -30,7 +31,7 @@
     date: function date(value) {
       return Promise.resolve(!/Invalid|NaN/.test((new Date(value)).toString()));
     },
-    
+
     /**
      * Make sure a value is a valid ISO Date (YYYY-MM-DD) or is optional (params[0]) and empty
      * @memberof Validators
@@ -153,7 +154,7 @@
   // while there are tests for the browser validations, they depend on vm.runInNewContext.
   // this creates a sandboxed environment that currently cannot be properly analysed for coverage.
   // see ../test/middlewareTests.js for the tests
-  // see https://github.com/istanbuljs/nyc/issues/371 for details on 
+  // see https://github.com/istanbuljs/nyc/issues/371 for details on
   /* istanbul ignore if */
   if (typeof (window) !== 'undefined' && typeof (nohmValidationsNamespaceName) !== 'undefined') {
     // we're in a browser and have a defined namespace
@@ -162,9 +163,9 @@
 
     // get extra validators
     for (var i in nohm.extraValidations) {
-      if (nohm.extraValidations.hasOwnProperty(i)) {
+      if (Object.prototype.hasOwnProperty.call(nohm.extraValidations, i)) {
         for (var name in nohm.extraValidations[i]) {
-          if (nohm.extraValidations[i].hasOwnProperty(name)) {
+          if (Object.prototype.hasOwnProperty.call(nohm.extraValidations[i], name)) {
             validators[name] = nohm.extraValidations[i][name];
           }
         }
@@ -205,10 +206,10 @@
           }
           wrap(validators[val], options, val);
         } else if (val && typeof (val.name) === 'string') {
-          /* 
+          /*
           Validation object
-          { 
-            name: 'someValidtaor', 
+          {
+            name: 'someValidtaor',
             options: {
               someOption: false
             }
@@ -243,7 +244,7 @@
           return reject(new Error('Invalid input passed to nohm validate() function. Needs a modelname and a data object.'));
         }
 
-        if (!nohm.models.hasOwnProperty(modelName)) {
+        if (!Object.prototype.hasOwnProperty.call(nohm.models, modelName)) {
           return reject(new Error('Invalid modelName passed to nohm or model was not properly exported.'));
         }
 
@@ -264,7 +265,7 @@
         var validCallback = function (key, valid, errorName) {
           if (!valid) {
             failed = true;
-            if (!errors.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(errors, key)) {
               errors[key] = [];
             }
             errors[key].push(errorName);
@@ -274,7 +275,7 @@
           }
         };
         for (var key in data) {
-          if (data.hasOwnProperty(key) && model.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(data, key) && Object.prototype.hasOwnProperty.call(model, key)) {
             var innerFuncs = validateProperty(key, data[key], model[key], validCallback);
             for (var len = innerFuncs.length, i = 0; i < len; i++) {
               funcs.push(innerFuncs[i]);
@@ -326,7 +327,7 @@
         if ((options = arguments[i]) !== null) {
           // Extend the base object
           for (name in options) {
-            if (options.hasOwnProperty(name)) {
+            if (Object.prototype.hasOwnProperty.call(options, name)) {
               src = target[name];
               copy = options[name];
 
@@ -366,8 +367,8 @@
 
       // Not own constructor property must be Object
       if (obj.constructor &&
-        !obj.hasOwnProperty("constructor") &&
-        !obj.constructor.prototype.hasOwnProperty("isPrototypeOf")) {
+        !Object.prototype.hasOwnProperty.call(obj, "constructor") &&
+        !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
         return false;
       }
 
@@ -377,7 +378,7 @@
         // if last one is own, then all properties are own.
       }
 
-      return key === undefined || obj.hasOwnProperty(key);
+      return key === undefined || Object.prototype.hasOwnProperty.call(obj, key);
     };
   }
 

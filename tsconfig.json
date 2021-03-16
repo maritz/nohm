@@ -15,7 +15,8 @@
     "outDir": "./tsOut",
     "sourceMap": true,
     "keyofStringsOnly": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "skipLibCheck": true
   },
   "files": ["./ts/index.ts"],
   "exclude": ["./lib/*.js"]

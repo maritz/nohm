@@ -81,7 +81,7 @@ test('propertyGetter', (t) => {
     () => {
       user.property('hurgelwurz');
     },
-    /Invalid property key 'hurgelwurz'\./,
+    { message: /Invalid property key 'hurgelwurz'\./ },
     'Calling .property() with an undefined key did not throw an error.',
   );
 

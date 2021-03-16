@@ -88,7 +88,7 @@ test.serial(
         // tslint:disable-next-line:no-unused-expression
         new UserMockup();
       },
-      /No redis client/,
+      { message: /No redis client/ },
       'Creating a model without having a redis client set did not throw an error.',
     );
     await args.setClient(nohm, redis); // this waits until the connection is ready before setting the client
@@ -334,9 +334,12 @@ test.serial("delete with id that doesn't exist", async (t) => {
   const user = new UserMockup();
   user.id = '987654321';
 
-  await t.throwsAsync(async () => {
-    return user.remove();
-  }, 'not found');
+  await t.throwsAsync(
+    async () => {
+      return user.remove();
+    },
+    { message: 'not found' },
+  );
 });
 
 test.serial(
@@ -987,7 +990,9 @@ test.serial('helpers.callbackError', (t) => {
       // tslint:disable-next-line:no-empty
       callbackError(() => {});
     },
-    /^Callback style has been removed. Use the returned promise\.$/,
+    {
+      message: /^Callback style has been removed. Use the returned promise\.$/,
+    },
     'Does not throw when given only function',
   );
   t.throws(
@@ -995,7 +1000,9 @@ test.serial('helpers.callbackError', (t) => {
       // tslint:disable-next-line:no-empty
       callbackError('foo', 'bar', 'baz', () => {});
     },
-    /^Callback style has been removed. Use the returned promise\.$/,
+    {
+      message: /^Callback style has been removed. Use the returned promise\.$/,
+    },
     'Does not throw when last of 4 is function.',
   );
   t.notThrows(() => {
