@@ -322,11 +322,14 @@ test.serial('exists', async (t) => {
 test.serial('findByInvalidSearch', async (t) => {
   const findUser = new UserFindMockup();
 
-  await t.throwsAsync(async () => {
-    await findUser.find({
-      gender: 'male',
-    });
-  }, /Trying to search for non-indexed/);
+  await t.throwsAsync(
+    async () => {
+      await findUser.find({
+        gender: 'male',
+      });
+    },
+    { message: /Trying to search for non-indexed/ },
+  );
 });
 
 test.serial('findByUnique', async (t) => {
@@ -1177,7 +1180,6 @@ test.serial('sort() - endpoints only specify one', async (t) => {
 test.serial(
   'sort() - find numeric options parsing and defaulting',
   async (t) => {
-    const warnDouble = td.replace(global.console, 'warn');
     try {
       await UserFindMockup.find({
         // @ts-ignore - intentionally calling it with wrong parameters
@@ -1194,22 +1196,21 @@ test.serial(
       t.fail('Succeeded where it should not have.');
     } catch (err) {
       if (process.env.NOHM_TEST_IOREDIS !== 'true') {
-        td.verify(
-          warnDouble,
-          warnDouble(
-            'node_redis:',
-            `Deprecated: The ZRANGEBYSCORE command contains a argument of type Array.
-This is converted to "1" by using .toString() now and will return an error from v.3.0 on.
-Please handle this in your code to make sure everything works as you intended it to.`,
-          ),
+        // node_redis throws an error here
+        t.is(
+          err.message,
+          `node_redis: The ZRANGEBYSCORE command contains a invalid argument type.
+Only strings, dates and buffers are accepted. Please update your code to use valid argument types.`,
+        );
+      } else {
+        // ioredis should pass it on and return the redis error itself
+        t.true(
+          // the error message from redis itself was changed, so we test for both old and new version.
+          err.message === 'ERR min or max is not a float' ||
+            err.message === 'ERR value is not an integer or out of range',
+          "Invalid or parseAble find options didn't throw an error.",
         );
       }
-      t.true(
-        // the error message from redis itself was changed, so we test for both old and new version.
-        err.message === 'ERR min or max is not a float' ||
-          err.message === 'ERR value is not an integer or out of range',
-        "Invalid or parseAble find options didn't throw an error.",
-      );
     }
   },
 );

@@ -4,8 +4,11 @@ import * as IORedis from 'ioredis';
 export const errorMessage =
   'Supplied redis client does not have the correct methods.';
 
-export function get(client: RedisClient | Multi, key: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+export function get(
+  client: RedisClient | Multi,
+  key: string,
+): Promise<string | null> {
+  return new Promise<string | null>((resolve, reject) => {
     if (!client.get) {
       return reject(new Error(errorMessage));
     }
@@ -13,7 +16,7 @@ export function get(client: RedisClient | Multi, key: string): Promise<string> {
       if (err) {
         reject(err);
       } else {
-        resolve(value);
+        resolve(value && String(value));
       }
     });
   });
