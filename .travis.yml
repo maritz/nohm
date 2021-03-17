@@ -2,8 +2,8 @@ language: node_js
 node_js:
   - 'stable'
   - 'lts/*'
+  - '12'
   - '10'
-  - '8'
 services:
   - redis-server
 before_script:
