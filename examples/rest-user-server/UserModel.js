@@ -68,7 +68,7 @@ module.exports = nohm.model('User', {
     password: {
       load_pure: true, // this ensures that there is no typecasting when loading from the db.
       // because when typecasting, we create a new hash of the password.
-      type: function(value) {
+      type: function (value) {
         const valueDefined = value && typeof value.length !== 'undefined';
         if (valueDefined && value.length >= PASSWORD_MINLENGTH) {
           return hashPassword(value);
@@ -119,7 +119,9 @@ module.exports = nohm.model('User', {
       fields = Array.isArray(fields) ? fields : Object.keys(data);
 
       fields.forEach((propKey) => {
-        if (!this.getDefinitions().hasOwnProperty(propKey)) {
+        if (
+          !Object.prototype.hasOwnProperty.call(this.getDefinitions(), propKey)
+        ) {
           return;
         }
 
