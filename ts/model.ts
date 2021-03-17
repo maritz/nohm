@@ -228,22 +228,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     if (methods) {
       _.each(methods, (method, name) => {
         if (typeof (this as any)[name] !== 'undefined') {
-          const errorForStack = new Error('Deprecation warning');
-          setTimeout(() => {
-            // Timeout to make sure we have this.modelName. this function is called in constructor and thus
-            //  doesn't always have modelName yet
-            console.warn(
-              '\x1b[31m%s\x1b[0m',
-              `WARNING: Overwriting existing property/method '${name}' in '${this.modelName}' because of method definition.`,
-            );
-            console.warn(
-              '\x1b[31m%s\x1b[0m',
-              // tslint:disable-next-line:max-line-length
-              `DEPRECATED: Overwriting built-in methods is deprecated. Please migrate them to a different name. Here's a stack to help identify the problem:`,
-              errorForStack.stack,
-            );
-          }, 1);
-          (this as any)['_super_' + name] = (this as any)[name].bind(this);
+          throw new Error(
+            'Overwriting built-in methods is not supported anymore. Please migrate them to a different name.',
+          );
         }
         debug(`Adding method to model: %s`, method);
         (this as any)[name] = method;
@@ -351,22 +338,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     hash.update(idGenerator.toString());
 
     return hash.digest('hex');
-  }
-
-  public p(keyOrValues: any, value?: any): any {
-    console.warn(
-      '\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.p() is deprecated, use NohmModel.property() instead.',
-    );
-    return this.property(keyOrValues, value);
-  }
-
-  public prop(keyOrValues: any, value?: any): any {
-    console.warn(
-      '\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.',
-    );
-    return this.property(keyOrValues, value);
   }
 
   /**
@@ -994,14 +965,6 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
     }
   }
 
-  public valid(property?: keyof TProps, setDirectly = false): Promise<boolean> {
-    console.warn(
-      '\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.valid() is deprecated, use NohmModel.validate() instead.',
-    );
-    return this.validate(property, setDirectly);
-  }
-
   /**
    * Check if one or all properties are valid and optionally set the unique indices immediately.
    * If a property is invalid the {@link NohmModel#errors} object will be populated with error messages.
@@ -1024,9 +987,9 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
         nonUniqueValidations.push(this.validateProperty(key, prop));
       }
     }
-    let validationResults: Array<IValidationResult> = await Promise.all<
-      IValidationResult
-    >(nonUniqueValidations);
+    let validationResults: Array<IValidationResult> = await Promise.all<IValidationResult>(
+      nonUniqueValidations,
+    );
 
     let valid = validationResults.some((result) => result.valid);
 

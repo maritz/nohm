@@ -55,14 +55,6 @@ const userMockup = nohm.model('UserMockup', {
 test('propertyGetter', (t) => {
   const user = new userMockup();
 
-  t.is(typeof user.p, 'function', 'Property getter short p is not available.');
-
-  t.is(
-    typeof user.prop,
-    'function',
-    'Property getter short prop is not available.',
-  );
-
   t.is(typeof user.property, 'function', 'Property getter is not available.');
 
   t.is(

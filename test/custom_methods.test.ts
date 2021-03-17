@@ -1,9 +1,7 @@
 import test from 'ava';
-import * as td from 'testdouble';
 
 import { nohm } from '../ts';
 import * as args from './testArgs';
-import { sleep } from './helper';
 
 test.before(async () => {
   await args.setClient(nohm, args.redis);
@@ -51,81 +49,35 @@ test('methods', async (t) => {
   );
 });
 
-test('methodsSuper', async (t) => {
-  const warnDouble = td.replace(global.console, 'warn');
-
-  const methodOverwriteSuperMethod = nohm.model('methodOverwriteSuperMethod', {
-    properties: {
-      name: {
-        defaultValue: 'test',
-        type: 'string',
-        unique: true,
-        validations: ['notEmpty'],
+test('overwriting built-in methods throws error', async (t) => {
+  const methodOverwriteSuperThrows = nohm.model(
+    'methodOverwriteSuperThrows',
+    {
+      properties: {
+        name: {
+          defaultValue: 'test',
+          type: 'string',
+        },
+      },
+      methods: {
+        property: function property() {
+          t.fail('Overwriting .properties() worked.');
+          return;
+        },
       },
     },
-    methods: {
-      prop: function prop(name) {
-        if (name === 'super') {
-          // @ts-ignore _super_prop is dynamically added, not elegant but the only way this works right now
-          return this._super_prop('name');
-        } else {
-          // @ts-ignore _super_prop is dynamically added
-          return this._super_prop.apply(this, arguments, 0);
-        }
-      },
+    true,
+  );
+  t.throws(
+    () => {
+      const methodOverwrite = new methodOverwriteSuperThrows();
+      methodOverwrite.property('foo');
     },
-  });
-
-  const methodOverwrite = new methodOverwriteSuperMethod();
-
-  // wait 100ms because the warning from the constructor is delayed as well.
-  await sleep(100);
-  td.verify(
-    warnDouble,
-    warnDouble(
-      '\x1b[31m%s\x1b[0m',
-      `WARNING: Overwriting existing property/method 'prop' in 'methodOverwriteSuperMethod' because of method definition.`,
-    ),
+    {
+      message:
+        'Overwriting built-in methods is not supported anymore. Please migrate them to a different name.',
+    },
   );
-
-  t.is(
-    typeof methodOverwrite.prop,
-    'function',
-    'Overwriting a method in a model definition did not create that method on a new instance.',
-  );
-  t.is(
-    // @ts-ignore _super_prop is dynamically added
-    typeof methodOverwrite._super_prop,
-    'function',
-    'Overwriting a method in a model definition did not create the _super_ method on a new instance.',
-  );
-  t.is(
-    methodOverwrite.prop('super'),
-    methodOverwrite.property('name'),
-    'The super test method did not work properly.',
-  );
-  td.verify(
-    warnDouble,
-    warnDouble(
-      '\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.',
-    ),
-  );
-  methodOverwrite.prop('name', 'methodTest');
-  td.verify(
-    warnDouble,
-    warnDouble(
-      '\x1b[31m%s\x1b[0m',
-      'DEPRECATED: Usage of NohmModel.prop() is deprecated, use NohmModel.property() instead.',
-    ),
-  );
-
-  t.is(
-    methodOverwrite.property('name'),
-    'methodTest',
-    'The super test method did not properly handle arguments',
-  );
-  td.reset();
 });
 
 test('no super method if none needed', async (t) => {

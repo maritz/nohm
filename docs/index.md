@@ -150,7 +150,7 @@ TODO: once v2 has proper logging support, change this.
 
 ```javascript
 // this will throw all errors nohm encounters - not recommended
-nohm.logError = function(err) {
+nohm.logError = function (err) {
   throw new Error({
     name: 'Nohm Error',
     message: err,
@@ -327,7 +327,7 @@ Casts to boolean - except 'false' (string) which will be cast to false (boolean)
 
 ###### Timestamp
 
-Converts a Date(-time) to a timestamp (base 10 integer of miliseconds from 1970).
+Converts a Date(-time) to a timestamp (base 10 integer of milliseconds from 1970).
 This takes two different formats as inputs:
 
 - Numbers result in a direct parseInt
@@ -361,13 +361,13 @@ const User = nohm.model('User', {
 });
 
 const test = new User();
-test.p('balance'); // 0
-test.p('balance', 5);
-test.p('balance'); // 5
-test.p('balance', 10);
-test.p('balance'); // 15
-test.p('balance', -6);
-test.p('balance'); // 9
+test.property('balance'); // 0
+test.property('balance', 5);
+test.property('balance'); // 5
+test.property('balance', 10);
+test.property('balance'); // 15
+test.property('balance', -6);
+test.property('balance'); // 9
 ```
 
 ##### Validators
@@ -434,7 +434,7 @@ If you need to define custom validations as functions and want them to be export
 Example customValidation.js:
 
 ```javascript
-exports.usernameIsAnton = function(value, options) {
+exports.usernameIsAnton = function (value, options) {
   if (options.revert) {
     callback(value !== 'Anton');
   } else {
@@ -553,8 +553,6 @@ user.property('name'); // returns 'test2'
 user.property('email'); // returns 'someMail@example.com'
 ```
 
-The convenience short versions .p() and .prop() still exist, but are deprecated and cause a deprecation warning.
-
 There are several other methods for dealing with properties:
 
 - allProperties() - get an object with all properties plus it's id
@@ -565,7 +563,7 @@ There are several other methods for dealing with properties:
 
 Your model instance is automatically validated on save but you can manually validate it as well.
 
-In the following code examples we assume the model of the [valitators section](#validators) is defined and instanced as `user`.
+In the following code examples we assume the model of the [validators section](#validators) is defined and instanced as `user`.
 
 #### Calling valid()
 
@@ -625,7 +623,7 @@ server.use(
           name: [0], // this will ignore the first validation in the validation definition array for name in the model definition
           salt: true, // this will completely ignore all validations for the salt property
         },
-        Privileges: true, // this will completely ignore the Priviledges model
+        Privileges: true, // this will completely ignore the Privileges model
       },
     },
   ),
@@ -665,7 +663,7 @@ try {
   // it's in the db :)
 } catch (error) {
   if (error instanceof nohm.ValidationError) {
-    // erros = the errors in validation
+    // error = the errors in validation
   }
 }
 ```
@@ -743,7 +741,7 @@ const ids = await SomeModel.find();
 
 To specify indexes to search for you have to pass in an object as the first parameter.
 There are three kinds of indexes: unique, simple and numeric.
-Unique is the fastest and if you look for a property that is unqiue all other search criteria is ignored.
+Unique is the fastest and if you look for a property that is unique all other search criteria is ignored.
 You can mix the three search queries within one find call.
 After all search queries of a find() have been processed the intersection of the found IDs is returned.
 
@@ -953,7 +951,7 @@ try {
   // User1 and Admin are saved and the relation is in the DB
 } catch (err) {
   if (err instanceof Nohm.LinkError) {
-    // error occured during linking, in this case probably AdminRole validation
+    // error occurred during linking, in this case probably AdminRole validation
     // err.errors is an Array of these objects:
     /*
       {
@@ -987,7 +985,7 @@ The options object has 2 available options:
 ```typescript
 User1.link(ManagerRole, {
   name: 'hasRole', // otherwise defaults to "default"
-  error: function(error, linkedInstance) {
+  error: function (error, linkedInstance) {
     // this is called if there was an error while saving the linked object (ManagerRole in this case)
     // error is the error ManagerRole.save() rejected with
     // linkedInstance is ManagerRole
@@ -1054,13 +1052,13 @@ roleIds = await User2.getAll('RoleModel', 'temp');
 
 ### Publish / Subscribe
 
-Nohm supports a way for seperate clients to get notified of nohm actions in other clients, if they are connected to the same redis database and PubSub is activated.
+Nohm supports a way for separate clients to get notified of nohm actions in other clients, if they are connected to the same redis database and PubSub is activated.
 
 #### Configuration
 
 To use PubSub 2 steps are required:
 
-1.  setting a seperate redis client for subscribing
+1.  setting a separate redis client for subscribing
 2.  configuring either nohm or models to publish
 
 ##### Setting the second redis client
@@ -1079,7 +1077,7 @@ const client = nohm.closePubSub();
 ##### Configuring nohm globally to publish
 
 ```typescript
-nohm.setPublish(true); // this client will publish on all modelsby default
+nohm.setPublish(true); // this client will publish on all models by default
 nohm.setPublish(false); // this client will not publish by default
 ```
 
@@ -1158,7 +1156,7 @@ Example:
 
 ```typescript
 const model = await nohm.factory('someModel');
-model.subscribe('update', function(event) {
+model.subscribe('update', function (event) {
   console.log(
     'someModel with id %s was updated and now looks like this:',
     event.target.id,
@@ -1176,7 +1174,7 @@ Example:
 ```typescript
 let updates = 0;
 const model = await nohm.factory('someModel');
-model.subscribeOnce('update', function(event) {
+model.subscribeOnce('update', function (event) {
   // will only be called once no matter how many updates happen after 1 has published
   updates++;
   console.log(
@@ -1196,7 +1194,7 @@ Example:
 
 ```typescript
 const model = await nohm.factory('someModel');
-const callback = function(event) {
+const callback = function (event) {
   console.log(
     'someModel with id %s was updated and now looks like this:',
     event.target.id,
