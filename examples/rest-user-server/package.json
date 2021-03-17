@@ -16,7 +16,7 @@
     "start": "node rest-server.js"
   },
   "dependencies": {
-    "bcrypt": "^2.0.1",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "nohm": "^2.1.0",
