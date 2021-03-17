@@ -1,22 +1,22 @@
 /*global $, nohmValidations, io, confirm, alert */
-$(function() {
+$(function () {
   const $userList = $('#users tbody');
   let sortField = 'updatedAt';
   let sortDirection = 'ASC';
   let refreshNoticeInterval;
   let refreshTime = 0;
-  const updateUserList = function() {
+  const updateUserList = function () {
     clearInterval(refreshNoticeInterval);
     $('#refreshNotice').remove();
-    $.get(`/User/?sortField=${sortField}&direction=${sortDirection}`, function(
-      response,
-    ) {
-      $userList.empty();
-      $.each(response, function(index, item) {
-        const createdAt = new Date(parseInt(item.createdAt, 10));
-        const updatedAt = new Date(parseInt(item.updatedAt, 10));
-        $userList.append(
-          $(`
+    $.get(
+      `/User/?sortField=${sortField}&direction=${sortDirection}`,
+      function (response) {
+        $userList.empty();
+        $.each(response, function (index, item) {
+          const createdAt = new Date(parseInt(item.createdAt, 10));
+          const updatedAt = new Date(parseInt(item.updatedAt, 10));
+          $userList.append(
+            $(`
           <tr>
             <td title="${item.id}">${item.id}</td>
             <td title="${item.name}">${item.name}</td>
@@ -28,38 +28,35 @@ $(function() {
             <td><a name="remove-user" href="#">Remove</a></td>
           </tr>
           `).data('raw', item),
-        );
-      });
-      if (response.length > 5) {
-        setTimeout(() => {
-          updateUserList();
-        }, 10000);
-        refreshTime = Date.now() + 10000;
-        $('#users').after(
-          '<span id="refreshNotice">More than 5 users, will refresh userlist in <span>10</span> seconds. You should be able to see a remove event log at the bottom the moment it gets removed.</span>',
-        );
-        refreshNoticeInterval = setInterval(() => {
-          $('#refreshNotice span').text(
-            ((refreshTime - Date.now()) / 1000).toFixed(0),
           );
-        }, 500);
-      }
-    });
+        });
+        if (response.length > 5) {
+          setTimeout(() => {
+            updateUserList();
+          }, 10000);
+          refreshTime = Date.now() + 10000;
+          $('#users').after(
+            '<span id="refreshNotice">More than 5 users, will refresh user list in <span>10</span> seconds. You should be able to see a remove event log at the bottom the moment it gets removed.</span>',
+          );
+          refreshNoticeInterval = setInterval(() => {
+            $('#refreshNotice span').text(
+              ((refreshTime - Date.now()) / 1000).toFixed(0),
+            );
+          }, 500);
+        }
+      },
+    );
   };
-  $userList.on('click', 'tbody a[name="edit-user"]', function(target) {
-    const data = $(target.currentTarget)
-      .parents('tr')
-      .data('raw');
+  $userList.on('click', 'tbody a[name="edit-user"]', function (target) {
+    const data = $(target.currentTarget).parents('tr').data('raw');
     Object.keys(data).forEach((key) => {
       if (key !== 'password') {
         $(`form input[name="${key}"]`).val(data[key]);
       }
     });
   });
-  $userList.on('click', 'tbody a[name="remove-user"]', function(target) {
-    const data = $(target.currentTarget)
-      .parents('tr')
-      .data('raw');
+  $userList.on('click', 'tbody a[name="remove-user"]', function (target) {
+    const data = $(target.currentTarget).parents('tr').data('raw');
     const confirmed = confirm('Delete user?');
     if (confirmed) {
       $.ajax(`/User/${data.id}`, {
@@ -71,7 +68,7 @@ $(function() {
         .always(finalHandler);
     }
   });
-  $('#users thead').on('click', 'th[data-sortFieldName]', function(target) {
+  $('#users thead').on('click', 'th[data-sortFieldName]', function (target) {
     const fieldName = $(target.currentTarget).attr('data-sortFieldName');
     if (sortField === fieldName) {
       sortDirection = sortDirection === 'ASC' ? 'DESC' : 'ASC';
@@ -104,13 +101,13 @@ $(function() {
   };
 
   const $editForm = $('form#edit');
-  $editForm.submit(function(e) {
+  $editForm.submit(function (e) {
     e.preventDefault();
 
     const data = {};
     const id = $editForm.find('input[name="id"]').val();
     const idSet = id.length !== 0;
-    $editForm.find('input').each(function() {
+    $editForm.find('input').each(function () {
       const $this = $(this);
       if ($this.attr('type') === 'submit') {
         return;
@@ -142,7 +139,7 @@ $(function() {
             .always(finalHandler($editForm));
         }
       } else {
-        $.each(validation.errors, function(index, error) {
+        $.each(validation.errors, function (index, error) {
           $editForm
             .find('ul[name=errors]')
             .append(
@@ -157,7 +154,7 @@ $(function() {
   });
 
   const $loginForm = $('form#login');
-  $loginForm.submit(function(e) {
+  $loginForm.submit(function (e) {
     e.preventDefault();
 
     const data = {
@@ -175,7 +172,7 @@ $(function() {
           .fail(failHandler($loginForm))
           .always(finalHandler($loginForm));
       } else {
-        $.each(validation.errors, function(index, error) {
+        $.each(validation.errors, function (index, error) {
           $loginForm
             .find('[name="errors"]')
             .append(
@@ -191,7 +188,7 @@ $(function() {
 
   const $eventLog = $('#eventlog');
   const socket = io();
-  socket.on('nohmEvent', function(msg) {
+  socket.on('nohmEvent', function (msg) {
     $eventLog.append($('<li>').text(JSON.stringify(msg)));
   });
 });

@@ -69,13 +69,13 @@ redisClient.once('connect', async () => {
           direction: 'ASC',
         });
         sortedIds.splice(-1 * maxUsers);
-        console.log('Autoremoving', sortedIds);
+        console.log('Auto removing', sortedIds);
         await Promise.all(sortedIds.map((id) => UserModel.remove(id)));
       }
     });
   }, 5000);
 
-  app.get('/User/', async function(req, res, next) {
+  app.get('/User/', async function (req, res, next) {
     try {
       const defaultSortField = 'updatedAt';
       const allowedSortFields = ['name', 'email', 'createdAt', 'updatedAt'];
@@ -106,7 +106,7 @@ redisClient.once('connect', async () => {
     }
   });
 
-  app.post('/User/', async function(req, res, next) {
+  app.post('/User/', async function (req, res, next) {
     try {
       const data = {
         name: req.body.name,
@@ -121,7 +121,7 @@ redisClient.once('connect', async () => {
     }
   });
 
-  app.put('/User/:id', async function(req, res, next) {
+  app.put('/User/:id', async function (req, res, next) {
     try {
       const data = {
         name: req.body.name,
@@ -138,7 +138,7 @@ redisClient.once('connect', async () => {
     }
   });
 
-  app.post('/User/login', async function(req, res) {
+  app.post('/User/login', async function (req, res) {
     const user = new UserModel(); // alternatively Nohm.factory('User'); like in post
     const loginSuccess = await user.login(req.body.name, req.body.password);
     if (loginSuccess) {
@@ -149,7 +149,7 @@ redisClient.once('connect', async () => {
     }
   });
 
-  app.delete('/User/:id', async function(req, res, next) {
+  app.delete('/User/:id', async function (req, res, next) {
     try {
       await UserModel.remove(req.params.id);
       res.status(204);
@@ -159,15 +159,15 @@ redisClient.once('connect', async () => {
     }
   });
 
-  app.get('/', function(req, res) {
+  app.get('/', function (req, res) {
     res.send(fs.readFileSync(__dirname + '/index.html', 'utf-8'));
   });
 
-  app.get('/client.js', function(req, res) {
+  app.get('/client.js', function (req, res) {
     res.sendFile(__dirname + '/client.js');
   });
 
-  app.use(function(err, req, res, _next) {
+  app.use(function (err, _req, res) {
     // error handler
     res.status(500);
     let errData = err.message;
