@@ -66,18 +66,18 @@ export interface IStaticMethods<T extends NohmModel> {
   remove(id: any): Promise<void>;
 }
 
-export type validatiorFunction = (value: any, options: any) => Promise<boolean>;
+export type validatorFunction = (value: any, options: any) => Promise<boolean>;
 
 export interface IValidationObject {
   name: string;
   options: { [index: string]: any };
-  validator: validatiorFunction;
+  validator: validatorFunction;
 }
 
 export type TValidationDefinition =
   | string
   | { name: string; options: any }
-  | validatiorFunction;
+  | validatorFunction;
 
 export interface IModelPropertyDefinition {
   /**

@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { validatiorFunction } from './model.header';
+import { validatorFunction } from './model.header';
 
 export const universalValidatorPath = path.join(
   __dirname,
@@ -15,8 +15,7 @@ const newRawValidators = require(universalValidatorPath);
  * @namespace Validators
  */
 export const validators: {
-  [index: string]: validatiorFunction;
-} =
-  newRawValidators.validators;
+  [index: string]: validatorFunction;
+} = newRawValidators.validators;
 
 exports.regexps = newRawValidators.regexps;

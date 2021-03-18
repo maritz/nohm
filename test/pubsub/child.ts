@@ -16,6 +16,10 @@ process.on('message', async (msg) => {
   let instance: any;
   let fn: any;
 
+  if (!process.send) {
+    throw new Error('Process.send does not exist?');
+  }
+
   switch (msg.question) {
     case 'does nohm have pubsub?':
       process.send({

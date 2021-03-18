@@ -30,7 +30,7 @@ let testCounter = 0;
 const initializeChild = (childPrefix) => {
   return new Promise<IChildProcessWithAsk>((resolve, reject) => {
     const child = child_process.fork(childPath, process.argv);
-    child.on('message', (msg) => {
+    child.on('message', (msg: any) => {
       if (msg.question === 'initialize' && msg.answer === true) {
         resolve(child as IChildProcessWithAsk);
       }
@@ -46,7 +46,7 @@ const initializeChild = (childPrefix) => {
 
     (child as any).ask = (request, callback) => {
       return new Promise((resolveInner) => {
-        child.on('message', (msg) => {
+        child.on('message', (msg: any) => {
           if (msg.question === request.question) {
             if (msg.answer === 'ACK') {
               // this happens on things like subscribe where it acknowledges the subscribe has happened

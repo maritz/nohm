@@ -118,29 +118,6 @@ test.serial('static methods', async (t) => {
     test2(player: any): Promise<void>;
   }
 
-  const simpleModel = nohm.model<IAdditionalMethods>(
-    'SimpleModelRegistration',
-    {
-      properties: {
-        name: {
-          defaultValue: 'simple',
-          type: 'string',
-        },
-      },
-      // tslint:disable-next-line:object-literal-sort-keys
-      methods: {
-        test1(): Promise<boolean> {
-          return this.validate();
-        },
-        async test2(player: any) {
-          await this.save();
-          this.link(player, 'leader');
-          this.link(player);
-        },
-      },
-    },
-  );
-
   t.is(
     typeof commentMockup.findAndLoad,
     'function',
@@ -156,23 +133,6 @@ test.serial('static methods', async (t) => {
     'function',
     'findAndLoad was not set on commentMockup',
   );
-  t.is(
-    typeof simpleModel.findAndLoad,
-    'function',
-    'findAndLoad was not set on commentMockup',
-  );
-  t.is(
-    typeof simpleModel.sort,
-    'function',
-    'findAndLoad was not set on commentMockup',
-  );
-  t.is(
-    typeof simpleModel.find,
-    'function',
-    'findAndLoad was not set on commentMockup',
-  );
-  const testInstance = new simpleModel();
-  testInstance.test1();
 });
 
 test.serial('instances', async (t) => {

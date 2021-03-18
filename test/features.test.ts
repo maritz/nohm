@@ -1,3 +1,5 @@
+// tslint:disable: max-classes-per-file
+
 import test from 'ava';
 
 import * as _ from 'lodash';
@@ -12,7 +14,7 @@ import { hgetall, keys, sismember, zscore } from '../ts/typed-redis-helper';
 // to make prefixes per-file separate we add the filename
 const prefix = args.prefix + 'feature';
 
-import { Nohm, NohmModel, NohmClass } from '../ts';
+import { Nohm, NohmModel, NohmClass, TTypedDefinitions } from '../ts';
 
 const nohm = Nohm;
 
@@ -26,58 +28,65 @@ test.afterEach(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
-const UserMockup = Nohm.model('UserMockup', {
-  properties: {
-    name: {
-      defaultValue: 'test',
-      type: 'string',
-      unique: true,
-      validations: ['notEmpty'],
-    },
-    visits: {
-      index: true,
-      type: 'integer',
-    },
-    email: {
-      defaultValue: 'email@email.de',
-      type: 'string',
-      unique: true,
-      validations: ['email'],
-    },
-    emailOptional: {
-      defaultValue: '',
-      type: 'string',
-      unique: true,
-      validations: [
-        {
-          name: 'email',
-          options: {
-            optional: true,
+const UserMockup = Nohm.register(
+  class UserMockupClass extends NohmModel {
+    static modelName = 'UserMockup';
+    protected static definitions: TTypedDefinitions<any> = {
+      name: {
+        defaultValue: 'test',
+        type: 'string',
+        unique: true,
+        validations: ['notEmpty'],
+      },
+      visits: {
+        index: true,
+        type: 'integer',
+      },
+      email: {
+        defaultValue: 'email@email.de',
+        type: 'string',
+        unique: true,
+        validations: ['email'],
+      },
+      emailOptional: {
+        defaultValue: '',
+        type: 'string',
+        unique: true,
+        validations: [
+          {
+            name: 'email',
+            options: {
+              optional: true,
+            },
           },
-        },
-      ],
-    },
-    country: {
-      index: true,
-      defaultValue: 'Tibet',
-      type: 'string',
-      validations: ['notEmpty'],
-    },
-    json: {
-      defaultValue: '{}',
-      type: 'json',
-    },
-  },
-  idGenerator: 'increment',
-});
+        ],
+      },
+      country: {
+        index: true,
+        defaultValue: 'Tibet',
+        type: 'string',
+        validations: ['notEmpty'],
+      },
+      json: {
+        defaultValue: '{}',
+        type: 'json',
+      },
+    };
 
-nohm.model('NonIncrement', {
-  properties: {
-    name: {
-      type: 'string',
-    },
+    static idGenerator = 'increment';
   },
-});
+);
+
+nohm.register(
+  class NonIncrement extends NohmModel {
+    static modelName = 'NonIncrement';
+    static definitions: TTypedDefinitions<any> = {
+      name: {
+        type: 'string',
+      },
+    };
+  },
+);
 
 test.serial(
   'creating models with and without a redis client set',
@@ -410,16 +419,19 @@ test.serial('thisInCallbacks', async (t) => {
 */
 
 test.serial.cb('defaultAsFunction', (t) => {
-  const TestMockup = nohm.model('TestMockup', {
-    properties: {
-      time: {
-        defaultValue: () => {
-          return +new Date();
+  const TestMockup = nohm.register(
+    class TestMockupClass extends NohmModel {
+      static modelName = 'TestMockup';
+      static definitions: TTypedDefinitions<any> = {
+        time: {
+          defaultValue: () => {
+            return +new Date();
+          },
+          type: 'timestamp',
         },
-        type: 'timestamp',
-      },
+      };
     },
-  });
+  );
   const test1 = new TestMockup();
   setTimeout(() => {
     const test2 = new TestMockup();
@@ -441,14 +453,17 @@ test.serial.cb('defaultAsFunction', (t) => {
 });
 
 test.serial('defaultIdGeneration', async (t) => {
-  const TestMockup = nohm.model('TestMockup', {
-    properties: {
-      name: {
-        defaultValue: 'defaultIdGeneration',
-        type: 'string',
-      },
+  const TestMockup = nohm.register(
+    class TestMockupClass extends NohmModel {
+      static modelName = 'TestMockup';
+      static definitions: TTypedDefinitions<any> = {
+        name: {
+          defaultValue: 'defaultIdGeneration',
+          type: 'string',
+        },
+      };
     },
-  });
+  );
   const test1 = new TestMockup();
   await test1.save();
   t.is(typeof test1.id, 'string', 'The generated id was not a string');
@@ -593,14 +608,14 @@ test.serial('temporary model definitions', async (t) => {
   const user = await nohm.factory('UserMockup');
 
   // new temporary model definition with same name
-  const TempUserMockup = nohm.model(
-    'UserMockup',
-    {
-      properties: {
+  const TempUserMockup = nohm.register(
+    class TempUserMockupClass extends NohmModel {
+      static modelName = 'TempUserMockup';
+      static definitions: TTypedDefinitions<any> = {
         well_shit: {
           type: 'string',
         },
-      },
+      };
     },
     true,
   );
@@ -624,7 +639,6 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
     },
   };
 
-  // @ts-ignore
   const ModelCtor = nohm.register(ClassModel);
   const instance = new ModelCtor();
   const factoryInstance = await nohm.factory('ClassModel');
@@ -787,14 +801,17 @@ test.serial('isDirty', async (t) => {
 });
 
 test.serial('create-only failure attempt without load_pure', async (t) => {
-  nohm.model('withoutLoadPureCreateOnlyModel', {
-    properties: {
-      createdAt: {
-        defaultValue: () => Date.now() + ':' + Math.random(),
-        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
-      },
+  nohm.register(
+    class WithoutLoadPureCreateOnlyModelClass extends NohmModel {
+      static modelName = 'withoutLoadPureCreateOnlyModel';
+      static definitions: TTypedDefinitions<any> = {
+        createdAt: {
+          defaultValue: () => Date.now() + ':' + Math.random(),
+          type: (_a, _b, oldValue) => oldValue, // never change the value after creation
+        },
+      };
     },
-  });
+  );
 
   const loadPure = await nohm.factory('withoutLoadPureCreateOnlyModel');
   const initialValue = loadPure.property('createdAt');
@@ -818,24 +835,27 @@ test.serial('create-only failure attempt without load_pure', async (t) => {
 });
 
 test.serial('loadPure', async (t) => {
-  nohm.model('loadPureModel', {
-    properties: {
-      incrementOnChange: {
-        defaultValue: 0,
-        load_pure: true,
-        type() {
-          return (
-            1 + parseInt(this.property('incrementOnChange'), 10)
-          ).toString();
+  nohm.register(
+    class LoadPureModelClass extends NohmModel {
+      static modelName = 'loadPureModel';
+      static definitions: TTypedDefinitions<any> = {
+        incrementOnChange: {
+          defaultValue: 0,
+          load_pure: true,
+          type() {
+            return (
+              1 + parseInt(this.property('incrementOnChange'), 10)
+            ).toString();
+          },
         },
-      },
-      createdAt: {
-        defaultValue: () => Date.now() + ':' + Math.random(),
-        load_pure: true,
-        type: (_a, _b, oldValue) => oldValue, // never change the value after creation
-      },
+        createdAt: {
+          defaultValue: () => Date.now() + ':' + Math.random(),
+          load_pure: true,
+          type: (_a, _b, oldValue) => oldValue, // never change the value after creation
+        },
+      };
     },
-  });
+  );
 
   const loadPure = await nohm.factory('loadPureModel');
   const initialCreatedAt = loadPure.property('createdAt');
@@ -893,17 +913,17 @@ test.serial('allProperties() cache is reset on propertyReset()', async (t) => {
 });
 
 test.serial('id with : should fail', async (t) => {
-  const wrongIdModel = nohm.model(
-    'wrongIdModel',
-    {
-      properties: {
+  const wrongIdModel = nohm.register(
+    class wrongIdModelClass extends NohmModel {
+      static modelName = 'wrongIdModel';
+      static definitions: TTypedDefinitions<any> = {
         name: {
           type: 'string',
         },
-      },
-      idGenerator: () => {
+      };
+      static idGenerator = () => {
         return 'foo:bar';
-      },
+      };
     },
     true,
   );
