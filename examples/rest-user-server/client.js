@@ -88,7 +88,7 @@ $(function () {
   const failHandler = ($form) => {
     return (jqXHR) => {
       const status = jqXHR.status;
-      const errorSource = status !== 401 && status < 500 ? 'Client' : 'Server';
+      const errorSource = status < 500 ? 'Server validation' : 'Unknown server';
       $form
         .find('ul[name=errors]')
         .append(`<li>${errorSource} error: ${jqXHR.responseText}`);
@@ -190,5 +190,6 @@ $(function () {
   const socket = io();
   socket.on('nohmEvent', function (msg) {
     $eventLog.append($('<li>').text(JSON.stringify(msg)));
+    updateUserList();
   });
 });

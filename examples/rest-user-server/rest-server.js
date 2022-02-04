@@ -167,7 +167,8 @@ redisClient.once('connect', async () => {
     res.sendFile(__dirname + '/client.js');
   });
 
-  app.use(function (err, _req, res) {
+  // eslint-disable-next-line no-unused-vars
+  app.use(function (err, _req, res, _next) {
     // error handler
     res.status(500);
     let errData = err.message;
