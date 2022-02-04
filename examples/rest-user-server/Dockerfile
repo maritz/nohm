@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json client.js index.html rest-server.js UserModel.js ./
 
-RUN npm install --production
+RUN npm ci
 
 EXPOSE 3000
 

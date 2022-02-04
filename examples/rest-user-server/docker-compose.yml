@@ -1,14 +1,30 @@
-version: '3.4'
+version: '3.8'
 
 services:
   nohm-example-redis:
     image: redis:latest
+    networks:
+      - inside
 
   nohm-example:
     build:
       context: .
       dockerfile: ./Dockerfile
-    ports: 
-      - 3000:3000
+    ports:
+      - ${NOHM_EXAMPLE_PORT:-3000}:3000
     environment:
       REDIS_HOST: nohm-example-redis
+    labels:
+      - "traefik.enable=${NOHM_EXAMPLE_NETWORK_ENABLE:-true}"
+      - "traefik.docker.network=${NOHM_EXAMPLE_NETWORK:-nohm}"
+      - "traefik.http.routers.portainer.entrypoints=${NOHM_EXAMPLE_ENTRYPOINT:-web}"
+      - "traefik.http.routers.portainer.rule=Host(`${NOHM_EXAMPLE_DOMAIN:-nohm-example.maritz.space}`)"
+      - "traefik.http.services.portainer.loadbalancer.server.port=${NOHM_EXAMPLE_PORT:-3000}"
+    networks:
+      - outside
+      - inside
+
+networks:
+  outside:
+    name: ${NOHM_EXAMPLE_NETWORK:-nohm}
+  inside:
