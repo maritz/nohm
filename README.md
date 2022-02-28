@@ -1,6 +1,5 @@
 # Nohm
 
-[![Dependency Status](https://david-dm.org/maritz/nohm.svg)](https://david-dm.org/maritz/nohm)
 [![Known Vulnerabilities (Snyk)](https://snyk.io/test/github/maritz/nohm/badge.svg)](https://snyk.io/test/github/maritz/nohm)
 [![Coverage Status](https://coveralls.io/repos/github/maritz/nohm/badge.png?branch=master)](https://coveralls.io/github/maritz/nohm?branch=master)
 
