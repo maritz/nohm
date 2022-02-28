@@ -156,27 +156,29 @@ test('version in instance', async (t) => {
   );
 });
 
-test.cb('meta callback and setting meta.inDb', (t) => {
-  const testModel = nohm.model('TestVersionMetaMockup', {
-    properties: {
-      name: {
-        defaultValue: 'testProperty',
-        type: 'string',
+test('meta callback and setting meta.inDb', (t) => {
+  return new Promise((resolve) => {
+    const testModel = nohm.model('TestVersionMetaMockup', {
+      properties: {
+        name: {
+          defaultValue: 'testProperty',
+          type: 'string',
+        },
       },
-    },
-    metaCallback(err, version) {
-      t.is(err, null, 'Meta version callback had an error.');
-      t.true(testInstance.meta.inDb, 'Meta version inDb was not false.');
-      t.truthy(version, 'No version in meta.inDb callback');
-      t.end();
-    },
-  });
+      metaCallback(err, version) {
+        t.is(err, null, 'Meta version callback had an error.');
+        t.true(testInstance.meta.inDb, 'Meta version inDb was not false.');
+        t.truthy(version, 'No version in meta.inDb callback');
+        resolve();
+      },
+    });
 
-  const testInstance = new testModel();
-  t.false(
-    testInstance.meta.inDb,
-    'Meta version inDb was not false directly after instantiation.',
-  );
+    const testInstance = new testModel();
+    t.false(
+      testInstance.meta.inDb,
+      'Meta version inDb was not false directly after instantiation.',
+    );
+  });
 });
 
 test('idGenerator', async (t) => {

@@ -1,13 +1,18 @@
 import test from 'ava';
 
 import * as _ from 'lodash';
-import * as async from 'async';
 import * as td from 'testdouble';
 
 import * as args from './testArgs';
-import { cleanUpPromise } from './helper';
+import { cleanUpPromise, sleep } from './helper';
 
-import { hgetall, keys, sismember, zscore } from '../ts/typed-redis-helper';
+import {
+  hgetall,
+  keys,
+  sismember,
+  zscore,
+  exists,
+} from '../ts/typed-redis-helper';
 
 // to make prefixes per-file separate we add the filename
 const prefix = args.prefix + 'feature';
@@ -139,18 +144,6 @@ test.serial('create a new instance', async (t) => {
 
 test.serial('remove', async (t) => {
   const user = new UserMockup();
-  let testExists;
-
-  testExists = (what, key, callback) => {
-    redis.exists(key, (err, value) => {
-      t.true(!err, 'There was a redis error in the remove test check.');
-      t.true(
-        value === 0,
-        'Deleting a user did not work: ' + what + ', key: ' + key,
-      );
-      callback();
-    });
-  };
 
   user.property('name', 'deleteTest');
   user.property('email', 'deleteTest@asdasd.de');
@@ -164,55 +157,51 @@ test.serial('remove', async (t) => {
     null,
     'Removing an object from the db did not set the id to null',
   );
-  return new Promise<void>((resolve, reject) => {
-    async.series(
-      [
-        (callback) => {
-          testExists('hashes', prefix + ':hash:UserMockup:' + id, callback);
-        },
-        (callback) => {
-          redis.sismember(
-            prefix + ':index:UserMockup:name:' + user.property('name'),
-            id,
-            (err, value) => {
-              t.true(
-                err === null && value === 0,
-                'Deleting a model did not properly delete the normal index.',
-              );
-              callback();
-            },
-          );
-        },
-        (callback) => {
-          redis.zscore(
-            prefix + ':scoredindex:UserMockup:visits',
-            id,
-            (err, value) => {
-              t.true(
-                err === null && value === null,
-                'Deleting a model did not properly delete the scored index.',
-              );
-              callback();
-            },
-          );
-        },
-        (callback) => {
-          testExists(
-            'uniques',
-            prefix + ':uniques:UserMockup:name:' + user.property('name'),
-            callback,
-          );
-        },
-      ],
-      (err: any) => {
-        if (err) {
-          return reject(err);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
+
+  const value = await exists(redis, prefix + ':hash:UserMockup:' + id);
+  t.is(
+    value,
+    0,
+    'Deleting a user did not work: hashes, key: ' +
+      prefix +
+      ':hash:UserMockup:' +
+      id,
+  );
+
+  const isMemberInIndex = await sismember(
+    redis,
+    prefix + ':index:UserMockup:name:' + user.property('name'),
+    id!,
+  );
+  t.is(
+    isMemberInIndex,
+    0,
+    'Deleting a model did not properly delete the normal index.',
+  );
+
+  const scoredIndex = await zscore(
+    redis,
+    prefix + ':scoredindex:UserMockup:visits',
+    id!,
+  );
+  t.is(
+    scoredIndex,
+    null,
+    'Deleting a model did not properly delete the scored index.',
+  );
+
+  const uniqueExists = await exists(
+    redis,
+    prefix + ':uniques:UserMockup:name:' + user.property('name'),
+  );
+  t.is(
+    uniqueExists,
+    0,
+    'Deleting a user did not work: uniques, key: ' +
+      prefix +
+      ':uniques:UserMockup:name:' +
+      user.property('name'),
+  );
 });
 
 test.serial('idSets', async (t) => {
@@ -276,7 +265,7 @@ test.serial('indexes', async (t) => {
   );
   t.is(
     countryIndex.toString(),
-    user.id,
+    user.id!,
     'The country index did not have the user as one of its ids.',
   );
 
@@ -298,7 +287,7 @@ test.serial('indexes', async (t) => {
   );
   t.is(
     visitsIndex.toString(),
-    user.id,
+    user.id!,
     'The visits index did not have the user as one of its ids.',
   );
 });
@@ -409,7 +398,7 @@ test.serial('thisInCallbacks', async (t) => {
 });
 */
 
-test.serial.cb('defaultAsFunction', (t) => {
+test.serial('defaultAsFunction', async (t) => {
   const TestMockup = nohm.model('TestMockup', {
     properties: {
       time: {
@@ -421,23 +410,21 @@ test.serial.cb('defaultAsFunction', (t) => {
     },
   });
   const test1 = new TestMockup();
-  setTimeout(() => {
-    const test2 = new TestMockup();
+  await sleep(10);
+  const test2 = new TestMockup();
 
-    t.true(
-      typeof test1.property('time') === 'string',
-      'time of test1 is not a string',
-    );
-    t.true(
-      typeof test2.property('time') === 'string',
-      'time of test2 is not a string',
-    );
-    t.true(
-      test1.property('time') < test2.property('time'),
-      'time of test2 is not lower than test1',
-    );
-    t.end();
-  }, 10);
+  t.true(
+    typeof test1.property('time') === 'string',
+    'time of test1 is not a string',
+  );
+  t.true(
+    typeof test2.property('time') === 'string',
+    'time of test2 is not a string',
+  );
+  t.true(
+    test1.property('time') < test2.property('time'),
+    'time of test2 is not lower than test1',
+  );
 });
 
 test.serial('defaultIdGeneration', async (t) => {
@@ -499,62 +486,47 @@ test.serial('factory with non-integer id', async (t) => {
   );
 });
 
-test.serial.cb('purgeDB', (t) => {
-  t.plan(4);
-
+test.serial('purgeDB', async (t) => {
   // TODO: refactor this mess
-  const countKeys = (
-    countPrefix: string,
-    callback: (err: Error, count: number) => void,
-  ) => {
-    redis.keys(countPrefix + '*', (err, keysFound) => {
-      callback(err, keysFound.length);
-    });
+  const countKeysForPrefix = async (countPrefix: string): Promise<number> => {
+    const keysFound = await keys(redis, countPrefix + '*');
+    return keysFound.length;
   };
 
-  const tests: Array<any> = [];
-  Object.keys(nohm.prefix).forEach((key) => {
-    if (typeof nohm.prefix[key] === 'object') {
-      Object.keys(nohm.prefix[key]).forEach((innerKey) => {
-        tests.push(async.apply(countKeys, nohm.prefix[key][innerKey]));
-      });
-    } else {
-      tests.push(async.apply(countKeys, nohm.prefix[key]));
-    }
-  });
+  const makeCountKeyPromises = () => {
+    const tests: Array<Promise<number>> = [];
+    Object.keys(nohm.prefix).forEach((key) => {
+      if (typeof nohm.prefix[key] === 'object') {
+        Object.keys(nohm.prefix[key]).forEach((innerKey) => {
+          tests.push(countKeysForPrefix(nohm.prefix[key][innerKey]));
+        });
+      } else {
+        tests.push(countKeysForPrefix(nohm.prefix[key]));
+      }
+    });
+    return tests;
+  };
 
   // make sure we have some keys by first saving a model and then counting keys. then we purge and count again.
   const user = new UserMockup();
-  user.save().then(
-    () => {
-      async.series(tests, (err, numArr: Array<{}>) => {
-        t.true(!err, 'Unexpected redis error');
-        const countBefore = numArr.reduce((num: number, add: number) => {
-          return num + add;
-        }, 0);
-        t.true(
-          countBefore > 0,
-          'Database did not have any keys before purgeDb call',
-        );
-        nohm.purgeDb().then(() => {
-          async.series(tests, (errInner, numArrInner: Array<{}>) => {
-            t.true(!errInner, 'Unexpected redis error');
-            const countAfter = numArrInner.reduce(
-              (num: number, add: number) => {
-                return num + add;
-              },
-              0,
-            );
-            t.is(countAfter, 0, 'Database did have keys left after purging.');
-            t.end();
-          });
-        }, t.fail);
-      });
-    },
-    (err) => {
-      t.fail(err);
-    },
-  );
+  await user.save();
+
+  const numArr = await Promise.all(makeCountKeyPromises());
+
+  const countBefore = numArr.reduce((num: number, add: number) => {
+    return num + add;
+  }, 0);
+  t.true(countBefore > 0, 'Database did not have any keys before purgeDb call');
+
+  // test purge
+  await nohm.purgeDb();
+
+  const numArrAfter = await Promise.all(makeCountKeyPromises());
+
+  const countAfter = numArrAfter.reduce((num: number, add: number) => {
+    return num + add;
+  }, 0);
+  t.is(countAfter, 0, 'Database did have keys left after purging.');
 });
 
 test.serial('no key left behind', async (t) => {
@@ -665,12 +637,12 @@ test.serial('register nohm model via ES6 class definition', async (t) => {
   const staticSort = await ModelCtor.sort({ field: 'name' }, [
     instance.id as string,
   ]);
-  t.deepEqual(staticSort, [instance.id], 'register().sort failed.');
+  t.deepEqual(staticSort, [instance.id!], 'register().sort failed.');
 
   const staticFind = await ModelCtor.find({
     name: instance.property('name'),
   });
-  t.deepEqual(staticFind, [instance.id], 'register().find failed.');
+  t.deepEqual(staticFind, [instance.id!], 'register().find failed.');
 
   const staticFindAndLoad = await ModelCtor.findAndLoad({
     name: instance.property('name'),

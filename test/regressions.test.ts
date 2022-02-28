@@ -16,8 +16,16 @@ test.before(async () => {
   await cleanUpPromise(redis, prefix);
 });
 
-test.afterEach.cb((t) => {
-  cleanUp(redis, prefix, t.end);
+test.afterEach(() => {
+  return new Promise((resolve, reject) => {
+    cleanUp(redis, prefix, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 });
 
 test.serial('#114 update does not reset index', async (t) => {
