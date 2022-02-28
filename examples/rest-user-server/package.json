@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
-    "body-parser": "^1.19.1",
-    "express": "^4.17.2",
-    "nohm": "^2.2.3",
+    "body-parser": "^1.19.2",
+    "express": "^4.17.3",
+    "nohm": "^3.0.0",
     "socket.io": "^4.0.0"
   }
 }
