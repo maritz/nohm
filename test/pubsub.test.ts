@@ -142,30 +142,33 @@ test('set/get publish bool', async (t) => {
   );
 });
 
-test.cb("nohm in child process doesn't have pubsub yet", (t) => {
-  t.plan(1);
-  const question = 'does nohm have pubsub?';
-  const child = child_process.fork(childPath);
-  const checkNohmPubSubNotInitialized = (msg) => {
-    if (msg.question === question) {
-      t.is(
-        msg.answer,
-        undefined,
-        'PubSub in the child process was already initialized.',
-      );
-      child.kill();
-      t.end();
-    }
-  };
-  child.on('message', checkNohmPubSubNotInitialized);
-  child.send({ question });
+test("nohm in child process doesn't have pubsub yet", (t) => {
+  return new Promise((resolve, reject) => {
+    const question = 'does nohm have pubsub?';
+    const child = child_process.fork(childPath);
+    const checkNohmPubSubNotInitialized = (msg) => {
+      if (msg.question === question) {
+        t.is(
+          msg.answer,
+          undefined,
+          'PubSub in the child process was already initialized.',
+        );
+        child.kill();
+        resolve();
+      }
+    };
+    child.on('message', checkNohmPubSubNotInitialized);
+    child.send({ question });
+  });
 });
 
-test.afterEach.cb((t) => {
-  t.context.child.on('exit', () => {
-    t.end();
+test.afterEach((t) => {
+  return new Promise((resolve) => {
+    t.context.child.on('exit', () => {
+      resolve();
+    });
+    t.context.child.kill();
   });
-  t.context.child.kill();
 });
 
 test('create', async (t) => {

@@ -334,8 +334,8 @@ export function zscore(
   client: RedisClient | Multi,
   key: string,
   member: string,
-): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
+): Promise<number | null> {
+  return new Promise<number | null>((resolve, reject) => {
     if (!client.zscore) {
       return reject(new Error(errorMessage));
     }
@@ -343,7 +343,11 @@ export function zscore(
       if (err) {
         reject(err);
       } else {
-        resolve(parseFloat(value));
+        if (value === null) {
+          resolve(null);
+        } else {
+          resolve(parseFloat(value));
+        }
       }
     });
   });
