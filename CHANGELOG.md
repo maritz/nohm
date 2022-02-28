@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/maritz/nohm/compare/v2.2.3...v3.0.0) (2022-02-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* Dropping support vor node v8. Now requires at least node v12.
+
+### Bug Fixes
+
+* tests: check for both old and new error message text ([b2c8f2c](https://github.com/maritz/nohm/commit/b2c8f2c5362ff6d944cd0f2b2802ac76d2687264))
+* example-app: make example app usable on new setup ([5ca2cf7](https://github.com/maritz/nohm/commit/5ca2cf7f22b415856d0e338d5bc769e72f6b8d4d))
+* example-app: route name to nohmexample ([1b6130b](https://github.com/maritz/nohm/commit/1b6130bf3a5104ce53fed0b64f585b36b39442e8))
+* example-app: some example app fixes ([4be4250](https://github.com/maritz/nohm/commit/4be4250864cf08b47f4988726d7a74b2d2ce8b1c))
+
+
+### Other
+
+* **deps-dev:** bump standard-version from 6.0.1 to 8.0.1 ([#158](https://github.com/maritz/nohm/issues/158)) ([64aa5c1](https://github.com/maritz/nohm/commit/64aa5c124c4405ede8c509d2d539b0bb7ab1adcd))
+* **deps:** bump acorn from 6.4.0 to 6.4.1 ([#155](https://github.com/maritz/nohm/issues/155)) ([1ada7c9](https://github.com/maritz/nohm/commit/1ada7c9d1c718c4f8408d9dc530aa7c20bf9496d))
+* **deps:** bump lodash from 4.17.15 to 4.17.19 ([#159](https://github.com/maritz/nohm/issues/159)) ([3031dac](https://github.com/maritz/nohm/commit/3031dac8f8cafc6b99dfc31efbfee498940f4a7d))
+* drop support for node v8 ([2931b44](https://github.com/maritz/nohm/commit/2931b440da1d2c49da39b81e01542693418b8799))
+* remove david-dm dependency status since it was discontinued ([396254c](https://github.com/maritz/nohm/commit/396254ce62c2acfea808e8a1af4b33c398f33508))
+* remove travis-ci since it was discontinued ([4e74216](https://github.com/maritz/nohm/commit/4e74216649efde7aac4f65967cb72ded7a0843b3))
+* some security fixes and locking @types/node until major TS upgrade is possible ([674d5aa](https://github.com/maritz/nohm/commit/674d5aa73b93c4ab6d9507b1b42fc70db6de5e71))
+* update dependencies ([5957c5f](https://github.com/maritz/nohm/commit/5957c5f260523d94c13c6c3dc4cfd8c4ae6bd2b9))
+* update dependencies and fix tests for new ava ([853e7cb](https://github.com/maritz/nohm/commit/853e7cb0884a286231c4a557b3bd6caf009a025e))
+* update dependencies of example rest server ([e443aa3](https://github.com/maritz/nohm/commit/e443aa34bb7d26bea822798ecc39c6b2409185f5))
+
 ### [2.2.3](https://github.com/maritz/nohm/compare/v2.2.2...v2.2.3) (2019-12-07)
 
 
