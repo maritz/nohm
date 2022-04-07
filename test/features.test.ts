@@ -204,6 +204,41 @@ test.serial('remove', async (t) => {
   );
 });
 
+test.serial.failing(
+  'remove after other instance changes properties',
+  async (t) => {
+    await cleanUpPromise(redis, prefix);
+    const remainingKeys = await keys(redis, '*');
+
+    // at this point only meta info should be stored
+    t.is(remainingKeys.length, 0, 'Not all keys were removed before tests');
+
+    const user = await nohm.factory('UserMockup');
+
+    user.property({
+      name: 'user',
+      email: 'user@example.com',
+    });
+    await user.save();
+
+    const user2 = await nohm.factory('UserMockup', user.id);
+    user2.property({
+      name: 'user2',
+      email: 'user2@example.com',
+      visits: 500,
+    });
+    await user2.save();
+
+    await user.remove();
+
+    const remainingKeys2 = await keys(redis, prefix + ':*');
+    t.snapshot(
+      remainingKeys2.sort(),
+      'Not all keys were removed from the database',
+    );
+  },
+);
+
 test.serial('idSets', async (t) => {
   const user = new UserMockup();
   let tempId = '';

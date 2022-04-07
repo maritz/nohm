@@ -17,6 +17,7 @@ process.argv.forEach((val, index) => {
     prefix = process.argv[index + 1];
   }
   if (val === '--no-cleanup') {
+    // TODO: this is mostly disfunctional now since cleanup is called in afterEach calls.
     noCleanup = true;
   }
   if (val === '--redis-host') {
