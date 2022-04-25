@@ -10,8 +10,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    ports:
-      - ${NOHM_EXAMPLE_PORT:-3000}:3000
     environment:
       REDIS_HOST: nohm-example-redis
     labels:
