@@ -3,6 +3,7 @@ version: '3.8'
 services:
   nohm-example-redis:
     image: redis:latest
+    restart: on-failure:5
     networks:
       - inside
 
@@ -10,6 +11,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    restart: on-failure:5
     environment:
       REDIS_HOST: nohm-example-redis
     labels:
