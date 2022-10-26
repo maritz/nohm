@@ -391,3 +391,22 @@ test.serial('validation errors', async (t) => {
     }
   }
 });
+
+test.serial(
+  'return type',
+  async (t) => {
+    const testInstance = await nohm.factory<UserMockup>('UserMockup');
+    const diffBeforeUpdate = testInstance.propertyDiff('name');
+
+    // update the property
+    testInstance.property('name','testName');
+    const diffAfterUpdate = testInstance.propertyDiff('name');
+
+    t.deepEqual(diffBeforeUpdate, [], 'return without undefined');
+    t.deepEqual(diffAfterUpdate, [{
+      after: 'testName',
+      before: 'defaultName',
+      key: 'name',
+    }], 'return with difference in property');
+  },
+);

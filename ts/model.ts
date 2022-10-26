@@ -538,10 +538,11 @@ abstract class NohmModel<TProps extends IDictionary = IDictionary> {
    */
   public propertyDiff(
     key?: keyof TProps,
-  ): Array<void | IPropertyDiff<keyof TProps>> {
+  ): Array<IPropertyDiff<keyof TProps>> {
     // TODO: determine if returning an array is really the best option
     if (key) {
-      return [this.onePropertyDiff(key)];
+      const diff = this.onePropertyDiff(key);
+      return diff ? [diff] : [];
     } else {
       const diffResult: Array<IPropertyDiff<keyof TProps>> = [];
       for (const [iterationKey] of this.properties) {

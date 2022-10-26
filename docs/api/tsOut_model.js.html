@@ -419,7 +419,8 @@ class NohmModel {
     propertyDiff(key) {
         // TODO: determine if returning an array is really the best option
         if (key) {
-            return [this.onePropertyDiff(key)];
+            const diff = this.onePropertyDiff(key);
+            return diff ? [diff] : [];
         }
         else {
             const diffResult = [];
